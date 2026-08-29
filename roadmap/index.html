@@ -45,12 +45,13 @@
   header { padding-block: clamp(2.5rem, 7vh, 4.5rem) 0; }
   .back { font-size: 0.95rem; font-weight: 500; text-decoration: none; }
   .back:hover { text-decoration: underline; }
+  .epigraph { margin-top: 0.9rem; font-family: var(--display); font-style: italic; font-size: 0.98rem; color: var(--muted); }
   h1 { font-size: clamp(2.1rem, 5.5vw, 3.2rem); font-weight: 800; letter-spacing: -0.01em; margin-top: 0.8rem; }
   .sub { margin-top: 0.8rem; color: var(--muted); max-width: 40em; }
 
   /* Прогресс-бары с бегуном */
   .track { position: relative; height: 8px; border-radius: 999px; background: var(--surface); border: 1px solid var(--line); }
-  .fill { height: 100%; width: var(--p); border-radius: 999px; background: var(--accent); animation: load 1.1s var(--ease) var(--d, 0s) both; }
+  .fill { height: 100%; width: var(--p); border-radius: 999px; background: linear-gradient(90deg, var(--accent), oklch(0.74 0.15 60), var(--accent)); background-size: 200% 100%; animation: load 1.1s var(--ease) var(--d, 0s) both, shimmer 2.6s linear infinite; }
   .runner {
     position: absolute;
     left: max(var(--p), 1.4rem);
@@ -60,10 +61,16 @@
     font-style: normal;
     line-height: 1;
     pointer-events: none;
-    animation: run 1.1s var(--ease) var(--d, 0s) both;
+    animation: run 1.1s var(--ease) var(--d, 0s) both, jog 0.5s ease-in-out infinite;
   }
   @keyframes load { from { width: 0; } }
   @keyframes run { from { left: 1.4rem; } }
+  @keyframes shimmer { from { background-position: 200% 0; } to { background-position: 0% 0; } }
+  @keyframes jog { 0%, 100% { margin-top: 0; } 50% { margin-top: -3px; } }
+  @keyframes fall { 40% { transform: translate(-95%, -55%) scaleX(-1) rotate(75deg); opacity: 1; } 100% { transform: translate(-95%, -5%) scaleX(-1) rotate(115deg); opacity: 0; } }
+  .runner.fall { animation: fall 0.9s ease-in forwards; }
+  .runner.gone { opacity: 0; animation: none; }
+  .runner.rerun { animation: run 1.1s var(--ease) both, jog 0.5s ease-in-out infinite; }
   @media (prefers-reduced-motion: reduce) {
     .fill, .runner { animation: none; }
   }
@@ -92,6 +99,23 @@
   }
   .gate b { color: var(--accent-deep); }
 
+  /* Календарь плана */
+  .cal-card { margin-top: 1.25rem; border: 1px solid var(--line); border-radius: var(--r); padding: 1.4rem 1.6rem 1.5rem; }
+  .cal-title { font-size: 1.15rem; font-weight: 700; margin-bottom: 1rem; }
+  .cal { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; max-width: 26rem; }
+  .cal .dow { font-size: 0.78rem; color: var(--muted); text-align: center; font-weight: 600; }
+  .cal .d { aspect-ratio: 1; display: grid; place-items: center; border-radius: 8px; font-size: 0.88rem; font-weight: 600; color: #fff; }
+  .cal .off { background: none; }
+  .cal .p1 { background: var(--accent); }
+  .cal .p2 { background: var(--accent-deep); }
+  .cal .p3 { background: oklch(0.5 0.08 270); }
+  .cal .p4 { background: var(--dark); }
+  .cal .p5 { background: oklch(0.5 0.1 145); }
+  .cal .go { background: var(--done); }
+  .cal-legend { display: flex; flex-wrap: wrap; gap: 0.5rem 1.25rem; margin-top: 1rem; font-size: 0.85rem; color: var(--muted); }
+  .cal-legend i { display: inline-block; width: 0.7rem; height: 0.7rem; border-radius: 3px; margin-right: 0.4rem; }
+  .cal-legend .p1 { background: var(--accent); } .cal-legend .p2 { background: var(--accent-deep); } .cal-legend .p3 { background: oklch(0.5 0.08 270); } .cal-legend .p4 { background: var(--dark); } .cal-legend .p5 { background: oklch(0.5 0.1 145); } .cal-legend .go { background: var(--done); }
+
   /* Фазы */
   main { padding-block: clamp(2.5rem, 6vh, 4rem); }
   .phases { list-style: none; margin: 0; padding: 0; display: grid; gap: 1rem; }
@@ -110,7 +134,7 @@
   .status.next { background: var(--surface); color: var(--muted); border: 1px solid var(--line); }
   .meter { display: flex; align-items: center; gap: 1rem; margin-top: 1.1rem; }
   .meter .track { flex: 1; }
-  .phase[data-done] .fill { background: var(--done); }
+  .phase[data-done] .fill { background: linear-gradient(90deg, var(--done), oklch(0.7 0.13 145), var(--done)); background-size: 200% 100%; }
   .meter .pct { font-family: var(--display); font-weight: 700; font-size: 1.05rem; min-width: 3ch; text-align: right; }
   .topics { margin-top: 0.8rem; font-size: 0.95rem; color: var(--muted); }
   .note { margin-top: 0.5rem; font-size: 0.95rem; }
@@ -127,8 +151,9 @@
 <header>
   <div class="wrap">
     <a class="back" href="/">← Иван Архипов</a>
+    <p class="epigraph">Не забывай, кто тебя отправил, и помни, что ты можешь доказать.</p>
     <h1>Роадмапа C#</h1>
-    <p class="sub">Путь от .NET Framework к современному стеку - в открытую, с честными процентами поглощения материала. Проценты означают «сколько темы реально сидит в голове и руках», а не «сколько страниц прочитано».</p>
+    <p class="sub">Путь от .NET Framework к современному стеку - в открытую, с честными процентами поглощения материала: сколько темы реально сидит в голове и руках.</p>
 
     <div class="total">
       <div class="row"><span class="label">Общий прогресс пути</span><span class="num">31%</span></div>
@@ -136,7 +161,27 @@
       <p class="note">Обновлено 30 августа 2026 · пересчёт каждое воскресенье</p>
     </div>
 
-    <p class="gate"><b>Веха - начало октября:</b> Life Notes готов целиком - API, авторизация, тесты, Redis, RabbitMQ, Docker. После прогона подготовки (1-3 октября) открываются отклики на вакансии разработчика; архитектура добирается параллельно с собеседованиями.</p>
+    <p class="gate"><b>Веха:</b> Life Notes готов целиком - API, авторизация, тесты, Redis, RabbitMQ, Docker. Дальше собеседования, архитектура добирается параллельно с ними.</p>
+
+    <div class="cal-card">
+      <h2 class="cal-title">Сентябрь на календаре</h2>
+      <div class="cal" role="img" aria-label="План сентября: 1-9 EF Core и JWT, 10-16 CRUD API, 17-22 юнит-тесты, 23-30 Redis, RabbitMQ и Docker, 1-3 октября подготовка, дальше собеседования">
+        <span class="dow">пн</span><span class="dow">вт</span><span class="dow">ср</span><span class="dow">чт</span><span class="dow">пт</span><span class="dow">сб</span><span class="dow">вс</span>
+        <span class="d off"></span><span class="d p1">1</span><span class="d p1">2</span><span class="d p1">3</span><span class="d p1">4</span><span class="d p1">5</span><span class="d p1">6</span>
+        <span class="d p1">7</span><span class="d p1">8</span><span class="d p1">9</span><span class="d p2">10</span><span class="d p2">11</span><span class="d p2">12</span><span class="d p2">13</span>
+        <span class="d p2">14</span><span class="d p2">15</span><span class="d p2">16</span><span class="d p3">17</span><span class="d p3">18</span><span class="d p3">19</span><span class="d p3">20</span>
+        <span class="d p3">21</span><span class="d p3">22</span><span class="d p4">23</span><span class="d p4">24</span><span class="d p4">25</span><span class="d p4">26</span><span class="d p4">27</span>
+        <span class="d p4">28</span><span class="d p4">29</span><span class="d p4">30</span><span class="d p5">1</span><span class="d p5">2</span><span class="d p5">3</span><span class="d go">4</span>
+      </div>
+      <div class="cal-legend">
+        <span><i class="p1"></i>EF Core + JWT</span>
+        <span><i class="p2"></i>CRUD API</span>
+        <span><i class="p3"></i>Unit-тесты</span>
+        <span><i class="p4"></i>Redis · RabbitMQ · Docker</span>
+        <span><i class="p5"></i>Подготовка</span>
+        <span><i class="go"></i>Дальше</span>
+      </div>
+    </div>
   </div>
 </header>
 
@@ -201,7 +246,7 @@
         </div>
         <div class="meter"><div class="track" style="--p:5%"><div class="fill"></div><i class="runner" aria-hidden="true">🏃</i></div><span class="pct">5%</span></div>
         <p class="topics">xUnit · Moq · AAA · интеграционный тест с TestContainers</p>
-        <p class="note">Решение: тесты входят в проект до собеседований, не после. Пока только знакомство по конспектам.</p>
+        <p class="note">Решение: тесты входят в проект до собеседований. Пока только знакомство по конспектам.</p>
       </li>
 
       <li class="phase" style="--d:0.47s">
@@ -247,5 +292,27 @@
   </div>
 </footer>
 
+<script>
+(() => {
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  const runners = [...document.querySelectorAll('.runner')];
+  const trip = () => {
+    const r = runners[Math.floor(Math.random() * runners.length)];
+    if (!r || r.classList.contains('fall') || r.classList.contains('gone')) return;
+    r.classList.remove('rerun');
+    r.classList.add('fall');
+    setTimeout(() => {
+      r.classList.add('gone');
+      r.classList.remove('fall');
+      setTimeout(() => {
+        r.classList.remove('gone');
+        void r.offsetWidth;
+        r.classList.add('rerun');
+      }, 3000 + Math.random() * 2000);
+    }, 900);
+  };
+  setInterval(trip, 9000 + Math.random() * 6000);
+})();
+</script>
 </body>
 </html>

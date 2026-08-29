@@ -227,6 +227,34 @@
   .now-grid p { color: var(--muted); margin-top: 0.6rem; font-size: 1rem; }
   .now-note { margin-top: 2rem; color: var(--muted); font-size: 1.02rem; max-width: 52em; }
 
+  /* Частички меня */
+  .mottos { display: grid; gap: 1.1rem; margin-bottom: 2.5rem; }
+  .mottos blockquote {
+    margin: 0;
+    font-family: var(--display);
+    font-style: italic;
+    font-size: clamp(1.15rem, 2.4vw, 1.45rem);
+    line-height: 1.4;
+    max-width: 34em;
+  }
+  .mottos blockquote::before { content: "« "; color: var(--accent); font-weight: 700; }
+  .mottos blockquote::after { content: " »"; color: var(--accent); font-weight: 700; }
+  .streams { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 2rem 3rem; }
+  .stream .tag { font-size: 0.85rem; font-weight: 600; color: var(--accent-deep); }
+  .typed { margin-top: 0.5rem; min-height: 4.2em; font-size: 1.05rem; }
+  .typed::after { content: "▌"; color: var(--accent); animation: blink 1s steps(1) infinite; }
+  @keyframes blink { 50% { opacity: 0; } }
+  .advice {
+    margin-top: 2.5rem;
+    background: var(--dark);
+    color: oklch(0.93 0.005 40);
+    border-radius: var(--r);
+    padding: 1.3rem 1.5rem 1.4rem;
+  }
+  .advice-tag { font-family: var(--mono); font-size: 0.85rem; color: oklch(0.75 0.13 55); }
+  .advice .typed { min-height: 3em; }
+  @media (prefers-reduced-motion: reduce) { .typed::after { animation: none; } }
+
   /* ---------- Футер ---------- */
   footer { background: var(--dark); color: oklch(0.95 0.005 40); padding-block: clamp(2.75rem, 7vh, 4.5rem); }
   footer h2 { font-family: var(--display); font-size: clamp(1.7rem, 3.2vw, 2.3rem); font-weight: 700; margin: 0; }
@@ -303,7 +331,7 @@
         </div>
         <div>
           <h3>Сопровождение сложных систем</h3>
-          <p>3-я линия как суперсила: диагностика по логам, SQL, эскалации. Открыт к ролям поддержки с реальным ростом в разработку.</p>
+          <p>Прошёл все линии: распределение заявок, консультации пользователей, расследование инцидентов, дебаг кода на 3-й линии. Открыт к ролям поддержки с реальным ростом в разработку.</p>
         </div>
       </div>
       <p class="tracks-note">Вне работы: n8n и Airflow, cron на собственной Ubuntu-машине, эксперименты с Unity.</p>
@@ -386,10 +414,13 @@
       <div class="tools">
         <div class="row"><span class="label">Языки</span><span class="items"><b>C#</b>, <b>Python</b>, <b>SQL</b>, TypeScript, Bash</span></div>
         <div class="row"><span class="label">Backend</span><span class="items"><b>.NET Framework</b>, ASP.NET Core, LINQ, Dapper, REST, SOAP</span></div>
-        <div class="row"><span class="label">Данные</span><span class="items"><b>PostgreSQL</b>, <b>MS SQL Server</b>, MySQL, MongoDB</span></div>
+        <div class="row"><span class="label">Данные</span><span class="items"><b>PostgreSQL</b>, <b>MS SQL Server</b>, MySQL, MongoDB, Liquibase</span></div>
         <div class="row"><span class="label">Инфраструктура</span><span class="items"><b>Docker</b>, Git, Jenkins, Zabbix, Grafana, RabbitMQ, Kafka</span></div>
+        <div class="row"><span class="label">API и отладка</span><span class="items"><b>Postman</b> (вплоть до Collection Runner), Swagger, SoapUI, WinSCP, SSH</span></div>
+        <div class="row"><span class="label">Процессы</span><span class="items"><b>Jira</b> - внедрение и администрирование, Confluence, HPSM</span></div>
+        <div class="row"><span class="label">Frontend (смежный)</span><span class="items">Angular, TypeScript, React, Vue, Bootstrap, Tailwind</span></div>
         <div class="row"><span class="label">Автоматизация</span><span class="items">pandas, selenium, <b>n8n</b>, <b>Claude Code</b> в ежедневной разработке</span></div>
-        <div class="row"><span class="label">Личные проекты</span><span class="items">Airflow, cron на Ubuntu VM, эксперименты с Unity</span></div>
+        <div class="row"><span class="label">Личные проекты</span><span class="items">Airflow, cron на Ubuntu VM, Unity (<a href="https://github.com/iosifov-pavel/EgyptPlatformer">EgyptPlatformer</a>)</span></div>
       </div>
     </div>
   </section>
@@ -410,6 +441,53 @@
         </article>
       </div>
       <p class="now-note">Учусь публично: путь от .NET Framework к современному стеку лежит в открытых репозиториях, вместе с ошибками и их разборами.</p>
+    </div>
+  </section>
+
+  <section aria-labelledby="more-title">
+    <div class="wrap">
+      <h2 class="section-title" id="more-title">Ещё в копилке</h2>
+      <div class="tracks">
+        <div>
+          <h3><a href="https://github.com/Lazysagotku/inventoryDB">Инвентаризация</a></h3>
+          <p>Готовый продукт на Django: учёт инвентаря с веб-интерфейсом, Dockerfile и docker-compose. Крутился на PythonAnywhere, <a href="https://github.com/Lazysagotku/inventarizion">архив продакшен-версии</a> сохранён.</p>
+        </div>
+        <div>
+          <h3><a href="https://github.com/iosifov-pavel/EgyptPlatformer">EgyptPlatformer</a></h3>
+          <p>2D-платформер на Unity: командная разработка, C# и ShaderLab. Игровой движок расширяет взгляд на код за пределы бэкенда.</p>
+        </div>
+        <div>
+          <h3><a href="https://www.unisprings.ru/">Unisprings</a></h3>
+          <p>Сайт производителя пружин: участвовал в <a href="https://github.com/iosifov-pavel/Pruzhinki">разработке</a>, дизайн логотипа придумал лично. Сайт живёт и работает до сих пор.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section aria-labelledby="soul-title">
+    <div class="wrap">
+      <h2 class="section-title" id="soul-title">Частички <em>меня</em></h2>
+
+      <div class="mottos">
+        <blockquote>Хочется заглянуть в бездну: интересно, что она ответит.</blockquote>
+        <blockquote>Если вы сели не на тот поезд, то чем дальше продолжите свой путь, тем дороже выйдет вам поездка. И речь совсем не о поездах.</blockquote>
+      </div>
+
+      <div class="streams">
+        <div class="stream">
+          <span class="tag">Мотивация · пишет саму себя</span>
+          <p class="typed" id="typed-mot">&nbsp;</p>
+        </div>
+        <div class="stream">
+          <span class="tag">Из курилки поддержки</span>
+          <p class="typed" id="typed-joke">&nbsp;</p>
+        </div>
+      </div>
+
+      <div class="advice" role="note">
+        <span class="advice-tag">claude@советы для Ивана:~$</span>
+        <p class="typed" id="typed-adv">&nbsp;</p>
+      </div>
     </div>
   </section>
 </main>
@@ -436,6 +514,61 @@
 
 <script>
 (() => {
+  const MOT = [
+    "Семь лет я чинил чужие системы. Теперь строю свою.",
+    "Каждая закрытая фаза - собеседование, на котором я уже ответил.",
+    "Рынок сжался вдвое? Значит, в финале встретятся те, кто продолжил идти.",
+    "Готовлю причину, по которой оффер нельзя будет не дать.",
+    "Бездна спрашивает, кто здесь. Отвечаю коммитом.",
+    "Поезд можно поменять на любой станции. Я уже стою на перроне с билетом.",
+    "Тишина рынка говорит о рынке. Мой код говорит обо мне."
+  ];
+  const JOKES = [
+    "Техподдержка - это когда «ничего не трогал» слышишь чаще, чем «здравствуйте».",
+    "Легаси - это код, автор которого предусмотрительно уволился.",
+    "Оптимист видит стакан наполовину полным, пессимист - наполовину пустым, поддержка - тикет «стакан не работает».",
+    "Баг, который невозможно воспроизвести, стабильно воспроизводится на демо.",
+    "Документация - как снежный человек: все о ней слышали, никто её не видел.",
+    "Самый надёжный способ найти скрытую ошибку - задеплоить в пятницу вечером.",
+    "HTTP 418: сервис прикинулся чайником. В логах, как всегда, Broken Pipe."
+  ];
+  const ADV = [
+    "Проговори самопрезентацию вслух до собеса: голова знает, а язык - отдельная мышца.",
+    "Записывай разбор каждого собеса в тот же день. Память льстит, файл честен.",
+    "Утренний блок кода - святое. Отклики и звонки подождут до обеда.",
+    "Когда тревога шумит - открой career-notes и пересчитай факты. Их больше, чем кажется.",
+    "Один процент на роадмапе в день - это тридцать за месяц. Держи бегуна живым.",
+    "Спрашивай на собесе про рост в разработку прямо. Ответ работодателя - тоже данные."
+  ];
+  const typer = (id, items, first) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    let i = Math.floor(Math.random() * items.length);
+    if (matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      el.textContent = items[i];
+      setInterval(() => { i = (i + 1) % items.length; el.textContent = items[i]; }, 9000);
+      return;
+    }
+    const type = () => {
+      const s = items[i];
+      let p = 0;
+      const t = setInterval(() => {
+        el.textContent = s.slice(0, ++p);
+        if (p >= s.length) { clearInterval(t); setTimeout(erase, 6500); }
+      }, 27);
+    };
+    const erase = () => {
+      const t = setInterval(() => {
+        el.textContent = el.textContent.slice(0, -3);
+        if (!el.textContent) { clearInterval(t); i = (i + 1) % items.length; setTimeout(type, 350); }
+      }, 13);
+    };
+    setTimeout(type, first);
+  };
+  typer('typed-mot', MOT, 300);
+  typer('typed-joke', JOKES, 1400);
+  typer('typed-adv', ADV, 2500);
+
   const maps = document.getElementById('maps');
   const fine = document.getElementById('fine');
   const show = () => { maps.hidden = false; };

@@ -36,13 +36,20 @@
   header { padding-block: clamp(2.5rem, 7vh, 4.5rem) 0; }
   .back { font-size: 0.95rem; font-weight: 500; text-decoration: none; }
   .back:hover { text-decoration: underline; }
+  .epigraph { margin-top: 0.9rem; font-family: var(--display); font-style: italic; font-size: 0.98rem; color: var(--muted); }
   h1 { font-size: clamp(2.1rem, 5.5vw, 3.2rem); font-weight: 800; letter-spacing: -0.01em; margin-top: 0.8rem; }
   .sub { margin-top: 0.8rem; color: var(--muted); max-width: 40em; }
   .track { position: relative; height: 8px; border-radius: 999px; background: var(--surface); border: 1px solid var(--line); }
-  .fill { height: 100%; width: var(--p); border-radius: 999px; background: var(--accent); animation: load 1.1s var(--ease) var(--d, 0s) both; }
-  .runner { position: absolute; left: max(var(--p), 1.4rem); top: -3px; transform: translate(-95%, -100%) scaleX(-1); font-size: 1.05rem; font-style: normal; line-height: 1; pointer-events: none; animation: run 1.1s var(--ease) var(--d, 0s) both; }
+  .fill { height: 100%; width: var(--p); border-radius: 999px; background: linear-gradient(90deg, var(--accent), oklch(0.74 0.15 60), var(--accent)); background-size: 200% 100%; animation: load 1.1s var(--ease) var(--d, 0s) both, shimmer 2.6s linear infinite; }
+  .runner { position: absolute; left: max(var(--p), 1.4rem); top: -3px; transform: translate(-95%, -100%) scaleX(-1); font-size: 1.05rem; font-style: normal; line-height: 1; pointer-events: none; animation: run 1.1s var(--ease) var(--d, 0s) both, jog 0.5s ease-in-out infinite; }
   @keyframes load { from { width: 0; } }
   @keyframes run { from { left: 1.4rem; } }
+  @keyframes shimmer { from { background-position: 200% 0; } to { background-position: 0% 0; } }
+  @keyframes jog { 0%, 100% { margin-top: 0; } 50% { margin-top: -3px; } }
+  @keyframes fall { 40% { transform: translate(-95%, -55%) scaleX(-1) rotate(75deg); opacity: 1; } 100% { transform: translate(-95%, -5%) scaleX(-1) rotate(115deg); opacity: 0; } }
+  .runner.fall { animation: fall 0.9s ease-in forwards; }
+  .runner.gone { opacity: 0; animation: none; }
+  .runner.rerun { animation: run 1.1s var(--ease) both, jog 0.5s ease-in-out infinite; }
   @media (prefers-reduced-motion: reduce) { .fill, .runner { animation: none; } }
   .total { margin-top: 2.25rem; background: var(--dark); color: #fff; border-radius: var(--r); padding: 1.5rem 1.75rem 1.65rem; }
   .total .row { display: flex; justify-content: space-between; align-items: baseline; gap: 1rem; }
@@ -65,7 +72,7 @@
   .status.next { background: var(--surface); color: var(--muted); border: 1px solid var(--line); }
   .meter { display: flex; align-items: center; gap: 1rem; margin-top: 1.1rem; }
   .meter .track { flex: 1; }
-  .phase[data-done] .fill { background: var(--done); }
+  .phase[data-done] .fill { background: linear-gradient(90deg, var(--done), oklch(0.7 0.13 145), var(--done)); background-size: 200% 100%; }
   .meter .pct { font-family: var(--display); font-weight: 700; font-size: 1.05rem; min-width: 3ch; text-align: right; }
   .topics { margin-top: 0.8rem; font-size: 0.95rem; color: var(--muted); }
   .note { margin-top: 0.5rem; font-size: 0.95rem; }
@@ -80,8 +87,9 @@
 <header>
   <div class="wrap">
     <a class="back" href="/">← Иван Архипов</a>
+    <p class="epigraph">Не забывай, кто тебя отправил, и помни, что ты можешь доказать.</p>
     <h1>Роадмапа ИИ-инженера</h1>
-    <p class="sub">Трек AI Product Engineer: встраивание готовых LLM в реальные продукты - инженерия вокруг модели, а не внутри неё. Проценты - честная самооценка поглощения.</p>
+    <p class="sub">Трек AI Product Engineer: встраивание готовых LLM в реальные продукты - инженерия вокруг готовой модели. Проценты - честная самооценка поглощения.</p>
 
     <div class="total">
       <div class="row"><span class="label">Общий прогресс трека</span><span class="num">14%</span></div>
@@ -134,7 +142,7 @@
         </div>
         <div class="meter"><div class="track" style="--p:20%"><div class="fill"></div><i class="runner" aria-hidden="true">🏃</i></div><span class="pct">20%</span></div>
         <p class="topics">ReAct loop · дизайн инструментов · свой MCP-сервер · многошаговое планирование · human-in-the-loop</p>
-        <p class="note">Опытный потребитель агентов и MCP-серверов - каждый рабочий день. Следующий уровень: написать свой сервер, а не только подключать чужие.</p>
+        <p class="note">Опытный потребитель агентов и MCP-серверов - каждый рабочий день. Следующий уровень: написать свой сервер.</p>
       </li>
 
       <li class="phase" style="--d:0.33s">
@@ -154,7 +162,7 @@
         </div>
         <div class="meter"><div class="track" style="--p:0%"><div class="fill"></div><i class="runner" aria-hidden="true">🏃</i></div><span class="pct">0%</span></div>
         <p class="topics">AI-инсайты по заметкам в Life Notes · RAG + агент + observability в одной фиче · rate limiting на реальном трафике</p>
-        <p class="note">Не учебный пример, а фича в живом проекте: Life Notes уже готовится как база.</p>
+        <p class="note">Фича в живом проекте: Life Notes уже готовится как база.</p>
       </li>
 
     </ol>
@@ -170,5 +178,27 @@
   </div>
 </footer>
 
+<script>
+(() => {
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  const runners = [...document.querySelectorAll('.runner')];
+  const trip = () => {
+    const r = runners[Math.floor(Math.random() * runners.length)];
+    if (!r || r.classList.contains('fall') || r.classList.contains('gone')) return;
+    r.classList.remove('rerun');
+    r.classList.add('fall');
+    setTimeout(() => {
+      r.classList.add('gone');
+      r.classList.remove('fall');
+      setTimeout(() => {
+        r.classList.remove('gone');
+        void r.offsetWidth;
+        r.classList.add('rerun');
+      }, 3000 + Math.random() * 2000);
+    }, 900);
+  };
+  setInterval(trip, 9000 + Math.random() * 6000);
+})();
+</script>
 </body>
 </html>
