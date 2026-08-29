@@ -14,16 +14,20 @@
 <link href="https://fonts.googleapis.com/css2?family=Bitter:wght@600;700;800&family=Golos+Text:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg: oklch(1 0 0);
-    --surface: oklch(0.962 0 0);
+    --bg: oklch(1 0 0);                    /* 60% - светлая база */
+    --surface: oklch(0.97 0.003 40);
+    --dark: oklch(0.23 0.012 40);          /* 30% - тёмные секции */
+    --dark-soft: oklch(0.3 0.015 40);
     --ink: oklch(0.24 0.015 40);
-    --muted: oklch(0.44 0.02 40);
-    --primary: oklch(0.55 0.145 42);      /* горелый янтарь: фон хиро */
-    --primary-deep: oklch(0.46 0.125 42); /* ссылки и мелкий акцентный текст на белом */
-    --accent: oklch(0.34 0.07 140);       /* тёмная олива: "прод ✓" */
-    --line: oklch(0.88 0.005 40);
+    --muted: oklch(0.45 0.015 40);
+    --accent: oklch(0.58 0.15 42);         /* 10% - янтарный акцент: кнопки, цифры, годы */
+    --accent-deep: oklch(0.46 0.125 42);   /* ссылки и мелкий акцентный текст на белом */
+    --ok: oklch(0.55 0.12 145);
+    --line: oklch(0.9 0.004 40);
     --display: "Bitter", Georgia, serif;
     --body: "Golos Text", "Segoe UI", system-ui, sans-serif;
+    --mono: ui-monospace, "Cascadia Mono", Consolas, monospace;
+    --r: 14px;
     --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
   }
 
@@ -40,133 +44,136 @@
   }
   h1, h2, h3 { font-family: var(--display); text-wrap: balance; margin: 0; }
   p { margin: 0; text-wrap: pretty; }
-  a { color: var(--primary-deep); text-decoration-thickness: 1px; text-underline-offset: 3px; }
+  a { color: var(--accent-deep); text-decoration-thickness: 1px; text-underline-offset: 3px; }
   a:hover { text-decoration-thickness: 2px; }
-  :focus-visible { outline: 3px solid var(--primary-deep); outline-offset: 3px; border-radius: 2px; }
+  :focus-visible { outline: 3px solid var(--accent-deep); outline-offset: 3px; border-radius: 4px; }
 
-  .wrap { max-width: 62rem; margin-inline: auto; padding-inline: clamp(1.25rem, 5vw, 3rem); }
+  .wrap { max-width: 66rem; margin-inline: auto; padding-inline: clamp(1.25rem, 5vw, 3rem); }
 
-  /* ---------- Хиро: залит янтарём ---------- */
-  .hero {
-    background: var(--primary);
-    color: #fff;
-    padding-block: clamp(3.5rem, 9vh, 6.5rem) clamp(3rem, 8vh, 5.5rem);
-    overflow: hidden;
-  }
-  .hero .kicker {
-    font-weight: 500;
-    font-size: 1rem;
-    color: oklch(0.93 0.04 60);
-  }
-  .hero h1 {
-    font-size: clamp(2.7rem, 7.5vw, 5rem);
-    font-weight: 800;
-    line-height: 1.04;
-    letter-spacing: -0.015em;
-    margin-top: 0.35rem;
-  }
-  .hero .lead {
-    max-width: 34em;
-    margin-top: 1.4rem;
-    font-size: clamp(1.125rem, 2.2vw, 1.3rem);
-    line-height: 1.55;
-    color: oklch(0.97 0.015 60);
-  }
-  .hero .lead strong { color: #fff; font-weight: 600; }
-
-  .flow {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 0.55rem 0.75rem;
-    margin-top: 2.1rem;
-    padding: 0;
-    list-style: none;
-    font-weight: 500;
-    font-size: 0.95rem;
-  }
-  .flow li {
-    border: 1.5px solid oklch(1 0 0 / 0.55);
-    border-radius: 999px;
-    padding: 0.3rem 0.95rem;
-    white-space: nowrap;
-  }
-  .flow li.done { background: var(--accent); border-color: transparent; }
-  .flow li:not(:last-child)::after {
-    content: "→";
-    position: absolute;
-    transform: translate(0.95rem, 0);
-    color: oklch(1 0 0 / 0.75);
-  }
-  .flow li { position: relative; margin-right: 1.4rem; }
-  .flow li:last-child { margin-right: 0; }
-
-  .hero-meta {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.75rem 1.75rem;
-    align-items: center;
-    margin-top: 2.4rem;
-    font-size: 0.98rem;
-  }
-  .hero-meta .dot { font-weight: 600; }
-  .hero-meta a {
+  .btn {
+    display: inline-block;
+    background: var(--accent);
     color: #fff;
     font-weight: 600;
-    text-decoration-color: oklch(1 0 0 / 0.5);
+    text-decoration: none;
+    padding: 0.85rem 1.7rem;
+    border-radius: 999px;
+    transition: background 0.25s var(--ease-out), transform 0.25s var(--ease-out);
+  }
+  .btn:hover { background: var(--accent-deep); transform: translateY(-1px); }
+
+  /* ---------- Хиро: светлый, воздушный ---------- */
+  .hero { padding-block: clamp(3.5rem, 10vh, 7rem) clamp(2.5rem, 6vh, 4rem); }
+  .hero .cols {
+    display: grid;
+    grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+    gap: 2rem 4rem;
+    align-items: center;
+  }
+  .hero .kicker { font-weight: 500; color: var(--muted); font-size: 1rem; }
+  .hero h1 {
+    font-size: clamp(2.8rem, 7.5vw, 5.2rem);
+    font-weight: 800;
+    line-height: 1.02;
+    letter-spacing: -0.015em;
+    margin-top: 0.4rem;
+  }
+  .hero .claim {
+    margin-top: 1.3rem;
+    font-size: clamp(1.15rem, 2.3vw, 1.4rem);
+    line-height: 1.5;
+    max-width: 30em;
+  }
+  .hero .claim strong { color: var(--accent-deep); font-weight: 600; }
+  .hero .sub { margin-top: 0.9rem; color: var(--muted); max-width: 34em; }
+  .hero .cta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 1rem 1.75rem;
+    margin-top: 2.1rem;
   }
 
-  /* Каскад появления */
-  .hero .rise { animation: rise 0.9s var(--ease-out) both; }
-  .hero .rise:nth-child(2) { animation-delay: 0.08s; }
-  .hero .rise:nth-child(3) { animation-delay: 0.18s; }
-  .hero .rise:nth-child(4) { animation-delay: 0.28s; }
-  .hero .rise:nth-child(5) { animation-delay: 0.38s; }
+  /* Карточка-пайплайн: терминальный фидбек, как в реальном скрипте */
+  .pipe {
+    justify-self: end;
+    width: min(100%, 21rem);
+    background: var(--dark);
+    color: oklch(0.93 0.005 40);
+    border-radius: var(--r);
+    padding: 1.4rem 1.5rem 1.2rem;
+    font-family: var(--mono);
+    font-size: 0.92rem;
+    line-height: 2.05;
+    box-shadow: 0 18px 40px -18px oklch(0.23 0.012 40 / 0.45);
+  }
+  .pipe .bar { display: flex; gap: 0.4rem; margin-bottom: 0.9rem; }
+  .pipe .bar i { width: 0.65rem; height: 0.65rem; border-radius: 50%; background: var(--dark-soft); }
+  .pipe .bar i:first-child { background: var(--accent); }
+  .pipe .row { display: flex; justify-content: space-between; gap: 1rem; white-space: nowrap; }
+  .pipe .ok { color: oklch(0.78 0.14 145); }
+  .pipe .note { margin-top: 0.8rem; color: oklch(0.68 0.02 40); font-family: var(--body); font-size: 0.88rem; line-height: 1.5; white-space: normal; }
+
+  .rise { animation: rise 0.9s var(--ease-out) both; }
+  .rise:nth-child(2) { animation-delay: 0.08s; }
+  .rise:nth-child(3) { animation-delay: 0.16s; }
+  .rise:nth-child(4) { animation-delay: 0.24s; }
+  .rise:nth-child(5) { animation-delay: 0.32s; }
+  .hero .pipe { animation: rise 0.9s 0.25s var(--ease-out) both; }
   @keyframes rise {
-    from { opacity: 0; transform: translateY(1.1rem); }
+    from { opacity: 0; transform: translateY(1rem); }
     to   { opacity: 1; transform: none; }
   }
   @media (prefers-reduced-motion: reduce) {
-    .hero .rise { animation: none; }
+    .rise, .hero .pipe { animation: none; }
+    .btn { transition: none; }
     html { scroll-behavior: auto; }
+  }
+
+  /* ---------- Полоса цифр ---------- */
+  .proof { border-block: 1px solid var(--line); background: var(--surface); }
+  .proof .wrap {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.5rem 2.5rem;
+    padding-block: 1.9rem;
+  }
+  .proof p { font-size: 0.98rem; color: var(--muted); line-height: 1.5; }
+  .proof b {
+    display: block;
+    font-family: var(--display);
+    font-weight: 800;
+    font-size: 1.9rem;
+    color: var(--accent-deep);
+    line-height: 1.2;
   }
 
   /* ---------- Секции ---------- */
   section { padding-block: clamp(3rem, 8vh, 5.5rem); }
-  section + section { border-top: 1px solid var(--line); }
   .section-title {
     font-size: clamp(1.7rem, 3.5vw, 2.4rem);
     font-weight: 700;
     letter-spacing: -0.01em;
     margin-bottom: clamp(1.75rem, 4vh, 2.75rem);
   }
-  .section-title em { font-style: normal; color: var(--primary-deep); }
+  .section-title em { font-style: normal; color: var(--accent-deep); }
 
-  /* Кейсы: строки разной анатомии */
+  /* Кейсы */
   .case {
     display: grid;
     grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
     gap: 1rem 3rem;
-    padding-block: 1.75rem;
+    padding: 1.75rem;
+    border-radius: var(--r);
   }
-  .case + .case { border-top: 1px dashed var(--line); }
-  .case h3 {
-    font-size: clamp(1.25rem, 2.4vw, 1.55rem);
-    font-weight: 700;
-    line-height: 1.25;
-  }
-  .case .where {
-    display: block;
-    font-family: var(--body);
-    font-weight: 500;
-    font-size: 0.9rem;
-    color: var(--muted);
-    margin-top: 0.5rem;
-  }
-  .case p { color: var(--ink); }
-  .case p strong { color: var(--primary-deep); }
+  .case:nth-child(even) { background: var(--surface); }
+  .case h3 { font-size: clamp(1.2rem, 2.3vw, 1.5rem); font-weight: 700; line-height: 1.25; }
+  .case .where { display: block; font-family: var(--body); font-weight: 500; font-size: 0.9rem; color: var(--muted); margin-top: 0.5rem; }
+  .case p strong { color: var(--accent-deep); }
 
-  /* Путь: таймлайн */
+  /* Путь: тёмная секция */
+  .dark-band { background: var(--dark); color: oklch(0.95 0.005 40); }
+  .dark-band .section-title { color: #fff; }
   .path { list-style: none; margin: 0; padding: 0; }
   .path li {
     display: grid;
@@ -174,17 +181,16 @@
     gap: 0.25rem 2rem;
     padding-block: 1.4rem;
   }
-  .path li + li { border-top: 1px solid var(--line); }
+  .path li + li { border-top: 1px solid var(--dark-soft); }
   .path .years {
     font-family: var(--display);
     font-weight: 700;
     font-size: 1.15rem;
-    color: var(--primary-deep);
+    color: oklch(0.75 0.13 55);
     line-height: 1.5;
   }
-  .path h3 { font-size: 1.15rem; font-weight: 700; }
-  .path p { color: var(--muted); margin-top: 0.3rem; font-size: 1rem; }
-  .path .now h3 { color: var(--primary-deep); }
+  .path h3 { font-size: 1.15rem; font-weight: 700; color: #fff; }
+  .path p { color: oklch(0.72 0.015 40); margin-top: 0.3rem; font-size: 1rem; }
 
   /* Инструменты */
   .tools { display: grid; gap: 1.1rem; }
@@ -199,81 +205,76 @@
   .tools .items b { color: var(--ink); font-weight: 500; }
 
   /* Сейчас */
-  .now-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 2.5rem; }
+  .now-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem; }
+  .now-grid article {
+    border: 1px solid var(--line);
+    border-radius: var(--r);
+    padding: 1.5rem 1.6rem;
+  }
   .now-grid h3 { font-size: 1.2rem; font-weight: 700; }
   .now-grid h3 a { color: inherit; }
-  .now-grid .tagline { font-size: 0.9rem; font-weight: 500; color: var(--primary-deep); margin-top: 0.2rem; }
+  .now-grid .tagline { font-size: 0.9rem; font-weight: 500; color: var(--accent-deep); margin-top: 0.2rem; }
   .now-grid p { color: var(--muted); margin-top: 0.6rem; font-size: 1rem; }
-  .now-note {
-    margin-top: 2.5rem;
-    padding: 1.25rem 1.5rem;
-    background: var(--surface);
-    border-radius: 10px;
-    font-size: 1.02rem;
-  }
+  .now-note { margin-top: 2rem; color: var(--muted); font-size: 1.02rem; max-width: 52em; }
 
   /* ---------- Футер ---------- */
-  footer {
-    background: var(--ink);
-    color: oklch(0.95 0.01 40);
-    padding-block: clamp(2.5rem, 6vh, 4rem);
-  }
-  footer h2 { font-size: clamp(1.6rem, 3vw, 2.1rem); font-weight: 700; }
-  .contacts {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.8rem 2.25rem;
-    margin-top: 1.5rem;
-    padding: 0;
-    list-style: none;
-  }
+  footer { background: var(--dark); color: oklch(0.95 0.005 40); padding-block: clamp(2.75rem, 7vh, 4.5rem); }
+  footer h2 { font-family: var(--display); font-size: clamp(1.7rem, 3.2vw, 2.3rem); font-weight: 700; margin: 0; }
+  footer .lead { margin-top: 0.7rem; color: oklch(0.72 0.015 40); max-width: 38em; }
+  .contacts { display: flex; flex-wrap: wrap; gap: 0.8rem 2.25rem; margin: 1.75rem 0 0; padding: 0; list-style: none; align-items: center; }
   .contacts a { color: #fff; font-weight: 600; text-decoration-color: oklch(1 0 0 / 0.4); }
-  .contacts .k { color: oklch(0.72 0.02 40); margin-right: 0.4rem; }
-  footer .fine { margin-top: 2.25rem; font-size: 0.88rem; color: oklch(0.7 0.02 40); }
+  .contacts .k { color: oklch(0.62 0.015 40); margin-right: 0.4rem; }
+  footer .fine { margin-top: 2.25rem; font-size: 0.88rem; color: oklch(0.6 0.015 40); }
 
   /* ---------- Адаптив ---------- */
-  @media (max-width: 700px) {
+  @media (max-width: 780px) {
+    .hero .cols { grid-template-columns: 1fr; }
+    .pipe { justify-self: start; }
     .case, .path li, .tools .row { grid-template-columns: 1fr; }
+    .case { padding: 1.4rem 1.1rem; }
     .path .years { font-size: 1rem; }
-    .flow { font-size: 0.88rem; }
-  }
-  @media print {
-    .hero { background: none; color: var(--ink); }
-    .hero .lead, .hero .kicker, .hero-meta, .hero-meta a { color: var(--ink); }
-    .flow li { border-color: var(--ink); color: var(--ink); }
-    .flow li.done { background: none; }
-    footer { background: none; color: var(--ink); }
-    .contacts a { color: var(--ink); }
-    .hero .rise { animation: none; }
   }
 </style>
 </head>
 <body>
 
 <header class="hero">
-  <div class="wrap">
-    <p class="kicker rise">Москва · корпоративные системы · финансовый и государственный сектор</p>
-    <h1 class="rise">Иван Архипов</h1>
-    <p class="lead rise">Разработчик с <strong>7+ годами</strong> внутри корпоративных систем. Разбираю проблему от заявки пользователя до кода, который закрывает её насовсем: <strong>сам ставлю диагноз, сам пишу решение, сам довожу до прода.</strong></p>
-    <ul class="flow rise" aria-label="Как я работаю">
-      <li>заявка</li>
-      <li>диагностика</li>
-      <li>код</li>
-      <li class="done">прод ✓</li>
-    </ul>
-    <div class="hero-meta rise">
-      <span class="dot">Открыт к предложениям</span>
-      <a href="https://t.me/rmvrn">Telegram</a>
-      <a href="mailto:ivan.arkhipov.k@gmail.com">Написать письмо</a>
-      <a href="https://github.com/Lazysagotku">GitHub</a>
+  <div class="wrap cols">
+    <div>
+      <p class="kicker rise">Москва · корпоративные системы · финансовый и государственный сектор</p>
+      <h1 class="rise">Иван Архипов</h1>
+      <p class="claim rise">Разбираю проблему <strong>от заявки пользователя до кода в проде</strong> - сам ставлю диагноз, сам пишу решение, сам довожу до результата.</p>
+      <p class="sub rise">Разработчик с 7+ годами внутри корпоративных систем: бэкенд на C#, автоматизация на Python, SQL как ежедневный инструмент.</p>
+      <div class="cta rise">
+        <a class="btn" href="https://t.me/rmvrn">Написать в Telegram</a>
+        <a href="https://github.com/Lazysagotku">GitHub</a>
+        <a href="mailto:ivan.arkhipov.k@gmail.com">Почта</a>
+      </div>
+    </div>
+    <div class="pipe" role="img" aria-label="Пайплайн работы: заявка принята, диагноз поставлен, код написан, релиз в проде - каждый шаг с зелёной галочкой">
+      <div class="bar"><i></i><i></i><i></i></div>
+      <div class="row"><span>заявка принята</span><span class="ok">✓</span></div>
+      <div class="row"><span>диагноз поставлен</span><span class="ok">✓</span></div>
+      <div class="row"><span>код написан</span><span class="ok">✓</span></div>
+      <div class="row"><span>релиз в проде</span><span class="ok">✓</span></div>
+      <p class="note">Мои скрипты отчитываются о каждом шаге - и я так же: статус виден всегда.</p>
     </div>
   </div>
 </header>
 
+<div class="proof">
+  <div class="wrap">
+    <p><b>7+ лет</b> в корпоративных системах финансов и госсектора</p>
+    <p><b>~20</b> бизнес-процессов сопровождал в основной системе</p>
+    <p><b>1+ год</b> мой скрипт в проде, им пользуется вся группа поддержки</p>
+    <p><b>2 репо</b> открытых: учебный курс и боевой проект на ASP.NET Core</p>
+  </div>
+</div>
+
 <main>
-  <section aria-labelledby="proof">
+  <section aria-labelledby="proof-title">
     <div class="wrap">
-      <h2 class="section-title" id="proof">Работает <em>без меня</em></h2>
+      <h2 class="section-title" id="proof-title">Работает <em>без меня</em></h2>
 
       <article class="case">
         <h3>Тикет-система, после которой первая линия поддержки стала лишней
@@ -298,7 +299,7 @@
     </div>
   </section>
 
-  <section aria-labelledby="path-title">
+  <section class="dark-band" aria-labelledby="path-title">
     <div class="wrap">
       <h2 class="section-title" id="path-title">Путь</h2>
       <ol class="path">
@@ -323,7 +324,7 @@
             <p>Бэкенд финансового ПО на C#: дебаг чужого кода без документации, хранимые процедуры PostgreSQL и MS SQL, отчётность. Внедрил и администрировал Jira, подключал RabbitMQ и Kafka через RPA-платформу.</p>
           </div>
         </li>
-        <li class="now">
+        <li>
           <span class="years">сейчас</span>
           <div>
             <h3>ASP.NET Core и EF Core</h3>
@@ -369,9 +370,10 @@
 
 <footer>
   <div class="wrap">
-    <h2>На связи</h2>
+    <h2>Есть задача, которую некому разобрать?</h2>
+    <p class="lead">Расскажите - отвечу быстро и по делу.</p>
     <ul class="contacts">
-      <li><span class="k">Telegram</span><a href="https://t.me/rmvrn">@rmvrn</a></li>
+      <li><a class="btn" href="https://t.me/rmvrn">Написать в Telegram</a></li>
       <li><span class="k">Почта</span><a href="mailto:ivan.arkhipov.k@gmail.com">ivan.arkhipov.k@gmail.com</a></li>
       <li><span class="k">Запасная</span><a href="mailto:arkhipov.i.k@mail.ru">arkhipov.i.k@mail.ru</a></li>
       <li><span class="k">GitHub</span><a href="https://github.com/Lazysagotku">Lazysagotku</a></li>
