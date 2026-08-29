@@ -1,0 +1,177 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Инвентаризация - проект Ивана Архипова</title>
+<meta name="description" content="Веб-система учёта техники на Django: 25 полей учёта, поиск, CRUD, Docker. Проект Ивана Архипова, работал на PythonAnywhere.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%23b0561f'/%3E%3Ctext x='32' y='43' font-family='Georgia,serif' font-weight='700' font-size='30' fill='white' text-anchor='middle'%3EИА%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bitter:wght@600;700;800&family=Golos+Text:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: oklch(1 0 0);
+    --surface: oklch(0.97 0.003 40);
+    --dark: oklch(0.23 0.012 40);
+    --ink: oklch(0.24 0.015 40);
+    --muted: oklch(0.45 0.015 40);
+    --accent: oklch(0.58 0.15 42);
+    --accent-deep: oklch(0.46 0.125 42);
+    --line: oklch(0.9 0.004 40);
+    --display: "Bitter", Georgia, serif;
+    --body: "Golos Text", "Segoe UI", system-ui, sans-serif;
+    --mono: ui-monospace, "Cascadia Mono", Consolas, monospace;
+    --r: 14px;
+    --ease: cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--body); font-size: 1.0625rem; line-height: 1.65; -webkit-font-smoothing: antialiased; }
+  h1, h2, h3 { font-family: var(--display); text-wrap: balance; margin: 0; }
+  p { margin: 0; text-wrap: pretty; }
+  a { color: var(--accent-deep); text-underline-offset: 3px; }
+  :focus-visible { outline: 3px solid var(--accent-deep); outline-offset: 3px; border-radius: 4px; }
+  img { max-width: 100%; display: block; }
+  .wrap { max-width: 62rem; margin-inline: auto; padding-inline: clamp(1.25rem, 5vw, 3rem); }
+
+  header { padding-block: clamp(2.5rem, 7vh, 4.5rem) clamp(2rem, 5vh, 3rem); }
+  .back { font-size: 0.95rem; font-weight: 500; text-decoration: none; }
+  .back:hover { text-decoration: underline; }
+  h1 { font-size: clamp(2.2rem, 6vw, 3.5rem); font-weight: 800; letter-spacing: -0.015em; margin-top: 0.8rem; }
+  .lead { margin-top: 1rem; font-size: clamp(1.1rem, 2.2vw, 1.3rem); max-width: 40em; }
+  .lead strong { color: var(--accent-deep); font-weight: 600; }
+  .meta { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 1.5rem; padding: 0; list-style: none; }
+  .meta li { font-size: 0.9rem; font-weight: 500; border: 1px solid var(--line); border-radius: 999px; padding: 0.25rem 0.9rem; color: var(--muted); }
+  .meta li.k { background: var(--dark); color: #fff; border-color: transparent; }
+
+  section { padding-block: clamp(2.5rem, 6vh, 4rem); }
+  section + section { border-top: 1px solid var(--line); }
+  .section-title { font-size: clamp(1.6rem, 3.2vw, 2.2rem); font-weight: 700; margin-bottom: 1.5rem; }
+  .section-title em { font-style: normal; color: var(--accent-deep); }
+
+  /* Скриншоты */
+  .shots { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.75rem; }
+  figure { margin: 0; }
+  figure img { border: 1px solid var(--line); border-radius: 10px; background: var(--surface); }
+  figcaption { margin-top: 0.6rem; font-size: 0.95rem; color: var(--muted); }
+  .tall img { max-height: 30rem; object-fit: cover; object-position: top; }
+
+  /* Что внутри */
+  .facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1.5rem 2.5rem; }
+  .facts h3 { font-size: 1.1rem; font-weight: 700; }
+  .facts p { color: var(--muted); margin-top: 0.4rem; font-size: 1rem; }
+
+  /* Модель данных */
+  .fields { display: flex; flex-wrap: wrap; gap: 0.45rem; margin-top: 1rem; padding: 0; list-style: none; }
+  .fields li { font-family: var(--mono); font-size: 0.85rem; background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 0.2rem 0.6rem; color: var(--muted); }
+
+  .note { margin-top: 1.5rem; color: var(--muted); font-size: 0.98rem; max-width: 46em; }
+
+  footer { background: var(--dark); color: oklch(0.95 0.005 40); padding-block: clamp(2.25rem, 6vh, 3.5rem); }
+  footer h2 { font-size: clamp(1.4rem, 2.8vw, 1.9rem); font-weight: 700; }
+  footer .links { display: flex; flex-wrap: wrap; gap: 0.8rem 2rem; margin-top: 1.25rem; padding: 0; list-style: none; }
+  footer a { color: #fff; font-weight: 600; text-decoration-color: oklch(1 0 0 / 0.4); }
+  footer .fine { margin-top: 1.75rem; font-size: 0.88rem; color: oklch(0.65 0.015 40); }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap">
+    <a class="back" href="/">← Иван Архипов</a>
+    <h1>Инвентаризация</h1>
+    <p class="lead">Веб-система учёта техники организации: от статуса устройства до номера госконтракта, по которому его закупили. <strong>Собственный проект целиком</strong> - модель, интерфейс, поиск, контейнер.</p>
+    <ul class="meta">
+      <li class="k">Django</li>
+      <li class="k">Python</li>
+      <li>SQLite</li>
+      <li>Bootstrap</li>
+      <li>Docker</li>
+      <li>работал на PythonAnywhere</li>
+    </ul>
+  </div>
+</header>
+
+<main>
+  <section aria-labelledby="shots-title">
+    <div class="wrap">
+      <h2 class="section-title" id="shots-title">Как это <em>выглядит</em></h2>
+      <div class="shots">
+        <figure>
+          <img src="shots/home.png" alt="Главная страница системы: тёмный интерфейс, боковая навигация с поиском" loading="lazy">
+          <figcaption>Главная. Боковая навигация и поиск доступны с любого экрана.</figcaption>
+        </figure>
+        <figure>
+          <img src="shots/list.png" alt="Список инвентаря: карточки устройств со статусом, местом и инвентарным номером" loading="lazy">
+          <figcaption>Список техники. Каждая карточка сразу показывает статус, размещение и номера.</figcaption>
+        </figure>
+        <figure class="tall">
+          <img src="shots/detail.png" alt="Карточка шредера: все поля учёта от статуса до даты договора поставки" loading="lazy">
+          <figcaption>Карточка устройства: полная учётная история, включая контракт и накладную.</figcaption>
+        </figure>
+        <figure class="tall">
+          <img src="shots/create.png" alt="Форма добавления устройства с выпадающим списком статусов" loading="lazy">
+          <figcaption>Форма добавления. Статусы и типы техники ограничены справочниками.</figcaption>
+        </figure>
+      </div>
+      <p class="note">Скриншоты сняты с живого запуска проекта в августе 2026: код 2021 года поднялся на современном Django почти без правок.</p>
+    </div>
+  </section>
+
+  <section aria-labelledby="what-title">
+    <div class="wrap">
+      <h2 class="section-title" id="what-title">Что внутри</h2>
+      <div class="facts">
+        <div>
+          <h3>Полный CRUD</h3>
+          <p>Создание, просмотр, редактирование и удаление устройств на классовых представлениях Django с формами и валидацией.</p>
+        </div>
+        <div>
+          <h3>Поиск по базе</h3>
+          <p>Строка поиска в боковой панели работает на любой странице: ищет по типу техники и учётным данным.</p>
+        </div>
+        <div>
+          <h3>Справочники вместо опечаток</h3>
+          <p>Статус и тип устройства выбираются из фиксированных списков: «В работе», «В ремонте», «В резерве», «Списан» и двенадцать типов техники.</p>
+        </div>
+        <div>
+          <h3>Docker</h3>
+          <p>Dockerfile и docker-compose в репозитории: проект поднимается одной командой, без ручной настройки окружения.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section aria-labelledby="model-title">
+    <div class="wrap">
+      <h2 class="section-title" id="model-title">Модель данных: <em>25 полей</em></h2>
+      <p>Учёт спроектирован под реальную бухгалтерию организации, а не под демонстрацию: устройство описывается вместе с документами, по которым оно попало в компанию.</p>
+      <ul class="fields">
+        <li>статус</li><li>тип устройства</li><li>корпус</li><li>этаж</li><li>кабинет</li>
+        <li>серийный номер</li><li>инвентарный номер</li><li>бухгалтерский инв. номер</li>
+        <li>отдел</li><li>отделение</li><li>материально-ответственное лицо</li>
+        <li>ФИО допущенных</li><li>год закупки</li><li>закупочная стоимость</li>
+        <li>основание для закупки</li><li>номер накладной</li><li>дата накладной</li>
+        <li>номер контракта</li><li>дата контракта</li><li>шифр контракта</li>
+        <li>номер договора поставки</li><li>дата договора</li><li>сохранная расписка</li>
+        <li>заметка</li><li>история перемещений</li>
+      </ul>
+      <p class="note">Поле «история» хранит перемещения и замену комплектующих: устройство живёт годами, и путь важнее одной записи о покупке.</p>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <h2>Посмотреть код</h2>
+    <ul class="links">
+      <li><a href="https://github.com/Lazysagotku/inventoryDB">Репозиторий с Docker</a></li>
+      <li><a href="https://github.com/Lazysagotku/inventarizion">Архив рабочей версии</a></li>
+      <li><a href="/">Вернуться на визитку</a></li>
+    </ul>
+    <p class="fine">Иван Архипов · Москва · проект 2021 года, страница собрана в 2026</p>
+  </div>
+</footer>
+
+</body>
+</html>
