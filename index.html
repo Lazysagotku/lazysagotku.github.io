@@ -1,0 +1,384 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Иван Архипов - разработчик</title>
+<meta name="description" content="Иван Архипов, Москва. Разработчик с 7+ годами в корпоративных системах: финансовый и государственный сектор. Разбираю проблему от заявки пользователя до кода в проде.">
+<meta property="og:title" content="Иван Архипов - разработчик">
+<meta property="og:description" content="7+ лет в корпоративных системах. От заявки пользователя до кода в проде.">
+<meta property="og:type" content="website">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%23b0561f'/%3E%3Ctext x='32' y='43' font-family='Georgia,serif' font-weight='700' font-size='30' fill='white' text-anchor='middle'%3EИА%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bitter:wght@600;700;800&family=Golos+Text:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: oklch(1 0 0);
+    --surface: oklch(0.962 0 0);
+    --ink: oklch(0.24 0.015 40);
+    --muted: oklch(0.44 0.02 40);
+    --primary: oklch(0.55 0.145 42);      /* горелый янтарь: фон хиро */
+    --primary-deep: oklch(0.46 0.125 42); /* ссылки и мелкий акцентный текст на белом */
+    --accent: oklch(0.34 0.07 140);       /* тёмная олива: "прод ✓" */
+    --line: oklch(0.88 0.005 40);
+    --display: "Bitter", Georgia, serif;
+    --body: "Golos Text", "Segoe UI", system-ui, sans-serif;
+    --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--body);
+    font-size: 1.0625rem;
+    line-height: 1.65;
+    -webkit-font-smoothing: antialiased;
+  }
+  h1, h2, h3 { font-family: var(--display); text-wrap: balance; margin: 0; }
+  p { margin: 0; text-wrap: pretty; }
+  a { color: var(--primary-deep); text-decoration-thickness: 1px; text-underline-offset: 3px; }
+  a:hover { text-decoration-thickness: 2px; }
+  :focus-visible { outline: 3px solid var(--primary-deep); outline-offset: 3px; border-radius: 2px; }
+
+  .wrap { max-width: 62rem; margin-inline: auto; padding-inline: clamp(1.25rem, 5vw, 3rem); }
+
+  /* ---------- Хиро: залит янтарём ---------- */
+  .hero {
+    background: var(--primary);
+    color: #fff;
+    padding-block: clamp(3.5rem, 9vh, 6.5rem) clamp(3rem, 8vh, 5.5rem);
+    overflow: hidden;
+  }
+  .hero .kicker {
+    font-weight: 500;
+    font-size: 1rem;
+    color: oklch(0.93 0.04 60);
+  }
+  .hero h1 {
+    font-size: clamp(2.7rem, 7.5vw, 5rem);
+    font-weight: 800;
+    line-height: 1.04;
+    letter-spacing: -0.015em;
+    margin-top: 0.35rem;
+  }
+  .hero .lead {
+    max-width: 34em;
+    margin-top: 1.4rem;
+    font-size: clamp(1.125rem, 2.2vw, 1.3rem);
+    line-height: 1.55;
+    color: oklch(0.97 0.015 60);
+  }
+  .hero .lead strong { color: #fff; font-weight: 600; }
+
+  .flow {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.55rem 0.75rem;
+    margin-top: 2.1rem;
+    padding: 0;
+    list-style: none;
+    font-weight: 500;
+    font-size: 0.95rem;
+  }
+  .flow li {
+    border: 1.5px solid oklch(1 0 0 / 0.55);
+    border-radius: 999px;
+    padding: 0.3rem 0.95rem;
+    white-space: nowrap;
+  }
+  .flow li.done { background: var(--accent); border-color: transparent; }
+  .flow li:not(:last-child)::after {
+    content: "→";
+    position: absolute;
+    transform: translate(0.95rem, 0);
+    color: oklch(1 0 0 / 0.75);
+  }
+  .flow li { position: relative; margin-right: 1.4rem; }
+  .flow li:last-child { margin-right: 0; }
+
+  .hero-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem 1.75rem;
+    align-items: center;
+    margin-top: 2.4rem;
+    font-size: 0.98rem;
+  }
+  .hero-meta .dot { font-weight: 600; }
+  .hero-meta a {
+    color: #fff;
+    font-weight: 600;
+    text-decoration-color: oklch(1 0 0 / 0.5);
+  }
+
+  /* Каскад появления */
+  .hero .rise { animation: rise 0.9s var(--ease-out) both; }
+  .hero .rise:nth-child(2) { animation-delay: 0.08s; }
+  .hero .rise:nth-child(3) { animation-delay: 0.18s; }
+  .hero .rise:nth-child(4) { animation-delay: 0.28s; }
+  .hero .rise:nth-child(5) { animation-delay: 0.38s; }
+  @keyframes rise {
+    from { opacity: 0; transform: translateY(1.1rem); }
+    to   { opacity: 1; transform: none; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .hero .rise { animation: none; }
+    html { scroll-behavior: auto; }
+  }
+
+  /* ---------- Секции ---------- */
+  section { padding-block: clamp(3rem, 8vh, 5.5rem); }
+  section + section { border-top: 1px solid var(--line); }
+  .section-title {
+    font-size: clamp(1.7rem, 3.5vw, 2.4rem);
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    margin-bottom: clamp(1.75rem, 4vh, 2.75rem);
+  }
+  .section-title em { font-style: normal; color: var(--primary-deep); }
+
+  /* Кейсы: строки разной анатомии */
+  .case {
+    display: grid;
+    grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+    gap: 1rem 3rem;
+    padding-block: 1.75rem;
+  }
+  .case + .case { border-top: 1px dashed var(--line); }
+  .case h3 {
+    font-size: clamp(1.25rem, 2.4vw, 1.55rem);
+    font-weight: 700;
+    line-height: 1.25;
+  }
+  .case .where {
+    display: block;
+    font-family: var(--body);
+    font-weight: 500;
+    font-size: 0.9rem;
+    color: var(--muted);
+    margin-top: 0.5rem;
+  }
+  .case p { color: var(--ink); }
+  .case p strong { color: var(--primary-deep); }
+
+  /* Путь: таймлайн */
+  .path { list-style: none; margin: 0; padding: 0; }
+  .path li {
+    display: grid;
+    grid-template-columns: 9.5rem minmax(0, 1fr);
+    gap: 0.25rem 2rem;
+    padding-block: 1.4rem;
+  }
+  .path li + li { border-top: 1px solid var(--line); }
+  .path .years {
+    font-family: var(--display);
+    font-weight: 700;
+    font-size: 1.15rem;
+    color: var(--primary-deep);
+    line-height: 1.5;
+  }
+  .path h3 { font-size: 1.15rem; font-weight: 700; }
+  .path p { color: var(--muted); margin-top: 0.3rem; font-size: 1rem; }
+  .path .now h3 { color: var(--primary-deep); }
+
+  /* Инструменты */
+  .tools { display: grid; gap: 1.1rem; }
+  .tools .row {
+    display: grid;
+    grid-template-columns: 9.5rem minmax(0, 1fr);
+    gap: 0.35rem 2rem;
+    align-items: baseline;
+  }
+  .tools .label { font-weight: 600; font-size: 0.95rem; }
+  .tools .items { color: var(--muted); font-size: 1rem; line-height: 1.8; }
+  .tools .items b { color: var(--ink); font-weight: 500; }
+
+  /* Сейчас */
+  .now-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 2.5rem; }
+  .now-grid h3 { font-size: 1.2rem; font-weight: 700; }
+  .now-grid h3 a { color: inherit; }
+  .now-grid .tagline { font-size: 0.9rem; font-weight: 500; color: var(--primary-deep); margin-top: 0.2rem; }
+  .now-grid p { color: var(--muted); margin-top: 0.6rem; font-size: 1rem; }
+  .now-note {
+    margin-top: 2.5rem;
+    padding: 1.25rem 1.5rem;
+    background: var(--surface);
+    border-radius: 10px;
+    font-size: 1.02rem;
+  }
+
+  /* ---------- Футер ---------- */
+  footer {
+    background: var(--ink);
+    color: oklch(0.95 0.01 40);
+    padding-block: clamp(2.5rem, 6vh, 4rem);
+  }
+  footer h2 { font-size: clamp(1.6rem, 3vw, 2.1rem); font-weight: 700; }
+  .contacts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.8rem 2.25rem;
+    margin-top: 1.5rem;
+    padding: 0;
+    list-style: none;
+  }
+  .contacts a { color: #fff; font-weight: 600; text-decoration-color: oklch(1 0 0 / 0.4); }
+  .contacts .k { color: oklch(0.72 0.02 40); margin-right: 0.4rem; }
+  footer .fine { margin-top: 2.25rem; font-size: 0.88rem; color: oklch(0.7 0.02 40); }
+
+  /* ---------- Адаптив ---------- */
+  @media (max-width: 700px) {
+    .case, .path li, .tools .row { grid-template-columns: 1fr; }
+    .path .years { font-size: 1rem; }
+    .flow { font-size: 0.88rem; }
+  }
+  @media print {
+    .hero { background: none; color: var(--ink); }
+    .hero .lead, .hero .kicker, .hero-meta, .hero-meta a { color: var(--ink); }
+    .flow li { border-color: var(--ink); color: var(--ink); }
+    .flow li.done { background: none; }
+    footer { background: none; color: var(--ink); }
+    .contacts a { color: var(--ink); }
+    .hero .rise { animation: none; }
+  }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="wrap">
+    <p class="kicker rise">Москва · корпоративные системы · финансовый и государственный сектор</p>
+    <h1 class="rise">Иван Архипов</h1>
+    <p class="lead rise">Разработчик с <strong>7+ годами</strong> внутри корпоративных систем. Разбираю проблему от заявки пользователя до кода, который закрывает её насовсем: <strong>сам ставлю диагноз, сам пишу решение, сам довожу до прода.</strong></p>
+    <ul class="flow rise" aria-label="Как я работаю">
+      <li>заявка</li>
+      <li>диагностика</li>
+      <li>код</li>
+      <li class="done">прод ✓</li>
+    </ul>
+    <div class="hero-meta rise">
+      <span class="dot">Открыт к предложениям</span>
+      <a href="https://t.me/rmvrn">Telegram</a>
+      <a href="mailto:ivan.arkhipov.k@gmail.com">Написать письмо</a>
+      <a href="https://github.com/Lazysagotku">GitHub</a>
+    </div>
+  </div>
+</header>
+
+<main>
+  <section aria-labelledby="proof">
+    <div class="wrap">
+      <h2 class="section-title" id="proof">Работает <em>без меня</em></h2>
+
+      <article class="case">
+        <h3>Тикет-система, после которой первая линия поддержки стала лишней
+          <span class="where">Мосгоргеотрест</span>
+        </h3>
+        <p>Спроектировал и внедрил внутреннюю тикет-систему и настолько её отладил, что <strong>отдельная 1-я линия оказалась ненужной</strong>: маршрутизация, права по группам пользователей и автозаполнение делали рутинную работу сами. Позже собрал на той же базе кадровую систему с разграничением доступа.</p>
+      </article>
+
+      <article class="case">
+        <h3>Импорт заявок в Jira: больше года в проде
+          <span class="where">ТРИНФИКО</span>
+        </h3>
+        <p>Цепочка из шести Python-скриптов переносит заявки из внутренней тикет-системы в Jira: выгрузка, CSV, загрузка, статус на каждом шаге. <strong>Пользуется вся группа поддержки</strong>, а руководство импортирует задачи самостоятельно, без участия разработчика.</p>
+      </article>
+
+      <article class="case">
+        <h3>«Электронный секретарь» с отчётами в Telegram
+          <span class="where">Мосгоргеотрест</span>
+        </h3>
+        <p>Сервис на React и Python: многопоточные сессии, мониторинг через Selenoid, о каждом успехе и сбое <strong>сам докладывает в Telegram-бот</strong>. Плюс автоматизация отчётности для руководства: из ручной выгрузки JSON вырос гибкий конструктор отчётов.</p>
+      </article>
+    </div>
+  </section>
+
+  <section aria-labelledby="path-title">
+    <div class="wrap">
+      <h2 class="section-title" id="path-title">Путь</h2>
+      <ol class="path">
+        <li>
+          <span class="years">2019 → 2025</span>
+          <div>
+            <h3>Мосгоргеотрест · инженер по внедрению и сопровождению</h3>
+            <p>Веб-ресурс на Angular и TypeScript поверх PostgreSQL, 15-20 бизнес-процессов. Релизы через Jenkins, мониторинг серверов в Zabbix, затем в Grafana, диагностика API через Postman, проекты в Docker.</p>
+          </div>
+        </li>
+        <li>
+          <span class="years">2025</span>
+          <div>
+            <h3>Альфа-Банк · поддержка инвестиционных процессов</h3>
+            <p>Короткий эпизод: оптимизация запросов на MySQL.</p>
+          </div>
+        </li>
+        <li>
+          <span class="years">2025 → 2026</span>
+          <div>
+            <h3>ТРИНФИКО · разработчик и 3-я линия</h3>
+            <p>Бэкенд финансового ПО на C#: дебаг чужого кода без документации, хранимые процедуры PostgreSQL и MS SQL, отчётность. Внедрил и администрировал Jira, подключал RabbitMQ и Kafka через RPA-платформу.</p>
+          </div>
+        </li>
+        <li class="now">
+          <span class="years">сейчас</span>
+          <div>
+            <h3>ASP.NET Core и EF Core</h3>
+            <p>Целенаправленно довожу стек до современного .NET: весь реальный опыт уже давно про разработку, перевожу её в официальную роль.</p>
+          </div>
+        </li>
+      </ol>
+    </div>
+  </section>
+
+  <section aria-labelledby="tools-title">
+    <div class="wrap">
+      <h2 class="section-title" id="tools-title">Инструменты</h2>
+      <div class="tools">
+        <div class="row"><span class="label">Языки</span><span class="items"><b>C#</b>, <b>Python</b>, <b>SQL</b>, TypeScript, Bash</span></div>
+        <div class="row"><span class="label">Backend</span><span class="items"><b>.NET Framework</b>, ASP.NET Core, LINQ, Dapper, REST, SOAP</span></div>
+        <div class="row"><span class="label">Данные</span><span class="items"><b>PostgreSQL</b>, <b>MS SQL Server</b>, MySQL, MongoDB</span></div>
+        <div class="row"><span class="label">Инфраструктура</span><span class="items"><b>Docker</b>, Git, Jenkins, Zabbix, Grafana, RabbitMQ, Kafka</span></div>
+        <div class="row"><span class="label">Автоматизация</span><span class="items">pandas, selenium, n8n, Claude Code в ежедневной разработке</span></div>
+      </div>
+    </div>
+  </section>
+
+  <section aria-labelledby="now-title">
+    <div class="wrap">
+      <h2 class="section-title" id="now-title">Сейчас на верстаке</h2>
+      <div class="now-grid">
+        <article>
+          <h3><a href="https://github.com/Lazysagotku/life-notes">Life Notes</a></h3>
+          <p class="tagline">ASP.NET Core Web API · EF Core · PostgreSQL · JWT</p>
+          <p>Открытый бэкенд-проект: чистая архитектура, репозитории и Unit of Work, миграции, авторизация. Строится в открытую, коммит за коммитом.</p>
+        </article>
+        <article>
+          <h3><a href="https://github.com/Lazysagotku/l2code">l2code</a></h3>
+          <p class="tagline">Открытый конспект пути к современному .NET</p>
+          <p>Полный курс с теорией, задачами и банком реальных вопросов с собеседований, который я веду по мере собственного продвижения.</p>
+        </article>
+      </div>
+      <p class="now-note">Учусь публично: путь от .NET Framework к современному стеку лежит в открытых репозиториях, вместе с ошибками и их разборами.</p>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <h2>На связи</h2>
+    <ul class="contacts">
+      <li><span class="k">Telegram</span><a href="https://t.me/rmvrn">@rmvrn</a></li>
+      <li><span class="k">Почта</span><a href="mailto:ivan.arkhipov.k@gmail.com">ivan.arkhipov.k@gmail.com</a></li>
+      <li><span class="k">Запасная</span><a href="mailto:arkhipov.i.k@mail.ru">arkhipov.i.k@mail.ru</a></li>
+      <li><span class="k">GitHub</span><a href="https://github.com/Lazysagotku">Lazysagotku</a></li>
+    </ul>
+    <p class="fine">Иван Архипов · Москва · 2026</p>
+  </div>
+</footer>
+
+</body>
+</html>
