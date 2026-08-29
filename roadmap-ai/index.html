@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Роадмапа ИИ-инженера - Иван Архипов</title>
+<meta name="robots" content="noindex">
+<meta name="description" content="Спящий трек: AI Product Engineer. Проценты поглощения по фазам.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%23b0561f'/%3E%3Ctext x='32' y='43' font-family='Georgia,serif' font-weight='700' font-size='30' fill='white' text-anchor='middle'%3EИА%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bitter:wght@600;700;800&family=Golos+Text:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: oklch(1 0 0);
+    --surface: oklch(0.97 0.003 40);
+    --dark: oklch(0.23 0.012 40);
+    --ink: oklch(0.24 0.015 40);
+    --muted: oklch(0.45 0.015 40);
+    --accent: oklch(0.58 0.15 42);
+    --accent-deep: oklch(0.46 0.125 42);
+    --done: oklch(0.55 0.12 145);
+    --line: oklch(0.9 0.004 40);
+    --display: "Bitter", Georgia, serif;
+    --body: "Golos Text", "Segoe UI", system-ui, sans-serif;
+    --r: 14px;
+    --ease: cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--body); font-size: 1.0425rem; line-height: 1.6; -webkit-font-smoothing: antialiased; }
+  h1, h2, h3 { font-family: var(--display); text-wrap: balance; margin: 0; }
+  p { margin: 0; text-wrap: pretty; }
+  a { color: var(--accent-deep); text-underline-offset: 3px; }
+  :focus-visible { outline: 3px solid var(--accent-deep); outline-offset: 3px; border-radius: 4px; }
+  .wrap { max-width: 50rem; margin-inline: auto; padding-inline: clamp(1.25rem, 5vw, 2.5rem); }
+  header { padding-block: clamp(2.5rem, 7vh, 4.5rem) 0; }
+  .back { font-size: 0.95rem; font-weight: 500; text-decoration: none; }
+  .back:hover { text-decoration: underline; }
+  h1 { font-size: clamp(2.1rem, 5.5vw, 3.2rem); font-weight: 800; letter-spacing: -0.01em; margin-top: 0.8rem; }
+  .sub { margin-top: 0.8rem; color: var(--muted); max-width: 40em; }
+  .track { position: relative; height: 8px; border-radius: 999px; background: var(--surface); border: 1px solid var(--line); }
+  .fill { height: 100%; width: var(--p); border-radius: 999px; background: var(--accent); animation: load 1.1s var(--ease) var(--d, 0s) both; }
+  .runner { position: absolute; left: max(var(--p), 1.4rem); top: -3px; transform: translate(-95%, -100%) scaleX(-1); font-size: 1.05rem; font-style: normal; line-height: 1; pointer-events: none; animation: run 1.1s var(--ease) var(--d, 0s) both; }
+  @keyframes load { from { width: 0; } }
+  @keyframes run { from { left: 1.4rem; } }
+  @media (prefers-reduced-motion: reduce) { .fill, .runner { animation: none; } }
+  .total { margin-top: 2.25rem; background: var(--dark); color: #fff; border-radius: var(--r); padding: 1.5rem 1.75rem 1.65rem; }
+  .total .row { display: flex; justify-content: space-between; align-items: baseline; gap: 1rem; }
+  .total .label { font-weight: 600; }
+  .total .num { font-family: var(--display); font-weight: 800; font-size: 2rem; color: oklch(0.75 0.13 55); }
+  .total .track { margin-top: 0.9rem; height: 10px; border: none; background: oklch(0.34 0.015 40); }
+  .total .note { margin-top: 0.75rem; font-size: 0.9rem; color: oklch(0.7 0.015 40); }
+  .gate { margin-top: 1.25rem; border: 1.5px solid var(--accent); border-radius: var(--r); padding: 1rem 1.4rem; font-size: 0.98rem; }
+  .gate b { color: var(--accent-deep); }
+  main { padding-block: clamp(2.5rem, 6vh, 4rem); }
+  .phases { list-style: none; margin: 0; padding: 0; display: grid; gap: 1rem; }
+  .phase { border: 1px solid var(--line); border-radius: var(--r); padding: 1.4rem 1.6rem 1.5rem; }
+  .phase.active { border-color: var(--accent); border-width: 1.5px; }
+  .phase .head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 0.4rem 1.5rem; }
+  .phase h2 { font-size: 1.25rem; font-weight: 700; }
+  .phase h2 .n { color: var(--accent-deep); margin-right: 0.5rem; }
+  .status { font-size: 0.85rem; font-weight: 600; padding: 0.2rem 0.8rem; border-radius: 999px; white-space: nowrap; }
+  .status.done { background: oklch(0.93 0.035 145); color: oklch(0.38 0.1 145); }
+  .status.active { background: oklch(0.94 0.045 55); color: var(--accent-deep); }
+  .status.next { background: var(--surface); color: var(--muted); border: 1px solid var(--line); }
+  .meter { display: flex; align-items: center; gap: 1rem; margin-top: 1.1rem; }
+  .meter .track { flex: 1; }
+  .phase[data-done] .fill { background: var(--done); }
+  .meter .pct { font-family: var(--display); font-weight: 700; font-size: 1.05rem; min-width: 3ch; text-align: right; }
+  .topics { margin-top: 0.8rem; font-size: 0.95rem; color: var(--muted); }
+  .note { margin-top: 0.5rem; font-size: 0.95rem; }
+  .note b { color: var(--accent-deep); }
+  .legend { margin-top: 2rem; font-size: 0.9rem; color: var(--muted); max-width: 46em; }
+  footer { border-top: 1px solid var(--line); padding-block: 1.75rem; }
+  footer .wrap { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 0.75rem 2rem; font-size: 0.92rem; color: var(--muted); }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap">
+    <a class="back" href="/">← Иван Архипов</a>
+    <h1>Роадмапа ИИ-инженера</h1>
+    <p class="sub">Трек AI Product Engineer: встраивание готовых LLM в реальные продукты - инженерия вокруг модели, а не внутри неё. Проценты - честная самооценка поглощения.</p>
+
+    <div class="total">
+      <div class="row"><span class="label">Общий прогресс трека</span><span class="num">14%</span></div>
+      <div class="track" style="--p:14%"><div class="fill"></div><i class="runner" aria-hidden="true">🏃</i></div>
+      <p class="note">Обновлено 30 августа 2026 · интуиция копится каждый день, теория ждёт своего окна</p>
+    </div>
+
+    <p class="gate"><b>Ставка трека:</b> C# бэкенд + Python + ежедневная практика с Claude - редкое сочетание: большинство ИИ-инженеров не имеют продакшен-бэкенд опыта. Рынок подтверждает направление: вакансий с ИИ-навыками за год стало в 2,7 раза больше.</p>
+  </div>
+</header>
+
+<main>
+  <div class="wrap">
+    <ol class="phases">
+
+      <li class="phase active" style="--d:0.05s">
+        <div class="head">
+          <h2><span class="n">01</span>Фундамент LLM</h2>
+          <span class="status active">копится практикой</span>
+        </div>
+        <div class="meter"><div class="track" style="--p:35%"><div class="fill"></div><i class="runner" aria-hidden="true">🏃</i></div><span class="pct">35%</span></div>
+        <p class="topics">Токены и context window · роли system/user/assistant · temperature и top-p · промпт-инжиниринг · природа галлюцинаций</p>
+        <p class="note">Ежедневная разработка с Claude Code дала рабочую интуицию: промпты, контекст, границы модели. Не хватает системной теории под интуицией - её этот трек и добавит.</p>
+      </li>
+
+      <li class="phase" style="--d:0.12s">
+        <div class="head">
+          <h2><span class="n">02</span>Работа с LLM API</h2>
+          <span class="status next">спит</span>
+        </div>
+        <div class="meter"><div class="track" style="--p:20%"><div class="fill"></div><i class="runner" aria-hidden="true">🏃</i></div><span class="pct">20%</span></div>
+        <p class="topics">Claude API · streaming · tool use · structured outputs · стоимость и кэширование · retry-логика</p>
+        <p class="note">REST, очереди и обработка ошибок - реальный рабочий опыт; LLM-автоматизации в n8n уже собирал. Осталось вызвать модель из собственного кода, а не из готового инструмента.</p>
+      </li>
+
+      <li class="phase" style="--d:0.19s">
+        <div class="head">
+          <h2><span class="n">03</span>RAG и векторный поиск</h2>
+          <span class="status next">спит · сильный мост</span>
+        </div>
+        <div class="meter"><div class="track" style="--p:5%"><div class="fill"></div><i class="runner" aria-hidden="true">🏃</i></div><span class="pct">5%</span></div>
+        <p class="topics">Эмбеддинги · pgvector · chunking · гибридный поиск · оценка качества</p>
+        <p class="note">Самая короткая дорога из всех: pgvector - это расширение PostgreSQL, с которым я работаю 7 лет. План: RAG поверх собственных заметок Life Notes.</p>
+      </li>
+
+      <li class="phase" style="--d:0.26s">
+        <div class="head">
+          <h2><span class="n">04</span>Агенты и MCP</h2>
+          <span class="status next">спит · пользуюсь ежедневно</span>
+        </div>
+        <div class="meter"><div class="track" style="--p:20%"><div class="fill"></div><i class="runner" aria-hidden="true">🏃</i></div><span class="pct">20%</span></div>
+        <p class="topics">ReAct loop · дизайн инструментов · свой MCP-сервер · многошаговое планирование · human-in-the-loop</p>
+        <p class="note">Опытный потребитель агентов и MCP-серверов - каждый рабочий день. Следующий уровень: написать свой сервер, а не только подключать чужие.</p>
+      </li>
+
+      <li class="phase" style="--d:0.33s">
+        <div class="head">
+          <h2><span class="n">05</span>Продакшен ИИ-инженерия</h2>
+          <span class="status next">спит</span>
+        </div>
+        <div class="meter"><div class="track" style="--p:5%"><div class="fill"></div><i class="runner" aria-hidden="true">🏃</i></div><span class="pct">5%</span></div>
+        <p class="topics">Evaluation · guardrails · observability для агентных цепочек · версионирование промптов · Semantic Kernel против LangChain</p>
+        <p class="note">То, что отличает демо от продукта. Принципы observability уже знакомы по мониторингу реальных систем - Zabbix и Grafana в рабочем опыте.</p>
+      </li>
+
+      <li class="phase" style="--d:0.4s">
+        <div class="head">
+          <h2><span class="n">06</span>Прикладной проект</h2>
+          <span class="status next">горизонт</span>
+        </div>
+        <div class="meter"><div class="track" style="--p:0%"><div class="fill"></div><i class="runner" aria-hidden="true">🏃</i></div><span class="pct">0%</span></div>
+        <p class="topics">AI-инсайты по заметкам в Life Notes · RAG + агент + observability в одной фиче · rate limiting на реальном трафике</p>
+        <p class="note">Не учебный пример, а фича в живом проекте: Life Notes уже готовится как база.</p>
+      </li>
+
+    </ol>
+
+    <p class="legend">Проценты - самооценка поглощения: 90%+ означает «объясню и напишу без подсказок», около 50% - «понимаю, но вслух пока спотыкаюсь», ниже 20% - «прочитал, руками не делал».</p>
+  </div>
+</main>
+
+<footer>
+  <div class="wrap">
+    <span>Иван Архипов · Москва</span>
+    <span><a href="https://github.com/Lazysagotku/l2code">Курс на GitHub</a> · <a href="/">визитка</a></span>
+  </div>
+</footer>
+
+</body>
+</html>

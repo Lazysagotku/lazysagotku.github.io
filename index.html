@@ -158,6 +158,16 @@
   }
   .section-title em { font-style: normal; color: var(--accent-deep); }
 
+  /* Направления */
+  .tracks {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.75rem 3rem;
+  }
+  .tracks h3 { font-size: 1.15rem; font-weight: 700; }
+  .tracks p { color: var(--muted); margin-top: 0.45rem; font-size: 1rem; }
+  .tracks-note { margin-top: 1.75rem; font-size: 0.95rem; color: var(--muted); }
+
   /* Кейсы */
   .case {
     display: grid;
@@ -224,7 +234,10 @@
   .contacts { display: flex; flex-wrap: wrap; gap: 0.8rem 2.25rem; margin: 1.75rem 0 0; padding: 0; list-style: none; align-items: center; }
   .contacts a { color: #fff; font-weight: 600; text-decoration-color: oklch(1 0 0 / 0.4); }
   .contacts .k { color: oklch(0.62 0.015 40); margin-right: 0.4rem; }
-  footer .fine { margin-top: 2.25rem; font-size: 0.88rem; color: oklch(0.6 0.015 40); }
+  footer .fine { margin-top: 2.25rem; font-size: 0.88rem; color: oklch(0.6 0.015 40); user-select: none; }
+  .maps { display: flex; flex-wrap: wrap; gap: 0.5rem 1.5rem; margin-top: 1rem; font-size: 0.92rem; }
+  .maps[hidden] { display: none; }
+  .maps a { color: oklch(0.75 0.13 55); font-weight: 600; }
 
   /* ---------- Адаптив ---------- */
   @media (max-width: 780px) {
@@ -244,11 +257,11 @@
       <p class="kicker rise">Москва · корпоративные системы · финансовый и государственный сектор</p>
       <h1 class="rise">Иван Архипов</h1>
       <p class="claim rise">Разбираю проблему <strong>от заявки пользователя до кода в проде</strong> - сам ставлю диагноз, сам пишу решение, сам довожу до результата.</p>
-      <p class="sub rise">Разработчик с 7+ годами внутри корпоративных систем: бэкенд на C#, автоматизация на Python, SQL как ежедневный инструмент.</p>
+      <p class="sub rise">Разработчик с 7+ годами внутри корпоративных систем: бэкенд на C#, автоматизация на Python, ИИ-инструменты в ежедневной разработке, SQL как родной язык.</p>
       <div class="cta rise">
         <a class="btn" href="https://t.me/rmvrn">Написать в Telegram</a>
         <a href="https://github.com/Lazysagotku">GitHub</a>
-        <a href="mailto:ivan.arkhipov.k@gmail.com">Почта</a>
+        <a href="mailto:arkhipov.i.k@mail.ru">Почта</a>
       </div>
     </div>
     <div class="pipe" role="img" aria-label="Пайплайн работы: заявка принята, диагноз поставлен, код написан, релиз в проде - каждый шаг с зелёной галочкой">
@@ -272,6 +285,31 @@
 </div>
 
 <main>
+  <section aria-labelledby="tracks-title">
+    <div class="wrap">
+      <h2 class="section-title" id="tracks-title">Куда <em>развиваюсь</em></h2>
+      <div class="tracks">
+        <div>
+          <h3>C#/.NET бэкенд</h3>
+          <p>Основной вектор: довожу стек до ASP.NET Core и EF Core, строю открытый Web API проект с чистой архитектурой.</p>
+        </div>
+        <div>
+          <h3>Python-автоматизация</h3>
+          <p>Рабочий инструмент годами: интеграции между системами, отчётность, pandas и selenium, скрипты, живущие в проде.</p>
+        </div>
+        <div>
+          <h3>ИИ-инженерия</h3>
+          <p>Claude Code в ежедневной разработке, LLM-автоматизации в n8n: Telegram-бот и интеграция с таблицами, где ИИ обрабатывает данные.</p>
+        </div>
+        <div>
+          <h3>Сопровождение сложных систем</h3>
+          <p>3-я линия как суперсила: диагностика по логам, SQL, эскалации. Открыт к ролям поддержки с реальным ростом в разработку.</p>
+        </div>
+      </div>
+      <p class="tracks-note">Вне работы: n8n и Airflow, cron на собственной Ubuntu-машине, эксперименты с Unity.</p>
+    </div>
+  </section>
+
   <section aria-labelledby="proof-title">
     <div class="wrap">
       <h2 class="section-title" id="proof-title">Работает <em>без меня</em></h2>
@@ -288,6 +326,13 @@
           <span class="where">ТРИНФИКО</span>
         </h3>
         <p>Цепочка из шести Python-скриптов переносит заявки из внутренней тикет-системы в Jira: выгрузка, CSV, загрузка, статус на каждом шаге. <strong>Пользуется вся группа поддержки</strong>, а руководство импортирует задачи самостоятельно, без участия разработчика.</p>
+      </article>
+
+      <article class="case">
+        <h3>TimeReportV3: соло-доработка легаси-инструмента учёта заявок
+          <span class="where">ТРИНФИКО</span>
+        </h3>
+        <p>В одиночку развивал внутренний WinForms-инструмент, доставшийся как легаси: двойная интеграция с IS-системой и Jira через Dapper, поддержка PostgreSQL и MS SQL. Фича «фильтрация заявок по сервисам» - <strong>с README, где четыре пойманных бага разобраны до root-cause</strong>: гонка BeginInvoke, перерисовка DataGridView и другие.</p>
       </article>
 
       <article class="case">
@@ -343,7 +388,8 @@
         <div class="row"><span class="label">Backend</span><span class="items"><b>.NET Framework</b>, ASP.NET Core, LINQ, Dapper, REST, SOAP</span></div>
         <div class="row"><span class="label">Данные</span><span class="items"><b>PostgreSQL</b>, <b>MS SQL Server</b>, MySQL, MongoDB</span></div>
         <div class="row"><span class="label">Инфраструктура</span><span class="items"><b>Docker</b>, Git, Jenkins, Zabbix, Grafana, RabbitMQ, Kafka</span></div>
-        <div class="row"><span class="label">Автоматизация</span><span class="items">pandas, selenium, n8n, Claude Code в ежедневной разработке</span></div>
+        <div class="row"><span class="label">Автоматизация</span><span class="items">pandas, selenium, <b>n8n</b>, <b>Claude Code</b> в ежедневной разработке</span></div>
+        <div class="row"><span class="label">Личные проекты</span><span class="items">Airflow, cron на Ubuntu VM, эксперименты с Unity</span></div>
       </div>
     </div>
   </section>
@@ -374,13 +420,35 @@
     <p class="lead">Расскажите - отвечу быстро и по делу.</p>
     <ul class="contacts">
       <li><a class="btn" href="https://t.me/rmvrn">Написать в Telegram</a></li>
-      <li><span class="k">Почта</span><a href="mailto:ivan.arkhipov.k@gmail.com">ivan.arkhipov.k@gmail.com</a></li>
-      <li><span class="k">Запасная</span><a href="mailto:arkhipov.i.k@mail.ru">arkhipov.i.k@mail.ru</a></li>
+      <li><span class="k">Почта</span><a href="mailto:arkhipov.i.k@mail.ru">arkhipov.i.k@mail.ru</a></li>
+      <li><span class="k">Запасная</span><a href="mailto:ivan.arkhipov.k@gmail.com">ivan.arkhipov.k@gmail.com</a></li>
       <li><span class="k">GitHub</span><a href="https://github.com/Lazysagotku">Lazysagotku</a></li>
     </ul>
-    <p class="fine">Иван Архипов · Москва · 2026</p>
+    <p class="fine" id="fine">Иван Архипов · Москва · 2026</p>
+    <nav class="maps" id="maps" hidden aria-label="Роадмапы">
+      <span class="k">Штаб:</span>
+      <a href="/roadmap/">Роадмапа C#</a>
+      <a href="/roadmap-python/">Python</a>
+      <a href="/roadmap-ai/">ИИ-инженер</a>
+    </nav>
   </div>
 </footer>
+
+<script>
+(() => {
+  const maps = document.getElementById('maps');
+  const fine = document.getElementById('fine');
+  const show = () => { maps.hidden = false; };
+  if (location.hash === '#hq') show();
+  let n = 0, t = 0;
+  fine.addEventListener('click', () => {
+    const now = Date.now();
+    if (now - t > 1500) n = 0;
+    t = now;
+    if (++n >= 3) show();
+  });
+})();
+</script>
 
 </body>
 </html>

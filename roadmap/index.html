@@ -3,7 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Роадмапа - Иван Архипов</title>
+<title>Роадмапа C# - Иван Архипов</title>
+<meta name="robots" content="noindex">
 <meta name="description" content="Публичная карта обучения Ивана Архипова: путь от .NET Framework к современному стеку с процентами поглощения материала по фазам.">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%23b0561f'/%3E%3Ctext x='32' y='43' font-family='Georgia,serif' font-weight='700' font-size='30' fill='white' text-anchor='middle'%3EИА%3C/text%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -23,6 +24,7 @@
     --display: "Bitter", Georgia, serif;
     --body: "Golos Text", "Segoe UI", system-ui, sans-serif;
     --r: 14px;
+    --ease: cubic-bezier(0.16, 1, 0.3, 1);
   }
   * { box-sizing: border-box; }
   body {
@@ -46,6 +48,26 @@
   h1 { font-size: clamp(2.1rem, 5.5vw, 3.2rem); font-weight: 800; letter-spacing: -0.01em; margin-top: 0.8rem; }
   .sub { margin-top: 0.8rem; color: var(--muted); max-width: 40em; }
 
+  /* Прогресс-бары с бегуном */
+  .track { position: relative; height: 8px; border-radius: 999px; background: var(--surface); border: 1px solid var(--line); }
+  .fill { height: 100%; width: var(--p); border-radius: 999px; background: var(--accent); animation: load 1.1s var(--ease) var(--d, 0s) both; }
+  .runner {
+    position: absolute;
+    left: max(var(--p), 1.4rem);
+    top: -3px;
+    transform: translate(-95%, -100%) scaleX(-1);
+    font-size: 1.05rem;
+    font-style: normal;
+    line-height: 1;
+    pointer-events: none;
+    animation: run 1.1s var(--ease) var(--d, 0s) both;
+  }
+  @keyframes load { from { width: 0; } }
+  @keyframes run { from { left: 1.4rem; } }
+  @media (prefers-reduced-motion: reduce) {
+    .fill, .runner { animation: none; }
+  }
+
   /* Общий прогресс */
   .total {
     margin-top: 2.25rem;
@@ -57,8 +79,7 @@
   .total .row { display: flex; justify-content: space-between; align-items: baseline; gap: 1rem; }
   .total .label { font-weight: 600; }
   .total .num { font-family: var(--display); font-weight: 800; font-size: 2rem; color: oklch(0.75 0.13 55); }
-  .total .track { margin-top: 0.8rem; height: 10px; border-radius: 999px; background: oklch(0.34 0.015 40); overflow: hidden; }
-  .total .fill { height: 100%; width: var(--p); border-radius: inherit; background: var(--accent); }
+  .total .track { margin-top: 0.9rem; height: 10px; border: none; background: oklch(0.34 0.015 40); }
   .total .note { margin-top: 0.75rem; font-size: 0.9rem; color: oklch(0.7 0.015 40); }
 
   /* Веха */
@@ -87,10 +108,9 @@
   .status.done { background: oklch(0.93 0.035 145); color: oklch(0.38 0.1 145); }
   .status.active { background: oklch(0.94 0.045 55); color: var(--accent-deep); }
   .status.next { background: var(--surface); color: var(--muted); border: 1px solid var(--line); }
-  .meter { display: flex; align-items: center; gap: 1rem; margin-top: 0.9rem; }
-  .meter .track { flex: 1; height: 8px; border-radius: 999px; background: var(--surface); border: 1px solid var(--line); overflow: hidden; }
-  .meter .fill { height: 100%; width: var(--p); border-radius: inherit; background: var(--accent); }
-  .phase[data-done] .meter .fill { background: var(--done); }
+  .meter { display: flex; align-items: center; gap: 1rem; margin-top: 1.1rem; }
+  .meter .track { flex: 1; }
+  .phase[data-done] .fill { background: var(--done); }
   .meter .pct { font-family: var(--display); font-weight: 700; font-size: 1.05rem; min-width: 3ch; text-align: right; }
   .topics { margin-top: 0.8rem; font-size: 0.95rem; color: var(--muted); }
   .note { margin-top: 0.5rem; font-size: 0.95rem; }
@@ -107,16 +127,16 @@
 <header>
   <div class="wrap">
     <a class="back" href="/">← Иван Архипов</a>
-    <h1>Роадмапа обучения</h1>
+    <h1>Роадмапа C#</h1>
     <p class="sub">Путь от .NET Framework к современному стеку - в открытую, с честными процентами поглощения материала. Проценты означают «сколько темы реально сидит в голове и руках», а не «сколько страниц прочитано».</p>
 
     <div class="total">
       <div class="row"><span class="label">Общий прогресс пути</span><span class="num">31%</span></div>
-      <div class="track"><div class="fill" style="--p:31%"></div></div>
+      <div class="track" style="--p:31%"><div class="fill"></div><i class="runner" aria-hidden="true">🏃</i></div>
       <p class="note">Обновлено 30 августа 2026 · пересчёт каждое воскресенье</p>
     </div>
 
-    <p class="gate"><b>Ближайшая веха - ~20 сентября:</b> Life Notes работает и демонстрируем (фазы 4-5 ниже), после этого открываются отклики на вакансии разработчика.</p>
+    <p class="gate"><b>Веха - начало октября:</b> Life Notes готов целиком - API, авторизация, тесты, Redis, RabbitMQ, Docker. После прогона подготовки (1-3 октября) открываются отклики на вакансии разработчика; архитектура добирается параллельно с собеседованиями.</p>
   </div>
 </header>
 
@@ -124,94 +144,94 @@
   <div class="wrap">
     <ol class="phases">
 
-      <li class="phase" data-done>
+      <li class="phase" data-done style="--d:0.05s">
         <div class="head">
           <h2><span class="n">01</span>Основы C#</h2>
           <span class="status done">закреплено</span>
         </div>
-        <div class="meter"><div class="track"><div class="fill" style="--p:90%"></div></div><span class="pct">90%</span></div>
+        <div class="meter"><div class="track" style="--p:90%"><div class="fill"></div><i class="runner" aria-hidden="true">🏃</i></div><span class="pct">90%</span></div>
         <p class="topics">Value/reference types · stack и heap · строки · приведение типов · nullable · коллекции · IEnumerable</p>
         <p class="note">Теория, задачи и итоговый проект Contact Manager пройдены, сверху - быстрый повтор по конспекту. Осталось то, что дошлифуется только практикой.</p>
       </li>
 
-      <li class="phase">
+      <li class="phase" style="--d:0.12s">
         <div class="head">
           <h2><span class="n">02</span>ООП</h2>
           <span class="status active">закрепляется</span>
         </div>
-        <div class="meter"><div class="track"><div class="fill" style="--p:75%"></div></div><span class="pct">75%</span></div>
+        <div class="meter"><div class="track" style="--p:75%"><div class="fill"></div><i class="runner" aria-hidden="true">🏃</i></div><span class="pct">75%</span></div>
         <p class="topics">Классы и объекты · наследование · интерфейсы · абстракции · SOLID · рефакторинг Contact Manager</p>
         <p class="note">Теория пройдена целиком, 27 задач решено. Четверть удерживается повторами - SOLID окончательно осядет в реальном коде Life Notes.</p>
       </li>
 
-      <li class="phase active">
+      <li class="phase active" style="--d:0.19s">
         <div class="head">
           <h2><span class="n">03</span>Продвинутый C#</h2>
           <span class="status active">в работе</span>
         </div>
-        <div class="meter"><div class="track"><div class="fill" style="--p:30%"></div></div><span class="pct">30%</span></div>
+        <div class="meter"><div class="track" style="--p:30%"><div class="fill"></div><i class="runner" aria-hidden="true">🏃</i></div><span class="pct">30%</span></div>
         <p class="topics">Исключения · ref/out/in · Generics · LINQ · async/await · параллелизм и примитивы синхронизации</p>
         <p class="note">Теория написана полностью, включая <b>самую частую тему реальных собеседований</b> - lock/Mutex/Semaphore/Interlocked. Проработка задачами только началась; LINQ и async доучиваются прямо в коде следующей фазы.</p>
       </li>
 
-      <li class="phase active">
+      <li class="phase active" style="--d:0.26s">
         <div class="head">
           <h2><span class="n">04</span>Life Notes: EF Core + JWT</h2>
           <span class="status active">старт 1 сентября</span>
         </div>
-        <div class="meter"><div class="track"><div class="fill" style="--p:10%"></div></div><span class="pct">10%</span></div>
+        <div class="meter"><div class="track" style="--p:10%"><div class="fill"></div><i class="runner" aria-hidden="true">🏃</i></div><span class="pct">10%</span></div>
         <p class="topics">DbContext · миграции · Repository и Unit of Work · BCrypt · JWT-авторизация</p>
         <p class="note">Домен, интерфейсы и docker-compose готовы. Слой данных и авторизация пишутся 1-9 сентября.</p>
       </li>
 
-      <li class="phase">
+      <li class="phase" style="--d:0.33s">
         <div class="head">
           <h2><span class="n">05</span>Life Notes: CRUD API</h2>
           <span class="status next">план: 10-16 сентября</span>
         </div>
-        <div class="meter"><div class="track"><div class="fill" style="--p:0%"></div></div><span class="pct">0%</span></div>
+        <div class="meter"><div class="track" style="--p:0%"><div class="fill"></div><i class="runner" aria-hidden="true">🏃</i></div><span class="pct">0%</span></div>
         <p class="topics">Контроллеры · DTO и маппинг · middleware и обработка ошибок · валидация · Serilog</p>
-        <p class="note">После этой фазы проект демонстрируем целиком - это и есть веха 20 сентября.</p>
+        <p class="note">После этой фазы проект показывает лицо: рабочий API с авторизацией и логами.</p>
       </li>
 
-      <li class="phase">
+      <li class="phase" style="--d:0.4s">
         <div class="head">
-          <h2><span class="n">06</span>Подготовка к собеседованиям</h2>
-          <span class="status next">прогон: 17-19 сентября</span>
+          <h2><span class="n">06</span>Unit-тесты</h2>
+          <span class="status next">план: 17-22 сентября</span>
         </div>
-        <div class="meter"><div class="track"><div class="fill" style="--p:45%"></div></div><span class="pct">45%</span></div>
+        <div class="meter"><div class="track" style="--p:5%"><div class="fill"></div><i class="runner" aria-hidden="true">🏃</i></div><span class="pct">5%</span></div>
+        <p class="topics">xUnit · Moq · AAA · интеграционный тест с TestContainers</p>
+        <p class="note">Решение: тесты входят в проект до собеседований, не после. Пока только знакомство по конспектам.</p>
+      </li>
+
+      <li class="phase" style="--d:0.47s">
+        <div class="head">
+          <h2><span class="n">07</span>Redis · RabbitMQ · Docker</h2>
+          <span class="status next">план: 23-30 сентября</span>
+        </div>
+        <div class="meter"><div class="track" style="--p:15%"><div class="fill"></div><i class="runner" aria-hidden="true">🏃</i></div><span class="pct">15%</span></div>
+        <p class="topics">Кэширование и TTL · очереди и события · Transactional Outbox · multi-stage build · docker-compose</p>
+        <p class="note">Тоже до собеседований - чтобы Life Notes закрывал весь целевой стек. Теория по Docker и Kubernetes уже пройдена по конспектам, плюс реальный опыт подключения RabbitMQ/Kafka на работе.</p>
+      </li>
+
+      <li class="phase" style="--d:0.54s">
+        <div class="head">
+          <h2><span class="n">08</span>Подготовка к собеседованиям</h2>
+          <span class="status next">прогон: 1-3 октября</span>
+        </div>
+        <div class="meter"><div class="track" style="--p:45%"><div class="fill"></div><i class="runner" aria-hidden="true">🏃</i></div><span class="pct">45%</span></div>
         <p class="topics">SOLID вслух · SQL и индексы · System Design mini · банк реальных вопросов · мок-интервью</p>
         <p class="note">Материалы уже собраны: банк вопросов с реальных собеседований, конспекты по SQL/System Design/сетям. Осталось главное - прогнать вслух под давлением.</p>
       </li>
 
-      <li class="phase">
-        <div class="head">
-          <h2><span class="n">07</span>Unit-тесты</h2>
-          <span class="status next">после собеседований</span>
-        </div>
-        <div class="meter"><div class="track"><div class="fill" style="--p:5%"></div></div><span class="pct">5%</span></div>
-        <p class="topics">xUnit · Moq · AAA · интеграционный тест с TestContainers</p>
-        <p class="note">Пока только знакомство по конспектам.</p>
-      </li>
-
-      <li class="phase">
-        <div class="head">
-          <h2><span class="n">08</span>Redis · RabbitMQ · Docker</h2>
-          <span class="status next">после собеседований</span>
-        </div>
-        <div class="meter"><div class="track"><div class="fill" style="--p:15%"></div></div><span class="pct">15%</span></div>
-        <p class="topics">Кэширование и TTL · очереди и события · Transactional Outbox · multi-stage build · docker-compose</p>
-        <p class="note">Теория по Docker и Kubernetes уже пройдена по конспектам, плюс реальный опыт подключения RabbitMQ/Kafka на работе. Руками в Life Notes - впереди.</p>
-      </li>
-
-      <li class="phase">
+      <li class="phase" style="--d:0.61s">
         <div class="head">
           <h2><span class="n">09</span>Архитектура</h2>
-          <span class="status next">горизонт</span>
+          <span class="status next">параллельно с собесами</span>
         </div>
-        <div class="meter"><div class="track"><div class="fill" style="--p:10%"></div></div><span class="pct">10%</span></div>
+        <div class="meter"><div class="track" style="--p:10%"><div class="fill"></div><i class="runner" aria-hidden="true">🏃</i></div><span class="pct">10%</span></div>
         <p class="topics">Clean Architecture · CQRS и MediatR · gRPC против REST · Polly · микросервисные паттерны</p>
-        <p class="note">Обзорная теория в банке вопросов - достаточно, чтобы обсуждать trade-offs; глубина придёт с практикой.</p>
+        <p class="note">Идёт фоном в октябре, параллельно с собеседованиями: обзорной теории в банке вопросов достаточно, чтобы обсуждать trade-offs, глубина придёт с практикой.</p>
       </li>
 
     </ol>
