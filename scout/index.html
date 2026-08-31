@@ -1,0 +1,224 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<script>
+  (() => {
+    let saved = null;
+    try { saved = localStorage.getItem("theme"); } catch (e) {}
+    document.documentElement.dataset.theme = saved
+      || (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+  })();
+</script>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Разведчик вакансий - проект Ивана Архипова</title>
+<meta name="description" content="Инструмент, который ищет вакансии, оценивает их по профилю и объясняет оценку. Python, FastAPI, hh.ru API.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%23b0561f'/%3E%3Ctext x='32' y='43' font-family='Georgia,serif' font-weight='700' font-size='30' fill='white' text-anchor='middle'%3EИА%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bitter:wght@600;700;800&family=Golos+Text:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: oklch(1 0 0);
+    --surface: oklch(0.97 0.003 40);
+    --dark: oklch(0.23 0.012 40);
+    --ink: oklch(0.24 0.015 40);
+    --muted: oklch(0.45 0.015 40);
+    --accent: oklch(0.58 0.15 42);
+    --accent-deep: oklch(0.46 0.125 42);
+    --line: oklch(0.9 0.004 40);
+    --display: "Bitter", Georgia, serif;
+    --body: "Golos Text", "Segoe UI", system-ui, sans-serif;
+    --mono: ui-monospace, "Cascadia Mono", Consolas, monospace;
+    --r: 14px;
+    --ease: cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--body); font-size: 1.0625rem; line-height: 1.65; -webkit-font-smoothing: antialiased; }
+  h1, h2, h3 { font-family: var(--display); text-wrap: balance; margin: 0; }
+  p { margin: 0; text-wrap: pretty; }
+  a { color: var(--accent-deep); text-underline-offset: 3px; }
+  :focus-visible { outline: 3px solid var(--accent-deep); outline-offset: 3px; border-radius: 4px; }
+  img { max-width: 100%; display: block; }
+  .wrap { max-width: 62rem; margin-inline: auto; padding-inline: clamp(1.25rem, 5vw, 3rem); }
+
+  header { padding-block: clamp(2.5rem, 7vh, 4.5rem) clamp(2rem, 5vh, 3rem); }
+  .back { font-size: 0.95rem; font-weight: 500; text-decoration: none; }
+  .back:hover { text-decoration: underline; }
+  h1 { font-size: clamp(2.2rem, 6vw, 3.5rem); font-weight: 800; letter-spacing: -0.015em; margin-top: 0.8rem; }
+  .lead { margin-top: 1rem; font-size: clamp(1.1rem, 2.2vw, 1.3rem); max-width: 40em; }
+  .lead strong { color: var(--accent-deep); font-weight: 600; }
+  .meta { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 1.5rem; padding: 0; list-style: none; }
+  .meta li { font-size: 0.9rem; font-weight: 500; border: 1px solid var(--line); border-radius: 999px; padding: 0.25rem 0.9rem; color: var(--muted); }
+  .meta li.k { background: var(--dark); color: #fff; border-color: transparent; }
+
+  section { padding-block: clamp(2.5rem, 6vh, 4rem); }
+  section + section { border-top: 1px solid var(--line); }
+  .section-title { font-size: clamp(1.6rem, 3.2vw, 2.2rem); font-weight: 700; margin-bottom: 1.5rem; }
+  .section-title em { font-style: normal; color: var(--accent-deep); }
+
+  .shots { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.75rem; }
+  figure { margin: 0; }
+  figure img { border: 1px solid var(--line); border-radius: 10px; background: var(--surface); }
+  figcaption { margin-top: 0.6rem; font-size: 0.95rem; color: var(--muted); }
+  .tall img { max-height: 32rem; object-fit: cover; object-position: top; }
+  .wide { grid-column: 1 / -1; }
+
+  .facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1.5rem 2.5rem; }
+  .facts h3 { font-size: 1.1rem; font-weight: 700; }
+  .facts p { color: var(--muted); margin-top: 0.4rem; font-size: 1rem; }
+
+  .stance { background: var(--surface); border-left: 3px solid var(--accent); border-radius: 0 var(--r) var(--r) 0; padding: 1.2rem 1.5rem; margin-top: 1rem; }
+  .stance h3 { font-size: 1.15rem; font-weight: 700; margin-bottom: 0.5rem; }
+  .stance p + p { margin-top: 0.7rem; }
+
+  .note { margin-top: 1.5rem; color: var(--muted); font-size: 0.98rem; max-width: 46em; }
+
+  .shot-open { display: block; width: 100%; padding: 0; border: 0; background: none; font: inherit; color: inherit; cursor: zoom-in; border-radius: 10px; position: relative; }
+  .shot-open img { transition: opacity 0.2s var(--ease); }
+  .shot-open:hover img { opacity: 0.85; }
+  .shot-open::after { content: "Открыть полностью"; position: absolute; inset-inline-end: 0.75rem; inset-block-end: 0.75rem; background: oklch(0.2 0.01 40 / 0.86); color: #fff; font-size: 0.8rem; font-weight: 500; padding: 0.25rem 0.7rem; border-radius: 999px; opacity: 0; transition: opacity 0.2s var(--ease); pointer-events: none; }
+  .shot-open:hover::after, .shot-open:focus-visible::after { opacity: 1; }
+  .lightbox { position: fixed; inset: 0; z-index: 100; display: grid; grid-template-rows: minmax(0, 1fr) auto; gap: 1rem; padding: clamp(1rem, 3vw, 2.5rem); background: oklch(0.16 0.008 40 / 0.95); overflow: auto; }
+  .lightbox[hidden] { display: none; }
+  .lightbox img { max-width: 100%; max-height: 100%; margin: auto; object-fit: contain; border-radius: 8px; background: var(--bg); box-shadow: 0 20px 60px oklch(0 0 0 / 0.5); }
+  .lightbox-cap { text-align: center; color: oklch(0.92 0.005 40); font-size: 0.95rem; max-width: 50em; margin-inline: auto; }
+  .lightbox-close { position: absolute; top: clamp(0.75rem, 2vw, 1.5rem); right: clamp(0.75rem, 2vw, 1.5rem); width: 2.75rem; height: 2.75rem; border-radius: 50%; border: 1px solid oklch(1 0 0 / 0.25); background: oklch(0.2 0.01 40 / 0.8); color: #fff; font-size: 1.5rem; line-height: 1; cursor: pointer; }
+
+  footer { background: var(--dark); color: oklch(0.95 0.005 40); padding-block: clamp(2.25rem, 6vh, 3.5rem); }
+  footer h2 { font-size: clamp(1.4rem, 2.8vw, 1.9rem); font-weight: 700; }
+  footer .links { display: flex; flex-wrap: wrap; gap: 0.8rem 2rem; margin-top: 1.25rem; padding: 0; list-style: none; }
+  footer a { color: #fff; font-weight: 600; text-decoration-color: oklch(1 0 0 / 0.4); }
+  footer .fine { margin-top: 1.75rem; font-size: 0.88rem; color: oklch(0.65 0.015 40); }
+</style>
+<link rel="stylesheet" href="/theme.css">
+</head>
+<body>
+
+<header>
+  <div class="wrap">
+    <a class="back" href="/">← Иван Архипов</a>
+    <h1>Разведчик вакансий</h1>
+    <p class="lead">Ищет вакансии, оценивает каждую по моему профилю и объясняет оценку. <strong>Откликов не отправляет</strong> - и это решение, а не недоделка.</p>
+    <ul class="meta">
+      <li class="k">Python</li>
+      <li class="k">FastAPI</li>
+      <li class="k">hh.ru API</li>
+      <li>скоринг</li>
+      <li>без внешних зависимостей в ядре</li>
+    </ul>
+  </div>
+</header>
+
+<main>
+  <section aria-labelledby="shots-title">
+    <div class="wrap">
+      <h2 class="section-title" id="shots-title">Как это <em>выглядит</em></h2>
+      <div class="shots">
+        <figure class="wide tall">
+          <img src="shots/main.png" alt="Список вакансий с оценками: сильные матчи сверху, отсеянные внизу, у каждой видно совпадения и пробелы" loading="lazy">
+          <figcaption>Выдача отсортирована по оценке. У каждой вакансии видно, что совпало, чего не хватает и на что обратить внимание.</figcaption>
+        </figure>
+        <figure class="wide">
+          <img src="shots/letter.png" alt="Развёрнутый черновик сопроводительного письма в тёмной теме" loading="lazy">
+          <figcaption>Черновик сопроводительного собирается из подтверждённых фактов - включая честный абзац о пробелах.</figcaption>
+        </figure>
+      </div>
+      <p class="note">Скриншоты кликабельны. На них демо-набор: реальный пайплайн откликов остаётся личным.</p>
+    </div>
+  </section>
+
+  <section aria-labelledby="stance-title">
+    <div class="wrap">
+      <h2 class="section-title" id="stance-title">Чего он <em>намеренно не делает</em></h2>
+      <div class="stance">
+        <h3>Не отправляет отклики</h3>
+        <p>Технически это несложно. Но отклик уходит от моего имени реальному работодателю и он необратим: повторно откликнуться на ту же вакансию нельзя.</p>
+        <p>Цена ошибки несимметрична. Выигрыш измеряется сэкономленными минутами, проигрыш - сожжённой вакансией. Поэтому инструмент доводит до момента «прочитай и реши», а решение остаётся за человеком.</p>
+        <p>Это же правило определило и всё остальное в проекте: он не пытается быть умнее, чем может, и везде показывает, на основании чего сделал вывод.</p>
+      </div>
+    </div>
+  </section>
+
+  <section aria-labelledby="how-title">
+    <div class="wrap">
+      <h2 class="section-title" id="how-title">Как устроена <em>оценка</em></h2>
+      <div class="facts">
+        <div>
+          <h3>Навык несёт своё подтверждение</h3>
+          <p>Не «знаю PostgreSQL», а «хранимые процедуры, оптимизация запросов, замена легаси-процедур». Одна и та же формулировка попадает и в объяснение оценки, и в черновик письма.</p>
+        </div>
+        <div>
+          <h3>Пробелы снижают, но не отсеивают</h3>
+          <p>Kubernetes в проде, IaC, векторные базы - встретилось в вакансии, значит балл честно уменьшается, и это же попадает в письмо отдельным абзацем.</p>
+        </div>
+        <div>
+          <h3>Блокеры отсеивают сразу</h3>
+          <p>Английский B2 при полной коммуникации на нём, реверс-инжиниринг, обучение моделей. Это не пробел на вечер, а другая профессия - и лучше увидеть это до того, как потратишь час на письмо.</p>
+        </div>
+        <div>
+          <h3>Условия важны не меньше стека</h3>
+          <p>Вилка ниже планки, сменный график с ночами, роль «обучим с нуля» при семи годах опыта - всё это снижает оценку, даже когда технологии совпадают полностью.</p>
+        </div>
+      </div>
+      <p class="note">Профиль вынесен в отдельный модуль и ничего не знает о скоринге, а скоринг ничего не знает о кандидате. Меняется опыт - правится один файл.</p>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <h2>Посмотреть код</h2>
+    <ul class="links">
+      <li><a href="https://github.com/Lazysagotku/vacancy-scout">Репозиторий на GitHub</a></li>
+      <li><a href="/tracker/">Трекер откликов - соседний проект</a></li>
+      <li><a href="/">Вернуться на визитку</a></li>
+    </ul>
+    <p class="fine">Иван Архипов · Москва · 2026</p>
+  </div>
+</footer>
+
+<script src="/theme.js"></script>
+<script>
+(() => {
+  const shots = document.querySelectorAll(".shots figure img");
+  if (!shots.length) return;
+  const box = document.createElement("div");
+  box.className = "lightbox";
+  box.hidden = true;
+  box.setAttribute("role", "dialog");
+  box.setAttribute("aria-modal", "true");
+  box.innerHTML = '<button class="lightbox-close" type="button" aria-label="Закрыть">×</button><img alt=""><p class="lightbox-cap"></p>';
+  document.body.appendChild(box);
+  const big = box.querySelector("img");
+  const cap = box.querySelector(".lightbox-cap");
+  const closeBtn = box.querySelector(".lightbox-close");
+  let lastFocus = null;
+  const close = () => { box.hidden = true; document.body.style.overflow = ""; if (lastFocus) lastFocus.focus(); };
+  shots.forEach((img) => {
+    const fig = img.closest("figure");
+    const figcap = fig && fig.querySelector("figcaption");
+    const text = (figcap ? figcap.textContent : img.alt).trim();
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "shot-open";
+    btn.setAttribute("aria-label", "Открыть скриншот в полном размере: " + text);
+    img.parentNode.insertBefore(btn, img);
+    btn.appendChild(img);
+    btn.addEventListener("click", () => {
+      lastFocus = btn;
+      big.src = img.currentSrc || img.src;
+      big.alt = img.alt;
+      cap.textContent = text;
+      box.hidden = false;
+      document.body.style.overflow = "hidden";
+      closeBtn.focus();
+    });
+  });
+  box.addEventListener("click", (e) => { if (e.target !== big) close(); });
+  document.addEventListener("keydown", (e) => { if (e.key === "Escape" && !box.hidden) close(); });
+})();
+</script>
+</body>
+</html>
