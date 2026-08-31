@@ -67,6 +67,30 @@
 
   .note { margin-top: 1.5rem; color: var(--muted); font-size: 0.98rem; max-width: 46em; }
 
+  /* Скриншот открывается в полном размере */
+  .shot-open { display: block; width: 100%; padding: 0; border: 0; background: none; font: inherit; color: inherit; cursor: zoom-in; border-radius: 10px; position: relative; }
+  .shot-open img { transition: opacity 0.2s var(--ease); }
+  .shot-open:hover img { opacity: 0.85; }
+  .shot-open::after {
+    content: "Открыть полностью";
+    position: absolute; inset-inline-end: 0.75rem; inset-block-end: 0.75rem;
+    background: oklch(0.2 0.01 40 / 0.86); color: #fff; font-size: 0.8rem; font-weight: 500;
+    padding: 0.25rem 0.7rem; border-radius: 999px;
+    opacity: 0; transition: opacity 0.2s var(--ease); pointer-events: none;
+  }
+  .shot-open:hover::after, .shot-open:focus-visible::after { opacity: 1; }
+
+  .lightbox { position: fixed; inset: 0; z-index: 100; display: grid; grid-template-rows: minmax(0, 1fr) auto; gap: 1rem; padding: clamp(1rem, 3vw, 2.5rem); background: oklch(0.16 0.008 40 / 0.95); overflow: auto; }
+  .lightbox[hidden] { display: none; }
+  .lightbox img { max-width: 100%; max-height: 100%; margin: auto; object-fit: contain; border-radius: 8px; background: var(--bg); box-shadow: 0 20px 60px oklch(0 0 0 / 0.5); }
+  .lightbox-cap { text-align: center; color: oklch(0.92 0.005 40); font-size: 0.95rem; max-width: 50em; margin-inline: auto; }
+  .lightbox-close {
+    position: absolute; top: clamp(0.75rem, 2vw, 1.5rem); right: clamp(0.75rem, 2vw, 1.5rem);
+    width: 2.75rem; height: 2.75rem; border-radius: 50%; border: 1px solid oklch(1 0 0 / 0.25);
+    background: oklch(0.2 0.01 40 / 0.8); color: #fff; font-size: 1.5rem; line-height: 1; cursor: pointer;
+  }
+  .lightbox-close:hover { background: oklch(0.3 0.02 40 / 0.9); }
+
   footer { background: var(--dark); color: oklch(0.95 0.005 40); padding-block: clamp(2.25rem, 6vh, 3.5rem); }
   footer h2 { font-size: clamp(1.4rem, 2.8vw, 1.9rem); font-weight: 700; }
   footer .links { display: flex; flex-wrap: wrap; gap: 0.8rem 2rem; margin-top: 1.25rem; padding: 0; list-style: none; }
@@ -114,7 +138,7 @@
           <figcaption>Форма добавления. Статусы и типы техники ограничены справочниками.</figcaption>
         </figure>
       </div>
-      <p class="note">Скриншоты сняты с живого запуска проекта в августе 2026: код 2021 года поднялся на современном Django почти без правок.</p>
+      <p class="note">Любой скриншот открывается в полном размере по клику. Сняты с живого запуска проекта в августе 2026: код 2021 года поднялся на современном Django почти без правок.</p>
     </div>
   </section>
 
@@ -172,6 +196,63 @@
     <p class="fine">Иван Архипов · Москва · проект 2021 года, страница собрана в 2026</p>
   </div>
 </footer>
+
+<script>
+(() => {
+  const shots = document.querySelectorAll(".shots figure img");
+  if (!shots.length) return;
+
+  const box = document.createElement("div");
+  box.className = "lightbox";
+  box.hidden = true;
+  box.setAttribute("role", "dialog");
+  box.setAttribute("aria-modal", "true");
+  box.setAttribute("aria-label", "Скриншот в полном размере");
+  box.innerHTML =
+    '<button class="lightbox-close" type="button" aria-label="Закрыть">×</button>' +
+    '<img alt=""><p class="lightbox-cap"></p>';
+  document.body.appendChild(box);
+
+  const big = box.querySelector("img");
+  const cap = box.querySelector(".lightbox-cap");
+  const closeBtn = box.querySelector(".lightbox-close");
+  let lastFocus = null;
+
+  const close = () => {
+    box.hidden = true;
+    document.body.style.overflow = "";
+    if (lastFocus) lastFocus.focus();
+  };
+
+  shots.forEach((img) => {
+    const fig = img.closest("figure");
+    const figcap = fig && fig.querySelector("figcaption");
+    const text = (figcap ? figcap.textContent : img.alt).trim();
+
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "shot-open";
+    btn.setAttribute("aria-label", "Открыть скриншот в полном размере: " + text);
+    img.parentNode.insertBefore(btn, img);
+    btn.appendChild(img);
+
+    btn.addEventListener("click", () => {
+      lastFocus = btn;
+      big.src = img.currentSrc || img.src;
+      big.alt = img.alt;
+      cap.textContent = text;
+      box.hidden = false;
+      document.body.style.overflow = "hidden";
+      closeBtn.focus();
+    });
+  });
+
+  box.addEventListener("click", (e) => { if (e.target !== big) close(); });
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && !box.hidden) close();
+  });
+})();
+</script>
 
 </body>
 </html>
