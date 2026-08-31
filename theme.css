@@ -1,0 +1,74 @@
+/* Тёмная тема для всех страниц сайта.
+   Страницы используют общий словарь токенов, поэтому тема - это одна подмена набора.
+
+   Важно про --dark: в светлой теме это фон тёмных секций (полосы, футер,
+   терминальная карточка). В тёмной он становится СВЕТЛЕЕ фона страницы -
+   иначе секции сольются с ним и ритм страницы пропадёт. Светлый текст,
+   заданный внутри этих секций, при этом остаётся читаемым. */
+
+:root {
+  color-scheme: light;
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+
+  --bg: oklch(0.17 0.008 40);
+  --surface: oklch(0.21 0.01 40);
+  --dark: oklch(0.26 0.014 40);
+  --dark-soft: oklch(0.32 0.016 40);
+  --ink: oklch(0.93 0.006 40);
+  --muted: oklch(0.71 0.014 40);
+  --accent: oklch(0.75 0.14 52);
+  --accent-deep: oklch(0.8 0.13 58);
+  --ok: oklch(0.74 0.13 145);
+  --done: oklch(0.74 0.13 145);
+  --line: oklch(0.32 0.009 40);
+}
+
+/* Кнопка переключения: одна на всех страницах, поверх содержимого */
+.theme-switch {
+  position: fixed;
+  top: 1rem;
+  right: 1rem;
+  z-index: 200;
+  width: 2.6rem;
+  height: 2.6rem;
+  border-radius: 50%;
+  border: 1px solid var(--line);
+  background: var(--bg);
+  color: var(--ink);
+  font-size: 1.1rem;
+  line-height: 1;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  box-shadow: 0 4px 14px -6px oklch(0 0 0 / 0.35);
+  transition: border-color 0.2s, transform 0.2s;
+}
+.theme-switch:hover { border-color: var(--accent); transform: scale(1.06); }
+.theme-switch:focus-visible { outline: 3px solid var(--accent-deep); outline-offset: 3px; }
+
+@media print { .theme-switch { display: none; } }
+
+/* --- Точечные правки под тёмную тему --- */
+:root[data-theme="dark"] body { background: var(--bg); color: var(--ink); }
+
+/* Светлые подложки, заданные напрямую белым */
+:root[data-theme="dark"] .modal-box,
+:root[data-theme="dark"] figure img { background: var(--surface); }
+
+/* Скриншоты на тёмном фоне слепят - слегка гасим до наведения */
+:root[data-theme="dark"] .shots figure img { filter: brightness(0.88); transition: filter 0.2s; }
+:root[data-theme="dark"] .shot-open:hover img,
+:root[data-theme="dark"] .lightbox img { filter: none; }
+
+/* Кнопка-призыв: в тёмной теме акцент светлее, поэтому текст на нём должен
+   стать тёмным - белый по светлому янтарю читается плохо */
+:root[data-theme="dark"] .btn { color: oklch(0.18 0.01 40); }
+:root[data-theme="dark"] .btn:hover { color: oklch(0.15 0.01 40); }
+
+/* Календарь роадмапы: дни на светлых плашках акцента тоже требуют тёмного текста */
+:root[data-theme="dark"] .cal .p1,
+:root[data-theme="dark"] .cal .p2,
+:root[data-theme="dark"] .cal .go { color: oklch(0.18 0.01 40); }

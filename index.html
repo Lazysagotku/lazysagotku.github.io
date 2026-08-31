@@ -2,6 +2,14 @@
 <html lang="ru">
 <head>
 <meta charset="utf-8">
+<script>
+  (() => {
+    let saved = null;
+    try { saved = localStorage.getItem("theme"); } catch (e) {}
+    document.documentElement.dataset.theme = saved
+      || (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+  })();
+</script>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Иван Архипов - разработчик</title>
 <meta name="description" content="Иван Архипов, Москва. Разработчик с 7+ годами в корпоративных системах: финансовый и государственный сектор. Разбираю проблему от заявки пользователя до кода в проде.">
@@ -276,6 +284,7 @@
     .path .years { font-size: 1rem; }
   }
 </style>
+<link rel="stylesheet" href="/theme.css">
 </head>
 <body>
 
@@ -590,5 +599,6 @@
 })();
 </script>
 
+<script src="/theme.js"></script>
 </body>
 </html>

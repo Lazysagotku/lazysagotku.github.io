@@ -2,6 +2,14 @@
 <html lang="ru">
 <head>
 <meta charset="utf-8">
+<script>
+  (() => {
+    let saved = null;
+    try { saved = localStorage.getItem("theme"); } catch (e) {}
+    document.documentElement.dataset.theme = saved
+      || (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+  })();
+</script>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Инвентаризация - проект Ивана Архипова</title>
 <meta name="description" content="Веб-система учёта техники на Django: 25 полей учёта, поиск, CRUD, Docker. Проект Ивана Архипова, работал на PythonAnywhere.">
@@ -97,6 +105,7 @@
   footer a { color: #fff; font-weight: 600; text-decoration-color: oklch(1 0 0 / 0.4); }
   footer .fine { margin-top: 1.75rem; font-size: 0.88rem; color: oklch(0.65 0.015 40); }
 </style>
+<link rel="stylesheet" href="/theme.css">
 </head>
 <body>
 
@@ -254,5 +263,6 @@
 })();
 </script>
 
+<script src="/theme.js"></script>
 </body>
 </html>
