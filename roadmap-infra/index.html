@@ -387,9 +387,7 @@ document.getElementById("btnNow").addEventListener("click", () => {
 document.getElementById("btnResetAll").addEventListener("click", () => {
   // Отметки живут в браузере, и любой, кто открыл страницу на этой машине,
   // может их наставить. Значит нужен честный откат в исходное состояние.
-  if (!confirm("Стереть весь прогресс по всем слоям и вернуть роадмап в начало?
-
-Отменить это будет нельзя.")) return;
+  if (!confirm("Стереть весь прогресс по всем слоям и вернуть роадмап в начало? Отменить это будет нельзя.")) return;
   try { localStorage.removeItem(KEY); } catch (e) {}
   state = {};
   render();
