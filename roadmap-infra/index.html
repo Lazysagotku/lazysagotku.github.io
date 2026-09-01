@@ -1,0 +1,393 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<script>
+  (() => {
+    let saved = null;
+    try { saved = localStorage.getItem("theme"); } catch (e) {}
+    document.documentElement.dataset.theme = saved
+      || (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+  })();
+</script>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Стенд с нуля - роадмап Ивана Архипова</title>
+<meta name="description" content="Роадмап инфраструктуры: голый сервер, на который слоями ставится Docker, nginx, CI/CD, мониторинг и Kubernetes.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%23b0561f'/%3E%3Ctext x='32' y='43' font-family='Georgia,serif' font-weight='700' font-size='30' fill='white' text-anchor='middle'%3EИА%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bitter:wght@600;700;800&family=Golos+Text:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: oklch(1 0 0);
+    --surface: oklch(0.97 0.003 40);
+    --raised: oklch(1 0 0);
+    --dark: oklch(0.23 0.012 40);
+    --on-dark: #fff;
+    --ink: oklch(0.24 0.015 40);
+    --muted: oklch(0.45 0.015 40);
+    --accent: oklch(0.58 0.15 42);
+    --accent-deep: oklch(0.46 0.125 42);
+    --accent-soft: oklch(0.96 0.02 42);
+    --done: oklch(0.55 0.12 145);
+    --done-soft: oklch(0.94 0.05 145);
+    --skip: oklch(0.55 0.13 25);
+    --skip-soft: oklch(0.95 0.04 25);
+    --line: oklch(0.9 0.004 40);
+    --display: "Bitter", Georgia, serif;
+    --body: "Golos Text", "Segoe UI", system-ui, sans-serif;
+    --mono: ui-monospace, "Cascadia Mono", Consolas, monospace;
+    --r: 14px;
+    --ease: cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--body); font-size: 1.0625rem; line-height: 1.65; -webkit-font-smoothing: antialiased; }
+  h1, h2, h3 { font-family: var(--display); text-wrap: balance; margin: 0; }
+  p { margin: 0; text-wrap: pretty; }
+  a { color: var(--accent-deep); text-underline-offset: 3px; }
+  .wrap { max-width: 60rem; margin-inline: auto; padding-inline: clamp(1.25rem, 5vw, 3rem); }
+
+  header { padding-block: clamp(2.5rem, 7vh, 4rem) 1.5rem; }
+  .back { font-size: 0.95rem; text-decoration: none; }
+  .epigraph { font-style: italic; color: var(--muted); margin-top: 1rem; font-size: 0.98rem; }
+  h1 { font-size: clamp(2rem, 5.5vw, 3.2rem); font-weight: 800; letter-spacing: -0.015em; margin-top: 0.6rem; }
+  .lead { margin-top: 0.9rem; font-size: clamp(1.05rem, 2vw, 1.2rem); color: var(--muted); max-width: 44em; }
+
+  section { padding-block: clamp(2rem, 5vh, 3rem); }
+  section + section { border-top: 1px solid var(--line); }
+  .section-title { font-size: clamp(1.4rem, 3vw, 1.9rem); font-weight: 700; margin-bottom: 1.2rem; }
+  .section-title em { font-style: normal; color: var(--accent-deep); }
+
+  /* Сегодняшний день */
+  .today { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 1.25rem 1.4rem; }
+  .today-head { display: flex; flex-wrap: wrap; gap: 0.75rem 1.5rem; align-items: center; }
+  .today-head h2 { font-size: 1.25rem; font-weight: 700; }
+  .start-row { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; font-size: 0.92rem; color: var(--muted); }
+  .start-row input { font: inherit; padding: 0.3rem 0.6rem; border: 1px solid var(--line); border-radius: 8px; background: var(--raised); color: inherit; }
+  .start-row button { font: inherit; font-size: 0.88rem; padding: 0.3rem 0.9rem; border: 1px solid var(--line); border-radius: 999px; background: var(--raised); color: inherit; cursor: pointer; }
+  .start-row button:hover { border-color: var(--accent); }
+
+  .finish { margin-top: 1rem; padding: 0.8rem 1rem; background: var(--accent-soft); border-left: 3px solid var(--accent); border-radius: 0 10px 10px 0; }
+  .finish b { color: var(--accent-deep); }
+
+  .steps { list-style: none; padding: 0; margin: 1.1rem 0 0; display: grid; gap: 0.5rem; }
+  .step { display: grid; grid-template-columns: 3.2rem 1fr auto; gap: 0.75rem; align-items: start; padding: 0.6rem 0.75rem; border: 1px solid var(--line); border-radius: 10px; background: var(--raised); }
+  .step.done { background: var(--done-soft); border-color: var(--done); }
+  .step.doing { border-color: var(--accent); border-width: 2px; }
+  .step.skipped { background: var(--skip-soft); border-color: var(--skip); opacity: 0.85; }
+  .step .clock { font-family: var(--mono); font-size: 0.85rem; color: var(--muted); padding-top: 0.15rem; }
+  .step .what b { display: block; font-weight: 600; }
+  .step .what span { color: var(--muted); font-size: 0.9rem; }
+  .step .marks { display: flex; gap: 0.25rem; }
+  .step .marks button { font: inherit; font-size: 0.8rem; padding: 0.2rem 0.55rem; border: 1px solid var(--line); border-radius: 999px; background: var(--raised); color: inherit; cursor: pointer; }
+  .step .marks button:hover { border-color: var(--accent); }
+  .step .marks button.on { background: var(--dark); color: var(--on-dark); border-color: var(--dark); }
+
+  /* Слои */
+  .layer { border: 1px solid var(--line); border-radius: var(--r); padding: 1rem 1.2rem; margin-bottom: 0.8rem; background: var(--raised); }
+  .layer summary { cursor: pointer; font-family: var(--display); font-weight: 700; font-size: 1.08rem; display: flex; flex-wrap: wrap; gap: 0.5rem 1rem; align-items: baseline; }
+  .layer .hours { font-family: var(--body); font-weight: 500; font-size: 0.88rem; color: var(--muted); }
+  .layer .pct { margin-left: auto; font-family: var(--body); font-size: 0.9rem; color: var(--accent-deep); font-weight: 600; }
+  .bar { height: 6px; border-radius: 3px; background: var(--surface); margin-top: 0.6rem; overflow: hidden; }
+  .bar i { display: block; height: 100%; background: var(--accent); }
+  .layer .body { margin-top: 0.9rem; font-size: 0.97rem; }
+  .layer .body p + p { margin-top: 0.6rem; }
+  .analogy { background: var(--surface); border-radius: 10px; padding: 0.7rem 0.9rem; margin-top: 0.7rem; }
+  .analogy b { color: var(--accent-deep); }
+  .qs { margin-top: 0.7rem; }
+  .qs b { font-size: 0.92rem; }
+  .qs ul { margin: 0.3rem 0 0; padding-left: 1.1rem; color: var(--muted); font-size: 0.93rem; }
+
+  table { width: 100%; border-collapse: collapse; font-size: 0.95rem; margin-top: 0.8rem; }
+  th, td { text-align: left; padding: 0.5rem 0.6rem; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { font-size: 0.82rem; text-transform: uppercase; letter-spacing: 0.03em; color: var(--muted); }
+
+  .note { color: var(--muted); font-size: 0.95rem; margin-top: 1rem; }
+  footer { background: var(--dark); color: oklch(0.95 0.005 40); padding-block: 2.5rem; margin-top: 2rem; }
+  footer a { color: #fff; font-weight: 600; }
+  footer .fine { margin-top: 1.2rem; font-size: 0.88rem; color: oklch(0.65 0.015 40); }
+</style>
+<link rel="stylesheet" href="/theme.css">
+</head>
+<body>
+
+<header>
+  <div class="wrap">
+    <a class="back" href="/">← Иван Архипов</a>
+    <p class="epigraph">Не забывай, кто тебя отправил, и помни, что ты можешь доказать.</p>
+    <h1>Стенд с нуля</h1>
+    <p class="lead">Голый сервер, на который слоями ставится всё: Docker, nginx, CI/CD, мониторинг и Kubernetes. Не курс по темам, а одна задача - та, что приходит на работе словами «вот сервер, разверни».</p>
+  </div>
+</header>
+
+<main>
+  <section>
+    <div class="wrap">
+      <div class="today">
+        <div class="today-head">
+          <h2 id="dayTitle">План на сегодня</h2>
+          <div class="start-row">
+            <label>начал в <input type="time" id="startAt"></label>
+            <button type="button" id="btnNow">сейчас</button>
+            <button type="button" id="btnReset">сбросить день</button>
+          </div>
+        </div>
+        <ul class="steps" id="steps"></ul>
+        <div class="finish" id="finish"></div>
+      </div>
+      <p class="note">Расписание не привязано к часам: отметь, во сколько начал, и оно само посчитает остальное. Пропущенный шаг переносится, а не исчезает - день просто заканчивается позже.</p>
+    </div>
+  </section>
+
+  <section>
+    <div class="wrap">
+      <h2 class="section-title">Куда <em>целимся</em></h2>
+      <p>Kubernetes несёт девопсовый характер, и делать вид, что его нет - самообман. Но и весь DevOps за месяц не берётся: источники оценивают полный путь в 8-12 месяцев. Поэтому прицел - базовый ближе к среднему.</p>
+      <table>
+        <thead><tr><th>Уровень</th><th>Что входит</th><th>Берём</th></tr></thead>
+        <tbody>
+          <tr><td>Входной минимум</td><td>Развернуть приложение в кластер, поды и сервисы, базовый YAML</td><td>да</td></tr>
+          <tr><td>Средний</td><td>Ingress, Helm, мониторинг внутри кластера, разбор инцидентов</td><td>да</td></tr>
+          <tr><td>Продвинутый</td><td>Автоскейлинг, сетевые политики, операторы</td><td>нет</td></tr>
+          <tr><td>DevOps-собес крупного банка</td><td>eBPF, cgroups, seccomp, контроллер на Go</td><td>нет</td></tr>
+        </tbody>
+      </table>
+      <p class="note">Отдельно: зрелая эксплуатация в 2026 - это не только деплой, а ещё эскалации, runbook и постмортемы. Это уже есть за плечами: семь лет линий поддержки и разбор инцидентов до причины. Не хватает именно инструмента.</p>
+    </div>
+  </section>
+
+  <section>
+    <div class="wrap">
+      <h2 class="section-title">Слои <em>стенда</em></h2>
+      <div id="layers"></div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <p><a href="/">На визитку</a> · <a href="/roadmap/">Роадмапа C#</a> · <a href="/tracker/">Трекер откликов</a></p>
+    <p class="fine">Иван Архипов · Москва · сентябрь 2026</p>
+  </div>
+</footer>
+
+<script src="/theme.js"></script>
+<script>
+// Слои роадмапа. Шаги идут подряд, минуты - оценка на шаг.
+const LAYERS = [
+  { key: "stand", title: "Стенд", hours: 2,
+    analogy: "Пустая квартира после ремонта: прежде чем завозить технику, ставим дверь с замком и находим щиток.",
+    steps: [
+      { t: "Поднять Ubuntu Server", m: 30, d: "своя машина или облако" },
+      { t: "Пользователь, sudo, SSH-ключ", m: 30, d: "вход по паролю отключить" },
+      { t: "Файрвол ufw", m: 20, d: "закрыть всё, открыть 22, 80, 443" },
+      { t: "Docker и docker compose", m: 40, d: "проверка: docker run hello-world без sudo" },
+    ],
+    qs: ["Как подготовите новый сервер к работе?"] },
+
+  { key: "nginx", title: "Nginx", hours: 3,
+    analogy: "Ресепшн в бизнес-центре: посетитель не бегает по этажам, он говорит, кто нужен, и его направляют.",
+    steps: [
+      { t: "Теория: reverse proxy", m: 40, d: "server, location, proxy_pass, upstream, заголовки" },
+      { t: "Nginx перед трекером", m: 40, d: "первый рабочий конфиг" },
+      { t: "TLS через certbot", m: 40, d: "сертификат и редирект на https" },
+      { t: "Балансировка на два бэкенда", m: 30, d: "убедиться, что запросы разъезжаются" },
+      { t: "Сломать и найти 502", m: 30, d: "остановить бэкенд, прочитать error.log" },
+    ],
+    qs: ["Чем forward отличается от reverse?", "Клиент получает 502 - ваши действия?", "Как настроить балансировку?"] },
+
+  { key: "cicd", title: "CI/CD", hours: 4,
+    analogy: "Конвейер против ручной сборки: каждый этап делает одно, брак отсеивается до покраски, а не после продажи.",
+    steps: [
+      { t: "Теория: стадии и раннеры", m: 40, d: "build, test, deploy; артефакты, кэш, секреты" },
+      { t: "Пайплайн для Скаута", m: 60, d: "линтер, тесты, сборка образа" },
+      { t: "Публикация образа", m: 40, d: "в реестр" },
+      { t: "Деплой на стенд по SSH", m: 50, d: "пуш в main обновляет контейнер" },
+      { t: "Сломать тест намеренно", m: 20, d: "деплой не должен поехать" },
+      { t: "Откат на прошлый образ", m: 30, d: "" },
+    ],
+    qs: ["Пайплайн упал на деплое - что делаете?", "Где храните секреты?", "Blue-green против rolling?"] },
+
+  { key: "mon", title: "Мониторинг с нуля", hours: 5,
+    analogy: "Приборная панель: на неё выводят не все триста параметров двигателя, а то, на что водитель обязан среагировать.",
+    steps: [
+      { t: "Теория: pull, типы метрик, PromQL", m: 60, d: "counter, gauge, histogram; rate и sum by" },
+      { t: "Prometheus и node_exporter", m: 45, d: "через docker compose" },
+      { t: "Grafana: дашборд руками", m: 60, d: "не импортировать готовый" },
+      { t: "Метрики приложения", m: 45, d: "ошибки, время ответа" },
+      { t: "Alertmanager: два алерта", m: 45, d: "рост пятисоток, диск выше 85%" },
+      { t: "Уведомление в Telegram", m: 25, d: "" },
+      { t: "Сломать и дождаться алерта", m: 20, d: "проверка, что цепочка работает" },
+    ],
+    qs: ["Pull или push и почему?", "Как не сделать алерты, которые игнорируют?", "Что такое SLI, SLO, error budget?"] },
+
+  { key: "k8s", title: "Kubernetes", hours: 10, main: true,
+    analogy: "Docker - повар с одной плитой. Kubernetes - шеф: сам не готовит, а распределяет. Повар слёг - ставит другого, гостей вдвое больше - добавляет плит.",
+    steps: [
+      { t: "Теория: зачем оркестратор", m: 30, d: "самолечение, масштабирование, декларативность" },
+      { t: "Объекты: Pod, Deployment, StatefulSet, DaemonSet", m: 40, d: "почему деплоят Deployment, а не Pod" },
+      { t: "Service и Ingress", m: 30, d: "ClusterIP, NodePort, LoadBalancer" },
+      { t: "ConfigMap, Secret, labels", m: 25, d: "на селекторах держится связность" },
+      { t: "Probes и ресурсы", m: 35, d: "liveness как пульс, readiness как готовность принимать" },
+      { t: "Поставить k3s или minikube", m: 40, d: "первый кластер" },
+      { t: "Задеплоить трекер руками", m: 90, d: "Deployment, Service, Ingress - манифесты писать, не генерировать" },
+      { t: "PostgreSQL в кластере", m: 60, d: "Secret для пароля, ConfigMap для настроек" },
+      { t: "Проверить DNS внутри кластера", m: 25, d: "приложение находит базу по имени сервиса" },
+      { t: "Ломать: убить под", m: 20, d: "посмотреть, как поднимется" },
+      { t: "Ломать: плохой readiness", m: 25, d: "трафик не идёт - увидеть это" },
+      { t: "Ломать: агрессивный liveness", m: 25, d: "перезапуск живого приложения" },
+      { t: "Ломать: лимит памяти", m: 25, d: "получить OOMKilled" },
+      { t: "Ломать: битый образ", m: 30, d: "CrashLoopBackOff и его разбор" },
+      { t: "Разбор инцидента по шагам", m: 45, d: "get, describe, logs, logs --previous, events" },
+      { t: "Helm: свой чарт", m: 60, d: "values для разных окружений" },
+      { t: "Написать runbook", m: 45, d: "что делать при CrashLoopBackOff - по шагам" },
+    ],
+    qs: ["Приложение падает с CrashLoopBackOff, логов нет. Действия?", "Liveness против readiness - что будет, если перепутать?",
+         "Как приложение находит базу внутри кластера?", "Что происходит при OOM?", "Зачем requests и limits?"] },
+
+  { key: "ch", title: "ClickHouse обзорно", hours: 2,
+    analogy: "Библиотека против картотеки: одна отдаёт книгу целиком, вторая мгновенно скажет, сколько книг издано в 1998 году.",
+    steps: [
+      { t: "Теория: колоночное хранение", m: 40, d: "почему аналитика быстрая, а точечные апдейты плохие" },
+      { t: "Поднять в Docker", m: 30, d: "" },
+      { t: "Залить данные трекера и замерить", m: 50, d: "сравнить агрегирующий запрос с PostgreSQL, записать цифры" },
+    ],
+    qs: ["Когда ClickHouse, а когда PostgreSQL?"] },
+
+  { key: "py", title: "Python до 3.13", hours: 6,
+    analogy: "GIL - одна касса в магазине: пока кассир пробивает товар, очередь стоит; но пока клиент ищет карту, можно обслужить соседнего.",
+    steps: [
+      { t: "Что нового в 3.12 и 3.13", m: 45, d: "ошибки, типизация, free-threaded" },
+      { t: "Типизация и mypy", m: 60, d: "аннотации, dataclasses, pydantic" },
+      { t: "Асинхронность", m: 60, d: "threading для I/O, asyncio для нагруженного I/O, multiprocessing для CPU" },
+      { t: "pytest: фикстуры, параметризация, моки", m: 60, d: "" },
+      { t: "Покрыть Скаута тестами", m: 90, d: "и прогнать mypy" },
+    ],
+    qs: ["Что реально блокирует GIL?", "list против tuple по памяти?", "Как работает декоратор?"] },
+
+  { key: "linux", title: "Linux фоном", hours: 7,
+    analogy: "systemd - это автозапуск, только строже: система знает, что запускать, в каком порядке, что делать при падении и куда писать логи.",
+    steps: [
+      { t: "Процессы и ресурсы", m: 60, d: "ps, top, lsof, df, du - найти, что съело диск" },
+      { t: "systemd и journalctl", m: 60, d: "unit-файл, systemctl" },
+      { t: "Скаут как systemd-сервис", m: 60, d: "автозапуск, сбор по таймеру" },
+      { t: "Сеть: ss, curl, dig, tcpdump", m: 60, d: "найти, кто слушает порт" },
+      { t: "Права и сигналы", m: 60, d: "chmod, chown; SIGTERM против SIGKILL - важно для Kubernetes" },
+      { t: "cron и systemd timers", m: 60, d: "почему задача молча не отработала" },
+    ],
+    qs: ["Как найти, что съело место на диске?", "Кто слушает порт?", "Что приходит поду при остановке?"] },
+];
+
+const KEY = "infra-progress";
+const load = () => { try { return JSON.parse(localStorage.getItem(KEY)) || {}; } catch (e) { return {}; } };
+const save = (s) => { try { localStorage.setItem(KEY, JSON.stringify(s)); } catch (e) {} };
+let state = load();
+
+const allSteps = [];
+LAYERS.forEach(layer => layer.steps.forEach((step, i) => {
+  allSteps.push({ ...step, layer: layer.title, layerKey: layer.key, id: layer.key + "-" + i });
+}));
+
+const DAY_MINUTES = 300;   // пять учебных часов
+
+function todaySteps() {
+  // Берём подряд незакрытые шаги, пока не наберём дневную норму
+  const rest = allSteps.filter(s => state[s.id] !== "done" && state[s.id] !== "skipped");
+  const plan = [];
+  let sum = 0;
+  for (const step of rest) {
+    if (sum && sum + step.m > DAY_MINUTES) break;
+    plan.push(step);
+    sum += step.m;
+  }
+  return plan.length ? plan : rest.slice(0, 1);
+}
+
+function fmt(minutesFromStart, startStr) {
+  if (!startStr) return null;
+  const [h, m] = startStr.split(":").map(Number);
+  const d = new Date();
+  d.setHours(h, m + minutesFromStart, 0, 0);
+  return d.toTimeString().slice(0, 5);
+}
+
+function render() {
+  const plan = todaySteps();
+  const start = state.startAt || "";
+  document.getElementById("startAt").value = start;
+
+  const list = document.getElementById("steps");
+  let acc = 0;
+  list.innerHTML = plan.map(step => {
+    const from = fmt(acc, start);
+    const status = state[step.id] || "";
+    // Пропущенный шаг не съедает время дня, но и не исчезает - вернётся завтра
+    if (status !== "skipped") acc += step.m;
+    const to = fmt(acc, start);
+    const clock = start && status !== "skipped" ? `${from}<br>${to}` : `${step.m} мин`;
+    return `<li class="step ${status}">
+      <span class="clock">${clock}</span>
+      <span class="what"><b>${step.t}</b><span>${step.layer}${step.d ? " · " + step.d : ""}</span></span>
+      <span class="marks">
+        <button type="button" class="${status === 'done' ? 'on' : ''}" onclick="mark('${step.id}','done')">сделано</button>
+        <button type="button" class="${status === 'doing' ? 'on' : ''}" onclick="mark('${step.id}','doing')">в процессе</button>
+        <button type="button" class="${status === 'skipped' ? 'on' : ''}" onclick="mark('${step.id}','skipped')">пропущено</button>
+      </span>
+    </li>`;
+  }).join("");
+
+  const doneTotal = allSteps.filter(s => state[s.id] === "done").length;
+  const pct = Math.round(doneTotal / allSteps.length * 100);
+  const layersDone = LAYERS.filter(l => l.steps.every((_, i) => state[l.key + "-" + i] === "done"));
+  const knowledge = plan.length ? plan.map(s => s.t).slice(0, 3).join(", ") : "всё пройдено";
+
+  document.getElementById("finish").innerHTML = start
+    ? `Закончишь в <b>${fmt(acc, start)}</b>. К концу дня будешь знать: <b>${knowledge}</b>.
+       Пройдено по роадмапу: <b>${pct}%</b>${layersDone.length ? `, слоёв закрыто: <b>${layersDone.length}</b> из ${LAYERS.length}` : ""}.`
+    : `Отметь время старта - посчитаю, во сколько закончишь. Сегодня набрано <b>${Math.round(acc / 60 * 10) / 10} ч</b> работы.
+       Пройдено по роадмапу: <b>${pct}%</b>.`;
+
+  document.getElementById("layers").innerHTML = LAYERS.map(layer => {
+    const total = layer.steps.length;
+    const done = layer.steps.filter((_, i) => state[layer.key + "-" + i] === "done").length;
+    const p = Math.round(done / total * 100);
+    return `<details class="layer" ${layer.main ? "open" : ""}>
+      <summary>${layer.title}<span class="hours">${layer.hours} ч · ${total} шагов</span><span class="pct">${p}%</span></summary>
+      <div class="bar"><i style="width:${p}%"></i></div>
+      <div class="body">
+        <div class="analogy"><b>Аналогия.</b> ${layer.analogy}</div>
+        <div class="qs"><b>Спросят на собеседовании:</b><ul>${layer.qs.map(q => `<li>${q}</li>`).join("")}</ul></div>
+      </div>
+    </details>`;
+  }).join("");
+}
+
+function mark(id, status) {
+  state[id] = state[id] === status ? "" : status;
+  save(state);
+  render();
+}
+
+document.getElementById("startAt").addEventListener("change", (e) => {
+  state.startAt = e.target.value;
+  save(state);
+  render();
+});
+document.getElementById("btnNow").addEventListener("click", () => {
+  state.startAt = new Date().toTimeString().slice(0, 5);
+  save(state);
+  render();
+});
+document.getElementById("btnReset").addEventListener("click", () => {
+  if (!confirm("Сбросить отметки сегодняшнего дня? Пройденное сохранится.")) return;
+  todaySteps().forEach(s => { if (state[s.id] === "doing") state[s.id] = ""; });
+  state.startAt = "";
+  save(state);
+  render();
+});
+
+render();
+</script>
+</body>
+</html>
