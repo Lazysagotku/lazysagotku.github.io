@@ -67,6 +67,10 @@
   .start-row input { font: inherit; padding: 0.3rem 0.6rem; border: 1px solid var(--line); border-radius: 8px; background: var(--raised); color: inherit; }
   .start-row button { font: inherit; font-size: 0.88rem; padding: 0.3rem 0.9rem; border: 1px solid var(--line); border-radius: 999px; background: var(--raised); color: inherit; cursor: pointer; }
   .start-row button:hover { border-color: var(--accent); }
+  /* Полный сброс стоит особняком и приглушён: нажимать его надо редко
+     и осознанно, а не мимоходом рядом с «сейчас». */
+  .start-row button.danger { margin-left: auto; opacity: 0.65; }
+  .start-row button.danger:hover { opacity: 1; border-color: var(--skip); color: var(--skip); }
 
   .finish { margin-top: 1rem; padding: 0.8rem 1rem; background: var(--accent-soft); border-left: 3px solid var(--accent); border-radius: 0 10px 10px 0; }
   .finish b { color: var(--accent-deep); }
@@ -131,6 +135,7 @@
             <label>начал в <input type="time" id="startAt"></label>
             <button type="button" id="btnNow">сейчас</button>
             <button type="button" id="btnReset">сбросить день</button>
+            <button type="button" id="btnResetAll" class="danger">сбросить весь прогресс</button>
           </div>
         </div>
         <ul class="steps" id="steps"></ul>
@@ -379,6 +384,17 @@ document.getElementById("btnNow").addEventListener("click", () => {
   save(state);
   render();
 });
+document.getElementById("btnResetAll").addEventListener("click", () => {
+  // Отметки живут в браузере, и любой, кто открыл страницу на этой машине,
+  // может их наставить. Значит нужен честный откат в исходное состояние.
+  if (!confirm("Стереть весь прогресс по всем слоям и вернуть роадмап в начало?
+
+Отменить это будет нельзя.")) return;
+  try { localStorage.removeItem(KEY); } catch (e) {}
+  state = {};
+  render();
+});
+
 document.getElementById("btnReset").addEventListener("click", () => {
   if (!confirm("Сбросить отметки сегодняшнего дня? Пройденное сохранится.")) return;
   todaySteps().forEach(s => { if (state[s.id] === "doing") state[s.id] = ""; });
