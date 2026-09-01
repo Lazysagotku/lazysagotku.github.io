@@ -190,6 +190,8 @@
   .case p strong { color: var(--accent-deep); }
 
   /* Путь: тёмная секция */
+  /* Ритм фонов: без чередования пять секций подряд сливаются в одно полотно */
+  .tinted { background: var(--surface); border-block: 1px solid var(--line); }
   .dark-band { background: var(--dark); color: oklch(0.95 0.005 40); }
   .dark-band .section-title { color: #fff; }
   .path { list-style: none; margin: 0; padding: 0; }
@@ -351,7 +353,7 @@
     </div>
   </section>
 
-  <section aria-labelledby="soul-title">
+  <section class="tinted" aria-labelledby="soul-title">
     <div class="wrap">
       <h2 class="section-title" id="soul-title">Частички <em>меня</em></h2>
 
@@ -440,15 +442,15 @@
         <li>
           <span class="years">сейчас</span>
           <div>
-            <h3>ASP.NET Core и EF Core</h3>
-            <p>Целенаправленно довожу стек до современного .NET: весь реальный опыт уже давно про разработку, перевожу её в официальную роль.</p>
+            <h3>Инфраструктура и оркестрация</h3>
+            <p>Строю собственный стенд с нуля: Docker и nginx, пайплайн CI/CD от коммита до деплоя, Prometheus и Grafana с алертами, Kubernetes. Ровно та задача, которая на работе приходит словами «вот сервер, разверни». Параллельно довожу бэкенд-стек до ASP.NET Core и EF Core.</p>
           </div>
         </li>
       </ol>
     </div>
   </section>
 
-  <section aria-labelledby="tools-title">
+  <section class="tinted" aria-labelledby="tools-title">
     <div class="wrap">
       <h2 class="section-title" id="tools-title">Инструменты</h2>
       <div class="tools">
@@ -494,7 +496,7 @@
     </div>
   </section>
 
-  <section aria-labelledby="more-title">
+  <section class="tinted" aria-labelledby="more-title">
     <div class="wrap">
       <h2 class="section-title" id="more-title">Ещё в копилке</h2>
       <div class="tracks">
