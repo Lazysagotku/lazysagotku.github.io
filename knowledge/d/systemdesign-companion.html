@@ -1,0 +1,250 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>System Design — живой companion-документ - База знаний</title>
+<link rel="stylesheet" href="../kb.css">
+<script>
+  // Тему ставим до первой отрисовки, иначе на тёмной системе мигает белым.
+  try {
+    var t = localStorage.getItem("kb-theme");
+    if (!t) t = matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+    document.documentElement.setAttribute("data-theme", t);
+  } catch (e) {}
+</script>
+</head>
+<body>
+
+<header class="top">
+  <div class="top-in">
+    <a class="brand" href="../index.html">База <span>знаний</span></a>
+    <span class="grow"></span>
+    <input id="q" type="search" placeholder="Поиск по всем материалам…" autocomplete="off">
+    <button class="icon-btn" id="theme" type="button" title="Тема"></button>
+  </div>
+</header>
+
+<div id="results" hidden><div class="wrap-r"><h3></h3><div id="hits"></div></div></div>
+
+<main class="wrap">
+  <div class="doc-head">
+    <div class="crumb"><a href="../index.html#companions">Спутники к собеседованиям</a></div>
+    <h1>System Design — живой companion-документ</h1>
+    <div class="meta">155 строк · источник <code>l2code/SystemDesign_Companion.md</code></div>
+  </div>
+
+  <div class="layout">
+    <article class="prose"><blockquote>
+<p>Как и <code>Algorithms_Companion.md</code> — не одноразовая находка, а постоянно пополняемая тема. Ты бэкендер — важно не просто писать код, а понимать архитектуру целиком, видеть узкие места и уметь объяснить решение по структуре, а не потоком сознания.</p>
+</blockquote>
+<hr>
+<h2 id="_1">Структура ответа на собесе — два источника, не противоречат, дополняют</h2>
+<blockquote>
+<p>[!info]+ 🆕 Независимое подтверждение источника + диаграммы (2026-08-14)
+Отдельный файл <code>Системный дизайн на собеседованиях и в работе backend-разработчика.docx</code> (автор — Сергей Филичкин, python backend ментор) оказался практически дословным дубликатом всей "Главы 5" ниже по ТЕКСТУ — тот же ВКонтакте-пример, та же Яндекс.Музыка, тот же URL Shortener, тот же 10-шаговый процесс хранения данных. Но в файле были ещё 7 картинок, которые текстовая выжимка изначально пропустила — они добавляют реальную ценность сверх текста, см. раздел "Диаграммы" ниже.</p>
+</blockquote>
+<h3 id="system-designdocx-premier-8-5">Основной (курс <code>System Design.docx</code>, менторы Авито/Альфа-Банк/Premier, Глава 8) — 5 этапов</h3>
+<p><strong>Единственная явная цифра по времени во всей главе:</strong> <em>"скорее всего, у тебя будет не больше часа от начала интервью до его завершения"</em> — поэтапной раскладки по минутам в источнике НЕТ, только общий лимит ~1 час. Не выдумываю раскладку, которой нет в материале.</p>
+<ol>
+<li><strong>Требования.</strong> Ключевая мысль: <em>"на этом собеседовании не тебе задают вопросы, а ты их задаёшь"</em>. Функциональные — роли, что каждая роль может делать, как работает поиск, способы оплаты. Нефункциональные — обязательно спросить: <strong>DAU и MAU</strong> (чтобы посчитать RPS — не средние цифры, а именно ПИКОВУЮ нагрузку: <em>"во сколько раз пик превышает среднюю?"</em>), число пользователей через N лет, объём загружаемых данных, соотношение чтение/запись, срок хранения данных.</li>
+<li><strong>Расчёты.</strong> Точность не нужна — порядок величины важен (месяц = 30 дней, а не 30.44 — это нормально). Зачем: (а) понять масштаб системы (10 серверов или 10 000?), (б) выявить критичные компоненты (огромный трафик → нужен агрессивный кэш+CDN), (в) обосновать архитектурные решения. Держать под рукой таблицы степеней 10 и таблицу задержек.</li>
+<li><strong>Домены и API.</strong> Выписать все сущности, вместе с интервьюером отметить, что вне скоупа задачи. Дальше — выбор API (REST/GraphQL) с явным обоснованием выбора, не молча.</li>
+<li><strong>High Level Design.</strong> Рисовать на высоком уровне, не закапываться в детали раньше времени. Начинать проще — от пользователя. Подписанные стрелки облегчают понимание. Не обязательно сразу несколько дата-центров — один достаточен для старта, но стоит упомянуть, что для отказоустойчивости рассматривается мультирегион. Избегать циклических зависимостей.</li>
+<li><strong>Low Level Design.</strong> Вернуться по архитектуре и принять конкретные решения по каждому компоненту — <strong>не только проговорить, но и прописать</strong>: какие были варианты, почему выбран этот, плюсы/риски.</li>
+</ol>
+<h3 id="habr">Дополнительный (Habr, уже был в файле) — та же логика, но с раскладкой по минутам</h3>
+<p>Тайминг на 40-45 минут, если интервьюер даёт структуру по времени: представление задачи (~5) → требования (~5) → сущности (~2) → API (~5) → потоки данных (~5) → high-level дизайн (~10-15) → углубление в узкое место (~10). Выбрать 3 основные фичи и сфокусироваться, не пытаться охватить всё; вести встречу самому.</p>
+<hr>
+<h2 id="8">Частые ошибки на собесе (Глава 8, дословно — это то, что реально роняет кандидатов)</h2>
+<p><strong>1. Использование в архитектуре незнакомых технологий.</strong> <em>"Если ты упомянул Kafka, будь готов объяснить, почему она лучше RabbitMQ для этого кейса. Если ты разбираешься в теме на уровне «где-то слышал», то, скорее всего, это всплывёт именно сейчас. Лучше выбери решение, которое тебе знакомо, даже если оно звучит не очень круто."</em> — прямое применение к тебе: не вставлять в схему то, что не сможешь защитить на низком уровне.</p>
+<p><strong>2. Требования ради требований.</strong> Спросил "сколько пользователей через 5 лет" — а зачем тебе это число? Если не можешь ответить, для чего именно оно используется дальше в расчётах — вопрос был для галочки, а не по делу.</p>
+<p><strong>3. "Строительство космолёта".</strong> Три сплетённых ошибки: пытаться сказать всё, что знаешь; расширять систему за рамки задачи; пытаться спроектировать систему, меняющую мир, за один час. Лечится: чётко вычеркнуть домены не по теме сразу на этапе 3, помнить про реальные ограничения (большинство компаний — не Google по бюджету).</p>
+<p><strong>4. Игнорирование продуктовых метрик.</strong> <em>"Разработчик, который мыслит в терминах бизнеса (DAU, retention, conversion rate) и понимает, как технические решения влияют на эти метрики, ценится намного выше."</em> — не только "как построить", но и "зачем бизнесу это нужно".</p>
+<hr>
+<h2 id="backend-system-design-5">Зоны ответственности backend-разработчика в system design (Глава 5)</h2>
+<ul>
+<li><strong>Архитектура и управление данными</strong> — где/как хранятся данные, схема, масштабируемая от тысяч до миллионов записей, целостность в распределённых системах. Контрольный вопрос себе: <em>"Что будет, если база данных внезапно упадёт?"</em></li>
+<li><strong>API и интеграции</strong> — гарантия, что новые версии не ломают старых клиентов. Контрольный вопрос: <em>"Что будет, если сервис отвечает с задержкой, и как это влияет на пользователя?"</em></li>
+<li><strong>Бизнес-логика</strong> — например, платёжный флоу с транзакциями; обработка дублей запросов и таймаутов, когда неизвестно, применился ли эффект.</li>
+<li><strong>Инфраструктура и производительность</strong> — кэширование, шардирование/партиционирование, мониторинг, CI/CD.</li>
+</ul>
+<p><strong>Типовые задачи на собесе (названы явно в курсе):</strong> URL Shortener, Chat, лента соцсети, платёжная система (ACID + фрод), видеоплатформа.</p>
+<p><strong>Разобранный пример — URL Shortener:</strong> Frontend → API Gateway/LB → Backend (URL Service создаёт короткую ссылку / Redirect Service перенаправляет / Analytics Service собирает статистику) → БД (таблицы <code>urls</code> и <code>clicks</code>) → Cache (Redis, для быстрых редиректов) → брокер (Kafka/RabbitMQ, асинхронная отправка событий кликов в Analytics). Ключевая мысль: <strong>не нужно 30 компонентов и 10 микросервисов</strong> — показывай схему, которая реально обоснована требованиями.</p>
+<p><strong>Что реально оценивает интервьюер (4 пункта):</strong> системное мышление (видишь картину целиком, думаешь про отказы и edge cases) → моделирование данных (схемы БД, выбор типа БД, шардирование) → масштабируемость (типовые узкие места, горизонтальное масштабирование) → практичность (обоснование выбора технологий, операционные риски).</p>
+<hr>
+<h2 id="5-2">Масштабирование и нагрузка (Глава 5, часть 2)</h2>
+<ul>
+<li><strong>Вертикальное (Scale Up)</strong> — усилить один сервер, есть физический потолок.</li>
+<li><strong>Горизонтальное (Scale Out)</strong> — добавлять узлы. Пример из курса: <strong>ВКонтакте</strong> стартовал на одном PostgreSQL, вырос до тысяч узлов с собственными системами хранения по мере роста аудитории.</li>
+<li><strong>Эластичность</strong> — авто-подстройка под нагрузку (K8s HPA), но есть <strong>cold start</strong> — увеличение ресурсов не мгновенно.</li>
+</ul>
+<p><strong>5 техник, которые реально используются:</strong> шардирование, репликация (Master-Slave / Multi-Master), event-driven + очереди (Kafka/RabbitMQ), CQRS + Event Sourcing (разделить команды и запросы; хранить историю изменений, не только текущее состояние), кэширование на всех уровнях (приложение → распределённый кэш → CDN).</p>
+<p><strong>Типы узких мест и лечение:</strong> CPU-bound → параллелизм/асинхронность/выделенные воркеры. Memory-bound → оптимизация структур данных, распределённый кэш. I/O-bound → асинхронный I/O, батчинг, кэш, очереди. Network-bound → сжатие данных, gRPC вместо REST, CDN.</p>
+<p><strong>Стратегии смягчения перегрузки (это компромиссы, не бесплатные решения):</strong> Graceful Degradation (отключить часть функциональности), Rate Limiting/Throttling, Backpressure (система сигнализирует, что не может принять больше), Circuit Breaker, Bulkhead Pattern (изолировать ресурсы, чтобы отказ одного компонента не утопил всё).</p>
+<p><strong>Метрики для мониторинга:</strong> Latency, Throughput (RPS/QPS), Error Rate, Resource Utilization, Saturation. Инструменты: Prometheus+Grafana, OpenTelemetry, ELK/EFK, Jaeger.</p>
+<hr>
+<h2 id="5-3-tproger">Балансировка нагрузки (Глава 5, часть 3 — расширяет уже имевшуюся находку из Tproger)</h2>
+<p><strong>L4 (транспортный)</strong> — по IP/порту, быстрый, не видит содержимое запроса. <strong>L7 (прикладной)</strong> — анализирует HTTP-заголовки/пути/куки, гибкая маршрутизация (<code>/api/payments</code> → один сервис, <code>/api/profile</code> → другой).</p>
+<p><strong>Внешние vs внутренние балансировщики:</strong> внешние принимают пользовательский трафик, гасят DDoS, терминируют SSL (пример из курса — <strong>Яндекс.Музыка</strong> через CDN+внешние балансировщики). Внутренние — минимальная задержка внутри микросервисной архитектуры. Отдельная категория — балансировщики БД (разделение чтения/записи).</p>
+<p><strong>Алгоритмы</strong> (расширяет уже известное): Round Robin, Weighted Round Robin, Least Connections, Weighted Least Connections, Response Time-based, <strong>Consistent Hashing</strong> (один и тот же пользователь всегда попадает на один сервер — пример: кэш изображений листинга не гоняется между серверами при повторном открытии).</p>
+<p><strong>Хранение сессий:</strong> Sticky sessions → cookie-based → IP-based (ненадёжно) → <strong>внешнее хранилище (Redis/БД)</strong> — любой сервер может обработать запрос, крах сервера не роняет сессию → Stateless (JWT).</p>
+<p><strong>Health checks:</strong> активные (балансировщик сам шлёт тестовые запросы) vs пассивные (анализ реальных запросов). При отказе — сервер убирается из пула, включается Circuit Breaker.</p>
+<p><strong>Микросервисные паттерны:</strong> Service Discovery (Consul/etcd/K8s), Traffic Splitting/Canary (1% → 10% → 100%), Feature Flags.</p>
+<hr>
+<h2 id="10-5-4">Хранение данных — 10-шаговый процесс проектирования (Глава 5, часть 4)</h2>
+<ol>
+<li>Цели и сценарии использования — что храним, кто потребляет, какой SLA (держать в уме <strong>CAP-теорему</strong>).</li>
+<li>Классификация данных — по структуре (структурированные/полу/неструктурированные), по жизненному циклу (hot/warm/cold), по критичности (деньги/заказы vs логи/кэш).</li>
+<li>Нефункциональные требования — объём, темп роста, consistency vs availability (снова CAP), частота доступа.</li>
+<li>Выбор модели хранения — реляционная (строгая схема/транзакции) / документная / key-value (быстрый доступ) / колоночная (аналитика, ClickHouse/Cassandra) / графовая / объектная (S3). Можно комбинировать разные типы под разные задачи.</li>
+<li>Логическая схема — сущности/связи, ключи, индексы.</li>
+<li>Физическая схема — шардирование (по пользователю/региону/дате), репликация, архивирование холодных данных.</li>
+<li>Оптимизация — индексы, кэш, материализованные представления, партиционирование.</li>
+<li>Отказоустойчивость — регулярные бэкапы (полные+инкрементальные), гео-репликация, тестирование disaster recovery.</li>
+<li>Мониторинг и алерты — время ответа запросов, рост БД, нагрузка на реплики; алерты на упавшую реплику/нехватку места.</li>
+<li>Документация и регулярный пересмотр стратегии по мере роста системы.</li>
+</ol>
+<p><strong>Практический совет из курса:</strong> начинать с одной БД (обычно PostgreSQL), добавлять NoSQL и кэш по мере роста нагрузки. Всегда проектировать бэкап/восстановление заранее — "сэкономит много нервов".</p>
+<hr>
+<h2 id="docx-2026-08-14">Диаграммы (из docx Филичкина, 2026-08-14 — текст был дублем, картинки нет)</h2>
+<p><strong>URL Shortener — та же архитектура, что разобрана текстом выше, но визуально:</strong>
+<img alt="Architecture of URL-shortener App" src="assets/system-design/url-shortener-architecture.png"></p>
+<p><strong>ER-диаграмма интернет-магазина</strong> — конкретный пример логической схемы (Шаг 5 из 10-шагового процесса выше) с реальными полями/связями: <code>users</code>/<code>addresses</code>/<code>categories</code>/<code>products</code>/<code>product_images</code>/<code>carts</code>/<code>cart_items</code>/<code>orders</code>/<code>order_items</code>/<code>reviews</code>/<code>payments</code>. Хороший референс, если попадётся задача спроектировать схему e-commerce с нуля.
+<img alt="ER-диаграмма интернет-магазина" src="assets/system-design/ecommerce-er-diagram.png"></p>
+<p><strong>Физическая архитектура хранения данных интернет-магазина</strong> (Шаг 6 выше, но конкретным примером) — L7 LB → Backend API-servers → пять параллельных хранилищ под разные задачи (Redis для кэша/сессий, S3/MinIO для файлов, ClickHouse для аналитики, PostgreSQL Cluster с явным Master→запись / Replicas→чтение и шардированием по Users/Orders, ElasticSearch для полнотекстового поиска):
+<img alt="Хранение данных интернет-магазина" src="assets/system-design/ecommerce-storage-architecture.png"></p>
+<p><strong>Сквозной пример "Hotel/Booking/Payment service" — этого нет вообще в тексте, только на 3 картинках подряд</strong>, показывает event-driven архитектуру от источника до потребления в одном consistent примере:</p>
+<ol>
+<li>
+<p>Поток событий в data pipeline (сервисы → Kafka/RabbitMQ → Stream processor → расходится на Redis/ClickHouse/S3 Datalake/SnowFlake под разные цели — real-time дашборды, аналитика, сырое хранение, BI):
+<img alt="Пример архитектурной схемы потока данных" src="assets/system-design/data-pipeline-example.png"></p>
+</li>
+<li>
+<p>Тот же пример, но со стороны балансировки нагрузки (Client → LB → три сервиса → тот же Kafka/RabbitMQ):
+<img alt="Балансировщик нагрузки" src="assets/system-design/load-balancer-example.png"></p>
+</li>
+<li>
+<p>Тот же пример с добавленными health checks — наглядно показано, как L7-балансировщик исключает "упавший" инстанс (<code>Booking service 3 UNHEALTHY</code>) из пула:
+<img alt="Балансировщик с Health Checks" src="assets/system-design/load-balancer-health-checks.png"></p>
+</li>
+</ol>
+<p><strong>Grafana-дашборд</strong> — просто иллюстрация к "метрики нужно на что-то смотреть", не несёт уникальной информации сверх текста:
+<img alt="Grafana monitoring example" src="assets/system-design/grafana-monitoring-example.png"></p>
+<hr>
+<h2 id="_2">Что уже разобрано в курсе отдельно (не дублирую, просто карта)</h2>
+<ul>
+<li><strong>CAP-теорема, шардирование/партиционирование</strong> — банк вопросов Ozon, раздел 13/14 <code>CSharp_Interview_Questions.md</code>.</li>
+<li><strong>Монолит → микросервисы + Strangler Fig pattern</strong> — мок-собес #2, раздел 15.</li>
+<li><strong>DDD bounded contexts, expand-and-contract миграции</strong> — мок-собес #2.</li>
+<li><strong>API Gateway vs BFF, message broker сравнение с цифрами, Retry storm/Circuit Breaker</strong> — раздел 15.</li>
+</ul>
+<hr>
+<h2 id="_3">Остальные главы курса (для полноты, не разбирались подробно)</h2>
+<ol>
+<li>Что такое системный дизайн и кому он нужен — вводные кейсы (Slack-инцидент 2019, Amazon→AWS, WhatsApp).</li>
+<li>Основы проектирования систем — свойства систем, монолит→LB→микросервисы→хранилище→API, пример: сервис проката самокатов.</li>
+<li>Продвинутое проектирование — перцентили задержки, законы Амдала/Густафсона, 2PC/3PC/TCC/Saga, многоуровневое кэширование.</li>
+<li>Системный дизайн в аналитике — C4-модель, контракты интеграций.</li>
+<li>Системный дизайн во frontend — FSD, BFF, SSR/SSG/ISR (не наш профиль, но если попадётся fullstack-вопрос — здесь).</li>
+<li>Системный дизайн в мобильной разработке — Clean Architecture/MVVM, BDUI.</li>
+</ol>
+<p><em>Если по ходу подготовки почувствуется нехватка — можно попросить разобрать конкретную главу из этого списка отдельно.</em></p>
+<hr>
+<h2 id="-">Видео-находки</h2>
+<p><em>(Пока пусто — следующий кандидат появится тем же способом, что и с алгоритмами.)</em></p></article>
+    <aside class="aside">
+      <strong>В этом документе</strong>
+      <div class="toc"><div class="toc">
+<ul>
+<li><a href="#_1">Структура ответа на собесе — два источника, не противоречат, дополняют</a><ul>
+<li><a href="#system-designdocx-premier-8-5">Основной (курс System Design.docx, менторы Авито/Альфа-Банк/Premier, Глава 8) — 5 этапов</a></li>
+<li><a href="#habr">Дополнительный (Habr, уже был в файле) — та же логика, но с раскладкой по минутам</a></li>
+</ul>
+</li>
+<li><a href="#8">Частые ошибки на собесе (Глава 8, дословно — это то, что реально роняет кандидатов)</a></li>
+<li><a href="#backend-system-design-5">Зоны ответственности backend-разработчика в system design (Глава 5)</a></li>
+<li><a href="#5-2">Масштабирование и нагрузка (Глава 5, часть 2)</a></li>
+<li><a href="#5-3-tproger">Балансировка нагрузки (Глава 5, часть 3 — расширяет уже имевшуюся находку из Tproger)</a></li>
+<li><a href="#10-5-4">Хранение данных — 10-шаговый процесс проектирования (Глава 5, часть 4)</a></li>
+<li><a href="#docx-2026-08-14">Диаграммы (из docx Филичкина, 2026-08-14 — текст был дублем, картинки нет)</a></li>
+<li><a href="#_2">Что уже разобрано в курсе отдельно (не дублирую, просто карта)</a></li>
+<li><a href="#_3">Остальные главы курса (для полноты, не разбирались подробно)</a></li>
+<li><a href="#-">Видео-находки</a></li>
+</ul>
+</div>
+</div>
+    </aside>
+  </div>
+</main>
+
+
+<script>
+const ROOT = "..";
+
+// ---- тема
+const themeBtn = document.getElementById("theme");
+const paint = () => {
+  const dark = document.documentElement.getAttribute("data-theme") === "dark";
+  themeBtn.textContent = dark ? "☀" : "☾";
+};
+paint();
+themeBtn.addEventListener("click", () => {
+  const next = document.documentElement.getAttribute("data-theme") === "dark" ? "light" : "dark";
+  document.documentElement.setAttribute("data-theme", next);
+  try { localStorage.setItem("kb-theme", next); } catch (e) {}
+  paint();
+});
+
+// ---- поиск
+let index = null;
+const box = document.getElementById("results");
+const hits = document.getElementById("hits");
+const head = box.querySelector("h3");
+const input = document.getElementById("q");
+
+async function ensureIndex() {
+  if (index) return index;
+  const res = await fetch(ROOT + "/search-index.json");
+  index = await res.json();
+  return index;
+}
+
+const esc = (s) => (s || "").replace(/[&<>]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
+
+function hi(text, query) {
+  const i = text.toLowerCase().indexOf(query);
+  if (i < 0) return esc(text);
+  return esc(text.slice(0, i)) + "<mark>" + esc(text.slice(i, i + query.length)) + "</mark>" + esc(text.slice(i + query.length));
+}
+
+input.addEventListener("input", async () => {
+  const q = input.value.trim().toLowerCase();
+  if (q.length < 2) { box.hidden = true; return; }
+  const data = await ensureIndex();
+  const found = [];
+  for (const d of data) {
+    const inTitle = d.title.toLowerCase().includes(q);
+    const inSum = (d.summary || "").toLowerCase().includes(q);
+    const heads = (d.heads || []).filter(h => h.toLowerCase().includes(q));
+    if (inTitle || inSum || heads.length) {
+      found.push({ d, heads, rank: inTitle ? 0 : heads.length ? 1 : 2 });
+    }
+  }
+  found.sort((a, b) => a.rank - b.rank);
+  head.textContent = found.length ? `Нашлось: ${found.length}` : "Ничего не нашлось";
+  hits.innerHTML = found.slice(0, 40).map(({ d, heads }) =>
+    `<a class="hit" href="${ROOT}/d/${d.slug}.html">
+       <b>${hi(d.title, q)}</b>
+       <span>${heads.length ? "→ " + heads.slice(0, 3).map(h => hi(h, q)).join(" · ") : esc(d.summary || "")}</span>
+     </a>`).join("");
+  box.hidden = false;
+});
+
+input.addEventListener("keydown", (e) => { if (e.key === "Escape") { input.value = ""; box.hidden = true; input.blur(); } });
+document.addEventListener("keydown", (e) => {
+  if (e.key === "/" && document.activeElement !== input) { e.preventDefault(); input.focus(); }
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,274 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PostgreSQL — живой companion-документ - База знаний</title>
+<link rel="stylesheet" href="../kb.css">
+<script>
+  // Тему ставим до первой отрисовки, иначе на тёмной системе мигает белым.
+  try {
+    var t = localStorage.getItem("kb-theme");
+    if (!t) t = matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+    document.documentElement.setAttribute("data-theme", t);
+  } catch (e) {}
+</script>
+</head>
+<body>
+
+<header class="top">
+  <div class="top-in">
+    <a class="brand" href="../index.html">База <span>знаний</span></a>
+    <span class="grow"></span>
+    <input id="q" type="search" placeholder="Поиск по всем материалам…" autocomplete="off">
+    <button class="icon-btn" id="theme" type="button" title="Тема"></button>
+  </div>
+</header>
+
+<div id="results" hidden><div class="wrap-r"><h3></h3><div id="hits"></div></div></div>
+
+<main class="wrap">
+  <div class="doc-head">
+    <div class="crumb"><a href="../index.html#companions">Спутники к собеседованиям</a></div>
+    <h1>PostgreSQL — живой companion-документ</h1>
+    <div class="meta">199 строк · источник <code>l2code/PostgreSQL_Companion.md</code></div>
+  </div>
+
+  <div class="layout">
+    <article class="prose"><blockquote>
+<p>Как <code>Algorithms_Companion.md</code> и <code>SystemDesign_Companion.md</code> — не C#-фаза (та про язык, PostgreSQL сюда не входит) и не то же самое, что план Life Notes (там EF Core поверх Postgres, а не сырой SQL/PL-pgSQL). Отдельная живая тема, пополняется по ходу теории.</p>
+</blockquote>
+<hr>
+<h2 id="plpgsql-named-">Циклы в PL/pgSQL (твой named-гэп)</h2>
+<p>Раз у тебя уже есть реальный опыт с триггерами/хранимыми процедурами, база явно есть — но декларативный SQL (обычные запросы) и <strong>процедурный PL/pgSQL</strong> (код внутри функций/процедур) — разные режимы мышления. Циклы живут только во втором.</p>
+<p><strong>Структура блока:</strong></p>
+<pre><code class="language-sql">DO $$
+DECLARE
+    counter INT := 1; -- переменные объявляются в DECLARE
+BEGIN
+    -- тело
+END $$;
+</code></pre>
+<p>Или именованная функция: <code>CREATE FUNCTION ... RETURNS ... AS $$ ... $$ LANGUAGE plpgsql;</code></p>
+<p><strong>Четыре вида циклов:</strong></p>
+<pre><code class="language-sql">-- 1. Базовый LOOP — бесконечный, обязателен ручной EXIT
+LOOP
+    counter := counter + 1;
+    EXIT WHEN counter &gt; 10;
+END LOOP;
+
+-- 2. WHILE — условие проверяется ДО каждой итерации
+WHILE counter &lt;= 10 LOOP
+    counter := counter + 1;
+END LOOP;
+
+-- 3. FOR по числовому диапазону
+FOR i IN 1..10 LOOP
+    RAISE NOTICE 'i = %', i;
+END LOOP;
+-- FOR i IN REVERSE 10..1 LOOP — тоже работает
+
+-- 4. FOR по результату запроса (&quot;cursor for loop&quot;) — построчно
+FOR rec IN SELECT id, name FROM users WHERE active = true LOOP
+    RAISE NOTICE 'user % - %', rec.id, rec.name;
+END LOOP;
+
+-- 5. FOREACH по массиву
+FOREACH item IN ARRAY my_array LOOP
+    -- ...
+END LOOP;
+</code></pre>
+<p><strong>Управление внутри цикла</strong> — <code>EXIT WHEN</code> (break) и <code>CONTINUE WHEN</code> (continue), работают как в C#, просто другой синтаксис.</p>
+<p><strong>Обработка исключений</strong> (тоже процедурное, вероятный соседний гэп):</p>
+<pre><code class="language-sql">BEGIN
+    -- рискованная операция
+EXCEPTION
+    WHEN division_by_zero THEN
+        RAISE NOTICE 'поймали: %', SQLERRM;
+    WHEN OTHERS THEN
+        RAISE NOTICE 'неожиданная ошибка: %', SQLERRM;
+END;
+</code></pre>
+<blockquote>
+<p>[!info]+ Важный практический момент — не для галочки
+SQL по своей природе <strong>множественный (set-based)</strong>, а не построчный. Цикл в PL/pgSQL — обработка строка-за-строкой (в индустрии это называют <strong>RBAR — Row By Agonizing Row</strong>, известный антипаттерн) — почти всегда медленнее эквивалентного одного запроса. Циклы реально нужны для сложной многошаговой процедурной логики, динамического SQL или по-настоящему последовательной обработки с состоянием. Но для задач "вроде цикла" — обход иерархии, накопительный итог — часто более идиоматичный и быстрый вариант — <strong><code>WITH RECURSIVE</code></strong> (рекурсивный CTE), множественный, а не процедурный. На собесе "как обойти дерево без цикла" чаще спрашивают именно это.</p>
+</blockquote>
+<hr>
+<h2 id="csharp_interview_questionsmd">Что уже разобрано и подтверждено (карта по <code>CSharp_Interview_Questions.md</code>, не дублирую целиком)</h2>
+<ul>
+<li><strong>MVCC, <code>xmin</code>, оптимистичная конкурентность</strong> — раздел про мок-собес #2/#4, плюс отдельно "что физически лежит в <code>xmin</code>".</li>
+<li><strong>Типы индексов</strong> (B-Tree/GIN/BRIN/GiST) + селективность — раздел 15.</li>
+<li><strong><code>EXPLAIN ANALYZE</code></strong> — как читать план, раздел 15.</li>
+<li><strong>Sargable-предикаты</strong> — банк Ozon, раздел 13/14.</li>
+<li><strong>Оконные функции, <code>EXISTS</code> vs <code>JOIN</code>, <code>NOT IN</code>+<code>NULL</code> ловушка</strong> — только что добавлено (2026-08-09).</li>
+<li><strong><code>JSON</code> vs <code>JSONB</code>, уровни изоляции транзакций</strong> — раздел про мок-собеседования.</li>
+</ul>
+<hr>
+<h2 id="view">Представления (VIEW) — обычные и материализованные</h2>
+<p><strong>Обычный VIEW</strong> — сохранённый ЗАПРОС, не данные. Каждое обращение к view заново выполняет исходный SELECT.</p>
+<pre><code class="language-sql">CREATE VIEW active_users AS
+SELECT id, name, email FROM users WHERE active = true;
+
+SELECT * FROM active_users; -- под капотом выполнится исходный SELECT с фильтром
+</code></pre>
+<p>Зачем нужен: спрятать сложную логику (джойны/фильтры) за простым именем; безопасность — дать доступ к view, показывающей только нужные колонки/строки, не давая прав на саму таблицу целиком (row-level/column-level security без отдельного механизма). Простой view (одна таблица, без агрегации/<code>DISTINCT</code>/<code>GROUP BY</code>/оконных функций) можно <code>UPDATE</code>/<code>INSERT</code>/<code>DELETE</code> напрямую через него — сложный, как правило, нет (нужны <code>INSTEAD OF</code> триггеры).</p>
+<p><strong>MATERIALIZED VIEW</strong> — в отличие от обычного, данные <strong>физически сохраняются на диске</strong> в момент создания.</p>
+<pre><code class="language-sql">CREATE MATERIALIZED VIEW sales_summary AS
+SELECT product_id, SUM(amount) AS total FROM sales GROUP BY product_id;
+
+REFRESH MATERIALIZED VIEW sales_summary; -- данные НЕ обновляются сами — нужен ручной/по расписанию refresh
+REFRESH MATERIALIZED VIEW CONCURRENTLY sales_summary; -- без блокировки чтения (нужен уникальный индекс на view заранее)
+</code></pre>
+<p><strong>Ключевая ловушка/компромисс, который стоит проговорить на собесе:</strong> данные в материализованном view становятся УСТАРЕВШИМИ сразу после изменения исходных таблиц — обновляются только по явному <code>REFRESH</code>. Это осознанный размен свежести на скорость — подходит для дорогих агрегаций/отчётов над большими объёмами, которым не нужна реалтайм-точность.</p>
+<hr>
+<h2 id="_1">Партиционирование — прямой ответ на "большие данные" и "изначальные установки на будущее"</h2>
+<p><strong>Не путать с шардированием</strong> (уже разобрано в курсе, банк Ozon) — шардирование делит данные между РАЗНЫМИ серверами БД. <strong>Партиционирование делит ОДНУ логическую таблицу на несколько физических под-таблиц внутри ОДНОЙ базы</strong> — прозрачно для запросов: обращаешься к "родительской" таблице, Postgres сам направляет запрос в нужную партицию.</p>
+<pre><code class="language-sql">CREATE TABLE orders (
+    id BIGINT,
+    created_at DATE NOT NULL,
+    amount NUMERIC
+) PARTITION BY RANGE (created_at);
+
+CREATE TABLE orders_2026_01 PARTITION OF orders
+    FOR VALUES FROM ('2026-01-01') TO ('2026-02-01');
+CREATE TABLE orders_2026_02 PARTITION OF orders
+    FOR VALUES FROM ('2026-02-01') TO ('2026-03-01');
+</code></pre>
+<p><strong>Типы:</strong> RANGE (по диапазону — чаще всего по дате, для таблиц логов/событий/заказов), LIST (по дискретной категории, например по региону), HASH (равномерное распределение, если нет естественного ключа для range/list).</p>
+<p><strong>Почему это отвечает именно на твоё "изначальные установки на будущее":</strong> запрос, фильтрующий по ключу партиционирования, вообще не сканирует нерелевантные партиции ("partition pruning") — вместо full scan гигантской таблицы сканируется только нужный кусок. Плюс обслуживание становится дешёвым: вместо <code>DELETE FROM orders WHERE created_at &lt; ...</code> (медленно, миллионы строк, распухший WAL) — просто <code>DROP TABLE orders_2020_01</code> (мгновенно). Но выбрать ключ партиционирования нужно <strong>на этапе создания таблицы</strong> — переразбить на партиции уже выросшую до миллионов строк таблицу заметно тяжелее, чем спроектировать это сразу. Отсюда и растёт то самое "не так глубоко подумал в начальном запросе о том, что будет дальше" — это ровно тот момент, где нужно решать заранее, а не постфактум.</p>
+<hr>
+<h2 id="postgres-redisrabbitmq">Postgres вместо Redis/RabbitMQ — где реально работает, где есть потолок</h2>
+<p>Принцип "используй то, что уже есть в компании, прежде чем вводить новую инфраструктуру с новой операционной нагрузкой" — реальный, уважаемый в индустрии архитектурный подход (иногда называют избеганием "operational complexity tax"), не наивность. Но важно знать границу — это ровно то, что отличает "звучит модно" от "продумал".</p>
+<p><strong>Вместо Redis (кэш) — уже подтверждено бенчмарком выше в этом же файле-семье курса:</strong> Redis 11 000+ rps на чтении против Postgres на <code>UNLOGGED TABLE</code> — 7 400 rps. Для большинства проектов 7 400 rps (это больше полумиллиарда операций в сутки) достаточно — отдельная зависимость не нужна ДО этого порога. Дополнительно: <code>LISTEN</code>/<code>NOTIFY</code> — встроенный лёгкий pub/sub в Postgres, закрывает часть простых сценариев без Redis Pub/Sub.</p>
+<p><strong>Вместо RabbitMQ (очередь) — тоже реально, через <code>FOR UPDATE SKIP LOCKED</code></strong> (уже разбирали в Transactional Outbox): таблица-очередь, несколько воркеров безопасно разбирают строки, не блокируя друг друга. <code>LISTEN</code>/<code>NOTIFY</code> добавляет push-уведомление о новой записи вместо постоянного поллинга. В индустрии для этого паттерна даже есть отдельное имя — "Postgres as a queue", есть готовые библиотеки (<code>pgmq</code> и подобные).</p>
+<p><strong>⚠️ Честный потолок, который стоит проговорить на собесе, а не только плюсы:</strong>
+- <strong>Throughput.</strong> Брокер-таблица в Postgres не приближается к пропускной способности выделенного брокера — даже RabbitMQ (50-100К msg/sec) кратно обгоняет Postgres-очередь под конкурентной записью, не говоря про Kafka (500К-1М+).
+- <strong>Продвинутая маршрутизация.</strong> Topic exchange, fanout, dead-letter exchange, приоритетные очереди — в RabbitMQ из коробки, в Postgres — вручную поверх таблицы.
+- <strong>Самое важное — это ЧУЖАЯ нагрузка на ТВОЮ основную БД.</strong> Таблица-очередь конкурирует за I/O/соединения с реальными транзакционными данными, требует своего вакуума (много INSERT/DELETE = много мёртвых строк), раздувает WAL. Связывать паттерн нагрузки очереди со здоровьем основной OLTP-базы — реальный операционный риск, не бесплатный трюк.</p>
+<p><strong>Итог для собеса:</strong> правильный ответ — не "всегда Redis/RabbitMQ" и не "всегда только Postgres", а умение назвать порог, после которого выделенная инфраструктура оправдана (нагрузка, требования к маршрутизации, изоляция рисков от основной БД) — та же логика "когда что", что уже была в SOLID и abstract-class-vs-interface.</p>
+<hr>
+<h2 id="support-l1l2-2026-08-25">Быстрая практика для support/разбора инцидентов (МТС L1/L2, 2026-08-25)</h2>
+<blockquote>
+<p>Не глубокая теория — набор паттернов, которые реально нужны, когда SQL используется для "найти данные/разобрать инцидент", а не для архитектуры БД.</p>
+</blockquote>
+<p><strong>Найти записи за период:</strong></p>
+<pre><code class="language-sql">SELECT * FROM incidents
+WHERE created_at BETWEEN '2026-08-01' AND '2026-08-25'
+ORDER BY created_at DESC;
+</code></pre>
+<p><strong>Посчитать инциденты по статусу (типичный вопрос "сколько чего"):</strong></p>
+<pre><code class="language-sql">SELECT status, COUNT(*) AS cnt
+FROM incidents
+GROUP BY status
+ORDER BY cnt DESC;
+</code></pre>
+<p><strong>Связать инцидент с пользователем (JOIN — почти всегда нужен для "кто и что"):</strong></p>
+<pre><code class="language-sql">SELECT i.id, i.description, u.full_name
+FROM incidents i
+JOIN users u ON u.id = i.user_id
+WHERE i.status = 'open';
+</code></pre>
+<p><strong>Поиск по тексту в логах/описании (ILIKE — регистронезависимый):</strong></p>
+<pre><code class="language-sql">SELECT * FROM incidents WHERE description ILIKE '%timeout%';
+</code></pre>
+<p><strong>Найти "зависшие" инциденты без ответа (LEFT JOIN + IS NULL — частый паттерн диагностики):</strong></p>
+<pre><code class="language-sql">SELECT i.id, i.created_at
+FROM incidents i
+LEFT JOIN responses r ON r.incident_id = i.id
+WHERE r.id IS NULL; -- инциденты, на которые ещё не ответили
+</code></pre>
+<p><strong>Q&amp;A:</strong>
+- Почему <code>ILIKE</code>, а не <code>LIKE</code>? → <code>LIKE</code> регистрозависим, <code>ILIKE</code> — нет, для поиска по логам/тексту почти всегда нужен <code>ILIKE</code>.
+- Как найти записи без совпадения в другой таблице? → <code>LEFT JOIN</code> + <code>WHERE правая_таблица.id IS NULL</code> — стандартный паттерн "чего не хватает".
+- <code>WHERE</code> vs <code>HAVING</code>? → <code>WHERE</code> фильтрует строки ДО группировки, <code>HAVING</code> — группы ПОСЛЕ <code>GROUP BY</code> (например <code>HAVING COUNT(*) &gt; 5</code>).</p>
+<hr>
+<h2 id="_2">Другие гэпы</h2>
+<p><em>(Пополняется по ходу — как появится следующий, добавлю сюда сразу теорию + пример, как с циклами выше.)</em></p></article>
+    <aside class="aside">
+      <strong>В этом документе</strong>
+      <div class="toc"><div class="toc">
+<ul>
+<li><a href="#plpgsql-named-">Циклы в PL/pgSQL (твой named-гэп)</a></li>
+<li><a href="#csharp_interview_questionsmd">Что уже разобрано и подтверждено (карта по CSharp_Interview_Questions.md, не дублирую целиком)</a></li>
+<li><a href="#view">Представления (VIEW) — обычные и материализованные</a></li>
+<li><a href="#_1">Партиционирование — прямой ответ на "большие данные" и "изначальные установки на будущее"</a></li>
+<li><a href="#postgres-redisrabbitmq">Postgres вместо Redis/RabbitMQ — где реально работает, где есть потолок</a></li>
+<li><a href="#support-l1l2-2026-08-25">Быстрая практика для support/разбора инцидентов (МТС L1/L2, 2026-08-25)</a></li>
+<li><a href="#_2">Другие гэпы</a></li>
+</ul>
+</div>
+</div>
+    </aside>
+  </div>
+</main>
+
+
+<script>
+const ROOT = "..";
+
+// ---- тема
+const themeBtn = document.getElementById("theme");
+const paint = () => {
+  const dark = document.documentElement.getAttribute("data-theme") === "dark";
+  themeBtn.textContent = dark ? "☀" : "☾";
+};
+paint();
+themeBtn.addEventListener("click", () => {
+  const next = document.documentElement.getAttribute("data-theme") === "dark" ? "light" : "dark";
+  document.documentElement.setAttribute("data-theme", next);
+  try { localStorage.setItem("kb-theme", next); } catch (e) {}
+  paint();
+});
+
+// ---- поиск
+let index = null;
+const box = document.getElementById("results");
+const hits = document.getElementById("hits");
+const head = box.querySelector("h3");
+const input = document.getElementById("q");
+
+async function ensureIndex() {
+  if (index) return index;
+  const res = await fetch(ROOT + "/search-index.json");
+  index = await res.json();
+  return index;
+}
+
+const esc = (s) => (s || "").replace(/[&<>]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
+
+function hi(text, query) {
+  const i = text.toLowerCase().indexOf(query);
+  if (i < 0) return esc(text);
+  return esc(text.slice(0, i)) + "<mark>" + esc(text.slice(i, i + query.length)) + "</mark>" + esc(text.slice(i + query.length));
+}
+
+input.addEventListener("input", async () => {
+  const q = input.value.trim().toLowerCase();
+  if (q.length < 2) { box.hidden = true; return; }
+  const data = await ensureIndex();
+  const found = [];
+  for (const d of data) {
+    const inTitle = d.title.toLowerCase().includes(q);
+    const inSum = (d.summary || "").toLowerCase().includes(q);
+    const heads = (d.heads || []).filter(h => h.toLowerCase().includes(q));
+    if (inTitle || inSum || heads.length) {
+      found.push({ d, heads, rank: inTitle ? 0 : heads.length ? 1 : 2 });
+    }
+  }
+  found.sort((a, b) => a.rank - b.rank);
+  head.textContent = found.length ? `Нашлось: ${found.length}` : "Ничего не нашлось";
+  hits.innerHTML = found.slice(0, 40).map(({ d, heads }) =>
+    `<a class="hit" href="${ROOT}/d/${d.slug}.html">
+       <b>${hi(d.title, q)}</b>
+       <span>${heads.length ? "→ " + heads.slice(0, 3).map(h => hi(h, q)).join(" · ") : esc(d.summary || "")}</span>
+     </a>`).join("");
+  box.hidden = false;
+});
+
+input.addEventListener("keydown", (e) => { if (e.key === "Escape") { input.value = ""; box.hidden = true; input.blur(); } });
+document.addEventListener("keydown", (e) => {
+  if (e.key === "/" && document.activeElement !== input) { e.preventDefault(); input.focus(); }
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,202 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Postman и клиент-серверная архитектура — живой companion-документ - База знаний</title>
+<link rel="stylesheet" href="../kb.css">
+<script>
+  // Тему ставим до первой отрисовки, иначе на тёмной системе мигает белым.
+  try {
+    var t = localStorage.getItem("kb-theme");
+    if (!t) t = matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+    document.documentElement.setAttribute("data-theme", t);
+  } catch (e) {}
+</script>
+</head>
+<body>
+
+<header class="top">
+  <div class="top-in">
+    <a class="brand" href="../index.html">База <span>знаний</span></a>
+    <span class="grow"></span>
+    <input id="q" type="search" placeholder="Поиск по всем материалам…" autocomplete="off">
+    <button class="icon-btn" id="theme" type="button" title="Тема"></button>
+  </div>
+</header>
+
+<div id="results" hidden><div class="wrap-r"><h3></h3><div id="hits"></div></div></div>
+
+<main class="wrap">
+  <div class="doc-head">
+    <div class="crumb"><a href="../index.html#companions">Спутники к собеседованиям</a></div>
+    <h1>Postman и клиент-серверная архитектура — живой companion-документ</h1>
+    <div class="meta">104 строк · источник <code>l2code/Postman_ClientServer_Companion.md</code></div>
+  </div>
+
+  <div class="layout">
+    <article class="prose"><blockquote>
+<p>Как <code>Algorithms_Companion.md</code>/<code>SystemDesign_Companion.md</code>/<code>PostgreSQL_Companion.md</code> — постоянно пополняемая тема, не разовая шпаргалка. Начато под собес МТС (базовые требования: понимание клиент-серверной архитектуры + опыт с Postman), но тема всплывает почти в каждой вакансии с API.</p>
+</blockquote>
+<hr>
+<h2 id="-">Клиент-серверная архитектура — база</h2>
+<p><strong>Аналогия из жизни:</strong> ресторан. Клиент (посетитель) не готовит еду сам и не заходит на кухню — он делает ЗАПРОС официанту (отправляет HTTP-запрос), кухня (сервер) готовит и возвращает ОТВЕТ. Один и тот же повар (сервер) обслуживает много столиков (клиентов) одновременно, не зная заранее, кто именно закажет.</p>
+<p><strong>Суть:</strong> клиент инициирует запрос, сервер обрабатывает и возвращает ответ — разделение того, ЧТО показывается (представление, на стороне клиента) от того, ГДЕ обрабатываются данные и бизнес-логика (сервер). Клиент и сервер могут быть написаны на разных языках, главное — общий протокол общения (обычно HTTP).</p>
+<p><strong>HTTP-методы — что означают:</strong>
+- <code>GET</code> — получить данные, безопасный (не меняет состояние), можно повторять много раз без побочных эффектов (идемпотентный).
+- <code>POST</code> — создать что-то новое, НЕ идемпотентный (повторный вызов создаст ещё одну запись).
+- <code>PUT</code> — заменить целиком, идемпотентный (повторный вызов даёт тот же результат).
+- <code>PATCH</code> — частично обновить.
+- <code>DELETE</code> — удалить, обычно идемпотентный.</p>
+<p><strong>Коды ответа — самое частое на собесе:</strong>
+| Код | Значение |
+|---|---|
+| 200 | OK — успех |
+| 201 | Created — успешно создано (после POST) |
+| 400 | Bad Request — клиент прислал некорректные данные |
+| 401 | Unauthorized — не авторизован (нет/неверный токен) |
+| 403 | Forbidden — авторизован, но доступа нет |
+| 404 | Not Found — ресурс не найден |
+| 500 | Internal Server Error — упал сам сервер |
+| 502/503 | Bad Gateway/Service Unavailable — сервер недоступен/перегружен |</p>
+<p><strong>Q&amp;A:</strong>
+- В чём разница между 401 и 403? → 401 — тебя не узнали (нет/невалидный токен), 403 — узнали, но прав нет.
+- Почему GET считается безопасным, а POST — нет? → GET не должен менять состояние сервера, только читать; POST создаёт новые данные, повторный вызов = новая запись.</p>
+<hr>
+<h2 id="api">Вебхуки — обратная сторона API</h2>
+<p><strong>Аналогия из жизни:</strong> обычный API-запрос - ты сам звонишь в компанию узнать статус заказа (pull). Вебхук - компания сама тебе звонит, как только статус изменился, тебе не нужно спрашивать (push). "Не звони нам - мы сами позвоним."</p>
+<p><strong>Суть:</strong> вебхук - HTTP-запрос, который сервис-источник отправляет НА заранее указанный тобой URL, когда происходит событие. Ты просто держишь эндпоинт наготове и ждёшь.</p>
+<hr>
+<h2 id="http-vs-http2">HTTP vs HTTP/2</h2>
+<p><strong>HTTP/1.1</strong> - текстовый протокол, по умолчанию по одному запросу за раз на соединение (keep-alive помогает переиспользовать соединение, но всё равно последовательно - head-of-line blocking, один медленный запрос тормозит следующие).</p>
+<p><strong>HTTP/2</strong> - бинарный протокол, <strong>мультиплексирование</strong> (много запросов и ответов одновременно через ОДНО соединение, без взаимной блокировки), сжатие заголовков (HPACK). Именно поэтому gRPC (см. <code>API_Companion.md</code>) выбирает HTTP/2 - быстрее гонять много мелких вызовов между сервисами.</p>
+<hr>
+<h2 id="postman">Postman — практика</h2>
+<p><strong>Аналогия из жизни:</strong> Postman — это как звонок в компанию по заранее заготовленному списку вопросов, вместо того чтобы писать код, который "разговаривает" с их сервером. Ты вручную собираешь запрос (номер/адрес — URL, что сказать — body, кто звонит — заголовки авторизации) и сразу видишь ответ, не поднимая для этого целое приложение.</p>
+<p><strong>Основные элементы запроса в Postman:</strong>
+- <strong>Method + URL</strong> — <code>GET https://api.example.com/incidents</code>
+- <strong>Params</strong> — query-параметры (<code>?status=open&amp;limit=10</code>)
+- <strong>Headers</strong> — метаданные запроса, чаще всего <code>Authorization: Bearer &lt;token&gt;</code>, <code>Content-Type: application/json</code>
+- <strong>Body</strong> — тело запроса (для POST/PUT/PATCH) — обычно JSON
+- <strong>Tests</strong> — скрипт на JS, который проверяет ответ автоматически (например <code>pm.response.to.have.status(200)</code>)</p>
+<p><strong>Практический пример — проверка API перед релизом:</strong></p>
+<pre><code>POST https://api.internal/incidents
+Headers: Authorization: Bearer eyJhbGc...
+Body (JSON): { &quot;title&quot;: &quot;Сервер недоступен&quot;, &quot;priority&quot;: &quot;high&quot; }
+
+Ожидаем: статус 201, в ответе — id новой записи
+</code></pre>
+<p><strong>Коллекции и окружения (Environments):</strong>
+- Коллекция — набор сохранённых запросов, сгруппированных по проекту/сервису.
+- Environment — набор переменных (<code>{{base_url}}</code>, <code>{{token}}</code>), которые подставляются в запросы — позволяет один и тот же запрос гонять на dev/staging/prod, меняя только окружение, не сам запрос.</p>
+<h2 id="api-workflow">Проверка API перед релизом — практический workflow</h2>
+<p><strong>Аналогия из жизни:</strong> пилот перед каждым взлётом проходит один и тот же чек-лист механически, не полагаясь на память. Collection Runner делает то же самое для API — прогоняет один и тот же набор проверок перед каждым релизом, не давая забыть что-то важное.</p>
+<ol>
+<li><strong>Happy path + ошибки</strong> — не только "отправил, получил 200", но и негативные сценарии: без обязательного поля (400), без токена (401), несуществующий ID (404). Разработчики часто тестируют только успешный путь — находка ошибок именно здесь ценится на собесе и в работе.</li>
+<li><strong>Автоматические проверки (вкладка Tests, JS)</strong> — превращает ручной клик в тест, который либо зелёный, либо красный:</li>
+</ol>
+<pre><code class="language-javascript">pm.test(&quot;Статус 200&quot;, () =&gt; pm.response.to.have.status(200));
+pm.test(&quot;Есть поле id&quot;, () =&gt; {
+    const data = pm.response.json();
+    pm.expect(data).to.have.property('id');
+});
+</code></pre>
+<ol start="3">
+<li><strong>Collection Runner</strong> — прогнать ВСЮ сохранённую коллекцию одной кнопкой вместо ручного прохода по каждому эндпоинту — отчёт "что упало, что прошло" за один прогон.</li>
+<li><strong>Цепочка запросов через переменные</strong> — POST создаёт ресурс → сохраняешь <code>id</code> в переменную окружения → GET использует этот <code>id</code>, чтобы проверить весь CRUD-цикл, а не отдельные вызовы вслепую.</li>
+<li><strong>Newman</strong> — тот же набор тестов, но из командной строки, встраивается в CI/CD — проверка идёт автоматически при каждом деплое, не только когда кто-то вспомнил проверить руками.</li>
+</ol>
+<p><strong>Q&amp;A:</strong>
+- Как проверить, что API работает правильно, не только что он "отвечает"? → смотреть не только код ответа (200), но и содержимое тела ответа — соответствует ли оно ожидаемой структуре/данным.
+- Зачем нужны Environments в Postman? → не хардкодить URL/токены в каждом запросе — переключение dev/staging/prod одной переменной, не переписыванием всех запросов.
+- Что делать, если API вернул 500? → это ошибка НА СТОРОНЕ СЕРВЕРА — проверять логи сервера, не искать ошибку в своём запросе (в отличие от 400, где проблема в самом запросе).</p>
+<hr>
+<h2 id="_1">Другие темы</h2>
+<p><em>(Пополняется по ходу — как появится следующий гэп, добавлю сюда.)</em></p></article>
+    <aside class="aside">
+      <strong>В этом документе</strong>
+      <div class="toc"><div class="toc">
+<ul>
+<li><a href="#-">Клиент-серверная архитектура — база</a></li>
+<li><a href="#api">Вебхуки — обратная сторона API</a></li>
+<li><a href="#http-vs-http2">HTTP vs HTTP/2</a></li>
+<li><a href="#postman">Postman — практика</a></li>
+<li><a href="#api-workflow">Проверка API перед релизом — практический workflow</a></li>
+<li><a href="#_1">Другие темы</a></li>
+</ul>
+</div>
+</div>
+    </aside>
+  </div>
+</main>
+
+
+<script>
+const ROOT = "..";
+
+// ---- тема
+const themeBtn = document.getElementById("theme");
+const paint = () => {
+  const dark = document.documentElement.getAttribute("data-theme") === "dark";
+  themeBtn.textContent = dark ? "☀" : "☾";
+};
+paint();
+themeBtn.addEventListener("click", () => {
+  const next = document.documentElement.getAttribute("data-theme") === "dark" ? "light" : "dark";
+  document.documentElement.setAttribute("data-theme", next);
+  try { localStorage.setItem("kb-theme", next); } catch (e) {}
+  paint();
+});
+
+// ---- поиск
+let index = null;
+const box = document.getElementById("results");
+const hits = document.getElementById("hits");
+const head = box.querySelector("h3");
+const input = document.getElementById("q");
+
+async function ensureIndex() {
+  if (index) return index;
+  const res = await fetch(ROOT + "/search-index.json");
+  index = await res.json();
+  return index;
+}
+
+const esc = (s) => (s || "").replace(/[&<>]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
+
+function hi(text, query) {
+  const i = text.toLowerCase().indexOf(query);
+  if (i < 0) return esc(text);
+  return esc(text.slice(0, i)) + "<mark>" + esc(text.slice(i, i + query.length)) + "</mark>" + esc(text.slice(i + query.length));
+}
+
+input.addEventListener("input", async () => {
+  const q = input.value.trim().toLowerCase();
+  if (q.length < 2) { box.hidden = true; return; }
+  const data = await ensureIndex();
+  const found = [];
+  for (const d of data) {
+    const inTitle = d.title.toLowerCase().includes(q);
+    const inSum = (d.summary || "").toLowerCase().includes(q);
+    const heads = (d.heads || []).filter(h => h.toLowerCase().includes(q));
+    if (inTitle || inSum || heads.length) {
+      found.push({ d, heads, rank: inTitle ? 0 : heads.length ? 1 : 2 });
+    }
+  }
+  found.sort((a, b) => a.rank - b.rank);
+  head.textContent = found.length ? `Нашлось: ${found.length}` : "Ничего не нашлось";
+  hits.innerHTML = found.slice(0, 40).map(({ d, heads }) =>
+    `<a class="hit" href="${ROOT}/d/${d.slug}.html">
+       <b>${hi(d.title, q)}</b>
+       <span>${heads.length ? "→ " + heads.slice(0, 3).map(h => hi(h, q)).join(" · ") : esc(d.summary || "")}</span>
+     </a>`).join("");
+  box.hidden = false;
+});
+
+input.addEventListener("keydown", (e) => { if (e.key === "Escape") { input.value = ""; box.hidden = true; input.blur(); } });
+document.addEventListener("keydown", (e) => {
+  if (e.key === "/" && document.activeElement !== input) { e.preventDefault(); input.focus(); }
+});
+</script>
+</body>
+</html>

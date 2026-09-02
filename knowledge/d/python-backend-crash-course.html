@@ -1,0 +1,978 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Python Backend Crash Course — 🌙 СПЯЩИЙ (dormant contingency) - База знаний</title>
+<link rel="stylesheet" href="../kb.css">
+<script>
+  // Тему ставим до первой отрисовки, иначе на тёмной системе мигает белым.
+  try {
+    var t = localStorage.getItem("kb-theme");
+    if (!t) t = matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+    document.documentElement.setAttribute("data-theme", t);
+  } catch (e) {}
+</script>
+</head>
+<body>
+
+<header class="top">
+  <div class="top-in">
+    <a class="brand" href="../index.html">База <span>знаний</span></a>
+    <span class="grow"></span>
+    <input id="q" type="search" placeholder="Поиск по всем материалам…" autocomplete="off">
+    <button class="icon-btn" id="theme" type="button" title="Тема"></button>
+  </div>
+</header>
+
+<div id="results" hidden><div class="wrap-r"><h3></h3><div id="hits"></div></div></div>
+
+<main class="wrap">
+  <div class="doc-head">
+    <div class="crumb"><a href="../index.html#reference">Справочники</a></div>
+    <h1>Python Backend Crash Course — 🌙 СПЯЩИЙ (dormant contingency)</h1>
+    <div class="meta">920 строк · источник <code>l2code/Python_Backend_Crash_Course.md</code></div>
+  </div>
+
+  <div class="layout">
+    <article class="prose"><blockquote>
+<p><strong>Статус: НЕ активен.</strong> Это план на случай, а не текущая работа.</p>
+<p><strong>Триггер активации:</strong> курс запускается ТОЛЬКО если по Python-резюме прилетит предложение (собес/оффер) РАНЬШЕ, чем закончится основной C# курс. Пока триггер не сработал — этот файл не трогаем, часы на него не тратим. Python поддерживается только через Tier 1 (чередование C#/Python в LeetCode, см. <code>project-csharp-learning</code> память).</p>
+<p><strong>Почему 2-3 дня, а не с нуля:</strong> ты уже знаешь Python как язык — ООП, циклы, structures, threading, писал Jira-интеграцию на Selenium. Этот курс не учит Python. Он учит backend-паттернам ПОВЕРХ языка, которые нужны для позиции Python-бэкендера: Pydantic, Strategy/ABC, asyncio, FastAPI, pytest. Это тот же скачок, что у тебя был от C#-синтаксиса к ASP.NET Core — только сжатый, потому что синтаксис уже не проблема.</p>
+<p><strong>Источник:</strong> курс "Python FastAPI" (проект Taxi Service, докс с Бусти) — использован как источник ТЕМ и логики проекта. Код в этом файле написан заново (в оригинале почти везде было "ссылка на код", не текст) — так что читай примеры как есть, а не сверяй один-в-один с видео.</p>
+<p><strong>Как читать (если триггер сработал):</strong> тема → теория → 2-4 примера → мини-задание → <strong>вопросы с собеседования</strong>. Там, где полезно — мостик к тому, что ты уже знаешь по C# (async/await, DI, xUnit/Moq), чтобы не учить заново, а перекладывать существующее понимание на новый синтаксис.</p>
+<p><strong>Формат активации:</strong> 3 дня. День 1 — Pydantic + ООП-паттерны. День 2 — asyncio + FastAPI. День 3 — pytest + инструменты + мини-проект.</p>
+</blockquote>
+<hr>
+<h1 id="1-pydantic-strategy-pattern">День 1 — Pydantic, декораторы, Strategy pattern</h1>
+<h2 id="11-pydantic">1.1 Pydantic — валидация данных</h2>
+<h3 id="_1">Почему это важно</h3>
+<p>В C# у тебя типы проверяет компилятор ДО запуска. В Python типов на рантайме никто не проверяет — <code>def f(x: int)</code> пропустит строку без единой жалобы. Pydantic закрывает эту дыру: <code>BaseModel</code> валидирует данные НА ГРАНИЦЕ системы (запрос пришёл по HTTP, JSON из файла, ответ внешнего API) и падает сразу с понятной ошибкой, а не где-то через три вызова функций.</p>
+<h3 id="_2">Теория</h3>
+<p><code>BaseModel</code> — класс, где поля объявляются как атрибуты класса с type hints. При создании экземпляра Pydantic проверяет и, где может, приводит типы (<code>"5"</code> → <code>5</code> для <code>int</code>, но не <code>"abc"</code> → <code>int</code>). Если данные не проходят — кидает <code>ValidationError</code> со списком всех проблемных полей сразу (не первая ошибка и стоп, как обычно бывает).</p>
+<p>Это НЕ то же самое, что <code>@dataclass</code> — <code>dataclass</code> просто хранит поля, без единой проверки. Pydantic создан именно ради валидации.</p>
+<h3 id="a">Пример A — простая модель</h3>
+<pre><code class="language-python">from pydantic import BaseModel
+
+class Point(BaseModel):
+    latitude: float
+    longitude: float
+
+p = Point(latitude=59.94, longitude=30.31)
+p2 = Point(latitude=&quot;59.94&quot;, longitude=30.31)  # OK — Pydantic приведёт строку к float
+# p3 = Point(latitude=&quot;not a number&quot;, longitude=30.31)  # ValidationError
+</code></pre>
+<h3 id="b-field">Пример B — <code>Field</code> с ограничениями и дефолтами</h3>
+<pre><code class="language-python">from pydantic import BaseModel, Field
+
+class OrderResponse(BaseModel):
+    order_id: int = Field(..., description=&quot;Уникальный идентификатор заказа&quot;)
+    status: str = Field(default=&quot;created&quot;)
+    price: float = Field(..., ge=0, description=&quot;Не может быть отрицательной&quot;)
+</code></pre>
+<p><code>...</code> (Ellipsis) в <code>Field(...)</code> означает "обязательное поле, без дефолта". <code>ge=0</code> — "greater or equal 0", валидация уже на уровне схемы, а не в ручном <code>if</code>.</p>
+<h3 id="c">Пример C — вложенные модели</h3>
+<pre><code class="language-python">class OrderRequest(BaseModel):
+    start: Point
+    end: Point
+    passenger_name: str
+</code></pre>
+<p>Pydantic рекурсивно валидирует вложенные модели — если <code>start</code> придёт без <code>longitude</code>, ошибка укажет точный путь: <code>start -&gt; longitude: field required</code>.</p>
+<h3 id="d">Пример D — обработка ошибки валидации</h3>
+<pre><code class="language-python">from pydantic import ValidationError
+
+try:
+    bad_order = OrderRequest(start={&quot;latitude&quot;: 59.94}, end=p, passenger_name=&quot;Иван&quot;)
+except ValidationError as e:
+    print(e.errors())
+    # [{'type': 'missing', 'loc': ('start', 'longitude'), 'msg': 'Field required', ...}]
+</code></pre>
+<h3 id="-11">Мини-задание 1.1</h3>
+<pre><code class="language-python"># Создай модель Driver:
+# - name: str, обязательное
+# - rating: float, от 0 до 5 (используй Field с ge/le)
+# - car_color: str, дефолт &quot;white&quot;
+# Создай вложенную модель Order с полями: driver (Driver), start (Point), end (Point)
+# Проверь: что произойдёт, если rating = 7?
+</code></pre>
+<h3 id="_3">🎤 Вопросы с собеседования</h3>
+<p><strong>Q: Чем <code>pydantic.BaseModel</code> отличается от <code>@dataclass</code>?</strong>
+A: <code>dataclass</code> только хранит поля и генерирует <code>__init__</code>/<code>__repr__</code> — никакой проверки данных. <code>BaseModel</code> валидирует типы при создании экземпляра и кидает <code>ValidationError</code>, если данные не соответствуют схеме. <code>dataclass</code> — структура данных, <code>BaseModel</code> — структура данных + контракт.</p>
+<p><strong>Q: Что произойдёт, если передать полю неверный тип, который нельзя привести?</strong>
+A: Pydantic попытается привести тип (coercion) там, где это однозначно (строка <code>"5"</code> → <code>int</code>), но если приведение невозможно (<code>"abc"</code> → <code>int</code>) — кидает <code>ValidationError</code> со списком всех невалидных полей сразу, а не только первого.</p>
+<p><strong>Q: Как сделать поле необязательным с дефолтным значением?</strong>
+A: <code>status: str = Field(default="created")</code> или просто <code>status: str = "created"</code> без <code>Field</code>, если ограничений не нужно.</p>
+<p><strong>Q: Как Pydantic связан с FastAPI?</strong>
+A: FastAPI использует Pydantic-модели как схему тела запроса и ответа. Когда JSON приходит на эндпоинт, FastAPI сам создаёт <code>BaseModel</code> из тела запроса — если валидация не прошла, клиент получает 422 автоматически, без единой строчки ручного кода на эндпоинте.</p>
+<hr>
+<h2 id="12">1.2 Декораторы — с нуля</h2>
+<h3 id="_4">Почему это важно</h3>
+<p>В курсе Strategy pattern и FastAPI везде используются декораторы (<code>@app.get(...)</code>, <code>@abstractmethod</code>, <code>@pytest.fixture</code>). Если не понимать, что декоратор реально делает — это магические заклинания, а не инструмент.</p>
+<h3 id="_5">Теория</h3>
+<p>Функции в Python — обычные объекты: их можно передать как аргумент, вернуть из другой функции, присвоить переменной. Декоратор — это функция, которая принимает функцию и возвращает функцию (обычно — обёртку вокруг оригинала). Синтаксис <code>@decorator</code> над <code>def f()</code> — просто сахар для <code>f = decorator(f)</code>.</p>
+<h3 id="a_1">Пример A — простой декоратор</h3>
+<pre><code class="language-python">def log_time(func):
+    def wrapper(*args, **kwargs):
+        import time
+        start = time.time()
+        result = func(*args, **kwargs)
+        print(f&quot;{func.__name__} выполнилась за {time.time() - start:.3f} сек&quot;)
+        return result
+    return wrapper
+
+@log_time
+def slow_add(a, b):
+    import time
+    time.sleep(1)
+    return a + b
+
+slow_add(2, 3)  # напечатает время выполнения, вернёт 5
+</code></pre>
+<p>Без <code>@</code> это было бы: <code>slow_add = log_time(slow_add)</code>.</p>
+<h3 id="b-functoolswraps">Пример B — <code>functools.wraps</code> (чтобы не терять метаданные)</h3>
+<pre><code class="language-python">from functools import wraps
+
+def log_time(func):
+    @wraps(func)  # сохраняет func.__name__, func.__doc__ у обёртки
+    def wrapper(*args, **kwargs):
+        return func(*args, **kwargs)
+    return wrapper
+</code></pre>
+<p>Без <code>@wraps</code> после декорирования <code>slow_add.__name__</code> стало бы <code>"wrapper"</code>, а не <code>"slow_add"</code> — ломает отладку и интроспекцию.</p>
+<h3 id="c_1">Пример C — декоратор с параметрами (три уровня вложенности)</h3>
+<pre><code class="language-python">def retry(times: int):
+    def decorator(func):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            last_error = None
+            for attempt in range(times):
+                try:
+                    return func(*args, **kwargs)
+                except Exception as e:
+                    last_error = e
+            raise last_error
+        return wrapper
+    return decorator
+
+@retry(times=3)
+def flaky_call():
+    ...
+</code></pre>
+<p><code>retry(times=3)</code> выполняется первым и возвращает <code>decorator</code> — вот этот <code>decorator</code> уже применяется к <code>flaky_call</code> как обычный однопараметрический декоратор.</p>
+<h3 id="d-property-c">Пример D — <code>@property</code> (мостик к C#)</h3>
+<pre><code class="language-python">class BankAccount:
+    def __init__(self, owner: str):
+        self._balance = 0
+        self.owner = owner
+
+    @property
+    def balance(self) -&gt; float:
+        return self._balance
+
+    @balance.setter
+    def balance(self, value: float):
+        if value &lt; 0:
+            raise ValueError(&quot;Баланс не может быть отрицательным&quot;)
+        self._balance = value
+
+acc = BankAccount(&quot;Иван&quot;)
+acc.balance = 100      # вызывает setter
+print(acc.balance)     # вызывает getter, напечатает 100
+</code></pre>
+<p>Это прямой аналог твоего C# <code>{ get; private set; }</code> с валидацией — просто другой синтаксис. <code>@property</code> превращает МЕТОД в АТРИБУТ по чтению (без скобок), <code>@balance.setter</code> — второй декоратор, добавляющий версию для записи.</p>
+<h3 id="-12">Мини-задание 1.2</h3>
+<pre><code class="language-python"># Напиши декоратор @log_call, который перед вызовом функции печатает
+# имя функции и переданные позиционные/именованные аргументы.
+# Примени его к любой функции с 2-3 параметрами и вызови.
+</code></pre>
+<h3 id="_6">🎤 Вопросы с собеседования</h3>
+<p><strong>Q: Что реально происходит, когда пишешь <code>@my_decorator</code> над функцией?</strong>
+A: Это синтаксический сахар для <code>func = my_decorator(func)</code> — функция под декоратором заменяется на то, что вернул декоратор (обычно — обёртку <code>wrapper</code>, вызывающую оригинал плюс что-то до/после).</p>
+<p><strong>Q: Зачем нужен <code>functools.wraps</code>?</strong>
+A: Без него обёртка (<code>wrapper</code>) заменяет метаданные оригинальной функции — <code>__name__</code>, <code>__doc__</code>, <code>__module__</code>. Это ломает отладку, логи, автогенерацию документации (например, FastAPI использует <code>__name__</code>/docstring эндпоинтов для Swagger). <code>@wraps(func)</code> копирует эти метаданные с оригинала на обёртку.</p>
+<p><strong>Q: Чем <code>@property</code> в Python похож на <code>{ get; set; }</code> в C#?</strong>
+A: Оба превращают доступ к методу в синтаксис доступа к полю. Разница — в C# это отдельная языковая конструкция (property), в Python это обычный декоратор поверх обычного метода: <code>@property</code> для getter, <code>@x.setter</code> для setter. Логика валидации в setter'е работает идентично твоему примеру <code>private set { if (value &lt; 0) throw ... }</code>.</p>
+<p><strong>Q: Как сделать декоратор, принимающий свои параметры (например, <code>@retry(times=3)</code>)?</strong>
+A: Нужен дополнительный уровень вложенности функций: внешняя функция принимает параметры декоратора и возвращает СОБСТВЕННО декоратор (функцию от одного аргумента — целевой функции), которая уже возвращает <code>wrapper</code>. Три уровня: <code>retry(times) → decorator(func) → wrapper(*args, **kwargs)</code>.</p>
+<hr>
+<h2 id="13-strategy-pattern-abc-abstractmethod">1.3 Strategy pattern через <code>ABC</code> + <code>abstractmethod</code></h2>
+<h3 id="_7">Почему это важно</h3>
+<p>Ты уже проходил это в C# как <code>abstract class</code>/<code>interface</code> (Фаза 2). Задача — не учить паттерн заново, а увидеть, как ТОТ ЖЕ паттерн выглядит в Python, где нет <code>interface</code> как отдельного языкового элемента.</p>
+<h3 id="_8">Теория</h3>
+<p>Модуль <code>abc</code> даёт <code>ABC</code> (Abstract Base Class) и декоратор <code>@abstractmethod</code>. Класс, унаследованный от <code>ABC</code> с хотя бы одним <code>@abstractmethod</code>, нельзя инстанцировать напрямую — только через наследника, реализовавшего ВСЕ абстрактные методы. Это прямой аналог C# <code>abstract class</code> (не <code>interface</code> — в Python <code>ABC</code> может иметь и обычные, не абстрактные методы с готовой реализацией, ровно как <code>abstract class</code> в C#).</p>
+<h3 id="a_2">Пример A — базовый контракт стратегии</h3>
+<pre><code class="language-python">from abc import ABC, abstractmethod
+
+class PricingStrategy(ABC):
+    @abstractmethod
+    def calculate(self, distance_km: float) -&gt; float:
+        ...
+
+class FixedPriceStrategy(PricingStrategy):
+    def __init__(self, base_price: float):
+        self.base_price = base_price
+
+    def calculate(self, distance_km: float) -&gt; float:
+        return self.base_price
+
+class DistancePriceStrategy(PricingStrategy):
+    def __init__(self, price_per_km: float, base_fee: float = 50):
+        self.price_per_km = price_per_km
+        self.base_fee = base_fee
+
+    def calculate(self, distance_km: float) -&gt; float:
+        return self.base_fee + distance_km * self.price_per_km
+</code></pre>
+<h3 id="b">Пример B — что будет, если не реализовать метод</h3>
+<pre><code class="language-python">class BrokenStrategy(PricingStrategy):
+    pass
+
+# strategy = BrokenStrategy()
+# TypeError: Can't instantiate abstract class BrokenStrategy
+# with abstract method calculate
+</code></pre>
+<p>Ошибка — на этапе создания экземпляра, не на этапе объявления класса. Класс с недоделанным контрактом определить можно, инстанцировать — нельзя.</p>
+<h3 id="c_2">Пример C — использование стратегии (композиция, а не наследование)</h3>
+<pre><code class="language-python">class OrderPricer:
+    def __init__(self, strategy: PricingStrategy):
+        self.strategy = strategy
+
+    def price_for(self, distance_km: float) -&gt; float:
+        return self.strategy.calculate(distance_km)
+
+pricer = OrderPricer(FixedPriceStrategy(base_price=300))
+print(pricer.price_for(distance_km=12))  # 300 — стратегия не смотрит на дистанцию
+
+pricer.strategy = DistancePriceStrategy(price_per_km=25)
+print(pricer.price_for(distance_km=12))  # 50 + 12*25 = 350
+</code></pre>
+<p>Стратегию можно поменять в рантайме простым присваиванием атрибута — ключевая идея паттерна: поведение — это объект, а не <code>if/else</code> внутри <code>OrderPricer</code>.</p>
+<h3 id="d-higher-order-function">Пример D — альтернатива без ООП (higher-order function)</h3>
+<p>Python не заставляет решать всё через классы — то же самое можно сделать функциями:</p>
+<pre><code class="language-python">from typing import Callable
+
+def fixed_price(base_price: float) -&gt; Callable[[float], float]:
+    return lambda distance_km: base_price
+
+def distance_price(price_per_km: float, base_fee: float = 50) -&gt; Callable[[float], float]:
+    return lambda distance_km: base_fee + distance_km * price_per_km
+
+strategy_fn = distance_price(price_per_km=25)
+print(strategy_fn(12))  # 350
+</code></pre>
+<p>Функциональный вариант короче, но теряет расширяемость (нельзя добавить стратегии со своим состоянием/методами так же легко) и явный контракт (<code>ABC</code> документирует сигнатуру, обычная функция — нет).</p>
+<h3 id="-13">Мини-задание 1.3</h3>
+<pre><code class="language-python"># Добавь TimeOfDayStrategy(PricingStrategy):
+# - в конструкторе: price_per_km, night_surcharge_percent (например, 20)
+# - calculate(distance_km) должен принимать ещё is_night: bool
+#   (придётся расширить сигнатуру базового класса — подумай, ломает ли это
+#   Liskov Substitution Principle, который ты уже проходил в C#)
+</code></pre>
+<h3 id="_9">🎤 Вопросы с собеседования</h3>
+<p><strong>Q: Чем <code>ABC</code> в Python отличается от <code>interface</code> в C#?</strong>
+A: <code>ABC</code> ближе к C# <code>abstract class</code>: может содержать как абстрактные методы (<code>@abstractmethod</code>, без реализации), так и обычные методы с готовым кодом. В Python нет отдельной языковой конструкции <code>interface</code> — если нужен "чистый контракт без реализации", это просто <code>ABC</code>, где ВСЕ методы абстрактные.</p>
+<p><strong>Q: Что произойдёт, если попытаться создать экземпляр класса-наследника <code>ABC</code>, не реализовав один из <code>@abstractmethod</code>?</strong>
+A: <code>TypeError</code> в момент вызова конструктора (<code>ClassName()</code>), а не при объявлении класса. Класс с недоделанным контрактом определить можно — Python проверяет полноту реализации только при инстанцировании.</p>
+<p><strong>Q: Мини-задание расширило <code>calculate</code> новым параметром <code>is_night</code> только в одном наследнике — что здесь не так с точки зрения ООП?</strong>
+A: Это нарушает Liskov Substitution Principle (ты проходил его в C# на SOLID) — если <code>TimeOfDayStrategy</code> требует параметр, которого нет в базовой сигнатуре, её нельзя подставить туда, где ожидается любой <code>PricingStrategy</code>, без дополнительных проверок типа. Правильно — либо добавить параметр в базовый абстрактный метод (даже если остальные стратегии его игнорируют), либо передавать контекст (время суток) через отдельный объект-параметр, который есть у всех стратегий.</p>
+<p><strong>Q: Зачем вообще Strategy, если можно передать функцию напрямую (Пример D)?</strong>
+A: Оба подхода валидны в Python. Функциональный вариант проще для простых случаев без внутреннего состояния сверх замыкания. Классовый (<code>ABC</code>) вариант лучше, когда стратегии должны хранить сложное состояние, иметь несколько связанных методов, или когда важен явный, проверяемый интерфейсом контракт — то есть ровно те случаи, где в C# тоже выбрали бы <code>interface</code>, а не <code>Func&lt;T&gt;</code>.</p>
+<hr>
+<h1 id="2-fastapi">День 2 — Асинхронность и FastAPI</h1>
+<h2 id="21-asyncio">2.1 asyncio — основы</h2>
+<h3 id="_10">Почему это важно</h3>
+<p>Ты только что закапывался в C# concurrency (Ozon-банк подтвердил: это топ-1 тема на собесах). Хорошая новость — концепции переносятся, меняется только синтаксис и модель исполнения. Разница, которую важно не перепутать: C# <code>async/await</code> может реально исполняться на разных потоках пула потоков; Python <code>asyncio</code> — ОДИН поток, переключающийся между задачами кооперативно (GIL всё равно не даёт параллелизма для CPU-bound кода).</p>
+<h3 id="_11">Теория</h3>
+<ul>
+<li><strong>event loop</strong> — диспетчер, который знает обо всех незавершённых корутинах и переключается между ними, когда одна из них "отдаёт" управление на <code>await</code>.</li>
+<li><strong>корутина</strong> (<code>async def</code>) — функция, которая при вызове НЕ выполняется сразу, а возвращает объект-корутину. Выполняется только через <code>await</code> или через event loop.</li>
+<li>Асинхронность помогает при I/O-bound (сеть, диск, БД, таймеры) — пока одна задача ждёт ответ, другая может работать. НЕ помогает при CPU-bound (для этого — <code>multiprocessing</code>, отдельные процессы, обходящие GIL).</li>
+</ul>
+<h3 id="a_3">Пример A — синхронная версия (медленно)</h3>
+<pre><code class="language-python">import time
+
+def simulate_driver_sync(order_id: int, seconds: int):
+    for i in range(seconds):
+        time.sleep(1)
+        print(f&quot;Заказ {order_id}: секунда {i+1}&quot;)
+
+simulate_driver_sync(1, 3)
+simulate_driver_sync(2, 3)
+# Итого 6 секунд — строго по очереди
+</code></pre>
+<h3 id="b-asynciogather">Пример B — асинхронная версия с <code>asyncio.gather</code></h3>
+<pre><code class="language-python">import asyncio
+
+async def simulate_driver(order_id: int, seconds: int):
+    for i in range(seconds):
+        await asyncio.sleep(1)
+        print(f&quot;Заказ {order_id}: секунда {i+1}&quot;)
+
+async def main():
+    await asyncio.gather(
+        simulate_driver(1, 3),
+        simulate_driver(2, 3),
+    )
+
+asyncio.run(main())
+# Итого ~3 секунды — оба &quot;водителя&quot; двигаются одновременно
+</code></pre>
+<p><code>asyncio.gather</code> — прямой аналог <code>Task.WhenAll</code> в C#: запускает несколько корутин конкурентно и ждёт завершения всех.</p>
+<h3 id="c-event-loop">Пример C — частая ошибка: заблокировать весь event loop</h3>
+<pre><code class="language-python">async def bad_driver(order_id: int):
+    time.sleep(3)  # ОШИБКА: обычный blocking sleep, не asyncio.sleep
+    print(f&quot;Заказ {order_id} готов&quot;)
+
+# Если запустить несколько bad_driver через gather — они всё равно
+# выполнятся строго по очереди, потому что time.sleep блокирует
+# ЕДИНСТВЕННЫЙ поток, на котором крутится весь event loop.
+</code></pre>
+<p>Это самая частая ошибка в асинхронном Python-коде: одна blocking-вызов (<code>time.sleep</code>, синхронный <code>requests.get</code>, тяжёлые вычисления) без <code>await</code> останавливает ВСЮ систему, а не только одну задачу — потому что поток один.</p>
+<h3 id="d-c-python">Пример D — сравнение терминов C# ↔ Python</h3>
+<table>
+<thead>
+<tr>
+<th>C#</th>
+<th>Python</th>
+<th>Комментарий</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>async Task Method()</code></td>
+<td><code>async def method()</code></td>
+<td>корутина/асинхронный метод</td>
+</tr>
+<tr>
+<td><code>await task</code></td>
+<td><code>await coro</code></td>
+<td>ждать результат, не блокируя поток</td>
+</tr>
+<tr>
+<td><code>Task.WhenAll(t1, t2)</code></td>
+<td><code>asyncio.gather(c1, c2)</code></td>
+<td>запустить конкурентно, ждать все</td>
+</tr>
+<tr>
+<td>Пул потоков (может быть параллелизм)</td>
+<td>Один event loop (без параллелизма, GIL)</td>
+<td>ключевое отличие модели исполнения</td>
+</tr>
+<tr>
+<td><code>Task.Delay(1000)</code></td>
+<td><code>asyncio.sleep(1)</code></td>
+<td>неблокирующая задержка</td>
+</tr>
+</tbody>
+</table>
+<h3 id="-21">Мини-задание 2.1</h3>
+<pre><code class="language-python"># Напиши async def simulate_driver(order_id, total_seconds), которая
+# каждую секунду печатает прогресс в процентах.
+# Запусти 3 таких &quot;водителя&quot; одновременно через asyncio.gather
+# с разным total_seconds (2, 3, 4) и убедись, что общее время ~4 сек, а не 9.
+</code></pre>
+<h3 id="_12">🎤 Вопросы с собеседования</h3>
+<p><strong>Q: Чем <code>asyncio</code>-корутина отличается от потока (thread)?</strong>
+A: Поток — реальная единица исполнения ОС, может выполняться параллельно на другом ядре. Корутина — объект, который выполняется на ОДНОМ потоке (event loop), переключаясь между задачами только в точках <code>await</code>. Конкурентность есть, параллелизма для CPU-bound кода — нет (из-за GIL).</p>
+<p><strong>Q: Что будет, если внутри <code>async def</code> вызвать <code>time.sleep(5)</code> вместо <code>await asyncio.sleep(5)</code>?</strong>
+A: Заблокируется ВЕСЬ event loop на 5 секунд — ни одна другая корутина не сможет выполниться в это время, потому что <code>time.sleep</code> не отдаёт управление диспетчеру, в отличие от <code>await asyncio.sleep</code>. Это одна из самых частых ошибок в асинхронном Python-коде.</p>
+<p><strong>Q: В чём разница между <code>asyncio.gather(c1, c2)</code> и <code>await c1; await c2</code> по очереди?</strong>
+A: Последовательный <code>await</code> ждёт c1 полностью, потом запускает c2 — итого сумма времён. <code>gather</code> запускает обе корутины конкурентно, event loop переключается между ними на каждом <code>await</code> внутри них — итого время ~максимум из двух, а не сумма.</p>
+<p><strong>Q: Python asyncio однопоточный (из-за GIL) — какой в этом практический смысл?</strong>
+A: Для I/O-bound задач (сеть, БД, файлы) это не проблема — пока одна задача ждёт ответ от сети, event loop переключается на другую, процессор не простаивает. Для CPU-bound задач (тяжёлые вычисления) asyncio не даёт ускорения — нужен <code>multiprocessing</code>, который использует реальные отдельные процессы в обход GIL.</p>
+<p><strong>Q: Как это соотносится с <code>Task.WhenAll</code> в C#?</strong>
+A: Концептуально то же самое — запустить несколько асинхронных операций и дождаться всех. Ключевое отличие в исполнении: <code>Task.WhenAll</code> в C# может реально распараллелить работу на пуле потоков (для CPU-bound тоже), <code>asyncio.gather</code> — только конкурентность на одном потоке (эффективна только для I/O-bound).</p>
+<hr>
+<h2 id="22-aiohttp-http-">2.2 aiohttp — асинхронные HTTP-запросы</h2>
+<h3 id="_13">Почему это важно</h3>
+<p><code>requests</code> (стандартная синхронная библиотека) — БЛОКИРУЮЩАЯ. Вызов <code>requests.get()</code> внутри <code>async def</code> не станет асинхронным просто от того, что функция помечена <code>async</code> — она всё равно остановит весь event loop, как в Примере C выше. Для реальной асинхронности HTTP нужна асинхронная библиотека — <code>aiohttp</code>.</p>
+<h3 id="_14">Теория</h3>
+<p><code>aiohttp.ClientSession</code> — аналог <code>HttpClient</code> в C#: держит пул соединений, переиспользуется между запросами (не создаётся заново на каждый вызов — это дорого). Запросы делаются через <code>async with session.get(url) as response</code>.</p>
+<h3 id="a_4">Пример A — синхронная версия (медленно, для сравнения)</h3>
+<pre><code class="language-python">import requests
+import time
+
+def download_all_sync(urls: list[str]):
+    start = time.time()
+    for url in urls:
+        requests.get(url)
+    print(f&quot;Синхронно: {time.time() - start:.2f} сек&quot;)
+</code></pre>
+<h3 id="b-aiohttp">Пример B — асинхронная версия с <code>aiohttp</code></h3>
+<pre><code class="language-python">import aiohttp
+import asyncio
+import time
+
+async def fetch(session: aiohttp.ClientSession, url: str):
+    async with session.get(url) as response:
+        return await response.read()
+
+async def download_all_async(urls: list[str]):
+    start = time.time()
+    async with aiohttp.ClientSession() as session:
+        await asyncio.gather(*(fetch(session, url) for url in urls))
+    print(f&quot;Асинхронно: {time.time() - start:.2f} сек&quot;)
+
+asyncio.run(download_all_async([&quot;https://cataas.com/cat&quot;] * 10))
+</code></pre>
+<p>Для 10 независимых запросов синхронная версия займёт ~сумму всех времён ответа, асинхронная — примерно время самого медленного одного запроса (все летят конкурентно).</p>
+<h3 id="-22">Мини-задание 2.2</h3>
+<pre><code class="language-python"># Дана функция fetch_route_sync(url) на requests.get(url).json().
+# Перепиши её в async fetch_route_async(session, url) на aiohttp,
+# и напиши main(), которая через gather получает маршруты для
+# списка из 5 URL конкурентно.
+</code></pre>
+<h3 id="_15">🎤 Вопросы с собеседования</h3>
+<p><strong>Q: Почему нельзя просто вызвать <code>requests.get()</code> внутри <code>async def</code> и получить ускорение?</strong>
+A: <code>requests</code> синхронная и блокирующая — она не умеет отдавать управление event loop на <code>await</code>, потому что <code>await</code> перед ней в принципе невозможен (<code>requests.get()</code> не корутина). Обёртка функции в <code>async def</code> ничего не меняет — вызов всё равно остановит весь поток, на котором крутится event loop, пока не получит ответ.</p>
+<p><strong>Q: Что такое <code>ClientSession</code> и почему его открывают один раз, а не на каждый запрос?</strong>
+A: Это объект, управляющий пулом TCP-соединений (как <code>HttpClient</code> в C#) — переиспользование соединений (keep-alive) значительно быстрее, чем открывать новое соединение на каждый запрос. Создание <code>ClientSession</code> на каждый вызов — частая ошибка производительности, аналогичная созданию нового <code>HttpClient</code> на каждый запрос в C#.</p>
+<hr>
+<h2 id="23-fastapi-di-backgroundtasks">2.3 FastAPI — сервис, DI, BackgroundTasks</h2>
+<h3 id="_16">Почему это важно</h3>
+<p>FastAPI — самый популярный async-фреймворк для Python-бэкенда в РФ прямо сейчас. Концептуально он очень похож на ASP.NET Core Minimal API: роутинг через декораторы вместо атрибутов, автоматическая валидация тела запроса через Pydantic (вместо <code>[FromBody]</code> + model binding), DI через <code>Depends()</code> вместо <code>IServiceCollection</code>.</p>
+<h3 id="a_5">Пример A — минимальное приложение</h3>
+<pre><code class="language-python">from fastapi import FastAPI
+
+app = FastAPI(title=&quot;Taxi Service API&quot;)
+
+@app.get(&quot;/&quot;)
+def read_root():
+    return {&quot;status&quot;: &quot;ok&quot;}
+
+# Запуск: fastapi dev main.py
+# Swagger автоматически на http://127.0.0.1:8000/docs
+</code></pre>
+<h3 id="b-post-pydantic-response_model">Пример B — POST с Pydantic-моделью запроса и <code>response_model</code></h3>
+<pre><code class="language-python">from pydantic import BaseModel
+
+class OrderRequest(BaseModel):
+    start: Point
+    end: Point
+
+class OrderResponse(BaseModel):
+    order_id: int
+    status: str
+
+@app.post(&quot;/orders&quot;, response_model=OrderResponse)
+def create_order(order: OrderRequest) -&gt; OrderResponse:
+    new_id = 42  # тут была бы реальная логика создания заказа
+    return OrderResponse(order_id=new_id, status=&quot;created&quot;)
+</code></pre>
+<p><code>response_model</code> — контракт ответа: даже если случайно вернуть лишнее поле или неверный тип, FastAPI отфильтрует/провалидирует по схеме перед отправкой клиенту. Это аналог явного DTO на выходе контроллера в ASP.NET Core — гарантия, что клиенты не получат "что попало".</p>
+<h3 id="c-depends-di">Пример C — <code>Depends()</code> (DI)</h3>
+<pre><code class="language-python">from fastapi import Depends
+
+class InMemoryOrdersDB:
+    def __init__(self):
+        self.orders: dict[int, OrderResponse] = {}
+
+db_instance = InMemoryOrdersDB()  # &quot;singleton&quot; — один на всё приложение
+
+def get_orders_db() -&gt; InMemoryOrdersDB:
+    return db_instance
+
+@app.get(&quot;/orders/{order_id}&quot;, response_model=OrderResponse)
+def get_order(order_id: int, db: InMemoryOrdersDB = Depends(get_orders_db)):
+    return db.orders[order_id]
+</code></pre>
+<p><code>Depends(get_orders_db)</code> — то же самое, что внедрение <code>IOrdersRepository</code> через конструктор в ASP.NET Core контроллере, только явно объявленное в сигнатуре ручки, а не через DI-контейнер снаружи. FastAPI сам вызывает <code>get_orders_db()</code> и подставляет результат.</p>
+<h3 id="d-backgroundtasks-fire-and-forget">Пример D — <code>BackgroundTasks</code> (fire-and-forget)</h3>
+<pre><code class="language-python">from fastapi import BackgroundTasks
+
+def simulate_driver_movement(order_id: int):
+    # долгая работа — двигать водителя, слать уведомления и т.д.
+    ...
+
+@app.post(&quot;/orders/{order_id}/start&quot;)
+async def start_order(order_id: int, background_tasks: BackgroundTasks):
+    background_tasks.add_task(simulate_driver_movement, order_id)
+    return {&quot;status&quot;: &quot;начали, но не ждём завершения&quot;}
+</code></pre>
+<p>Без <code>BackgroundTasks</code> эндпоинт "завис" бы до завершения <code>simulate_driver_movement</code> (клиент ждал бы ответ, пока вся долгая операция не закончится). С <code>BackgroundTasks</code> ответ уходит клиенту сразу, а функция выполняется после отправки ответа. Аналог в C# — что-то вроде <code>IHostedService</code>/<code>Task.Run</code> без ожидания, но проще и встроено во фреймворк специально под этот сценарий.</p>
+<h3 id="-23">Мини-задание 2.3</h3>
+<pre><code class="language-python"># Собери эндпоинт POST /orders, принимающий OrderRequest (start, end),
+# возвращающий OrderResponse через response_model.
+# Добавь BackgroundTasks, который в фоне &quot;запускает&quot; симуляцию поездки
+# (можно просто print с задержкой asyncio.sleep внутри async-функции).
+</code></pre>
+<h3 id="_17">🎤 Вопросы с собеседования</h3>
+<p><strong>Q: Чем <code>response_model</code> полезен, если можно просто <code>return dict</code>?</strong>
+A: <code>dict</code> не гарантирует структуру — опечатка в ключе или неверный тип не будет обнаружена до тех пор, пока клиент не получит "битый" JSON. <code>response_model</code> — явная Pydantic-схема: FastAPI провалидирует и сериализует ответ по контракту, а несоответствие поймает на этапе разработки/тестов, а не в проде у клиента.</p>
+<p><strong>Q: Что делает <code>Depends()</code> и как это соотносится с DI в ASP.NET Core?</strong>
+A: <code>Depends(get_orders_db)</code> говорит FastAPI: перед вызовом эндпоинта вызови <code>get_orders_db()</code> и подставь результат как аргумент. Концептуально то же самое, что внедрение зависимости через конструктор контроллера в ASP.NET Core (<code>services.AddSingleton&lt;IOrdersRepository&gt;</code>) — разница в том, что в FastAPI это объявляется прямо в сигнатуре функции-обработчика, а не настраивается отдельно в <code>Program.cs</code>.</p>
+<p><strong>Q: Зачем <code>BackgroundTasks</code>, если можно просто <code>await</code> внутри ручки?</strong>
+A: <code>await</code> внутри ручки заставит клиента ЖДАТЬ полного завершения операции перед получением ответа. <code>BackgroundTasks</code> отправляет ответ клиенту сразу, а операция выполняется после — нужен именно тогда, когда клиенту не важен результат операции немедленно (лог, уведомление, долгая фоновая симуляция).</p>
+<p><strong>Q: Откуда Swagger берёт схему автоматически?</strong>
+A: Из type hints и Pydantic-моделей в сигнатурах эндпоинтов (<code>OrderRequest</code>, <code>response_model=OrderResponse</code>) — FastAPI строит OpenAPI-схему во время старта приложения, анализируя аннотации типов кода, без единой ручной строчки документации.</p>
+<hr>
+<h1 id="3">День 3 — Тестирование и инструменты</h1>
+<h2 id="31-pytest-aaa">3.1 pytest — основы, паттерн AAA</h2>
+<h3 id="_18">Почему это важно</h3>
+<p>Ты знаешь xUnit — pytest концептуально то же самое (unit-тесты, паттерн AAA), синтаксис проще: не нужны атрибуты <code>[Fact]</code>, обычный <code>assert</code> вместо <code>Assert.Equal</code>.</p>
+<h3 id="_19">Теория</h3>
+<p>pytest находит тесты по маске: файлы <code>test_*.py</code>, функции <code>test_*</code>, классы <code>Test*</code> (без <code>__init__</code>). Паттерн AAA — Arrange (подготовка) → Act (выполнение) → Assert (проверка).</p>
+<h3 id="a_6">Пример A — функция + тесты</h3>
+<pre><code class="language-python"># math_utils.py
+def increment(n: int) -&gt; int:
+    return n + 1
+
+# test_math_utils.py
+from math_utils import increment
+
+def test_increment_positive():
+    assert increment(5) == 6
+
+def test_increment_negative():
+    assert increment(-5) == -4
+
+def test_increment_zero():
+    assert increment(0) == 1
+</code></pre>
+<p>Запуск: <code>pytest -vv</code> (подробный вывод по каждому тесту) или <code>pytest -q</code> (только точки/<code>F</code> для быстрого прогона).</p>
+<h3 id="b-aaa">Пример B — тест по паттерну AAA явно</h3>
+<pre><code class="language-python">def test_distance_pricing():
+    # Arrange
+    strategy = DistancePriceStrategy(price_per_km=25, base_fee=50)
+    # Act
+    price = strategy.calculate(distance_km=12)
+    # Assert
+    assert price == 350
+</code></pre>
+<h3 id="c_3">Мостик к C</h3>
+<table>
+<thead>
+<tr>
+<th>xUnit</th>
+<th>pytest</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>[Fact]</code></td>
+<td>имя функции начинается с <code>test_</code></td>
+</tr>
+<tr>
+<td><code>[Theory] + [InlineData]</code></td>
+<td><code>@pytest.mark.parametrize</code></td>
+</tr>
+<tr>
+<td><code>Assert.Equal(a, b)</code></td>
+<td><code>assert a == b</code></td>
+</tr>
+<tr>
+<td><code>Assert.Throws&lt;T&gt;(...)</code></td>
+<td><code>pytest.raises(T)</code></td>
+</tr>
+<tr>
+<td>Fixture (<code>IClassFixture</code>)</td>
+<td><code>@pytest.fixture</code></td>
+</tr>
+</tbody>
+</table>
+<h3 id="-31">Мини-задание 3.1</h3>
+<pre><code class="language-python"># Напиши тесты для FixedPriceStrategy и DistancePriceStrategy из Дня 1:
+# - fixed: любая дистанция даёт одну и ту же цену
+# - distance: нулевая дистанция всё равно даёт base_fee (граничный случай!)
+# - distance: большая дистанция дороже маленькой
+</code></pre>
+<h3 id="_20">🎤 Вопросы с собеседования</h3>
+<p><strong>Q: Как pytest находит тесты без атрибутов вроде <code>[Fact]</code>?</strong>
+A: По соглашению об именовании (convention over configuration): файлы <code>test_*.py</code>/<code>*_test.py</code>, функции <code>test_*</code>, классы <code>Test*</code>. Никакой регистрации не требуется — в отличие от xUnit, где <code>[Fact]</code> явно помечает тестовый метод.</p>
+<p><strong>Q: Что означает паттерн AAA и почему он важен?</strong>
+A: Arrange (подготовка данных/объектов) → Act (вызов тестируемого кода) → Assert (проверка результата). Важен как структура: тест, где вперемешку подготовка и проверки, тяжело читать и поддерживать — при падении неочевидно, что именно не так.</p>
+<hr>
+<h2 id="32-fixtures">3.2 Fixtures и параметризация</h2>
+<h3 id="_21">Теория</h3>
+<p><code>@pytest.fixture</code> — функция, которая готовит данные/окружение для теста. pytest подставляет её РЕЗУЛЬТАТ в тест по СОВПАДЕНИЮ ИМЕНИ параметра теста с именем фикстуры (магии импорта нет — просто одинаковое имя). Фикстуры хранятся в <code>conftest.py</code> — общем файле, из которого pytest автоматически подхватывает их для всех тестов в директории.</p>
+<p><code>@pytest.mark.parametrize</code> — прогоняет ОДИН тест с разными наборами входных данных, вместо копипаста похожих тестов.</p>
+<h3 id="a_7">Пример A — простая фикстура</h3>
+<pre><code class="language-python"># conftest.py
+import pytest
+
+@pytest.fixture
+def nevsky_point() -&gt; Point:
+    return Point(latitude=59.9311, longitude=30.3609)
+
+@pytest.fixture
+def palace_square_point() -&gt; Point:
+    return Point(latitude=59.9398, longitude=30.3146)
+
+# test_orders.py
+def test_order_creation(nevsky_point, palace_square_point):
+    order = OrderRequest(start=nevsky_point, end=palace_square_point)
+    assert order.start.latitude == 59.9311
+</code></pre>
+<p>pytest увидел параметры <code>nevsky_point</code>, <code>palace_square_point</code> у теста → нашёл фикстуры с такими же именами в <code>conftest.py</code> → вызвал их и подставил результат.</p>
+<h3 id="b_1">Пример B — фикстура, зависящая от другой фикстуры</h3>
+<pre><code class="language-python">@pytest.fixture
+def sample_order(nevsky_point, palace_square_point) -&gt; OrderRequest:
+    return OrderRequest(start=nevsky_point, end=palace_square_point)
+</code></pre>
+<p>Фикстуры можно комбинировать — pytest сам разрешит цепочку зависимостей.</p>
+<h3 id="c-parametrize">Пример C — <code>parametrize</code></h3>
+<pre><code class="language-python">import pytest
+
+@pytest.mark.parametrize(&quot;distance_km,expected_price&quot;, [
+    (0, 50),      # граничный случай: нулевая дистанция всё равно с базовой ставкой
+    (10, 300),
+    (20, 550),
+])
+def test_distance_pricing(distance_km, expected_price):
+    strategy = DistancePriceStrategy(price_per_km=25, base_fee=50)
+    assert strategy.calculate(distance_km) == expected_price
+</code></pre>
+<p>Один тест, три прогона — pytest покажет каждый как отдельный результат (<code>test_distance_pricing[0-50]</code>, и т.д.).</p>
+<h3 id="d_1">Пример D — фабрика фикстур (фикстура, возвращающая функцию)</h3>
+<pre><code class="language-python">@pytest.fixture
+def make_order():
+    def _make_order(start: Point, end: Point) -&gt; OrderRequest:
+        return OrderRequest(start=start, end=end)
+    return _make_order
+
+def test_custom_order(make_order, nevsky_point):
+    custom_end = Point(latitude=60.0, longitude=30.0)
+    order = make_order(nevsky_point, custom_end)
+    assert order.end.latitude == 60.0
+</code></pre>
+<p>Нужна, когда одной фикстуры с фиксированными данными недостаточно — тест хочет сам передать параметры при вызове.</p>
+<h3 id="-32">Мини-задание 3.2</h3>
+<pre><code class="language-python"># Вынеси создание FixedPriceStrategy и DistancePriceStrategy в фикстуры.
+# Перепиши тесты из 3.1 так, чтобы они принимали готовые стратегии
+# через параметры теста, без создания внутри каждого теста.
+</code></pre>
+<h3 id="_22">🎤 Вопросы с собеседования</h3>
+<p><strong>Q: Как pytest узнаёт, какую фикстуру подставить в тест?</strong>
+A: По СОВПАДЕНИЮ ИМЕНИ параметра теста и имени функции-фикстуры (декорированной <code>@pytest.fixture</code>), видимой в текущей области (обычно <code>conftest.py</code>). Явного импорта или регистрации не требуется.</p>
+<p><strong>Q: Чем <code>parametrize</code> отличается от написания нескольких отдельных тестов?</strong>
+A: Один тест с <code>parametrize</code> — один и тот же код проверки, разные входные данные, заданные декларативно списком. Несколько отдельных тестов — дублирование логики теста ради разных данных. <code>parametrize</code> также даёт отдельный, читаемый результат на каждый набор данных при падении.</p>
+<p><strong>Q: Что такое <code>conftest.py</code> и зачем он?</strong>
+A: Специальный файл, откуда pytest автоматически подхватывает фикстуры для всех тестов в директории (и поддиректориях) без явного импорта. В больших проектах фикстуры также выносят в отдельные подпапки/файлы, если их становится много.</p>
+<p><strong>Q: Сравни с <code>[InlineData]</code> в C#.</strong>
+A: <code>@pytest.mark.parametrize("a,b", [(1,2), (3,4)])</code> — прямой аналог нескольких <code>[InlineData(1,2)]</code>/<code>[InlineData(3,4)]</code> над одним <code>[Theory]</code>-методом. Механизм тот же: один тестовый метод, множество наборов данных, framework прогоняет каждый как отдельный тест-кейс.</p>
+<hr>
+<h2 id="33-pytest-mock-testclient">3.3 Мокинг (pytest-mock, TestClient)</h2>
+<h3 id="_23">Почему это важно</h3>
+<p>Ты знаешь Moq в C#. <code>pytest-mock</code> (обёртка над стандартным <code>unittest.mock</code>) решает ровно ту же задачу: подменить внешнюю зависимость (сеть, БД, время), чтобы тест был быстрым, детерминированным и не зависел от реального внешнего сервиса.</p>
+<h3 id="_24">Теория</h3>
+<p>Фикстура <code>mocker</code> (из <code>pytest-mock</code>) даёт методы:
+- <code>mocker.patch("module.function")</code> — заменяет функцию/объект в указанном модуле на мок на время теста
+- <code>mock.assert_called_once()</code> — проверка, что мок вызвали ровно один раз
+- <code>mock.assert_called_with(args)</code> — проверка аргументов вызова</p>
+<p><code>TestClient</code> (из <code>fastapi.testclient</code>) — позволяет делать запросы к FastAPI-приложению БЕЗ поднятия реального сервера — как <code>WebApplicationFactory</code> в ASP.NET Core тестах.</p>
+<h3 id="a_8">Пример A — мок внешней функции</h3>
+<pre><code class="language-python">def test_create_order_with_mocked_route(mocker):
+    # Arrange
+    mock_route = mocker.patch(&quot;main.fetch_route&quot;)
+    mock_route.return_value = {&quot;distance&quot;: 1240, &quot;duration&quot;: 600}
+
+    from fastapi.testclient import TestClient
+    from main import app
+    client = TestClient(app)
+
+    # Act
+    response = client.post(&quot;/orders&quot;, json={
+        &quot;start&quot;: {&quot;latitude&quot;: 59.93, &quot;longitude&quot;: 30.36},
+        &quot;end&quot;: {&quot;latitude&quot;: 59.94, &quot;longitude&quot;: 30.31},
+    })
+
+    # Assert
+    assert response.status_code == 200
+    mock_route.assert_called_once()
+</code></pre>
+<p><code>mocker.patch("main.fetch_route")</code> подменяет функцию <code>fetch_route</code> ИМЕННО в модуле <code>main</code> (там, где её реально вызывают) на мок — реальный HTTP-запрос к OSRM никогда не уходит.</p>
+<h3 id="b_2">Пример B — негативный сценарий (внешний сервис упал)</h3>
+<pre><code class="language-python">def test_create_order_when_route_service_fails(mocker):
+    mocker.patch(&quot;main.fetch_route&quot;, side_effect=TimeoutError(&quot;OSRM недоступен&quot;))
+
+    client = TestClient(app)
+    response = client.post(&quot;/orders&quot;, json={...})
+
+    # Заказ всё равно должен создаться, просто без точного времени в пути
+    assert response.status_code == 200
+</code></pre>
+<p><code>side_effect</code> — задаёт исключение (или функцию) вместо простого возврата значения. Проверяет, что код УСТОЙЧИВ к отказу внешней зависимости, а не только к успешному сценарию.</p>
+<h3 id="c_4">Пример C — мок метода объекта (репозитория/БД)</h3>
+<pre><code class="language-python">def test_get_order_with_mocked_db(mocker):
+    fake_order = OrderResponse(order_id=1, status=&quot;created&quot;)
+    mocker.patch.object(InMemoryOrdersDB, &quot;get&quot;, return_value=fake_order)
+
+    client = TestClient(app)
+    response = client.get(&quot;/orders/1&quot;)
+
+    assert response.json()[&quot;order_id&quot;] == 1
+</code></pre>
+<h3 id="c_5">Мостик к C</h3>
+<table>
+<thead>
+<tr>
+<th>Moq (C#)</th>
+<th>pytest-mock</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>new Mock&lt;IRepo&gt;()</code></td>
+<td><code>mocker.patch(...)</code> / <code>mocker.patch.object(...)</code></td>
+</tr>
+<tr>
+<td><code>.Setup(x =&gt; x.Get(1)).Returns(order)</code></td>
+<td><code>return_value=order</code></td>
+</tr>
+<tr>
+<td><code>.Verify(x =&gt; x.Get(1), Times.Once())</code></td>
+<td><code>mock.assert_called_once()</code></td>
+</tr>
+<tr>
+<td><code>.Throws&lt;TimeoutException&gt;()</code></td>
+<td><code>side_effect=TimeoutError(...)</code></td>
+</tr>
+</tbody>
+</table>
+<h3 id="-33">Мини-задание 3.3</h3>
+<pre><code class="language-python"># Замокай внешнюю функцию fetch_route в эндпоинте POST /orders так,
+# чтобы она возвращала фиксированный маршрут.
+# Напиши тест на негативный сценарий: fetch_route кидает исключение,
+# заказ всё равно должен создаться (со статусом created, без точного ETA).
+</code></pre>
+<h3 id="_25">🎤 Вопросы с собеседования</h3>
+<p><strong>Q: Чем это похоже на Moq в C# (<code>Mock&lt;T&gt;</code>, <code>Setup</code>, <code>Verify</code>)?</strong>
+A: Идея идентична: подменить реальную зависимость (внешний вызов, БД) объектом-заглушкой с заданным поведением, а потом проверить, что код вызвал её ожидаемым образом. <code>mocker.patch</code> ближе к <code>Setup</code>, <code>assert_called_once()</code> — к <code>Verify(..., Times.Once())</code>.</p>
+<p><strong>Q: Почему не стоит делать реальные HTTP-запросы в юнит-тестах?</strong>
+A: Тесты становятся медленными, нестабильными (падают из-за сети, а не из-за бага), непроверяемыми на сценарии ошибок (сложно заставить реальный внешний сервис вернуть таймаут по requestу), и внешний сервис может ограничить частоту запросов от тестового прогона.</p>
+<p><strong>Q: Что проверяет <code>assert_called_once()</code>?</strong>
+A: Что мок был вызван РОВНО один раз за время теста — не ноль (значит, код не дошёл до вызова) и не два+ (значит, лишний вызов, возможный баг — например, случайный повторный запрос).</p>
+<hr>
+<h2 id="34-coverage">3.4 Coverage (покрытие тестами)</h2>
+<h3 id="_26">Теория</h3>
+<p><code>pytest-cov</code> показывает, какие строки кода реально ВЫПОЛНИЛИСЬ во время прогона тестов. HTML-отчёт (<code>--cov-report=html</code>) подсвечивает непокрытые строки красным.</p>
+<pre><code class="language-bash">pytest --cov=app --cov-report=html
+# отчёт появится в htmlcov/index.html
+</code></pre>
+<h3 id="_27">🎤 Вопросы с собеседования</h3>
+<p><strong>Q: Гарантирует ли 100% coverage отсутствие багов?</strong>
+A: Нет. Coverage показывает, что строка ВЫПОЛНИЛАСЬ хотя бы раз — не то, что она проверена на всех значимых сценариях (граничные случаи, неверные входные данные). Можно иметь 100% coverage и полное отсутствие содержательных <code>assert</code> в тестах. Coverage — метрика "что не забыто", не метрика качества тестов.</p>
+<hr>
+<h2 id="35">3.5 Инструменты разработчика (кратко, теория)</h2>
+<h3 id="_28">Почему это важно</h3>
+<p>Это НЕ хендс-он часть — просто чтобы на собесе не было пустого места, если спросят про экосистему.</p>
+<ul>
+<li><strong>Виртуальные окружения</strong> (<code>venv</code>, <code>poetry</code>) — изоляция зависимостей проекта от глобального Python и от других проектов (разные версии библиотек/Python на разных проектах — иначе конфликт). Аналог — NuGet-пакеты проекта в C#, только там изоляция версий менее болезненная (не нужен отдельный venv на проект).</li>
+<li><strong>Линтеры/форматеры</strong> (<code>ruff</code>, <code>black</code>) — аналог <code>dotnet format</code>/Roslyn-анализаторов: автоматическое форматирование и обнаружение проблем в коде до ревью.</li>
+<li><strong>Type hints + <code>mypy</code></strong> — Python остаётся динамически типизированным ДАЖЕ с аннотациями типов: <code>def f(x: int)</code> не мешает вызвать <code>f("строка")</code> в рантайме без единой ошибки, если не подключен <code>mypy</code> как отдельный статический чекер (и даже тогда — только на этапе CI/линтинга, не в рантайме). Это принципиально отличается от C#, где типы проверяет компилятор и рантайм не даст присвоить несовместимый тип.</li>
+<li><strong>Логирование</strong> (<code>logging</code> модуль) — концептуальный аналог <code>Serilog</code>/<code>ILogger</code> в C#, но менее структурирован из коробки (JSON-логирование нужно настраивать отдельно, не встроено по умолчанию).</li>
+</ul>
+<h3 id="_29">🎤 Вопросы с собеседования</h3>
+<p><strong>Q: Зачем нужен virtual environment, если Python уже установлен глобально?</strong>
+A: Разные проекты часто требуют разные (и несовместимые) версии одной и той же библиотеки или даже самого Python. Виртуальное окружение изолирует зависимости конкретного проекта — установка/обновление пакета в одном проекте не ломает другой.</p>
+<p><strong>Q: Чем type hints в Python отличаются от строгой типизации в C#?</strong>
+A: Type hints — это ПОДСКАЗКА для читателя кода, IDE и статических анализаторов (<code>mypy</code>), но НЕ проверяются рантаймом Python. <code>def f(x: int): ...</code> можно вызвать как <code>f("строка")</code> без единой ошибки — интерпретатор аннотации типов игнорирует. В C# типы проверяются компилятором ДО запуска и обеспечены рантаймом — это принципиальная разница между "подсказкой" и "гарантией".</p>
+<hr>
+<h1 id="-">Итоговый мини-проект (если куда активировал курс)</h1>
+<p>Собери всё в один сервис <strong>Order Pricing API</strong>:
+- <code>POST /orders</code> — принимает <code>OrderRequest</code> (Pydantic, вложенные <code>Point</code>), считает цену через выбранную <code>PricingStrategy</code> (Strategy pattern, День 1), возвращает <code>OrderResponse</code> через <code>response_model</code>
+- Цена считается синхронно, но эндпоинт запускает <code>BackgroundTasks</code>, симулирующий движение водителя (<code>asyncio.sleep</code> в цикле, обновляющий "прогресс" в памяти)
+- <code>GET /orders/{id}</code> — отдаёт текущий прогресс, через <code>Depends()</code> на in-memory "репозиторий"
+- Тесты: pytest + fixtures (общие <code>Point</code>/<code>Order</code> для тестов) + мок внешнего вызова (<code>fetch_route</code>) + хотя бы один <code>parametrize</code>-тест на разные стратегии ценообразования + coverage-отчёт</p>
+<p>Это тот объём, который реально закрывает "написал README-совместимый pet-project" на резюме за 2-3 дня, если триггер сработает.</p>
+<hr>
+<h2 id="_30">Напоминание</h2>
+<p>🌙 Этот файл — план на непредвиденный случай. Активация — только по явному триггеру (см. шапку файла). До тех пор — ноль часов, Python поддерживается исключительно через Tier 1 (LeetCode чередование), приоритет — C# курс до собесов ~11-12 августа.</p></article>
+    <aside class="aside">
+      <strong>В этом документе</strong>
+      <div class="toc"><div class="toc">
+<ul>
+<li><a href="#1-pydantic-strategy-pattern">День 1 — Pydantic, декораторы, Strategy pattern</a><ul>
+<li><a href="#11-pydantic">1.1 Pydantic — валидация данных</a><ul>
+<li><a href="#_1">Почему это важно</a></li>
+<li><a href="#_2">Теория</a></li>
+<li><a href="#a">Пример A — простая модель</a></li>
+<li><a href="#b-field">Пример B — Field с ограничениями и дефолтами</a></li>
+<li><a href="#c">Пример C — вложенные модели</a></li>
+<li><a href="#d">Пример D — обработка ошибки валидации</a></li>
+<li><a href="#-11">Мини-задание 1.1</a></li>
+<li><a href="#_3">🎤 Вопросы с собеседования</a></li>
+</ul>
+</li>
+<li><a href="#12">1.2 Декораторы — с нуля</a><ul>
+<li><a href="#_4">Почему это важно</a></li>
+<li><a href="#_5">Теория</a></li>
+<li><a href="#a_1">Пример A — простой декоратор</a></li>
+<li><a href="#b-functoolswraps">Пример B — functools.wraps (чтобы не терять метаданные)</a></li>
+<li><a href="#c_1">Пример C — декоратор с параметрами (три уровня вложенности)</a></li>
+<li><a href="#d-property-c">Пример D — @property (мостик к C#)</a></li>
+<li><a href="#-12">Мини-задание 1.2</a></li>
+<li><a href="#_6">🎤 Вопросы с собеседования</a></li>
+</ul>
+</li>
+<li><a href="#13-strategy-pattern-abc-abstractmethod">1.3 Strategy pattern через ABC + abstractmethod</a><ul>
+<li><a href="#_7">Почему это важно</a></li>
+<li><a href="#_8">Теория</a></li>
+<li><a href="#a_2">Пример A — базовый контракт стратегии</a></li>
+<li><a href="#b">Пример B — что будет, если не реализовать метод</a></li>
+<li><a href="#c_2">Пример C — использование стратегии (композиция, а не наследование)</a></li>
+<li><a href="#d-higher-order-function">Пример D — альтернатива без ООП (higher-order function)</a></li>
+<li><a href="#-13">Мини-задание 1.3</a></li>
+<li><a href="#_9">🎤 Вопросы с собеседования</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="#2-fastapi">День 2 — Асинхронность и FastAPI</a><ul>
+<li><a href="#21-asyncio">2.1 asyncio — основы</a><ul>
+<li><a href="#_10">Почему это важно</a></li>
+<li><a href="#_11">Теория</a></li>
+<li><a href="#a_3">Пример A — синхронная версия (медленно)</a></li>
+<li><a href="#b-asynciogather">Пример B — асинхронная версия с asyncio.gather</a></li>
+<li><a href="#c-event-loop">Пример C — частая ошибка: заблокировать весь event loop</a></li>
+<li><a href="#d-c-python">Пример D — сравнение терминов C# ↔ Python</a></li>
+<li><a href="#-21">Мини-задание 2.1</a></li>
+<li><a href="#_12">🎤 Вопросы с собеседования</a></li>
+</ul>
+</li>
+<li><a href="#22-aiohttp-http-">2.2 aiohttp — асинхронные HTTP-запросы</a><ul>
+<li><a href="#_13">Почему это важно</a></li>
+<li><a href="#_14">Теория</a></li>
+<li><a href="#a_4">Пример A — синхронная версия (медленно, для сравнения)</a></li>
+<li><a href="#b-aiohttp">Пример B — асинхронная версия с aiohttp</a></li>
+<li><a href="#-22">Мини-задание 2.2</a></li>
+<li><a href="#_15">🎤 Вопросы с собеседования</a></li>
+</ul>
+</li>
+<li><a href="#23-fastapi-di-backgroundtasks">2.3 FastAPI — сервис, DI, BackgroundTasks</a><ul>
+<li><a href="#_16">Почему это важно</a></li>
+<li><a href="#a_5">Пример A — минимальное приложение</a></li>
+<li><a href="#b-post-pydantic-response_model">Пример B — POST с Pydantic-моделью запроса и response_model</a></li>
+<li><a href="#c-depends-di">Пример C — Depends() (DI)</a></li>
+<li><a href="#d-backgroundtasks-fire-and-forget">Пример D — BackgroundTasks (fire-and-forget)</a></li>
+<li><a href="#-23">Мини-задание 2.3</a></li>
+<li><a href="#_17">🎤 Вопросы с собеседования</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="#3">День 3 — Тестирование и инструменты</a><ul>
+<li><a href="#31-pytest-aaa">3.1 pytest — основы, паттерн AAA</a><ul>
+<li><a href="#_18">Почему это важно</a></li>
+<li><a href="#_19">Теория</a></li>
+<li><a href="#a_6">Пример A — функция + тесты</a></li>
+<li><a href="#b-aaa">Пример B — тест по паттерну AAA явно</a></li>
+<li><a href="#c_3">Мостик к C</a></li>
+<li><a href="#-31">Мини-задание 3.1</a></li>
+<li><a href="#_20">🎤 Вопросы с собеседования</a></li>
+</ul>
+</li>
+<li><a href="#32-fixtures">3.2 Fixtures и параметризация</a><ul>
+<li><a href="#_21">Теория</a></li>
+<li><a href="#a_7">Пример A — простая фикстура</a></li>
+<li><a href="#b_1">Пример B — фикстура, зависящая от другой фикстуры</a></li>
+<li><a href="#c-parametrize">Пример C — parametrize</a></li>
+<li><a href="#d_1">Пример D — фабрика фикстур (фикстура, возвращающая функцию)</a></li>
+<li><a href="#-32">Мини-задание 3.2</a></li>
+<li><a href="#_22">🎤 Вопросы с собеседования</a></li>
+</ul>
+</li>
+<li><a href="#33-pytest-mock-testclient">3.3 Мокинг (pytest-mock, TestClient)</a><ul>
+<li><a href="#_23">Почему это важно</a></li>
+<li><a href="#_24">Теория</a></li>
+<li><a href="#a_8">Пример A — мок внешней функции</a></li>
+<li><a href="#b_2">Пример B — негативный сценарий (внешний сервис упал)</a></li>
+<li><a href="#c_4">Пример C — мок метода объекта (репозитория/БД)</a></li>
+<li><a href="#c_5">Мостик к C</a></li>
+<li><a href="#-33">Мини-задание 3.3</a></li>
+<li><a href="#_25">🎤 Вопросы с собеседования</a></li>
+</ul>
+</li>
+<li><a href="#34-coverage">3.4 Coverage (покрытие тестами)</a><ul>
+<li><a href="#_26">Теория</a></li>
+<li><a href="#_27">🎤 Вопросы с собеседования</a></li>
+</ul>
+</li>
+<li><a href="#35">3.5 Инструменты разработчика (кратко, теория)</a><ul>
+<li><a href="#_28">Почему это важно</a></li>
+<li><a href="#_29">🎤 Вопросы с собеседования</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="#-">Итоговый мини-проект (если куда активировал курс)</a><ul>
+<li><a href="#_30">Напоминание</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+    </aside>
+  </div>
+</main>
+
+
+<script>
+const ROOT = "..";
+
+// ---- тема
+const themeBtn = document.getElementById("theme");
+const paint = () => {
+  const dark = document.documentElement.getAttribute("data-theme") === "dark";
+  themeBtn.textContent = dark ? "☀" : "☾";
+};
+paint();
+themeBtn.addEventListener("click", () => {
+  const next = document.documentElement.getAttribute("data-theme") === "dark" ? "light" : "dark";
+  document.documentElement.setAttribute("data-theme", next);
+  try { localStorage.setItem("kb-theme", next); } catch (e) {}
+  paint();
+});
+
+// ---- поиск
+let index = null;
+const box = document.getElementById("results");
+const hits = document.getElementById("hits");
+const head = box.querySelector("h3");
+const input = document.getElementById("q");
+
+async function ensureIndex() {
+  if (index) return index;
+  const res = await fetch(ROOT + "/search-index.json");
+  index = await res.json();
+  return index;
+}
+
+const esc = (s) => (s || "").replace(/[&<>]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
+
+function hi(text, query) {
+  const i = text.toLowerCase().indexOf(query);
+  if (i < 0) return esc(text);
+  return esc(text.slice(0, i)) + "<mark>" + esc(text.slice(i, i + query.length)) + "</mark>" + esc(text.slice(i + query.length));
+}
+
+input.addEventListener("input", async () => {
+  const q = input.value.trim().toLowerCase();
+  if (q.length < 2) { box.hidden = true; return; }
+  const data = await ensureIndex();
+  const found = [];
+  for (const d of data) {
+    const inTitle = d.title.toLowerCase().includes(q);
+    const inSum = (d.summary || "").toLowerCase().includes(q);
+    const heads = (d.heads || []).filter(h => h.toLowerCase().includes(q));
+    if (inTitle || inSum || heads.length) {
+      found.push({ d, heads, rank: inTitle ? 0 : heads.length ? 1 : 2 });
+    }
+  }
+  found.sort((a, b) => a.rank - b.rank);
+  head.textContent = found.length ? `Нашлось: ${found.length}` : "Ничего не нашлось";
+  hits.innerHTML = found.slice(0, 40).map(({ d, heads }) =>
+    `<a class="hit" href="${ROOT}/d/${d.slug}.html">
+       <b>${hi(d.title, q)}</b>
+       <span>${heads.length ? "→ " + heads.slice(0, 3).map(h => hi(h, q)).join(" · ") : esc(d.summary || "")}</span>
+     </a>`).join("");
+  box.hidden = false;
+});
+
+input.addEventListener("keydown", (e) => { if (e.key === "Escape") { input.value = ""; box.hidden = true; input.blur(); } });
+document.addEventListener("keydown", (e) => {
+  if (e.key === "/" && document.activeElement !== input) { e.preventDefault(); input.focus(); }
+});
+</script>
+</body>
+</html>

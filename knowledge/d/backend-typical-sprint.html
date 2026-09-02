@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Как выглядит типичный спринт бэкенд-разработчика - База знаний</title>
+<link rel="stylesheet" href="../kb.css">
+<script>
+  // Тему ставим до первой отрисовки, иначе на тёмной системе мигает белым.
+  try {
+    var t = localStorage.getItem("kb-theme");
+    if (!t) t = matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+    document.documentElement.setAttribute("data-theme", t);
+  } catch (e) {}
+</script>
+</head>
+<body>
+
+<header class="top">
+  <div class="top-in">
+    <a class="brand" href="../index.html">База <span>знаний</span></a>
+    <span class="grow"></span>
+    <input id="q" type="search" placeholder="Поиск по всем материалам…" autocomplete="off">
+    <button class="icon-btn" id="theme" type="button" title="Тема"></button>
+  </div>
+</header>
+
+<div id="results" hidden><div class="wrap-r"><h3></h3><div id="hits"></div></div></div>
+
+<main class="wrap">
+  <div class="doc-head">
+    <div class="crumb"><a href="../index.html#reference">Справочники</a></div>
+    <h1>Как выглядит типичный спринт бэкенд-разработчика</h1>
+    <div class="meta">60 строк · источник <code>l2code/Backend_Typical_Sprint.md</code></div>
+  </div>
+
+  <div class="layout">
+    <article class="prose"><blockquote>
+<p>10 минут чтения. Цель — интуиция "что вообще делает бэкендер день за днём", пока мы ещё в теории. Не задание, просто картинка для головы.</p>
+</blockquote>
+<hr>
+<h2 id="ef-core">Спринт — это не "изучаю EF Core неделю". Это набор мелких, разнородных тикетов</h2>
+<p>Реальный двухнедельный спринт Middle-разработчика выглядит примерно так (я специально смешал разные типы задач — это и есть реальность):</p>
+<h3 id="1">Тикет 1 — новый эндпоинт (самое частое)</h3>
+<blockquote>
+<p>"Добавить возможность фильтровать заметки по дате создания"</p>
+</blockquote>
+<p>Это: новый query-параметр в контроллере → LINQ <code>.Where(n =&gt; n.CreatedAt &gt;= from)</code> → возможно новый индекс в БД если станет медленно → тест на новый фильтр. 2-4 часа для Middle.</p>
+<h3 id="2">Тикет 2 — баг из продакшена</h3>
+<blockquote>
+<p>"Пользователи жалуются: при удалении заметки с тегами падает 500 ошибка"</p>
+</blockquote>
+<p>Это: воспроизвести локально → найти что забыли обработать каскадное удаление связанных <code>NoteTag</code> → пофиксить (миграция или Include + explicit delete) → написать регрессионный тест, чтобы баг не вернулся. Обычно 1-3 часа, но может занять день если баг "плавающий" (не всегда воспроизводится).</p>
+<h3 id="3">Тикет 3 — миграция схемы БД</h3>
+<blockquote>
+<p>"Добавить поле <code>IsArchived</code> в таблицу Notes"</p>
+</blockquote>
+<p><code>dotnet ef migrations add AddIsArchivedToNotes</code> → проверить сгенерированный SQL (EF иногда генерирует не то, что ты ожидал) → применить на dev-окружении → обновить DTO/маппинг → проверить что старые записи получили дефолтное значение. 1-2 часа.</p>
+<h3 id="4-">Тикет 4 — код-ревью коллеги</h3>
+<blockquote>
+<p>"Посмотреть PR Пети — добавил кэширование списка заметок"</p>
+</blockquote>
+<p>Не пишешь код сам, но читаешь чужой, ищешь: не забыл ли инвалидацию кэша при обновлении, правильно ли выбран TTL, нет ли N+1 запроса. 20-40 минут, но это ЕЖЕДНЕВНАЯ часть работы, не разовая.</p>
+<h3 id="5">Тикет 5 — оптимизация</h3>
+<blockquote>
+<p>"Список заметок грузится 3 секунды при 10000 записей — почему?"</p>
+</blockquote>
+<p>Это: посмотреть сгенерированный SQL через логи EF Core → скорее всего N+1 запрос (грузим Notes, потом для каждой отдельным запросом грузим Tags) → добавить <code>.Include(n =&gt; n.Tags)</code> или <code>.AsNoTracking()</code> для read-only → замерить снова. Полдня-день, требует навыка "читать что реально делает ORM под капотом".</p>
+<h3 id="6">Тикет 6 — интеграция с внешним сервисом</h3>
+<blockquote>
+<p>"При создании заметки отправлять событие в очередь для аналитики"</p>
+</blockquote>
+<p>RabbitMQ publish после успешного <code>SaveChanges()</code> → продумать что если очередь недоступна (не должно ронять основной запрос) → тест с моком очереди. 3-5 часов.</p>
+<h3 id="7-">Тикет 7 — "непонятное" от продукт-менеджера</h3>
+<blockquote>
+<p>"Хотим чтобы заметки о ресторанах можно было делиться с друзьями"</p>
+</blockquote>
+<p>Это САМОЕ частое и САМОЕ важное: требование расплывчатое, нужно самому додумать модель данных ("делиться" = read-only доступ? Совместное редактирование? Одноразовая ссылка?), задать 2-3 уточняющих вопроса, только потом начать писать код. Хуже всех формализовано, но именно это отличает Middle от Junior — Junior ждёт точную спецификацию, Middle умеет её выковырять из размытого запроса.</p>
+<h3 id="8">Тикет 8 — тесты для старого кода без тестов</h3>
+<blockquote>
+<p>"Написать тесты для AuthService, а то там 0% покрытия"</p>
+</blockquote>
+<p>Скучная, но частая задача — легаси-код без тестов есть почти везде. Читаешь существующий код, понимаешь ЧТО он должен делать (иногда через боль, если код плохо написан), пишешь тесты по факту поведения.</p>
+<hr>
+<h2 id="_1">Что из этого важно понять</h2>
+<ol>
+<li><strong>80% работы — это МЕЛКИЕ, разнородные задачи</strong>, не "спроектировать микросервисную архитектуру". Архитектурные решения бывают, но редко, и обычно коллективно, не в одиночку.</li>
+<li><strong>Чтение чужого кода</strong> (код-ревью, легаси без тестов, разбираться в чужом PR) — это минимум треть рабочего времени, не меньше чем написание своего.</li>
+<li><strong>Дебаг = детектив</strong>, не "знание синтаксиса". Тикет 2 и 5 выше — это чтение логов, воспроизведение, гипотезы, проверка. Ровно то, зачем нужен Serilog, который мы только что добавили в план.</li>
+<li><strong>Уточняющие вопросы — часть работы</strong>, не признак слабости (тикет 7). На собесе тоже можно и нужно переспрашивать, если задача сформулирована расплывчато — это то же самое умение.</li>
+</ol>
+<p>Life Notes даёт тебе тикеты 1, 3, 5, 6 напрямую (эндпоинты, миграции, Redis/RabbitMQ). Тикеты 2, 4, 8 — как раз то, что естественно всплывёт, когда начнём писать тесты и находить в своём же коде баги (Модуль 7).</p></article>
+    <aside class="aside">
+      <strong>В этом документе</strong>
+      <div class="toc"><div class="toc">
+<ul>
+<li><a href="#ef-core">Спринт — это не "изучаю EF Core неделю". Это набор мелких, разнородных тикетов</a><ul>
+<li><a href="#1">Тикет 1 — новый эндпоинт (самое частое)</a></li>
+<li><a href="#2">Тикет 2 — баг из продакшена</a></li>
+<li><a href="#3">Тикет 3 — миграция схемы БД</a></li>
+<li><a href="#4-">Тикет 4 — код-ревью коллеги</a></li>
+<li><a href="#5">Тикет 5 — оптимизация</a></li>
+<li><a href="#6">Тикет 6 — интеграция с внешним сервисом</a></li>
+<li><a href="#7-">Тикет 7 — "непонятное" от продукт-менеджера</a></li>
+<li><a href="#8">Тикет 8 — тесты для старого кода без тестов</a></li>
+</ul>
+</li>
+<li><a href="#_1">Что из этого важно понять</a></li>
+</ul>
+</div>
+</div>
+    </aside>
+  </div>
+</main>
+
+
+<script>
+const ROOT = "..";
+
+// ---- тема
+const themeBtn = document.getElementById("theme");
+const paint = () => {
+  const dark = document.documentElement.getAttribute("data-theme") === "dark";
+  themeBtn.textContent = dark ? "☀" : "☾";
+};
+paint();
+themeBtn.addEventListener("click", () => {
+  const next = document.documentElement.getAttribute("data-theme") === "dark" ? "light" : "dark";
+  document.documentElement.setAttribute("data-theme", next);
+  try { localStorage.setItem("kb-theme", next); } catch (e) {}
+  paint();
+});
+
+// ---- поиск
+let index = null;
+const box = document.getElementById("results");
+const hits = document.getElementById("hits");
+const head = box.querySelector("h3");
+const input = document.getElementById("q");
+
+async function ensureIndex() {
+  if (index) return index;
+  const res = await fetch(ROOT + "/search-index.json");
+  index = await res.json();
+  return index;
+}
+
+const esc = (s) => (s || "").replace(/[&<>]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
+
+function hi(text, query) {
+  const i = text.toLowerCase().indexOf(query);
+  if (i < 0) return esc(text);
+  return esc(text.slice(0, i)) + "<mark>" + esc(text.slice(i, i + query.length)) + "</mark>" + esc(text.slice(i + query.length));
+}
+
+input.addEventListener("input", async () => {
+  const q = input.value.trim().toLowerCase();
+  if (q.length < 2) { box.hidden = true; return; }
+  const data = await ensureIndex();
+  const found = [];
+  for (const d of data) {
+    const inTitle = d.title.toLowerCase().includes(q);
+    const inSum = (d.summary || "").toLowerCase().includes(q);
+    const heads = (d.heads || []).filter(h => h.toLowerCase().includes(q));
+    if (inTitle || inSum || heads.length) {
+      found.push({ d, heads, rank: inTitle ? 0 : heads.length ? 1 : 2 });
+    }
+  }
+  found.sort((a, b) => a.rank - b.rank);
+  head.textContent = found.length ? `Нашлось: ${found.length}` : "Ничего не нашлось";
+  hits.innerHTML = found.slice(0, 40).map(({ d, heads }) =>
+    `<a class="hit" href="${ROOT}/d/${d.slug}.html">
+       <b>${hi(d.title, q)}</b>
+       <span>${heads.length ? "→ " + heads.slice(0, 3).map(h => hi(h, q)).join(" · ") : esc(d.summary || "")}</span>
+     </a>`).join("");
+  box.hidden = false;
+});
+
+input.addEventListener("keydown", (e) => { if (e.key === "Escape") { input.value = ""; box.hidden = true; input.blur(); } });
+document.addEventListener("keydown", (e) => {
+  if (e.key === "/" && document.activeElement !== input) { e.preventDefault(); input.focus(); }
+});
+</script>
+</body>
+</html>

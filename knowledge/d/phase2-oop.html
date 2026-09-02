@@ -1,0 +1,1205 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Фаза 2 — ООП и архитектура мышления - База знаний</title>
+<link rel="stylesheet" href="../kb.css">
+<script>
+  // Тему ставим до первой отрисовки, иначе на тёмной системе мигает белым.
+  try {
+    var t = localStorage.getItem("kb-theme");
+    if (!t) t = matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+    document.documentElement.setAttribute("data-theme", t);
+  } catch (e) {}
+</script>
+</head>
+<body>
+
+<header class="top">
+  <div class="top-in">
+    <a class="brand" href="../index.html">База <span>знаний</span></a>
+    <span class="grow"></span>
+    <input id="q" type="search" placeholder="Поиск по всем материалам…" autocomplete="off">
+    <button class="icon-btn" id="theme" type="button" title="Тема"></button>
+  </div>
+</header>
+
+<div id="results" hidden><div class="wrap-r"><h3></h3><div id="hits"></div></div></div>
+
+<main class="wrap">
+  <div class="doc-head">
+    <div class="crumb"><a href="../index.html#phases">Фазы C#</a></div>
+    <h1>Фаза 2 — ООП и архитектура мышления</h1>
+    <div class="meta">1207 строк · источник <code>l2code/Phase2_OOP.md</code></div>
+  </div>
+
+  <div class="layout">
+    <article class="prose"><blockquote>
+<p><strong>Как читать:</strong> Каждая тема = теория → несколько примеров разной формы → мини-задание → <strong>вопросы с собеседования</strong> (с разобранными ответами).
+В конце — переходный пример перед итоговым проектом (чтобы не было резкого скачка сложности, как было с Contact Manager), и сам итоговый проект.</p>
+</blockquote>
+<hr>
+<h2 id="21">2.1 Классы и объекты — конструкторы, деструкторы, инициализаторы</h2>
+<h3 id="_1">Почему это важно</h3>
+<p>До сих пор весь код был статическим (<code>static class Task17</code>, методы без состояния). Классы вводят <strong>объекты с собственным состоянием</strong> — это переход от "функций, обрабатывающих данные" к "данным, которые знают, что с собой делать".</p>
+<h3 id="_2">Аналогия из жизни</h3>
+<p>Чертёж дома (класс) - один. Домов, построенных по нему (объекты), может быть сколько угодно, у каждого свой участок, забор, мебель - независимые друг от друга, хоть и построены по одному чертежу.</p>
+<h3 id="_3">Теория</h3>
+<p><strong>Класс</strong> — чертёж. <strong>Объект</strong> — конкретный экземпляр, построенный по чертежу.</p>
+<pre><code class="language-csharp">public class Product
+{
+    public string Name;
+    public decimal Price;
+}
+
+var p1 = new Product(); // объект 1
+var p2 = new Product(); // объект 2 — независимый от p1
+</code></pre>
+<h3 id="a-poco">Пример A — просто данные (POCO)</h3>
+<p>Самый простой класс — только поля, без логики. "POCO" (Plain Old CLR Object).</p>
+<pre><code class="language-csharp">public class Point
+{
+    public int X;
+    public int Y;
+}
+
+var origin = new Point();      // X=0, Y=0 (дефолтные значения)
+var p = new Point { X = 3, Y = 5 };
+</code></pre>
+<h3 id="b-this">Пример B — конструкторы и цепочка через <code>this(...)</code></h3>
+<pre><code class="language-csharp">public class Rectangle
+{
+    public double Width;
+    public double Height;
+
+    // Полный конструктор
+    public Rectangle(double width, double height)
+    {
+        Width = width;
+        Height = height;
+    }
+
+    // Квадрат — цепочка к полному конструктору
+    public Rectangle(double side) : this(side, side) { }
+
+    // Дефолтный — цепочка дальше
+    public Rectangle() : this(1, 1) { }
+}
+
+var r1 = new Rectangle(4, 6);  // прямоугольник 4x6
+var r2 = new Rectangle(5);     // квадрат 5x5 — через this(5,5)
+var r3 = new Rectangle();      // квадрат 1x1 — через this(1,1)→this(1,1,1)
+</code></pre>
+<p>Каждый конструктор передаёт работу следующему по цепочке — <strong>не дублируй логику инициализации</strong>, это частая причина багов (поправил в одном месте, забыл в другом).</p>
+<h3 id="this"><code>this</code> — полное объяснение (а не только для конструкторов)</h3>
+<p><code>this</code> — ссылка на ТЕКУЩИЙ экземпляр объекта, внутри которого выполняется код. У него несколько РАЗНЫХ применений — важно не путать их.</p>
+<p><strong>Применение 1 — устранение неоднозначности имён</strong></p>
+<pre><code class="language-csharp">public class Person
+{
+    private string name;
+
+    public Person(string name)
+    {
+        this.name = name; // this.name — поле класса, name (без this) — параметр
+    }
+}
+</code></pre>
+<p>Без <code>this.</code> строка <code>name = name</code> присвоила бы параметр самому себе — поле класса осталось бы нетронутым (<code>null</code>). <code>this.</code> явно говорит компилятору "это поле МОЕГО объекта, а не локальная переменная".</p>
+<p><strong>Применение 2 — <code>this(...)</code> как constructor initializer (то, что было в Примере B)</strong></p>
+<p>Вот тут и была путаница. <code>: this(side, side)</code> — <strong>не вызов метода внутри тела конструктора</strong>. Это отдельный синтаксический слот, стоящий МЕЖДУ сигнатурой и телом:</p>
+<pre><code class="language-csharp">public Rectangle(double side) : this(side, side) { }
+//   сигнатура ──┘             └── инициализатор   └── тело (здесь пустое)
+</code></pre>
+<p>Порядок выполнения:
+1. Сначала выполняется <code>this(side, side)</code> — вызывается ДРУГОЙ конструктор ЭТОГО ЖЕ класса (тот, что принимает <code>width, height</code>), полностью, от начала до конца
+2. Только ПОТОМ выполняется тело <code>{ }</code> текущего конструктора</p>
+<p>Если бы тело не было пустым, это стало бы очевиднее:</p>
+<pre><code class="language-csharp">public Rectangle(double side) : this(side, side)
+{
+    Console.WriteLine(&quot;Квадрат создан&quot;); // выполнится ПОСЛЕ this(side, side), не до
+}
+</code></pre>
+<p>То есть <code>this(...)</code> здесь — не "вызови метод <code>this</code>", а специальный синтаксис "сначала выполни вот тот конструктор, потом уже моё тело".</p>
+<p><strong>Применение 3 — передать "себя" в другой метод</strong></p>
+<pre><code class="language-csharp">public class Button
+{
+    public void Click()
+    {
+        EventLogger.Log(this); // передаём ссылку на ТЕКУЩИЙ объект куда-то ещё
+    }
+}
+</code></pre>
+<h3 id="this_1">Что ещё называется <code>this</code>, но это другое (встретишь позже, не сейчас)</h3>
+<ul>
+<li><strong><code>base(...)</code></strong> — то же самое место в синтаксисе, что и <code>this(...)</code>, но вызывает конструктор РОДИТЕЛЬСКОГО класса, а не текущего. Увидишь в 2.3 (Наследование).</li>
+<li><strong><code>this</code> в extension methods</strong> — первый параметр с модификатором <code>this</code> (<code>public static void Foo(this MyClass obj)</code>) — совсем другое использование того же слова, встретишь в Фазе 3 (3.8, Extension methods). Не путай с этой темой сейчас.</li>
+<li><strong><code>this[index]</code></strong> — индексаторы, если понадобится сделать свой класс с доступом через <code>obj[0]</code>, как у массива. Не входит явно в текущий план, но встретишь в чужом коде/библиотеках.</li>
+</ul>
+<h3 id="c">Пример C — класс с поведением, не только данными</h3>
+<pre><code class="language-csharp">public class Product
+{
+    public string Name;
+    public decimal Price;
+
+    public Product(string name, decimal price)
+    {
+        Name = name;
+        Price = price;
+    }
+
+    // Метод, использующий состояние объекта
+    public decimal GetPriceWithDiscount(decimal discountPercent) =&gt;
+        Price * (1 - discountPercent / 100);
+}
+
+var bread = new Product(&quot;Хлеб&quot;, 50m);
+Console.WriteLine(bread.GetPriceWithDiscount(10)); // 45
+</code></pre>
+<h3 id="object-initializer">Object initializer</h3>
+<pre><code class="language-csharp">var p3 = new Product { Name = &quot;Молоко&quot;, Price = 89.90m };
+// Компилятор вызывает пустой конструктор, потом присваивает поля/свойства
+// Работает ТОЛЬКО если есть доступный конструктор без параметров (явный или дефолтный)
+</code></pre>
+<h3 id="_4">Деструкторы (финализаторы) — почти никогда не нужны</h3>
+<pre><code class="language-csharp">public class Product
+{
+    ~Product() // деструктор — вызывается GC перед удалением объекта
+    {
+        // Освобождение НЕуправляемых ресурсов
+    }
+}
+</code></pre>
+<p><strong>Важно:</strong> ты НЕ решаешь, когда это вызовется — решает Garbage Collector. Для управляемых ресурсов (списки, строки, другие объекты) деструктор не нужен вообще. Для файлов/сокетов/соединений — используй <code>IDisposable</code> и <code>using</code> (Фаза 1, 1.8) — это предсказуемо, а деструктор нет.</p>
+<h3 id="primary-constructors-c-12">Современный синтаксис — primary constructors (C# 12+)</h3>
+<pre><code class="language-csharp">// То же самое, что Пример C, но короче — параметры конструктора сразу в заголовке класса
+public class Product(string name, decimal price)
+{
+    public decimal GetPriceWithDiscount(decimal discountPercent) =&gt;
+        price * (1 - discountPercent / 100);
+}
+</code></pre>
+<p>Встретишь в новом коде и на собесах спросят "что это за синтаксис" — но для учебных целей продолжай писать явные конструкторы, пока не станет интуитивно понятно, что происходит "под капотом".</p>
+<h3 id="-21">Мини-задание 2.1</h3>
+<pre><code class="language-csharp">// Создай класс BankAccount:
+// - Поля: Owner (string), Balance (decimal)
+// - Конструктор 1: принимает owner, Balance по умолчанию = 0
+// - Конструктор 2: принимает owner И balance — через цепочку this(...)
+// - Используй object initializer чтобы создать третий счёт
+
+public class BankAccount
+{
+    // твой код
+}
+</code></pre>
+<h3 id="_5">🎤 Вопросы с собеседования</h3>
+<p><strong>Q: Чем конструктор отличается от обычного метода?</strong>
+A: Нет возвращаемого типа (даже не <code>void</code>), имя совпадает с именем класса, вызывается автоматически при <code>new</code>, может быть перегружен как обычный метод.</p>
+<p><strong>Q: Что вызовется первым — конструктор базового класса или производного?</strong>
+A: Базового (через неявный или явный <code>base(...)</code>), потом производного. Построение идёт "снизу вверх" по иерархии — производный класс может полагаться на уже готовое состояние базового.</p>
+<p><strong>Q: Что произойдёт, если не написать ни одного конструктора?</strong>
+A: Компилятор сгенерирует пустой <code>public</code> конструктор без параметров автоматически — но только если не написан НИ ОДИН другой конструктор. Как только пишешь хотя бы один явный — дефолтный пропадает, и <code>new MyClass()</code> перестаёт работать, если ты не написал версию без параметров сам.</p>
+<p><strong>Q: Работает ли это правило одинаково для <code>class</code> и <code>struct</code>?</strong>
+A: Нет — у <code>struct</code> implicit-конструктор без параметров ВСЕГДА доступен, даже если написан свой явный конструктор с параметрами (до C# 10 у struct нельзя было даже объявить СВОЙ parameterless-конструктор — компилятор всегда добавлял его сам). У <code>class</code> дефолтный пропадает, как только появляется хотя бы один явный. Struct в этом смысле "мягче" class.</p>
+<p><strong>Q: Чем object initializer отличается от конструктора по факту выполнения?</strong>
+A: Это не замена конструктора, а надстройка над ним: сначала вызывается конструктор (дефолтный или явно указанный), и только ПОСЛЕ этого присваиваются свойства через <code>set</code>/<code>init</code>. Значит, в момент выполнения тела конструктора эти свойства ещё не установлены.</p>
+<p><strong>Q: Когда деструктор в C# действительно нужен?</strong>
+A: Практически никогда для управляемого кода. Только как "страховка" при работе с неуправляемыми ресурсами напрямую (P/Invoke, нативные хендлы) — и то обычно вместе с полноценным <code>IDisposable</code>, а не вместо него.</p>
+<p><strong>Q: Что выполнится раньше — <code>this(...)</code> инициализатор или тело конструктора?</strong>
+A: Всегда сначала <code>this(...)</code> (или <code>base(...)</code>) целиком, потом тело <code>{ }</code> текущего конструктора. Это не вызов метода из тела — это отдельный этап конструирования объекта, стоящий синтаксически ПЕРЕД телом.</p>
+<p><strong>Q: Зачем нужен именно <code>this.</code> перед полем, если у поля и параметра разные имена?</strong>
+A: Не нужен — <code>this.</code> обязателен только при совпадении имён (иначе неоднозначность). Но многие команды требуют его ВСЕГДА по конвенции кода — так с первого взгляда видно, что это поле объекта, а не локальная переменная, без чтения объявлений выше.</p>
+<hr>
+<h2 id="22-getsetinit">2.2 Инкапсуляция — модификаторы доступа, свойства (get/set/init)</h2>
+<h3 id="_6">Почему это важно</h3>
+<p>Инкапсуляция — не "спрятать поля от других", а <strong>контролировать, как меняется состояние объекта</strong>. Без неё баланс банковского счёта можно было бы установить в <code>-1000000</code> напрямую, без единой проверки.</p>
+<h3 id="_7">Аналогия из жизни</h3>
+<p>Банкомат не даёт залезть руками в сейф банка. Ты взаимодействуешь через контролируемый интерфейс - ввёл PIN, запросил сумму - а сам сейф (приватные поля) скрыт и защищён от прямого доступа снаружи.</p>
+<h3 id="_8">Модификаторы доступа</h3>
+<table>
+<thead>
+<tr>
+<th>Модификатор</th>
+<th>Кто видит</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>public</code></td>
+<td>Все</td>
+</tr>
+<tr>
+<td><code>private</code></td>
+<td>Только этот класс (дефолт для полей/методов)</td>
+</tr>
+<tr>
+<td><code>protected</code></td>
+<td>Этот класс + наследники</td>
+</tr>
+<tr>
+<td><code>internal</code></td>
+<td>Весь текущий проект/сборку</td>
+</tr>
+<tr>
+<td><code>protected internal</code></td>
+<td>Наследники ИЛИ текущая сборка</td>
+</tr>
+<tr>
+<td><code>private protected</code></td>
+<td>Наследники И ТОЛЬКО текущая сборка</td>
+</tr>
+</tbody>
+</table>
+<h3 id="a">Пример A — свойство с валидацией</h3>
+<pre><code class="language-csharp">public class BankAccount
+{
+    private decimal _balance;
+
+    public decimal Balance
+    {
+        get =&gt; _balance;
+        private set // менять можно только изнутри класса
+        {
+            if (value &lt; 0) throw new ArgumentException(&quot;Баланс не может быть отрицательным&quot;);
+            _balance = value;
+        }
+    }
+
+    public void Deposit(decimal amount) =&gt; Balance += amount;
+}
+</code></pre>
+<h3 id="b-auto-property-backing-field">Пример B — auto-property (компилятор сам создаёт backing field)</h3>
+<pre><code class="language-csharp">public class Person
+{
+    public string Name { get; set; }               // читать/писать может кто угодно
+    public string Id { get; private set; }          // читать снаружи, менять — только изнутри
+    public DateTime CreatedAt { get; } = DateTime.Now; // только для чтения, задаётся один раз
+}
+</code></pre>
+<h3 id="c-get-only-backing-field">Пример C — вычисляемое свойство (get-only, без backing field)</h3>
+<pre><code class="language-csharp">public class Person
+{
+    public string FirstName { get; set; }
+    public string LastName { get; set; }
+
+    // Не хранит своё значение — вычисляется каждый раз при обращении
+    public string FullName =&gt; $&quot;{FirstName} {LastName}&quot;;
+}
+
+var p = new Person { FirstName = &quot;Иван&quot;, LastName = &quot;Архипов&quot; };
+Console.WriteLine(p.FullName); // &quot;Иван Архипов&quot; — пересчитается, если поменять FirstName
+</code></pre>
+<h3 id="d-init-required-c-11">Пример D — <code>init</code> и современный <code>required</code> (C# 11+)</h3>
+<pre><code class="language-csharp">public class Order
+{
+    public required string Id { get; init; } // обязателен при создании, неизменяем после
+    public string? Comment { get; init; }    // необязателен, тоже неизменяем после создания
+}
+
+var order = new Order { Id = &quot;123&quot; };       // OK
+// var bad = new Order();                  // ОШИБКА — Id обязателен (required)
+order.Id = &quot;456&quot;;                            // ОШИБКА — init нельзя менять после создания
+</code></pre>
+<p>Это ровно то, что уже негласно используешь в <code>record Contact(string Name, ...)</code> — позиционные свойства record'ов автоматически <code>init</code>-only.</p>
+<blockquote>
+<p>[!info]+ 🆕 Добавлено 2 августа — <code>readonly</code>, <code>const</code> и <code>init</code> уже встречались в примерах без объяснения (DI в 2.7, <code>_lock</code> в 2.8) — вот разница
+Все три про "нельзя поменять", но на разных уровнях:
+<code>csharp
+const int MaxRetries = 3;              // значение известно уже на этапе КОМПИЛЯЦИИ, вшито в IL
+private readonly IDatabase _db;        // значение задаётся в конструкторе ОДИН раз, дальше поле нельзя переприсвоить
+public string Owner { get; init; }     // то же самое, но для СВОЙСТВА, а не поля, и видно снаружи класса</code>
+- <strong><code>const</code></strong> — для полей класса/локальных переменных, значение должно быть константой compile-time (числа, строки, <code>null</code>) — нельзя присвоить результат вызова метода или <code>new</code>.
+- <strong><code>readonly</code></strong> — для <strong>полей</strong>. Присвоить можно либо сразу при объявлении, либо в конструкторе (в том числе разными конструкторами по-разному) — но нигде больше. В отличие от <code>const</code>, значение может быть вычислено в рантайме (<code>new List&lt;T&gt;()</code>, результат метода).
+- <strong><code>init</code></strong> — для <strong>свойств</strong> (то есть <code>readonly</code>, но с автогенерируемым get/set через property-механизм, и доступно для присвоения через object initializer <code>new Order { Id = "123" }</code>, не только из конструктора).
+<strong>Практическое правило:</strong> приватное поле, которое просто хранит зависимость/состояние и снаружи не нужно — <code>readonly</code> поле (как <code>_db</code> в 2.7). Публичное значение, которое клиент класса должен видеть и задавать при создании — <code>init</code>-свойство. Compile-time константа (лимиты, коэффициенты) — <code>const</code>.</p>
+</blockquote>
+<h3 id="-22">Мини-задание 2.2</h3>
+<pre><code class="language-csharp">// Доработай BankAccount из 2.1:
+// - Balance должен иметь private set
+// - Метод Withdraw(decimal amount): если amount &gt; Balance — вернуть false,
+//   иначе снять и вернуть true
+// - Owner — со свойством init (задаётся только при создании)
+// - Добавь вычисляемое свойство IsOverdrawn =&gt; Balance &lt; 0 (на будущее, если решишь разрешить овердрафт)
+</code></pre>
+<h3 id="_9">🎤 Вопросы с собеседования</h3>
+<p><strong>Q: Зачем нужны private-поля, если можно сделать public property с <code>get; set;</code>?</strong>
+A: Обычный auto-property не даёт контроля над изменением — любой снаружи может поставить любое значение. Приватное поле + свойство с логикой в <code>set</code> — стандартный способ защитить инвариант объекта (например, не пустить отрицательный баланс).</p>
+<p><strong>Q: Чем <code>{ get; private set; }</code> отличается от <code>{ get; init; }</code>?</strong>
+A: <code>private set</code> разрешает менять значение из ЛЮБОГО метода внутри класса в ЛЮБОЙ момент жизни объекта. <code>init</code> разрешает установить значение только один раз — в момент создания (конструктор/object initializer), после — нельзя даже изнутри класса.</p>
+<p><strong>Q: Что такое auto-property "под капотом"?</strong>
+A: Компилятор сам генерирует приватное backing-поле (что-то вроде <code>&lt;Name&gt;k__BackingField</code>) и обычные get/set методы вокруг него — синтаксический сахар, ты просто не видишь поле явно.</p>
+<p><strong>Q: Могут ли get и set одного свойства иметь разную видимость?</strong>
+A: Да: <code>public string Name { get; private set; }</code> — читать может кто угодно снаружи, менять — только сам класс.</p>
+<p><strong>Q: В чём разница между <code>required</code> (C# 11) и обычным конструктором с обязательным параметром?</strong>
+A: <code>required</code> заставляет задать свойство через object initializer, но НЕ требует именно конструктор — гибче для случаев когда полей много и не все обязательны. Конструктор с обязательным параметром жёстче: без него объект вообще не создать, а <code>required</code> даёт компилятору проверить это на этапе <code>new Type { ... }</code>.</p>
+<hr>
+<h2 id="23-base-virtual-override-sealed">2.3 Наследование — base, virtual, override, sealed</h2>
+<h3 id="_10">Почему это важно</h3>
+<p>Наследование моделирует отношение "является" (Dog <strong>является</strong> Animal). Без него пришлось бы копипастить общий код в каждый похожий класс.</p>
+<h3 id="_11">Аналогия из жизни</h3>
+<p>Семейные черты: ребёнок (производный класс) получает базовые черты от родителя (базовый класс) автоматически, но может развить СВОЮ версию какой-то черты (override), оставаясь при этом узнаваемым потомком того же рода.</p>
+<h3 id="a-virtualoverride">Пример A — базовая иерархия с virtual/override</h3>
+<pre><code class="language-csharp">public class Animal
+{
+    public string Name { get; init; }
+    public Animal(string name) =&gt; Name = name;
+
+    public virtual void MakeSound()
+    {
+        Console.WriteLine($&quot;{Name} издаёт звук&quot;);
+    }
+}
+
+public class Dog : Animal
+{
+    public Dog(string name) : base(name) { } // base(...) вызывает конструктор Animal
+
+    public override void MakeSound()
+    {
+        Console.WriteLine($&quot;{Name} лает: Гав!&quot;);
+    }
+}
+</code></pre>
+<p><strong>Частая ошибка новичков:</strong> забыть <code>virtual</code> в базовом классе — тогда <code>override</code> в наследнике попросту не скомпилируется (<code>CS0506</code>). Оба ключевых слова обязательны и работают в паре.</p>
+<h3 id="b-protected">Пример B — protected: видно наследнику, не видно снаружи</h3>
+<pre><code class="language-csharp">public class Employee
+{
+    protected decimal BaseSalary; // видно в Employee И в наследниках, но НЕ снаружи
+
+    public Employee(decimal baseSalary) =&gt; BaseSalary = baseSalary;
+}
+
+public class Manager : Employee
+{
+    public Manager(decimal baseSalary) : base(baseSalary) { }
+
+    public decimal GetTotalSalary() =&gt; BaseSalary * 1.5m; // доступ есть, т.к. protected
+}
+
+var m = new Manager(1000);
+// m.BaseSalary; // ОШИБКА — снаружи protected не виден
+</code></pre>
+<h3 id="c-base">Пример C — трёхуровневая иерархия с цепочкой base()</h3>
+<pre><code class="language-csharp">public class Vehicle
+{
+    public string Brand { get; init; }
+    public Vehicle(string brand) =&gt; Brand = brand;
+    public virtual void Describe() =&gt; Console.WriteLine($&quot;Транспорт: {Brand}&quot;);
+}
+
+public class Car : Vehicle
+{
+    public int Doors { get; init; }
+    public Car(string brand, int doors) : base(brand) =&gt; Doors = doors;
+    public override void Describe() =&gt; Console.WriteLine($&quot;Машина {Brand}, дверей: {Doors}&quot;);
+}
+
+public class SportsCar : Car
+{
+    public int TopSpeed { get; init; }
+    public SportsCar(string brand, int topSpeed) : base(brand, doors: 2) =&gt; TopSpeed = topSpeed;
+    public override void Describe()
+    {
+        base.Describe(); // можно вызвать реализацию родителя И добавить своё
+        Console.WriteLine($&quot;Макс. скорость: {TopSpeed}&quot;);
+    }
+}
+</code></pre>
+<h3 id="d-sealed">Пример D — sealed</h3>
+<pre><code class="language-csharp">public sealed class Cat : Animal // от Cat нельзя унаследоваться дальше
+{
+    public Cat(string name) : base(name) { }
+    public sealed override void MakeSound() // и это переопределение нельзя переопределить дальше
+        =&gt; Console.WriteLine($&quot;{Name} мяукает: Мяу!&quot;);
+}
+</code></pre>
+<h3 id="e-hiding-new-override">Пример E — hiding через <code>new</code> (не путать с override!)</h3>
+<p>Если базовый метод НЕ помечен <code>virtual</code>, но нужно определить в наследнике метод с тем же именем — используй <code>new</code>. Это НЕ override, это скрытие (hiding) — принципиально другой механизм.</p>
+<pre><code class="language-csharp">public class Bird
+{
+    public void Move() // обычный метод, БЕЗ virtual
+        =&gt; Console.WriteLine(&quot;Птица передвигается&quot;);
+}
+
+public class Penguin : Bird
+{
+    public new void Move() // 'new' — явно говорим &quot;скрываю метод родителя, не переопределяю&quot;
+        =&gt; Console.WriteLine(&quot;Пингвин ковыляет&quot;);
+}
+</code></pre>
+<p><strong>Ключевое отличие от override — где решается, какой метод вызвать:</strong></p>
+<pre><code class="language-csharp">Penguin p = new Penguin();
+p.Move();               // &quot;Пингвин ковыляет&quot; — переменная объявлена как Penguin
+
+Bird b = p;              // тот же объект, но переменная теперь типа Bird
+b.Move();                // &quot;Птица передвигается&quot; — вызывается версия Bird, НЕ Penguin!
+</code></pre>
+<p>С <code>override</code> результат был бы другой — вызвалась бы версия <code>Penguin</code> в обоих случаях (см. 2.4, динамический полиморфизм). Разница:
+- <strong><code>override</code></strong> — решение в рантайме, по реальному типу объекта
+- <strong><code>new</code> (hiding)</strong> — решение на этапе компиляции, по объявленному типу переменной</p>
+<p><strong>Зачем это нужно:</strong> если базовый метод не <code>virtual</code> (например, класс из чужой библиотеки, которую не контролируешь), а в наследнике всё равно нужен метод с тем же именем — без <code>new</code> компилятор выдаст ПРЕДУПРЕЖДЕНИЕ <code>CS0108</code> ("скрывает унаследованный член, отсутствует ключевое слово new"), а не ошибку. <code>new</code> явно говорит "да, я знаю, это осознанно".</p>
+<blockquote>
+<p>[!info]+ 🆕 Добавлено 1 августа — та же ловушка, но на 3 уровнях наследования (реальная задачка с собеседования)
+Усложним пример: добавим третий уровень, где <code>new</code> встречается уже ПОСЛЕ <code>override</code>, а не сразу после virtual-метода.
+```csharp
+abstract class A { public virtual void Print() =&gt; Console.WriteLine("A"); }
+class B : A  { public override void Print() =&gt; Console.WriteLine("B"); }
+class C : B  { public new void Print() =&gt; Console.WriteLine("C"); } // new, НЕ override!</p>
+<p>A obj = new C();
+obj.Print(); // выведет "B", не "C" и не "A"
+<code>``
+**Почему именно B, а не A и не C.**</code>A.Print<code>и</code>B.Print<code>образуют ОДНУ цепочку виртуальной диспетчеризации (</code>B<code>честно сделал</code>override<code>).</code>C.Print<code>через</code>new<code>эту цепочку НЕ продолжает — это полностью отдельный, независимый метод, который виден только через переменную типа</code>C<code>(или дальше вниз по иерархии). Вызов</code>obj.Print()<code>идёт через переменную типа</code>A<code>— рантайм ищет самую "глубокую" реализацию именно внутри цепочки</code>A→B<code>и упирается в</code>B<code>, потому что</code>C<code>сам себя из этой цепочки исключил.
+Если бы</code>C<code>тоже написал</code>override<code>(а не</code>new<code>) — цепочка продолжилась бы, и вывелось бы</code>C<code>(обычный динамический полиморфизм, как в Примере B).
+**Вывод:**</code>new<code>не просто "скрывает метод от прямого родителя" — он **обрывает виртуальную диспетчеризацию для всех, кто ниже по иерархии**, даже если между</code>new<code>-методом и местом вызова есть промежуточный класс с честным</code>override`.</p>
+</blockquote>
+<h3 id="-23">Мини-задание 2.3</h3>
+<pre><code class="language-csharp">// Есть record Contact из Фазы 1.
+// Создай record WorkContact, наследующий от Contact, с доп. полем Company:
+
+public record Contact(string Name, string Phone, string? Email);
+public record WorkContact(string Name, string Phone, string? Email, string Company)
+    : Contact(Name, Phone, Email);
+
+// Проверь: можно ли положить WorkContact туда, где ожидается Contact?
+Contact c = new WorkContact(&quot;Ivan&quot;, &quot;123&quot;, null, &quot;МПП&quot;);
+</code></pre>
+<h3 id="_12">🎤 Вопросы с собеседования</h3>
+<p><strong>Q: Почему в C# нет множественного наследования классов?</strong>
+A: Чтобы избежать "diamond problem" — неоднозначности, если два родителя дают одинаковый член с разной реализацией. Вместо этого — множественная реализация интерфейсов, где такой проблемы нет (интерфейс до C# 8 вообще не содержал реализации).</p>
+<p><strong>Q: Что произойдёт, если явно не вызвать <code>base(...)</code>?</strong>
+A: Компилятор неявно вызовет пустой конструктор базового класса, если такой есть. Если у базового класса нет конструктора без параметров — ошибка компиляции, <code>base(...)</code> придётся вызвать явно.</p>
+<p><strong>Q: <code>virtual</code> vs <code>abstract</code> — в чём разница для наследника?</strong>
+A: <code>virtual</code> — есть реализация по умолчанию, <code>override</code> необязателен (можно не переопределять). <code>abstract</code> — реализации нет вообще, <code>override</code> ОБЯЗАТЕЛЕН в первом же неабстрактном наследнике.</p>
+<p><strong>Q: Что такое "hiding" через <code>new</code> и чем оно отличается от <code>override</code>?</strong>
+A: <code>new</code> скрывает член базового класса, но НЕ участвует в полиморфизме — вызов через переменную БАЗОВОГО типа вызовет базовую версию, даже если реальный объект — наследник. <code>override</code> участвует в динамической диспетчеризации — вызовется версия реального типа объекта, независимо от типа переменной.</p>
+<p><strong>Q: Можно ли вызвать метод базового класса из переопределённого метода наследника?</strong>
+A: Да, через <code>base.MethodName()</code> — как в примере C (<code>SportsCar.Describe()</code> вызывает <code>base.Describe()</code> и добавляет своё). Это позволяет расширять поведение, а не полностью заменять.</p>
+<hr>
+<h2 id="24">2.4 Полиморфизм — статический и динамический</h2>
+<h3 id="_13">Почему это важно</h3>
+<p>"Полиморфизм" звучит абстрактно, но смысл прост: <strong>один и тот же вызов ведёт себя по-разному</strong> в зависимости от контекста (перегрузки) или конкретного типа объекта (переопределения).</p>
+<h3 id="_14">Аналогия из жизни</h3>
+<p>Кнопка "Вкл" на универсальном пульте - для телевизора она включает экран, для кондиционера запускает охлаждение. Один и тот же вызов ведёт себя по-разному в зависимости от того, что реально стоит за кнопкой.</p>
+<h3 id="a-compile-time">Пример A — статический полиморфизм (перегрузка, compile-time)</h3>
+<pre><code class="language-csharp">public class Calculator
+{
+    public int Add(int a, int b) =&gt; a + b;
+    public double Add(double a, double b) =&gt; a + b;
+    public string Add(string a, string b) =&gt; a + b; // конкатенация
+}
+
+var calc = new Calculator();
+calc.Add(1, 2);       // компилятор выбирает int-версию — известно ЗАРАНЕЕ, на этапе компиляции
+calc.Add(1.5, 2.5);   // double-версию
+calc.Add(&quot;a&quot;, &quot;b&quot;);   // string-версию
+</code></pre>
+<h3 id="b-virtualoverride-runtime">Пример B — динамический полиморфизм (virtual/override, runtime)</h3>
+<pre><code class="language-csharp">List&lt;Animal&gt; animals = new() { new Dog(&quot;Рекс&quot;), new Cat(&quot;Мурка&quot;) };
+
+foreach (var a in animals)
+    a.MakeSound(); // решается В РАНТАЙМЕ, по реальному типу объекта, а не по типу переменной (Animal)
+</code></pre>
+<p>Это работает благодаря <code>virtual</code>/<code>override</code> из 2.3 — компилятор не может знать заранее, что окажется в списке <code>Animal</code>, поэтому решение откладывается до момента выполнения.</p>
+<h3 id="c-virtual-">Пример C — классическая ловушка: virtual-вызов из конструктора</h3>
+<pre><code class="language-csharp">public class Base
+{
+    public Base() =&gt; Init(); // ВЫЗОВ virtual-метода ИЗ конструктора — опасно!
+    public virtual void Init() =&gt; Console.WriteLine(&quot;Base.Init&quot;);
+}
+
+public class Derived : Base
+{
+    private string _name = &quot;готово&quot;;
+    public override void Init() =&gt; Console.WriteLine($&quot;Derived.Init, _name = {_name}&quot;);
+}
+
+new Derived();
+// Выведет: &quot;Derived.Init, _name = &quot; (ПУСТАЯ строка!)
+// Потому что Base() выполняется ДО того, как Derived успел инициализировать _name = &quot;готово&quot;
+</code></pre>
+<p>Это реальная ловушка продакшн-кода — вызов virtual-метода из конструктора вызовет override-версию, даже если наследник ещё не полностью готов.</p>
+<h3 id="-24">Мини-задание 2.4</h3>
+<pre><code class="language-csharp">// Задание 1: перегрузки (статический полиморфизм)
+// Класс Printer с тремя перегрузками Print: Print(int), Print(string), Print(List&lt;string&gt;)
+
+// Задание 2: динамический полиморфизм
+// класс Shape с virtual методом Area() (базовая реализация может возвращать 0).
+// Circle и Rectangle — каждый переопределяет Area() через override.
+// List&lt;Shape&gt;, вывести площадь каждого через foreach.
+</code></pre>
+<h3 id="_15">🎤 Вопросы с собеседования</h3>
+<p><strong>Q: Что произойдёт, если вызвать virtual-метод из конструктора базового класса?</strong>
+A: Вызовется override-версия наследника — даже если поля наследника ещё не инициализированы (см. Пример C). Считается плохой практикой и частым источником труднообъяснимых багов.</p>
+<p><strong>Q: Как компилятор выбирает нужную перегрузку при неоднозначности?</strong>
+A: Выбирает наиболее специфичную сигнатуру среди применимых. Если однозначного "победителя" нет (например, <code>null</code> передан методу с перегрузками на <code>string</code> и <code>object</code>, обе одинаково подходят) — ошибка компиляции CS0121 "вызов неоднозначен".</p>
+<p><strong>Q: Можно ли достичь полиморфизма без наследования от общего класса?</strong>
+A: Да — через интерфейсы. Разные несвязанные классы реализуют один интерфейс, и вызов через переменную типа интерфейса — тоже динамический полиморфизм, просто без общего предка.</p>
+<p><strong>Q: В чём принципиальная разница между overload (перегрузкой) и override (переопределением)?</strong>
+A: Overload — РАЗНЫЕ методы с одинаковым именем, но разной сигнатурой (параметры), выбор происходит на этапе компиляции. Override — ОДИН и тот же метод, переопределённый в наследнике, выбор происходит в рантайме по реальному типу объекта.</p>
+<hr>
+<h2 id="25-abstract-vs">2.5 Абстракция — abstract классы vs интерфейсы</h2>
+<h3 id="_16">Почему это важно</h3>
+<p>И <code>abstract class</code>, и <code>interface</code> не дают создать объект напрямую и заставляют наследника реализовать методы. Разница — в философии: <strong>abstract class</strong> — "мы близкие родственники, у нас общий код и состояние". <strong>interface</strong> — "мы умеем делать одно и то же, но можем быть совершенно не связаны".</p>
+<h3 id="_17">Аналогия из жизни</h3>
+<p>Руль и педали в машине - абстракция: жмёшь на газ, не зная, что происходит в двигателе. abstract класс/интерфейс - тот же контракт "вот что можно делать", детали реализации скрыты от того, кто пользуется.</p>
+<h3 id="a-abstract-class">Пример A — abstract class с общим кодом и абстрактным методом</h3>
+<pre><code class="language-csharp">public abstract class Shape
+{
+    public string Name { get; init; }
+    public void PrintName() =&gt; Console.WriteLine(Name); // общая реализация — наследуется как есть
+    public abstract double Area(); // контракт без реализации — наследник обязан написать
+
+    public double AreaRoundedUp() =&gt; Math.Ceiling(Area()); // может использовать абстрактный метод!
+}
+
+public class Circle : Shape
+{
+    public double Radius { get; init; }
+    public override double Area() =&gt; Math.PI * Radius * Radius;
+}
+
+// var s = new Shape(); // ОШИБКА — нельзя создать объект абстрактного класса
+</code></pre>
+<h3 id="b-interface">Пример B — interface, множественная реализация</h3>
+<pre><code class="language-csharp">public interface IShape { double Area(); }
+public interface ITaxable { decimal CalculateTax(); }
+
+// Один класс реализует СРАЗУ два интерфейса — invalid для abstract class (только один базовый)
+public class TaxableProperty : IShape, ITaxable
+{
+    public double Width, Height;
+    public double Area() =&gt; Width * Height;
+    public decimal CalculateTax() =&gt; (decimal)Area() * 0.05m;
+}
+</code></pre>
+<h3 id="c_1">Пример C — несвязанные классы, объединённые общим "умением"</h3>
+<pre><code class="language-csharp">public interface INotifiable { void Notify(string message); }
+
+public class EmailSender : INotifiable
+{
+    public void Notify(string message) =&gt; Console.WriteLine($&quot;Email: {message}&quot;);
+}
+
+public class SmsSender : INotifiable // совершенно другая природа класса, но тот же контракт
+{
+    public void Notify(string message) =&gt; Console.WriteLine($&quot;SMS: {message}&quot;);
+}
+
+List&lt;INotifiable&gt; senders = new() { new EmailSender(), new SmsSender() };
+foreach (var s in senders) s.Notify(&quot;Привет!&quot;); // единый вызов, разное поведение
+</code></pre>
+<h3 id="_18">Когда что</h3>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>abstract class</th>
+<th>interface</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Общий код/состояние</td>
+<td>Да, можно</td>
+<td>Нет (только контракт, редко default-методы)</td>
+</tr>
+<tr>
+<td>Множественное наследование</td>
+<td>Нет (только один base class)</td>
+<td>Да (реализуй сколько угодно интерфейсов)</td>
+</tr>
+<tr>
+<td>Семантика</td>
+<td>"Это разновидность X"</td>
+<td>"Это умеет делать Y"</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>🤖 <em>AI-инженерия:</em> агентные системы строятся на абстракции <code>ITool</code> — калькулятор, поиск, вызов внешнего API — каждый инструмент реализует один и тот же интерфейс (например, <code>Task&lt;string&gt; ExecuteAsync(string input)</code>), и агент вызывает их одинаково, не зная деталей реализации каждого конкретного инструмента.</p>
+</blockquote>
+<h3 id="-25">Мини-задание 2.5</h3>
+<pre><code class="language-csharp">// Interface INotifiable уже есть в примере C — реализуй третий класс PushSender.
+// Дополнительно: создай abstract класс BaseSender с общим полем SentCount
+// и абстрактным методом Notify(), от которого наследуются EmailSender/SmsSender
+// вместо прямой реализации интерфейса. Сравни: что стало проще, что сложнее?
+</code></pre>
+<h3 id="_19">🎤 Вопросы с собеседования</h3>
+<p><strong>Q: Может ли abstract класс иметь конструктор, если объект напрямую создать нельзя?</strong>
+A: Да — конструктор abstract класса вызывается через <code>base(...)</code> из наследника при создании ЕГО объекта. Сам abstract класс просто нельзя инстанцировать напрямую через <code>new</code>.</p>
+<p><strong>Q: Может ли интерфейс иметь реализацию метода по умолчанию?</strong>
+A: С C# 8+ — да (default interface methods), но на практике используется редко, в основном чтобы добавить новый метод в существующий публичный интерфейс библиотеки, не ломая всех, кто его уже реализовал.</p>
+<p><strong>Q: Когда выбрать abstract class, а когда interface, если контракт можно объявить и там, и там?</strong>
+A: Если есть общее СОСТОЯНИЕ или код, который должен быть у всех наследников — abstract class. Если классы совершенно не связаны по природе, но должны "уметь одно и то же" — interface (плюс даёт множественную реализацию, что abstract class не может).</p>
+<p><strong>Q: Что произойдёт при попытке создать объект интерфейса напрямую, <code>new IShape()</code>?</strong>
+A: Ошибка компиляции — интерфейсы, как и abstract-классы, нельзя инстанцировать. Единственный способ получить объект — создать конкретный класс, реализующий интерфейс.</p>
+<hr>
+<h2 id="26-idisposable-icomparable-ienumerable">2.6 Интерфейсы — IDisposable, IComparable, IEnumerable</h2>
+<h3 id="_20">Почему это важно</h3>
+<p>Это стандартные интерфейсы фреймворка. Реализовав их в своём классе, ты "подключаешь" объект к языковым механизмам: <code>using</code>, <code>Array.Sort</code>, <code>foreach</code>.</p>
+<h3 id="_21">Аналогия из жизни</h3>
+<p>Интерфейс - разъём USB: неважно, что внутри устройства (флешка, мышь, клавиатура), если разъём совпадает - оно подключится и заработает по общим правилам порта.</p>
+<h3 id="a-icomparablet">Пример A — IComparable\&lt;T&gt; — твой тип можно сортировать</h3>
+<pre><code class="language-csharp">public class Product : IComparable&lt;Product&gt;
+{
+    public string Name { get; init; }
+    public decimal Price { get; init; }
+
+    public int CompareTo(Product? other)
+    {
+        if (other is null) return 1;
+        return Price.CompareTo(other.Price); // сортировка по цене
+    }
+}
+
+var products = new List&lt;Product&gt; { ... };
+products.Sort(); // теперь работает — использует твой CompareTo
+</code></pre>
+<h3 id="b-idisposable">Пример B — IDisposable — реализуй сам (не только пользуйся)</h3>
+<p>Уже разбирали подробно в Фазе 1 (1.8) — <code>using</code>, GC не управляет неуправляемыми ресурсами, паттерн с <code>_disposed</code> флагом. Здесь тема — "реализуй сам":</p>
+<pre><code class="language-csharp">public class FileLogger : IDisposable
+{
+    private readonly StreamWriter _writer = new(&quot;log.txt&quot;);
+    public void Log(string msg) =&gt; _writer.WriteLine(msg);
+    public void Dispose() =&gt; _writer.Dispose();
+}
+
+using var logger = new FileLogger(); // теперь твой класс работает с using
+</code></pre>
+<blockquote>
+<p>🤖 <em>AI-инженерия:</em> <code>IDisposable</code> в твоих классах — то же самое управление жизненным циклом, что нужно для HttpClient/SSE-соединения при работе с LLM API (см. подробный разбор в Phase1_CSharp_Fundamentals.md, 1.8).</p>
+</blockquote>
+<h3 id="c-ienumerablet-foreach">Пример C — IEnumerable\&lt;T&gt; — твой тип можно перебирать через foreach</h3>
+<pre><code class="language-csharp">public class ProductCatalog : IEnumerable&lt;Product&gt;
+{
+    private List&lt;Product&gt; _items = new();
+    public void Add(Product p) =&gt; _items.Add(p);
+
+    public IEnumerator&lt;Product&gt; GetEnumerator() =&gt; _items.GetEnumerator();
+    IEnumerator IEnumerable.GetEnumerator() =&gt; GetEnumerator(); // non-generic версия обязательна
+}
+
+var catalog = new ProductCatalog();
+catalog.Add(new Product { Name = &quot;Хлеб&quot;, Price = 50 });
+foreach (var p in catalog) Console.WriteLine(p.Name); // теперь работает
+</code></pre>
+<h3 id="d-iequatablet-record">Пример D — бонус: IEquatable\&lt;T&gt; (то, что <code>record</code> делает автоматически)</h3>
+<pre><code class="language-csharp">public class Point : IEquatable&lt;Point&gt;
+{
+    public int X, Y;
+    public bool Equals(Point? other) =&gt; other is not null &amp;&amp; X == other.X &amp;&amp; Y == other.Y;
+    public override bool Equals(object? obj) =&gt; Equals(obj as Point);
+    public override int GetHashCode() =&gt; HashCode.Combine(X, Y);
+}
+// record делает ровно это за тебя автоматически — теперь видно, ЧТО именно
+</code></pre>
+<h3 id="-26">Мини-задание 2.6</h3>
+<blockquote>
+<p>Встретил <code>.OrderBy(...)</code> впервые здесь? Это тот же базовый LINQ-синтаксис, что уже видел в Фазе 1 (1.8) — <code>.Where()</code>, <code>.Select()</code>, <code>.Sum()</code>, <code>.FirstOrDefault()</code>. Подробно про LINQ (deferred execution, IQueryable и т.д.) — в Фазе 3, сейчас просто нужен синтаксис + понимание, что <code>.OrderBy</code> возвращает НОВУЮ последовательность, не трогая исходный список.</p>
+</blockquote>
+<pre><code class="language-csharp">// Сделай Product (Пример A) реализующим IComparable&lt;Product&gt; по цене.
+// Отсортируй List&lt;Product&gt; через .Sort() И через LINQ .OrderBy(p =&gt; p.Price)
+// — сравни, в каких случаях удобнее какой подход (нужно ли менять исходный список?).
+</code></pre>
+<h3 id="_22">🎤 Вопросы с собеседования</h3>
+<p><strong>Q: Зачем нужен generic <code>IComparable&lt;T&gt;</code>, если есть не-generic <code>IComparable</code>?</strong>
+A: Не-generic <code>IComparable.CompareTo(object)</code> требует boxing и приведения типов, не типобезопасен (можно передать вообще другой тип и упасть в рантайме). Generic-версия работает напрямую с нужным типом, без boxing, компилятор ловит несовпадение типов на этапе компиляции.</p>
+<p><strong>Q: Почему у <code>IEnumerable&lt;T&gt;</code> два метода <code>GetEnumerator()</code> — generic и нет?</strong>
+A: <code>IEnumerable&lt;T&gt;</code> наследует не-generic <code>IEnumerable</code> (для обратной совместимости с кодом до дженериков). Оба обязательны; не-generic версию обычно реализуют явно (<code>IEnumerator IEnumerable.GetEnumerator()</code>) и просто делегируют вызов в generic-версию, как в Примере C.</p>
+<p><strong>Q: В чём разница между <code>IDisposable.Dispose()</code> и деструктором для одного и того же класса?</strong>
+A: <code>Dispose()</code> вызывается ЯВНО и предсказуемо (через <code>using</code> или прямой вызов) в момент, который ты контролируешь. Деструктор вызывается ТОЛЬКО GC, когда сочтёт нужным — непредсказуемо по времени. Правильный production-паттерн — реализовать оба: <code>Dispose()</code> как основной путь, деструктор как страховку на случай если <code>Dispose()</code> забыли вызвать.</p>
+<p><strong>Q: Что будет, если реализовать <code>IComparable&lt;T&gt;.CompareTo</code>, но не переопределить <code>Equals</code>/<code>GetHashCode</code>?</strong>
+A: Сортировка (<code>CompareTo</code>) будет работать нормально, но сравнение на равенство (<code>==</code>, <code>.Equals()</code>, использование как ключа в <code>Dictionary</code>/<code>HashSet</code>) продолжит сравнивать по ССЫЛКЕ (для class), а не по значениям полей — потенциальный источник багов, если ожидается value-based равенство.</p>
+<hr>
+<h2 id="27-solid">2.7 Принципы SOLID</h2>
+<h3 id="_23">Почему это важно</h3>
+<p>SOLID — самая частая тема на собеседованиях Middle+. Не абстрактная философия, а конкретные признаки того, что код будет легко менять через полгода.</p>
+<h3 id="_24">Аналогия из жизни</h3>
+<p>Хорошо организованная кухня ресторана: у каждого повара своя чётко очерченная зона (SRP). Меню расширяется новым блюдом, не переписывая работу остальных поваров (OCP). Любой повар может заменить другого на своей позиции без сюрпризов для остальной кухни (LSP). Никто не обязан знать рецепты блюд, которые не готовит (ISP). А шеф-повар не бегает лично на рынок за морковью, а просто говорит "нужна морковь по спецификации X" - неважно, кто именно её принесёт (DIP).</p>
+<h3 id="s-single-responsibility">S — Single Responsibility (единственная ответственность)</h3>
+<pre><code class="language-csharp">// ПЛОХО — ContactBook и хранит, и печатает в консоль, и валидирует
+public class ContactBook
+{
+    public void Add(Contact c) { /* валидация + сохранение */ }
+    public void PrintAll() { Console.WriteLine(...); } // ← лишняя ответственность
+}
+
+// ХОРОШО — разделено (именно так уже сделано в твоём Contact Manager!)
+public class ContactBook { public void Add(Contact c) { ... } }         // хранение
+public class ContactPrinter { public void Print(Contact c) { ... } }    // вывод
+</code></pre>
+<h3 id="o-openclosed">O — Open/Closed (открыт для расширения, закрыт для изменения)</h3>
+<pre><code class="language-csharp">// ПЛОХО — новый тип скидки требует править существующий метод
+decimal GetDiscount(string customerType) =&gt; customerType switch
+{
+    &quot;regular&quot; =&gt; 0.05m,
+    &quot;vip&quot; =&gt; 0.15m,
+    _ =&gt; 0m
+};
+
+// ХОРОШО — новый тип скидки = новый класс, старый код не трогаем
+public interface IDiscountStrategy { decimal GetDiscount(); }
+public class VipDiscount : IDiscountStrategy { public decimal GetDiscount() =&gt; 0.15m; }
+public class RegularDiscount : IDiscountStrategy { public decimal GetDiscount() =&gt; 0.05m; }
+// Завтра появится SeasonalDiscount — просто новый класс, ни строчки старого кода не меняется
+</code></pre>
+<h3 id="l-liskov-substitution">L — Liskov Substitution (подстановка Лисков)</h3>
+<pre><code class="language-csharp">// ПЛОХО — нарушение LSP
+public class Bird { public virtual void Fly() { /* летит */ } }
+public class Penguin : Bird { public override void Fly() =&gt; throw new NotSupportedException(); }
+// Penguin ЯВЛЯЕТСЯ Bird по иерархии, но подстановка ломает код, ожидающий что Fly() сработает
+
+// ХОРОШО — честнее разделить абстракцию
+public abstract class Bird { }
+public interface IFlyable { void Fly(); }
+public class Eagle : Bird, IFlyable { public void Fly() { ... } }
+public class Penguin : Bird { } // просто не реализует IFlyable — никто не ждёт от него полёта
+</code></pre>
+<h3 id="i-interface-segregation">I — Interface Segregation (разделение интерфейсов)</h3>
+<pre><code class="language-csharp">// ПЛОХО — толстый интерфейс, не всем реализациям нужны все методы
+public interface IWorker { void Work(); void Eat(); void Sleep(); }
+
+// ХОРОШО — маленькие интерфейсы, реализуй только нужное
+public interface IWorkable { void Work(); }
+public interface IFeedable { void Eat(); }
+
+public class Robot : IWorkable { public void Work() { ... } } // роботу не нужен Eat()
+</code></pre>
+<h3 id="d-dependency-inversion">D — Dependency Inversion (инверсия зависимостей)</h3>
+<pre><code class="language-csharp">// ПЛОХО — жёсткая привязка к конкретному классу
+public class OrderService
+{
+    private SqlDatabase _db = new(); // класс сам создаёт свою зависимость — тестировать сложно
+}
+
+// ХОРОШО — зависимость от интерфейса, реализация передаётся снаружи (Dependency Injection)
+public interface IDatabase { void Save(Order order); }
+
+public class OrderService
+{
+    private readonly IDatabase _db;
+    public OrderService(IDatabase db) =&gt; _db = db; // конкретную реализацию решает вызывающий код
+}
+
+// В тестах можно подставить фейковую реализацию вместо реальной БД:
+public class FakeDatabase : IDatabase { public void Save(Order o) { /* ничего не делает */ } }
+</code></pre>
+<blockquote>
+<p>[!info]+ 🆕 Добавлено 2 августа — куда DIP вырастает в масштабе целого приложения (Hexagonal / Ports &amp; Adapters)
+<code>OrderService(IDatabase db)</code> выше — это DIP в одном классе. В масштабе целого приложения та же идея называется <strong>Hexagonal Architecture</strong> (Ports &amp; Adapters): изолированное ядро бизнес-логики в центре, а всё внешнее подключено через порты.
+- <strong>Driving ports</strong> — внешний мир зовёт ядро (HTTP-контроллер, UI).
+- <strong>Driven ports</strong> — ядро зовёт внешний мир (БД, очереди, чужие API) — это ровно <code>IDatabase</code> из примера выше, только на уровне приложения, а не одного класса.
+- Входные и выходные <strong>адаптеры</strong> реализуют эти порты (конкретный EF Core репозиторий — адаптер для <code>IDatabase</code>-порта).</p>
+<p><strong>Важно на собесе:</strong> Clean Architecture (уже встречалась в собесе #4 — слои Domain/Application/Infrastructure/Presentation) — это более поздняя и детализированная версия ТОЙ ЖЕ идеи, что и Hexagonal, а не конкурирующий подход. Называть их взаимозаменяемо не ошибка.</p>
+<p>Зачем это даёт практически: ядро можно юнит-тестировать без моков БД/сети вообще — оно ни от чего внешнего не зависит. Минус (честно, не только плюсы) — на маленьком проекте это оверинжиниринг: лишние интерфейсы и слои ради проекта, который и так меняется раз в год.</p>
+<p>🤖 <em>AI-инженерия:</em> Interface Segregation = чистый дизайн инструментов агента (маленькие специфичные интерфейсы вместо одного гигантского <code>ITool</code> со всеми методами сразу). Open/Closed = добавляешь агенту новый инструмент, не трогая его ядро.</p>
+</blockquote>
+<h3 id="-27">Мини-задание 2.7</h3>
+<pre><code class="language-csharp">// Найди нарушение SRP в твоём собственном ContactManager.cs (Фаза 1) —
+// или докажи письменно, что его там НЕТ (разбери, за что отвечает
+// ContactBook, а за что ContactManager, и почему это два разных класса).
+</code></pre>
+<h3 id="_25">🎤 Вопросы с собеседования</h3>
+<p><strong>Q: Приведи пример нарушения Single Responsibility из реального проекта.</strong>
+A: Класс <code>UserService</code>, который одновременно валидирует входные данные, сохраняет пользователя в БД и отправляет приветственное письмо — три РАЗНЫЕ причины для изменения (правила валидации, схема БД, шаблон письма) живут в одном классе.</p>
+<p><strong>Q: Как SOLID связан с Dependency Injection?</strong>
+A: <code>D</code> (Dependency Inversion) — теоретический принцип "зависеть от абстракций, а не от конкретных реализаций". Dependency Injection — практический механизм КАК эти абстракции передаются объекту (обычно через конструктор), часто автоматизированный DI-контейнером (в ASP.NET Core — встроенный).</p>
+<p><strong>Q: Может ли код соблюдать один принцип SOLID, но нарушать другой?</strong>
+A: Да, принципы независимы, хоть и взаимосвязаны. Например, класс может иметь идеальный SRP (одна чёткая ответственность), но нарушать OCP — для добавления нового поведения приходится лезть внутрь и редактировать существующий проверенный код.</p>
+<p><strong>Q: Что "закрыт для изменения" в Open/Closed НЕ означает?</strong>
+A: Не означает "никогда не трогай этот код вообще" — баги всё равно чинятся, рефакторинг возможен. Означает: для ДОБАВЛЕНИЯ нового поведения (новый тип скидки, новый формат экспорта) не нужно модифицировать существующий работающий код — только дописывать новый.</p>
+<p><strong>Q: Приведи пример, когда Liskov Substitution нарушается неочевидно (не через exception).</strong>
+A: Наследник переопределяет метод так, что он выполняется в разы медленнее или с побочными эффектами, которых не ожидает вызывающий код, рассчитывающий на поведение базового класса — формально сигнатура совпадает, но контракт (ожидания вызывающей стороны) нарушен.</p>
+<hr>
+<h2 id="28">2.8 Статические классы и синглтон</h2>
+<h3 id="_26">Почему это важно</h3>
+<p>Ты уже неявно использовал static в <code>ContactManager.Book</code> — теперь разберём, что это значит формально и чем отличается от паттерна Singleton.</p>
+<h3 id="_27">Аналогия из жизни</h3>
+<p>Один принтер на весь этаж офиса. Все сотрудники обращаются к ОДНОМУ и тому же устройству, никто не заводит себе персональную копию принтера "для себя".</p>
+<h3 id="a_1">Пример A — статический класс</h3>
+<pre><code class="language-csharp">public static class MathHelper // нельзя создать объект (new MathHelper() — ошибка компиляции)
+{
+    public static double Square(double x) =&gt; x * x; // все члены обязаны быть static
+}
+
+MathHelper.Square(5); // вызов без создания объекта
+</code></pre>
+<h3 id="b-singleton">Пример B — классический Singleton (ручная блокировка)</h3>
+<pre><code class="language-csharp">public class ConfigManager
+{
+    private static ConfigManager? _instance;
+    private static readonly object _lock = new();
+
+    private ConfigManager() { } // приватный конструктор — извне new() недоступен
+
+    public static ConfigManager Instance
+    {
+        get
+        {
+            lock (_lock) // потокобезопасность — только один поток может сюда попасть одновременно
+            {
+                _instance ??= new ConfigManager();
+                return _instance;
+            }
+        }
+    }
+}
+
+ConfigManager.Instance.DoSomething(); // всегда один и тот же объект
+</code></pre>
+<h3 id="c-singleton-lazyt">Пример C — современный Singleton через <code>Lazy&lt;T&gt;</code> (без ручной блокировки)</h3>
+<pre><code class="language-csharp">public class ConfigManager
+{
+    private static readonly Lazy&lt;ConfigManager&gt; _lazy = new(() =&gt; new ConfigManager());
+    public static ConfigManager Instance =&gt; _lazy.Value;
+
+    private ConfigManager() { }
+}
+// Lazy&lt;T&gt; сам гарантирует потокобезопасность и создание &quot;по требованию&quot; (при первом обращении)
+</code></pre>
+<p><strong>Важное отличие от твоего <code>Book</code>:</strong> в <code>ContactManager.cs</code> поле <code>private static readonly ContactBook Book = new();</code> — это просто "один статический экземпляр", а не Singleton-паттерн: конструктор <code>ContactBook</code> остался публичным, ничто не мешает создать <code>new ContactBook()</code> где-то ещё. Настоящий Singleton <strong>запрещает</strong> это через приватный конструктор.</p>
+<h3 id="-28">Мини-задание 2.8</h3>
+<pre><code class="language-csharp">// Реализуй настоящий Singleton: класс Logger с приватным конструктором,
+// статическим свойством Instance (через Lazy&lt;T&gt; или ручную блокировку),
+// методом Log(string message). Докажи в Main(), что Logger.Instance
+// всегда возвращает один и тот же объект: ReferenceEquals(Logger.Instance, Logger.Instance)
+</code></pre>
+<h3 id="_28">🎤 Вопросы с собеседования</h3>
+<p><strong>Q: Почему Singleton считается антипаттерном многими разработчиками?</strong>
+A: Это скрытая глобальная зависимость — код, использующий <code>Singleton.Instance</code> напрямую, невозможно протестировать изолированно (нельзя подменить mock-реализацией без дополнительных ухищрений), плюс скрытая связанность между частями системы, не видная по сигнатурам методов.</p>
+<p><strong>Q: Как сделать Singleton потокобезопасным без ручного <code>lock</code>?</strong>
+A: <code>Lazy&lt;T&gt;</code> (Пример C) — по умолчанию использует <code>LazyThreadSafetyMode.ExecutionAndPublication</code>, гарантированно создаст только один экземпляр даже при параллельном первом обращении из нескольких потоков.</p>
+<p><strong>Q: Чем static class отличается от Singleton по возможностям, если оба гарантируют "один экземпляр логики"?</strong>
+A: <code>static class</code> — вообще не объект, его нельзя передать как зависимость через интерфейс, нельзя протестировать с моком, нет полиморфизма. Singleton — обычный объект (просто гарантированно единственный), его можно спрятать за интерфейсом и подменить в тестах.</p>
+<p><strong>Q: Как обычно решают проблему тестируемости, свойственную Singleton, в современных .NET-проектах?</strong>
+A: Через Dependency Injection вместо ручного Singleton-паттерна — регистрируют сервис с <code>Lifetime.Singleton</code> в DI-контейнере (<code>services.AddSingleton&lt;IMyService, MyService&gt;()</code>), получают гарантию "один экземпляр на всё приложение", но при этом сохраняют возможность подменить реализацию в тестах через интерфейс.</p>
+<hr>
+<h2 id="29-record">2.9 Record типы — глубже</h2>
+<h3 id="_29">Почему это важно</h3>
+<p><code>record Contact</code> уже использовался в Фазе 1 интуитивно. Теперь — что происходит под капотом и когда record явно лучше class.</p>
+<h3 id="_30">Аналогия из жизни</h3>
+<p>Record - как бланк техпаспорта: если два бланка заполнены одинаковыми данными (тот же VIN, год, цвет), они СЧИТАЮТСЯ одним и тем же документом по содержанию (value equality) - не потому что это физически один и тот же лист бумаги, как было бы с class (reference equality, где важно, что это именно ТОТ ЖЕ конкретный экземпляр).</p>
+<h3 id="a-value-equality">Пример A — value equality</h3>
+<pre><code class="language-csharp">public record Point(int X, int Y);
+public class PointClass { public int X, Y; }
+
+var r1 = new Point(1, 2);
+var r2 = new Point(1, 2);
+Console.WriteLine(r1 == r2); // True — record сравнивает ЗНАЧЕНИЯ
+
+var c1 = new PointClass { X = 1, Y = 2 };
+var c2 = new PointClass { X = 1, Y = 2 };
+Console.WriteLine(c1 == c2); // False — class сравнивает ССЫЛКИ
+</code></pre>
+<h3 id="b-with-">Пример B — <code>with</code>-выражение (неразрушающая мутация)</h3>
+<pre><code class="language-csharp">var original = new Contact(&quot;Ivan&quot;, &quot;123&quot;, null);
+var updated = original with { Phone = &quot;999&quot; };
+// original не изменился, updated — новая копия с другим Phone
+Console.WriteLine(original.Phone); // &quot;123&quot;
+Console.WriteLine(updated.Phone);  // &quot;999&quot;
+</code></pre>
+<h3 id="c-record-vs-record-struct">Пример C — record vs record struct</h3>
+<pre><code class="language-csharp">public record Point(int X, int Y);        // reference type (в куче)
+public record struct Coord(int X, int Y); // value type (на стеке, копируется целиком)
+</code></pre>
+<h3 id="d-value-equality-mutable-reference-">Пример D — ловушка: value equality ломается с mutable reference-полями</h3>
+<pre><code class="language-csharp">public record Order(string Id, List&lt;string&gt; Items);
+
+var o1 = new Order(&quot;1&quot;, new List&lt;string&gt; { &quot;хлеб&quot; });
+var o2 = new Order(&quot;1&quot;, new List&lt;string&gt; { &quot;хлеб&quot; });
+Console.WriteLine(o1 == o2); // False! Не то, что ожидалось
+
+// Почему: record сравнивает поле Items через Equals — а у List&lt;T&gt; Equals
+// НЕ переопределён по значению, значит сравниваются ССЫЛКИ на два разных списка.
+// record даёт value equality только для того, что само умеет сравниваться по значению.
+</code></pre>
+<blockquote>
+<p>[!info]+ 🆕 Добавлено 28 июля — почему <code>string</code>-поля работают правильно, а <code>List&lt;T&gt;</code> нет (реальный вопрос с собеседования, Senior-уровень)
+Дело не в том, что record "особенный" со строками — а в том, что сам <code>string</code> в C# УЖЕ переопределяет <code>Equals</code>/<code>==</code> для сравнения по содержимому, на уровне языка, независимо от records. Record генерирует сравнение через <code>EqualityComparer&lt;T&gt;.Default</code> для КАЖДОГО поля по отдельности:
+```csharp
+public record Person(string Name, List<string> Tags);</p>
+<p>var p1 = new Person("Ivan", new List<string> { "dev" });
+var p2 = new Person("Ivan", new List<string> { "dev" });
+// p1.Name и p2.Name — разные объекты строк в памяти, но string.Equals
+// сравнивает по содержимому → для этого поля всё ОК
+// p1.Tags и p2.Tags — разные объекты List<T>, а у List<T> Equals НЕ переопределён
+// → сравнение по ссылке → p1 == p2 будет False из-за ЭТОГО поля
+<code>``
+Общее правило: record's value equality рекурсивно зависит от того, переопределяет ли **каждое отдельное поле** собственное сравнение по значению. Строки — да, коллекции (</code>List<code>,</code>Dictionary` и т.п.) — нет.</p>
+<p>🤖 <em>AI-инженерия:</em> request/response тела для LLM API — идеальный кандидат на record: неизменяемые данные, value equality удобна для кэширования по содержимому промпта (одинаковый запрос = одинаковый хэш = можно закэшировать ответ).</p>
+</blockquote>
+<h3 id="-29">Мини-задание 2.9</h3>
+<pre><code class="language-csharp">// 1. Создай контакт, через with поменяй только Phone — докажи, что original не изменился.
+// 2. Воспроизведи ловушку из Примера D на своём record с List&lt;T&gt; внутри —
+//    убедись, что == возвращает False, объясни почему словами.
+</code></pre>
+<h3 id="_31">🎤 Вопросы с собеседования</h3>
+<p><strong>Q: Как работает <code>Equals</code> у record, если внутри есть <code>List&lt;T&gt;</code>?</strong>
+A: Record генерирует <code>Equals</code>, сравнивающий каждое поле через его собственный <code>Equals</code>. Для <code>List&lt;T&gt;</code> это сравнение ССЫЛОК (список не переопределяет <code>Equals</code> по содержимому), а не элементов внутри — частая ловушка (см. Пример D).</p>
+<p><strong>Q: Можно ли унаследовать record от обычного class, или наоборот?</strong>
+A: Нет — record может наследовать только от другого record. Смешивать <code>record</code> и <code>class</code> в одной цепочке наследования нельзя.</p>
+<p><strong>Q: Что обычно быстрее для маленьких неизменяемых объектов — <code>record</code> или <code>record struct</code>?</strong>
+A: <code>record struct</code> — value type, не требует выделения в куче и работы GC, для маленьких объектов (2-3 примитивных поля) обычно быстрее. Но копируется целиком при каждой передаче в метод, что для больших структур может быть накладнее, чем передача ссылки.</p>
+<p><strong>Q: Что делает <code>with</code>-выражение "под капотом"?</strong>
+A: Вызывает специальный скрытый copy-конструктор, сгенерированный компилятором для record, копирует все поля из оригинала, а затем присваивает те, что указаны в <code>{ ... }</code> после <code>with</code>.</p>
+<hr>
+<h2 id="_32">🧩 Собираем всё вместе — переходный пример перед итоговым заданием</h2>
+<p>Прежде чем сразу рефакторить весь Contact Manager (там легко запутаться, комбинируя сразу 9 тем) — вот маленький пример, где 4 темы работают вместе на одной простой задаче. Изучи его, прежде чем переходить к итоговому заданию.</p>
+<pre><code class="language-csharp">// Абстракция (2.5): контракт для любого типа сотрудника
+public interface IPayable
+{
+    decimal CalculatePay();
+}
+
+// Наследование (2.3) + Инкапсуляция (2.2): общая база с защищённым состоянием
+public abstract class Employee : IPayable
+{
+    public string Name { get; init; }
+    protected decimal BaseSalary { get; init; }
+
+    protected Employee(string name, decimal baseSalary)
+    {
+        Name = name;
+        BaseSalary = baseSalary;
+    }
+
+    public abstract decimal CalculatePay(); // абстрактный — реализации нет
+}
+
+// Полиморфизм (2.4): каждый наследник считает зарплату по-своему
+public class Developer : Employee
+{
+    public Developer(string name, decimal baseSalary) : base(name, baseSalary) { }
+    public override decimal CalculatePay() =&gt; BaseSalary; // без бонусов
+}
+
+public class SalesManager : Employee
+{
+    public decimal SalesAmount { get; init; }
+    public SalesManager(string name, decimal baseSalary, decimal salesAmount)
+        : base(name, baseSalary) =&gt; SalesAmount = salesAmount;
+
+    public override decimal CalculatePay() =&gt; BaseSalary + SalesAmount * 0.05m; // + процент с продаж
+}
+
+// Использование — динамический полиморфизм через список базового типа
+List&lt;Employee&gt; employees = new()
+{
+    new Developer(&quot;Иван&quot;, 100_000m),
+    new SalesManager(&quot;Анна&quot;, 80_000m, salesAmount: 500_000m)
+};
+
+foreach (var e in employees)
+    Console.WriteLine($&quot;{e.Name}: {e.CalculatePay():C}&quot;); // вызовется правильная версия для каждого
+</code></pre>
+<p>Что здесь произошло: <code>IPayable</code> (абстракция) задаёт контракт → <code>Employee</code> (наследование + инкапсуляция) даёт общую базу с защищённым <code>BaseSalary</code> → <code>Developer</code>/<code>SalesManager</code> (полиморфизм) считают зарплату каждый по-своему → цикл <code>foreach</code> работает с ОДНИМ списком базового типа, не зная заранее, какой конкретно тип там лежит.</p>
+<p>Именно такую комбинацию тем ты примени́шь в итоговом задании — но там, вместо зарплаты, будет <code>IContactRepository</code> и <code>WorkContact : Contact</code>.</p>
+<hr>
+<h2 id="2-contact-manager">🎯 Итоговое задание Фазы 2 — рефакторинг Contact Manager</h2>
+<p>Возьми проект из Фазы 1 (<code>ContactManager.cs</code>, <code>Contact.cs</code>, <code>ContactBook.cs</code>) и:</p>
+<ol>
+<li><strong>Извлеки интерфейс</strong> <code>IContactRepository</code> из <code>ContactBook</code> (Add, Find, Delete, GetAll, Search) — примени Dependency Inversion (2.7).</li>
+<li><strong>Добавь наследование:</strong> <code>WorkContact : Contact</code> с полем <code>Company</code> (2.3, 2.9 — record-наследование).</li>
+<li><strong>Обоснуй SRP</strong> — почему <code>ContactBook</code> (данные) и <code>ContactManager</code> (ввод/вывод) уже разделены правильно (2.7).</li>
+<li><strong>Опционально:</strong> сделай <code>Contact</code> реализующим <code>IComparable&lt;Contact&gt;</code> по имени, отсортируй список через <code>.Sort()</code>.</li>
+</ol>
+<h3 id="_33">Чекпоинты</h3>
+<ul>
+<li>[ ] <code>IContactRepository</code> — интерфейс, <code>ContactBook</code> его реализует</li>
+<li>[ ] <code>WorkContact</code> наследует <code>Contact</code>, добавляет <code>Company</code></li>
+<li>[ ] Код компилируется, все команды меню продолжают работать</li>
+<li>[ ] Письменное обоснование SRP в комментарии или отдельно</li>
+</ul>
+<hr>
+<p><em>Фаза 2 завершена → Фаза 3 — Продвинутый C# (Generics, LINQ, Async/Await)</em></p></article>
+    <aside class="aside">
+      <strong>В этом документе</strong>
+      <div class="toc"><div class="toc">
+<ul>
+<li><a href="#21">2.1 Классы и объекты — конструкторы, деструкторы, инициализаторы</a><ul>
+<li><a href="#_1">Почему это важно</a></li>
+<li><a href="#_2">Аналогия из жизни</a></li>
+<li><a href="#_3">Теория</a></li>
+<li><a href="#a-poco">Пример A — просто данные (POCO)</a></li>
+<li><a href="#b-this">Пример B — конструкторы и цепочка через this(...)</a></li>
+<li><a href="#this">this — полное объяснение (а не только для конструкторов)</a></li>
+<li><a href="#this_1">Что ещё называется this, но это другое (встретишь позже, не сейчас)</a></li>
+<li><a href="#c">Пример C — класс с поведением, не только данными</a></li>
+<li><a href="#object-initializer">Object initializer</a></li>
+<li><a href="#_4">Деструкторы (финализаторы) — почти никогда не нужны</a></li>
+<li><a href="#primary-constructors-c-12">Современный синтаксис — primary constructors (C# 12+)</a></li>
+<li><a href="#-21">Мини-задание 2.1</a></li>
+<li><a href="#_5">🎤 Вопросы с собеседования</a></li>
+</ul>
+</li>
+<li><a href="#22-getsetinit">2.2 Инкапсуляция — модификаторы доступа, свойства (get/set/init)</a><ul>
+<li><a href="#_6">Почему это важно</a></li>
+<li><a href="#_7">Аналогия из жизни</a></li>
+<li><a href="#_8">Модификаторы доступа</a></li>
+<li><a href="#a">Пример A — свойство с валидацией</a></li>
+<li><a href="#b-auto-property-backing-field">Пример B — auto-property (компилятор сам создаёт backing field)</a></li>
+<li><a href="#c-get-only-backing-field">Пример C — вычисляемое свойство (get-only, без backing field)</a></li>
+<li><a href="#d-init-required-c-11">Пример D — init и современный required (C# 11+)</a></li>
+<li><a href="#-22">Мини-задание 2.2</a></li>
+<li><a href="#_9">🎤 Вопросы с собеседования</a></li>
+</ul>
+</li>
+<li><a href="#23-base-virtual-override-sealed">2.3 Наследование — base, virtual, override, sealed</a><ul>
+<li><a href="#_10">Почему это важно</a></li>
+<li><a href="#_11">Аналогия из жизни</a></li>
+<li><a href="#a-virtualoverride">Пример A — базовая иерархия с virtual/override</a></li>
+<li><a href="#b-protected">Пример B — protected: видно наследнику, не видно снаружи</a></li>
+<li><a href="#c-base">Пример C — трёхуровневая иерархия с цепочкой base()</a></li>
+<li><a href="#d-sealed">Пример D — sealed</a></li>
+<li><a href="#e-hiding-new-override">Пример E — hiding через new (не путать с override!)</a></li>
+<li><a href="#-23">Мини-задание 2.3</a></li>
+<li><a href="#_12">🎤 Вопросы с собеседования</a></li>
+</ul>
+</li>
+<li><a href="#24">2.4 Полиморфизм — статический и динамический</a><ul>
+<li><a href="#_13">Почему это важно</a></li>
+<li><a href="#_14">Аналогия из жизни</a></li>
+<li><a href="#a-compile-time">Пример A — статический полиморфизм (перегрузка, compile-time)</a></li>
+<li><a href="#b-virtualoverride-runtime">Пример B — динамический полиморфизм (virtual/override, runtime)</a></li>
+<li><a href="#c-virtual-">Пример C — классическая ловушка: virtual-вызов из конструктора</a></li>
+<li><a href="#-24">Мини-задание 2.4</a></li>
+<li><a href="#_15">🎤 Вопросы с собеседования</a></li>
+</ul>
+</li>
+<li><a href="#25-abstract-vs">2.5 Абстракция — abstract классы vs интерфейсы</a><ul>
+<li><a href="#_16">Почему это важно</a></li>
+<li><a href="#_17">Аналогия из жизни</a></li>
+<li><a href="#a-abstract-class">Пример A — abstract class с общим кодом и абстрактным методом</a></li>
+<li><a href="#b-interface">Пример B — interface, множественная реализация</a></li>
+<li><a href="#c_1">Пример C — несвязанные классы, объединённые общим "умением"</a></li>
+<li><a href="#_18">Когда что</a></li>
+<li><a href="#-25">Мини-задание 2.5</a></li>
+<li><a href="#_19">🎤 Вопросы с собеседования</a></li>
+</ul>
+</li>
+<li><a href="#26-idisposable-icomparable-ienumerable">2.6 Интерфейсы — IDisposable, IComparable, IEnumerable</a><ul>
+<li><a href="#_20">Почему это важно</a></li>
+<li><a href="#_21">Аналогия из жизни</a></li>
+<li><a href="#a-icomparablet">Пример A — IComparable\&lt;T&gt; — твой тип можно сортировать</a></li>
+<li><a href="#b-idisposable">Пример B — IDisposable — реализуй сам (не только пользуйся)</a></li>
+<li><a href="#c-ienumerablet-foreach">Пример C — IEnumerable\&lt;T&gt; — твой тип можно перебирать через foreach</a></li>
+<li><a href="#d-iequatablet-record">Пример D — бонус: IEquatable\&lt;T&gt; (то, что record делает автоматически)</a></li>
+<li><a href="#-26">Мини-задание 2.6</a></li>
+<li><a href="#_22">🎤 Вопросы с собеседования</a></li>
+</ul>
+</li>
+<li><a href="#27-solid">2.7 Принципы SOLID</a><ul>
+<li><a href="#_23">Почему это важно</a></li>
+<li><a href="#_24">Аналогия из жизни</a></li>
+<li><a href="#s-single-responsibility">S — Single Responsibility (единственная ответственность)</a></li>
+<li><a href="#o-openclosed">O — Open/Closed (открыт для расширения, закрыт для изменения)</a></li>
+<li><a href="#l-liskov-substitution">L — Liskov Substitution (подстановка Лисков)</a></li>
+<li><a href="#i-interface-segregation">I — Interface Segregation (разделение интерфейсов)</a></li>
+<li><a href="#d-dependency-inversion">D — Dependency Inversion (инверсия зависимостей)</a></li>
+<li><a href="#-27">Мини-задание 2.7</a></li>
+<li><a href="#_25">🎤 Вопросы с собеседования</a></li>
+</ul>
+</li>
+<li><a href="#28">2.8 Статические классы и синглтон</a><ul>
+<li><a href="#_26">Почему это важно</a></li>
+<li><a href="#_27">Аналогия из жизни</a></li>
+<li><a href="#a_1">Пример A — статический класс</a></li>
+<li><a href="#b-singleton">Пример B — классический Singleton (ручная блокировка)</a></li>
+<li><a href="#c-singleton-lazyt">Пример C — современный Singleton через Lazy&lt;T&gt; (без ручной блокировки)</a></li>
+<li><a href="#-28">Мини-задание 2.8</a></li>
+<li><a href="#_28">🎤 Вопросы с собеседования</a></li>
+</ul>
+</li>
+<li><a href="#29-record">2.9 Record типы — глубже</a><ul>
+<li><a href="#_29">Почему это важно</a></li>
+<li><a href="#_30">Аналогия из жизни</a></li>
+<li><a href="#a-value-equality">Пример A — value equality</a></li>
+<li><a href="#b-with-">Пример B — with-выражение (неразрушающая мутация)</a></li>
+<li><a href="#c-record-vs-record-struct">Пример C — record vs record struct</a></li>
+<li><a href="#d-value-equality-mutable-reference-">Пример D — ловушка: value equality ломается с mutable reference-полями</a></li>
+<li><a href="#-29">Мини-задание 2.9</a></li>
+<li><a href="#_31">🎤 Вопросы с собеседования</a></li>
+</ul>
+</li>
+<li><a href="#_32">🧩 Собираем всё вместе — переходный пример перед итоговым заданием</a></li>
+<li><a href="#2-contact-manager">🎯 Итоговое задание Фазы 2 — рефакторинг Contact Manager</a><ul>
+<li><a href="#_33">Чекпоинты</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+    </aside>
+  </div>
+</main>
+
+
+<script>
+const ROOT = "..";
+
+// ---- тема
+const themeBtn = document.getElementById("theme");
+const paint = () => {
+  const dark = document.documentElement.getAttribute("data-theme") === "dark";
+  themeBtn.textContent = dark ? "☀" : "☾";
+};
+paint();
+themeBtn.addEventListener("click", () => {
+  const next = document.documentElement.getAttribute("data-theme") === "dark" ? "light" : "dark";
+  document.documentElement.setAttribute("data-theme", next);
+  try { localStorage.setItem("kb-theme", next); } catch (e) {}
+  paint();
+});
+
+// ---- поиск
+let index = null;
+const box = document.getElementById("results");
+const hits = document.getElementById("hits");
+const head = box.querySelector("h3");
+const input = document.getElementById("q");
+
+async function ensureIndex() {
+  if (index) return index;
+  const res = await fetch(ROOT + "/search-index.json");
+  index = await res.json();
+  return index;
+}
+
+const esc = (s) => (s || "").replace(/[&<>]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
+
+function hi(text, query) {
+  const i = text.toLowerCase().indexOf(query);
+  if (i < 0) return esc(text);
+  return esc(text.slice(0, i)) + "<mark>" + esc(text.slice(i, i + query.length)) + "</mark>" + esc(text.slice(i + query.length));
+}
+
+input.addEventListener("input", async () => {
+  const q = input.value.trim().toLowerCase();
+  if (q.length < 2) { box.hidden = true; return; }
+  const data = await ensureIndex();
+  const found = [];
+  for (const d of data) {
+    const inTitle = d.title.toLowerCase().includes(q);
+    const inSum = (d.summary || "").toLowerCase().includes(q);
+    const heads = (d.heads || []).filter(h => h.toLowerCase().includes(q));
+    if (inTitle || inSum || heads.length) {
+      found.push({ d, heads, rank: inTitle ? 0 : heads.length ? 1 : 2 });
+    }
+  }
+  found.sort((a, b) => a.rank - b.rank);
+  head.textContent = found.length ? `Нашлось: ${found.length}` : "Ничего не нашлось";
+  hits.innerHTML = found.slice(0, 40).map(({ d, heads }) =>
+    `<a class="hit" href="${ROOT}/d/${d.slug}.html">
+       <b>${hi(d.title, q)}</b>
+       <span>${heads.length ? "→ " + heads.slice(0, 3).map(h => hi(h, q)).join(" · ") : esc(d.summary || "")}</span>
+     </a>`).join("");
+  box.hidden = false;
+});
+
+input.addEventListener("keydown", (e) => { if (e.key === "Escape") { input.value = ""; box.hidden = true; input.blur(); } });
+document.addEventListener("keydown", (e) => {
+  if (e.key === "/" && document.activeElement !== input) { e.preventDefault(); input.focus(); }
+});
+</script>
+</body>
+</html>

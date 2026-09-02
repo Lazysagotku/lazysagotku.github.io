@@ -1,0 +1,458 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Алгоритмы и LeetCode — живой companion-документ - База знаний</title>
+<link rel="stylesheet" href="../kb.css">
+<script>
+  // Тему ставим до первой отрисовки, иначе на тёмной системе мигает белым.
+  try {
+    var t = localStorage.getItem("kb-theme");
+    if (!t) t = matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+    document.documentElement.setAttribute("data-theme", t);
+  } catch (e) {}
+</script>
+</head>
+<body>
+
+<header class="top">
+  <div class="top-in">
+    <a class="brand" href="../index.html">База <span>знаний</span></a>
+    <span class="grow"></span>
+    <input id="q" type="search" placeholder="Поиск по всем материалам…" autocomplete="off">
+    <button class="icon-btn" id="theme" type="button" title="Тема"></button>
+  </div>
+</header>
+
+<div id="results" hidden><div class="wrap-r"><h3></h3><div id="hits"></div></div></div>
+
+<main class="wrap">
+  <div class="doc-head">
+    <div class="crumb"><a href="../index.html#companions">Спутники к собеседованиям</a></div>
+    <h1>Алгоритмы и LeetCode — живой companion-документ</h1>
+    <div class="meta">192 строк · источник <code>l2code/Algorithms_Companion.md</code></div>
+  </div>
+
+  <div class="layout">
+    <article class="prose"><blockquote>
+<p>Не одноразовая находка, а постоянно пополняемая тема — держать рядом, пополнять по мере новых источников. В отличие от <code>research/</code> и <code>discoveries/</code>, этот файл — часть самого курса (l2code), не архив.</p>
+</blockquote>
+<hr>
+<h2 id="big-o">Big O — теория (то, что раньше было только стратегией "выучи это первым")</h2>
+<p><strong>Что это вообще такое.</strong> Big O описывает, как время (или память) работы алгоритма РАСТЁТ с увеличением размера входных данных <code>n</code> — не секунды на конкретном железе, а форму роста. Считаем <strong>худший случай</strong> по умолчанию (если не оговорено иное), берём только САМОЕ БЫСТРОРАСТУЩЕЕ слагаемое и выбрасываем константы: <code>O(2n + 100)</code> → <code>O(n)</code>, потому что при n → ∞ константы перестают иметь значение по сравнению с ростом самого n.</p>
+<p><strong>Иерархия от быстрого к медленному</strong> (для интуиции — не нужно запоминать формулы):</p>
+<table>
+<thead>
+<tr>
+<th>Обозначение</th>
+<th>Название</th>
+<th>Пример</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>O(1)</td>
+<td>константа</td>
+<td>достать элемент по индексу массива</td>
+</tr>
+<tr>
+<td>O(log n)</td>
+<td>логарифмическая</td>
+<td>бинарный поиск</td>
+</tr>
+<tr>
+<td>O(n)</td>
+<td>линейная</td>
+<td>пройти массив один раз</td>
+</tr>
+<tr>
+<td>O(n log n)</td>
+<td>линейарифмическая</td>
+<td>эффективная сортировка (merge sort, quicksort в среднем)</td>
+</tr>
+<tr>
+<td>O(n²)</td>
+<td>квадратичная</td>
+<td>вложенные циклы по одному и тому же массиву</td>
+</tr>
+<tr>
+<td>O(2ⁿ)</td>
+<td>экспоненциальная</td>
+<td>перебор всех подмножеств</td>
+</tr>
+<tr>
+<td>O(n!)</td>
+<td>факториальная</td>
+<td>перебор всех перестановок</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Про O(k) — конкретно то, что смутило.</strong> <code>k</code> — это НЕ n. Это отдельная, самостоятельная переменная, которая появляется, когда сложность зависит не только от размера всего входа, а ещё и от какого-то ДОПОЛНИТЕЛЬНОГО параметра задачи. Частые случаи:
+- <strong>Размер окна</strong> — как раз твоя задача из трекера "Maximum Sum Subarray of Size K": проход <code>O(n)</code>, но если бы алгоритм зачем-то пересчитывал сумму окна заново на каждом шаге (а не сдвигал её), было бы <code>O(n·k)</code> — n сдвигов, каждый пересчёт занимает k шагов.
+- <strong>"Топ-K" задачи</strong> — "верните K самых частых элементов": часто решается через кучу (heap) размера k, сложность <code>O(n log k)</code> — n элементов проходим, но куча держит только k из них.
+- <strong>Отдельный второй вход</strong> — если на вход подаются ДВА независимых массива размером n и m, корректно писать <code>O(n + m)</code> (последовательно) или <code>O(n · m)</code> (вложенно) — нельзя просто написать <code>O(n)</code> и забыть про m, если m может быть большим независимо от n.</p>
+<p><strong>Ещё то, что часто путают:</strong>
+- <strong>Amortized (амортизированная) сложность</strong> — <code>List&lt;T&gt;.Add()</code> кажется <code>O(n)</code> из-за редких resize-ов (см. Phase1_CSharp_Fundamentals.md §1.7), но В СРЕДНЕМ по многим вызовам — <code>O(1) amortized</code>, потому что resize случается всё реже по мере роста списка. Указывается отдельно от обычного Big O, когда единичный "плохой" случай регулярно компенсируется массой "хороших".
+- <strong>Time vs Space complexity</strong> — Big O описывает не только время, но и ПАМЯТЬ. Решение может быть быстрым по времени (<code>O(n)</code>), но платить за это памятью (<code>O(n)</code> дополнительного места под хэш-таблицу) — на собесе часто спрашивают оба показателя, не только время.
+- <strong>Best/average/worst case</strong> — по умолчанию Big O = худший случай. Но иногда явно говорят "в среднем" (quicksort — <code>O(n log n)</code> в среднем, но <code>O(n²)</code> в худшем, если пивот выбирается неудачно каждый раз) — если не уточнить, какой случай имеется в виду, легко попасть впросак на собесе.</p>
+<p><strong>Q&amp;A:</strong>
+- Почему <code>O(2n)</code> = <code>O(n)</code>, а <code>O(n + m)</code> НЕЛЬЗЯ упростить до <code>O(n)</code>? → константы (2, 100 и т.п.) всегда выбрасываются, но РАЗНЫЕ переменные (n и m — два независимых входа) выбрасывать нельзя, потому что m может расти независимо и стать доминирующим слагаемым.
+- Что важнее на собесе — точная формула или порядок роста? → порядок роста. "Грубая оценка <code>2^(2n)</code> вместо точной формулы Каталана" уже отмечено в разделе про backtracking ниже — та же логика применима везде.</p>
+<hr>
+<h2 id="_1">Когда начинается практика (проверено по плану)</h2>
+<p><strong>Фаза 3</strong> — та, что уже написана и активна (<code>Phase3_Advanced.md</code>, Generics/LINQ/Async). По изначальному плану (<code>CSharp_Roadmap_Software.md</code>): <strong>5-7 задач уровня Easy</strong>, чередуя язык — нечётные на C#, чётные на Python (Tier 1, без доп. часов сверх бюджета). Можно начинать прямо сейчас, параллельно с текущими Task-заданиями.</p>
+<hr>
+<h2 id="leetcode">Порядок изучения (источник: видео "Как выучить алгоритмы и решать LeetCode", канал "абоба")</h2>
+<ol>
+<li>Базовые понятия — что такое алгоритмы/структуры данных, какие бывают.</li>
+<li><strong>Big O — приоритетно и отдельно</strong>, до практики: уметь по коду прикидывать время/память.</li>
+<li>Практика — но НЕ рандомными задачами с самого начала. Сначала фильтр по теме, которую только что изучил, рандом — когда тема закрыта уверенно.</li>
+<li>После каждой темы — реализовать структуру/алгоритм самому, даже если он уже встроен в язык.</li>
+</ol>
+<p><strong>Важное разрешение себе:</strong> не нужно знать всё. 1-2 самых эффективных алгоритма сортировки наизусть достаточно, остальное — на уровне "знаю название и идею". Ориентир из видео — ~150 решённых задач за пару лет хватило автору для уверенности на собесах. Полный разбор — <code>research/2026-08-08_leetcode-algorithms-strategy.md</code>.</p>
+<hr>
+<h2 id="_2">Книги — с моей проверкой репутации, не только пересказ видео</h2>
+<table>
+<thead>
+<tr>
+<th>Книга</th>
+<th>Что это реально</th>
+<th>Когда читать</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Грокаем алгоритмы, 2-е изд.</strong> (Aditya Bhargava, 2024) — ✅ прочитана целиком, полный разбор <code>research/2026-08-09_grokking-algorithms-1-vs-2.md</code></td>
+<td>Вход с нуля, иллюстрации, простой язык. 1-е издание (2017) читать НЕ нужно — 2-е включает его почти целиком плюс главы про деревья/B-деревья/NP-полноту. Есть реальные ошибки в тексте (см. разбор) — не брать на веру всё подряд</td>
+<td>Не целиком линейно — справочник под конкретный пробел, как с Postgres. Прицельно: DP Q&amp;A (гл. 11) + B-деревья (гл. 8, прямая связка с индексами БД) — 30-40 страниц, не вся книга</td>
+</tr>
+<tr>
+<td><strong>Алгоритмы: руководство по разработке</strong> (Skiena, The Algorithm Design Manual)</td>
+<td>Практическая, с war stories из консалтинга + каталог "какой алгоритм под какой паттерн задачи" — отлично под собес</td>
+<td>Позже, не под текущий дедлайн — многонедельная инвестиция</td>
+</tr>
+<tr>
+<td><strong>Алгоритмы: построение и анализ</strong> (CLRS — Cormen/Leiserson/Rivest/Stein)</td>
+<td>Канонический университетский учебник, математически плотный</td>
+<td>Справочник на будущее, НЕ для старта</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="leetcode_1">Таксономия паттернов LeetCode (источник: видео "Ты будешь страдать от алгоритмов...", канал Максим Фатин)</h2>
+<p>Идея видео: <strong>все ~3000 задач LeetCode сводятся к ~30 паттернам в 11-12 темах</strong> — не запоминать решение конкретной задачи, а узнавать паттерн по "гринфлагам" в условии. Это узнаваемая, реально существующая методология (в духе "Grokking the Coding Interview"), не выдумка конкретного автора.</p>
+<p>⚠️ <strong>Что не проверяемо и не факт:</strong> цветовая частотность (зелёная/жёлтая/оранжевая/красная зона "как часто спрашивают в русском бигтехе") — личная категоризация автора, без методологии/выборки. Держать как ориентир приоритета, не как рыночную статистику. Видео также рекламирует платный курс (~2000₽) — техническая часть от этого не хуже, но это на заметку.</p>
+<table>
+<thead>
+<tr>
+<th>Тема</th>
+<th>Кол-во задач (LeetCode)</th>
+<th>Частота (⚠️ не подтверждено)</th>
+<th>Паттерны</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Два указателя</td>
+<td>240+</td>
+<td>Зелёная (часто)</td>
+<td>с двух сторон / каждому свой / быстрый-медленный</td>
+</tr>
+<tr>
+<td>Плавающее окно</td>
+<td>160+</td>
+<td>Зелёная</td>
+<td>фиксированной длины / непересекающиеся / пересекающиеся</td>
+</tr>
+<tr>
+<td>Хэш-таблицы</td>
+<td>700+</td>
+<td>Зелёная</td>
+<td>подсчёт / ключ↔значение / выбор ключа</td>
+</tr>
+<tr>
+<td>Точки и отрезки</td>
+<td>— (без своего раздела)</td>
+<td>Жёлтая</td>
+<td>метод отрезков / два указателя на отрезках / sweep line</td>
+</tr>
+<tr>
+<td>Бинарный поиск</td>
+<td>300+</td>
+<td>Жёлтая</td>
+<td>базовый через "хорошую функцию" / двойной бинарный поиск</td>
+</tr>
+<tr>
+<td>Стек</td>
+<td>170+</td>
+<td>Жёлтая</td>
+<td>промежуточные результаты / монотонный стек / псевдостек</td>
+</tr>
+<tr>
+<td>Префиксный массив</td>
+<td>230+</td>
+<td>Жёлтая</td>
+<td>массив сумм / бегущий префикс</td>
+</tr>
+<tr>
+<td>Односвязный список</td>
+<td>80+</td>
+<td>Жёлтая</td>
+<td>фиктивный узел (dummy node) / частичные развороты</td>
+</tr>
+<tr>
+<td>Перебор комбинаций</td>
+<td>100+</td>
+<td>Жёлтая (редко, но обычно роняет секцию, если попалось)</td>
+<td>брутфорс через очередь / бэктрекинг</td>
+</tr>
+<tr>
+<td>Деревья</td>
+<td>200+</td>
+<td>Красная (редко)</td>
+<td>снизу вверх / сверху вниз</td>
+</tr>
+<tr>
+<td>Графы</td>
+<td>700+ (3 раздела)</td>
+<td>Оранжевая (редко)</td>
+<td>обход компонент связности / BFS кратчайший путь / топологическая сортировка (алгоритм Кана)</td>
+</tr>
+<tr>
+<td>Динамическое программирование</td>
+<td>600+</td>
+<td>Красная (только отдельные компании)</td>
+<td>одномерная / многомерная (0/1 knapsack)</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Конкретные, проверенные (не рекламные) советы, которые стоит забрать:</strong>
+- <strong>BFS vs DFS — простое правило:</strong> если в условии слово "минимум"/"кратчайший" — почти всегда BFS.
+- <strong>Деревья — первая строчка всегда проверка на пустой узел</strong> (частая ошибка №1); вторая частая ошибка — лишние null-проверки, которые пропускают edge case.
+- <strong>На собесе про сложность backtracking</strong> не бойся сказать грубую оценку (<code>2^(2n)</code>) вместо точной формулы Каталана — грубую оценку принимают нормально.
+- <strong>Алгоритм Кана</strong> (Kahn's algorithm) для топологической сортировки — через BFS-очередь, стартуя с узлов с нулевой входящей степенью — если топологическая сортировка всплывёт, это стандартный ответ.</p>
+<p><strong>Как использовать:</strong> не смотреть видео целиком (~1ч43м, визуальное, с кодом на экране — транскрипт часть теряет). Смотреть точечно, конкретный раздел, когда реально дошёл до этой темы на практике — таблица выше как чек-лист/навигация, что смотреть и когда.</p>
+<hr>
+<h2 id="_3">Теория по паттернам зелёной зоны (даю сам, по мере практики)</h2>
+<h3 id="-">Хэш-таблицы — три техники</h3>
+<ul>
+<li><strong>Техника подсчёта</strong> — вхождения через <code>Dictionary&lt;T, int&gt;</code> (частоты символов/чисел).</li>
+<li><strong>КВВК (ключ-значение ↔ значение-ключ)</strong> — ищешь ДОПОЛНЕНИЕ до цели, а не саму цель (классический Two Sum).</li>
+<li><strong>Выбор ключа</strong> — ключом бывает не само значение, а производное от него (например, отсортированная строка для поиска анаграмм).</li>
+</ul>
+<pre><code class="language-csharp">public int[] TwoSum(int[] nums, int target)
+{
+    var seen = new Dictionary&lt;int, int&gt;(); // значение → индекс
+    for (int i = 0; i &lt; nums.Length; i++)
+    {
+        int complement = target - nums[i];
+        if (seen.TryGetValue(complement, out int j))
+            return new[] { j, i };
+        seen[nums[i]] = i; // добавляем ПОСЛЕ проверки — иначе элемент сматчится сам с собой
+    }
+    return Array.Empty&lt;int&gt;();
+}
+</code></pre>
+<p>O(n) время, O(n) память.</p>
+<h3 id="_4">Два указателя — три техники</h3>
+<ul>
+<li><strong>С двух сторон</strong> — старт с обоих концов, схождение к середине (нужен отсортированный массив).</li>
+<li><strong>Каждому по указателю</strong> — идут по ДВУМ разным массивам одновременно (слияние отсортированных списков).</li>
+<li><strong>Быстрый и медленный</strong> — оба по одному массиву/списку, разная скорость (обнаружение цикла в связном списке).</li>
+</ul>
+<pre><code class="language-csharp">public int[] TwoSum(int[] numbers, int target) // numbers — ОТСОРТИРОВАН (Two Sum II)
+{
+    int left = 0, right = numbers.Length - 1;
+    while (left &lt; right)
+    {
+        int sum = numbers[left] + numbers[right];
+        if (sum == target) return new[] { left + 1, right + 1 }; // LeetCode ждёт 1-индексацию
+        if (sum &lt; target) left++; else right--;
+    }
+    return Array.Empty&lt;int&gt;();
+}
+</code></pre>
+<p>O(n) время, но <strong>O(1) память</strong> — выигрыш у хэш-таблицы именно за счёт использования отсортированности массива. Хороший ответ на собесе на "а почему тут не хэш-таблица".</p>
+<h3 id="_5">Плавающее окно — три техники</h3>
+<ul>
+<li><strong>Фиксированной длины</strong> — размер K задан заранее, сдвиг O(1) вместо пересчёта O(K).</li>
+<li><strong>Непересекающиеся окна</strong> — массив режется на блоки без пересечения, каждый блок обрабатывается независимо.</li>
+<li><strong>Пересекающиеся (плавающий размер)</strong> — самый частый вариант на собесах: окно растёт правым указателем, схлопывается левым при нарушении условия.</li>
+</ul>
+<pre><code class="language-csharp">// Фиксированное окно
+public int MaxSumSubarray(int[] nums, int k)
+{
+    int windowSum = 0;
+    for (int i = 0; i &lt; k; i++) windowSum += nums[i];
+    int maxSum = windowSum;
+    for (int i = k; i &lt; nums.Length; i++)
+    {
+        windowSum += nums[i] - nums[i - k];
+        maxSum = Math.Max(maxSum, windowSum);
+    }
+    return maxSum;
+}
+
+// Плавающий размер — самая длинная подстрока без повторов
+public int LengthOfLongestSubstring(string s)
+{
+    var lastSeen = new Dictionary&lt;char, int&gt;(); // хэш-таблица + окно — паттерны комбинируются!
+    int left = 0, maxLen = 0;
+    for (int right = 0; right &lt; s.Length; right++)
+    {
+        if (lastSeen.TryGetValue(s[right], out int idx) &amp;&amp; idx &gt;= left)
+            left = idx + 1;
+        lastSeen[s[right]] = right;
+        maxLen = Math.Max(maxLen, right - left + 1);
+    }
+    return maxLen;
+}
+</code></pre>
+<hr>
+<h2 id="_6">Трекер практики</h2>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Задача</th>
+<th>Паттерн</th>
+<th>Язык</th>
+<th>Статус</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>Two Sum</td>
+<td>Хэш-таблица (КВВК)</td>
+<td>Python — верно; C# — сначала brute force, потом исправлено на Dictionary</td>
+<td>✅</td>
+</tr>
+<tr>
+<td>2</td>
+<td>Two Sum II (Sorted)</td>
+<td>Два указателя (с двух сторон)</td>
+<td>C#</td>
+<td>⏳</td>
+</tr>
+<tr>
+<td>3</td>
+<td>Container With Most Water</td>
+<td>Два указателя (с двух сторон)</td>
+<td>Python</td>
+<td>⏳</td>
+</tr>
+<tr>
+<td>4</td>
+<td>Maximum Sum Subarray of Size K</td>
+<td>Окно фиксированной длины</td>
+<td>C#</td>
+<td>⏳</td>
+</tr>
+<tr>
+<td>5</td>
+<td>Longest Substring Without Repeating Characters</td>
+<td>Окно плавающего размера</td>
+<td>Python</td>
+<td>⏳</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="-_1">Другие видео-находки</h2>
+<p><em>(Пополняется по мере новых источников.)</em></p></article>
+    <aside class="aside">
+      <strong>В этом документе</strong>
+      <div class="toc"><div class="toc">
+<ul>
+<li><a href="#big-o">Big O — теория (то, что раньше было только стратегией "выучи это первым")</a></li>
+<li><a href="#_1">Когда начинается практика (проверено по плану)</a></li>
+<li><a href="#leetcode">Порядок изучения (источник: видео "Как выучить алгоритмы и решать LeetCode", канал "абоба")</a></li>
+<li><a href="#_2">Книги — с моей проверкой репутации, не только пересказ видео</a></li>
+<li><a href="#leetcode_1">Таксономия паттернов LeetCode (источник: видео "Ты будешь страдать от алгоритмов...", канал Максим Фатин)</a></li>
+<li><a href="#_3">Теория по паттернам зелёной зоны (даю сам, по мере практики)</a><ul>
+<li><a href="#-">Хэш-таблицы — три техники</a></li>
+<li><a href="#_4">Два указателя — три техники</a></li>
+<li><a href="#_5">Плавающее окно — три техники</a></li>
+</ul>
+</li>
+<li><a href="#_6">Трекер практики</a></li>
+<li><a href="#-_1">Другие видео-находки</a></li>
+</ul>
+</div>
+</div>
+    </aside>
+  </div>
+</main>
+
+
+<script>
+const ROOT = "..";
+
+// ---- тема
+const themeBtn = document.getElementById("theme");
+const paint = () => {
+  const dark = document.documentElement.getAttribute("data-theme") === "dark";
+  themeBtn.textContent = dark ? "☀" : "☾";
+};
+paint();
+themeBtn.addEventListener("click", () => {
+  const next = document.documentElement.getAttribute("data-theme") === "dark" ? "light" : "dark";
+  document.documentElement.setAttribute("data-theme", next);
+  try { localStorage.setItem("kb-theme", next); } catch (e) {}
+  paint();
+});
+
+// ---- поиск
+let index = null;
+const box = document.getElementById("results");
+const hits = document.getElementById("hits");
+const head = box.querySelector("h3");
+const input = document.getElementById("q");
+
+async function ensureIndex() {
+  if (index) return index;
+  const res = await fetch(ROOT + "/search-index.json");
+  index = await res.json();
+  return index;
+}
+
+const esc = (s) => (s || "").replace(/[&<>]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
+
+function hi(text, query) {
+  const i = text.toLowerCase().indexOf(query);
+  if (i < 0) return esc(text);
+  return esc(text.slice(0, i)) + "<mark>" + esc(text.slice(i, i + query.length)) + "</mark>" + esc(text.slice(i + query.length));
+}
+
+input.addEventListener("input", async () => {
+  const q = input.value.trim().toLowerCase();
+  if (q.length < 2) { box.hidden = true; return; }
+  const data = await ensureIndex();
+  const found = [];
+  for (const d of data) {
+    const inTitle = d.title.toLowerCase().includes(q);
+    const inSum = (d.summary || "").toLowerCase().includes(q);
+    const heads = (d.heads || []).filter(h => h.toLowerCase().includes(q));
+    if (inTitle || inSum || heads.length) {
+      found.push({ d, heads, rank: inTitle ? 0 : heads.length ? 1 : 2 });
+    }
+  }
+  found.sort((a, b) => a.rank - b.rank);
+  head.textContent = found.length ? `Нашлось: ${found.length}` : "Ничего не нашлось";
+  hits.innerHTML = found.slice(0, 40).map(({ d, heads }) =>
+    `<a class="hit" href="${ROOT}/d/${d.slug}.html">
+       <b>${hi(d.title, q)}</b>
+       <span>${heads.length ? "→ " + heads.slice(0, 3).map(h => hi(h, q)).join(" · ") : esc(d.summary || "")}</span>
+     </a>`).join("");
+  box.hidden = false;
+});
+
+input.addEventListener("keydown", (e) => { if (e.key === "Escape") { input.value = ""; box.hidden = true; input.blur(); } });
+document.addEventListener("keydown", (e) => {
+  if (e.key === "/" && document.activeElement !== input) { e.preventDefault(); input.focus(); }
+});
+</script>
+</body>
+</html>

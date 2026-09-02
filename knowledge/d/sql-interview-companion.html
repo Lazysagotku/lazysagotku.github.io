@@ -1,0 +1,245 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SQL — вопросы с собеседования (живой companion-документ) - База знаний</title>
+<link rel="stylesheet" href="../kb.css">
+<script>
+  // Тему ставим до первой отрисовки, иначе на тёмной системе мигает белым.
+  try {
+    var t = localStorage.getItem("kb-theme");
+    if (!t) t = matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+    document.documentElement.setAttribute("data-theme", t);
+  } catch (e) {}
+</script>
+</head>
+<body>
+
+<header class="top">
+  <div class="top-in">
+    <a class="brand" href="../index.html">База <span>знаний</span></a>
+    <span class="grow"></span>
+    <input id="q" type="search" placeholder="Поиск по всем материалам…" autocomplete="off">
+    <button class="icon-btn" id="theme" type="button" title="Тема"></button>
+  </div>
+</header>
+
+<div id="results" hidden><div class="wrap-r"><h3></h3><div id="hits"></div></div></div>
+
+<main class="wrap">
+  <div class="doc-head">
+    <div class="crumb"><a href="../index.html#companions">Спутники к собеседованиям</a></div>
+    <h1>SQL — вопросы с собеседования (живой companion-документ)</h1>
+    <div class="meta">169 строк · источник <code>l2code/SQL_Interview_Companion.md</code></div>
+  </div>
+
+  <div class="layout">
+    <article class="prose"><blockquote>
+<p>Классический набор SQL-вопросов среднего/продвинутого уровня. Пересекается с <code>PostgreSQL_Companion.md</code> (индексы, EXPLAIN) и <code>CSharp_Interview_Questions.md</code> (раздел 15) — не дублирую там, где уже разобрано, только ссылаюсь.</p>
+</blockquote>
+<hr>
+<h2 id="1-where-having">1. Разница между WHERE и HAVING</h2>
+<p><strong>Суть:</strong> <code>WHERE</code> фильтрует СТРОКИ до группировки — не может использовать агрегатные функции. <code>HAVING</code> фильтрует ГРУППЫ после <code>GROUP BY</code> — работает именно с результатами агрегации.</p>
+<pre><code class="language-sql">SELECT department, COUNT(*) AS cnt
+FROM employees
+WHERE status = 'active'   -- фильтр строк ДО группировки
+GROUP BY department
+HAVING COUNT(*) &gt; 5;      -- фильтр групп ПОСЛЕ агрегации
+</code></pre>
+<p><strong>Частая ошибка на собесе:</strong> попытка написать <code>WHERE COUNT(*) &gt; 5</code> — не скомпилируется, агрегат в <code>WHERE</code> недоступен.</p>
+<hr>
+<h2 id="2-join-inner-left-right-full-cross">2. Как работают JOIN (INNER, LEFT, RIGHT, FULL, CROSS)</h2>
+<p><strong>Аналогия из жизни:</strong> два списка гостей — со стороны жениха и со стороны невесты. INNER JOIN — только те, кто в ОБОИХ списках. LEFT JOIN — весь список невесты, плюс пересечение с женихом (для остальных — пусто). RIGHT JOIN — зеркально, весь список жениха. FULL JOIN — оба списка целиком, объединённые. CROSS JOIN — вообще без сверки списков: каждый гость невесты танцует с каждым гостем жениха (декартово произведение).</p>
+<pre><code class="language-sql">-- INNER: только совпадения
+SELECT * FROM orders o INNER JOIN customers c ON c.id = o.customer_id;
+
+-- LEFT: все заказы, даже если клиент удалён (customer_name = NULL)
+SELECT * FROM orders o LEFT JOIN customers c ON c.id = o.customer_id;
+
+-- FULL: все заказы И все клиенты, даже без взаимных совпадений
+SELECT * FROM orders o FULL JOIN customers c ON c.id = o.customer_id;
+
+-- CROSS: декартово произведение — n × m строк, без ON
+SELECT * FROM sizes CROSS JOIN colors; -- все комбинации размер×цвет
+</code></pre>
+<p><strong>Частый вопрос:</strong> как найти клиентов БЕЗ заказов? → <code>LEFT JOIN orders o ON ... WHERE o.id IS NULL</code> (уже разобрано в <code>PostgreSQL_Companion.md</code>, раздел про support-запросы).</p>
+<hr>
+<h2 id="3-over-partition-by">3. В чём суть оконных функций (OVER, PARTITION BY)</h2>
+<p><strong>Аналогия из жизни:</strong> класс, разбитый на группы за партами (PARTITION BY = разбивка на группы). В отличие от классного журнала (<code>GROUP BY</code>), который сводит каждую группу в одну строку с итогом, оконная функция считает итог ПО ГРУППЕ, но оставляет видимым каждого отдельного ученика — никто не пропадает из результата.</p>
+<pre><code class="language-sql">SELECT name, department, salary,
+       AVG(salary) OVER (PARTITION BY department) AS dept_avg
+FROM employees;
+-- каждая строка — отдельный сотрудник, но рядом видно средний оклад ЕГО отдела
+</code></pre>
+<p><code>GROUP BY</code> дал бы одну строку на отдел (со средним), потеряв имена людей. Оконная функция даёт и то, и другое сразу.</p>
+<hr>
+<h2 id="4">4. Как найти вторую по величине зарплату</h2>
+<p><strong>Три рабочих способа</strong> (от простого к надёжному):</p>
+<pre><code class="language-sql">-- 1. LIMIT/OFFSET — ловушка: без DISTINCT два одинаковых максимума дадут неверный ответ
+SELECT DISTINCT salary FROM employees ORDER BY salary DESC LIMIT 1 OFFSET 1;
+
+-- 2. Через MAX с исключением текущего максимума
+SELECT MAX(salary) FROM employees WHERE salary &lt; (SELECT MAX(salary) FROM employees);
+
+-- 3. Самый надёжный — DENSE_RANK, корректно обрабатывает дубли по максимуму
+SELECT salary FROM (
+    SELECT salary, DENSE_RANK() OVER (ORDER BY salary DESC) AS rnk
+    FROM employees
+) t
+WHERE rnk = 2;
+</code></pre>
+<p><strong>Почему важен <code>DISTINCT</code> в способе 1:</strong> если два человека получают одинаковый максимум, <code>LIMIT 1 OFFSET 1</code> без <code>DISTINCT</code> вернёт ТОТ ЖЕ максимум второй раз, а не настоящую вторую по величине зарплату.</p>
+<hr>
+<h2 id="5-rank-dense_rank-row_number">5. RANK(), DENSE_RANK(), ROW_NUMBER() — разница</h2>
+<p><strong>Аналогия из жизни:</strong> олимпийское награждение. Если два спортсмена делят золото, <code>RANK</code> даёт им обоим 1-е место, а следующий получает СРАЗУ 3-е (2-е место "сгорает", как в реальной олимпийской системе). <code>DENSE_RANK</code> тоже даёт обоим 1-е, но следующий получает 2-е — мест не теряется. <code>ROW_NUMBER</code> вообще не смотрит на равенство — просто нумерует по порядку 1,2,3,4, будто оценки разные, даже если они одинаковые.</p>
+<pre><code class="language-sql">-- Зарплаты: 100, 100, 90, 80
+SELECT salary,
+    ROW_NUMBER() OVER (ORDER BY salary DESC) AS rn,
+    RANK()       OVER (ORDER BY salary DESC) AS rnk,
+    DENSE_RANK() OVER (ORDER BY salary DESC) AS drnk
+FROM salaries;
+-- 100 → rn=1  rnk=1  drnk=1
+-- 100 → rn=2  rnk=1  drnk=1
+-- 90  → rn=3  rnk=3  drnk=2   ← RANK прыгает на 3, DENSE_RANK идёт подряд на 2
+-- 80  → rn=4  rnk=4  drnk=3
+</code></pre>
+<hr>
+<h2 id="6-cte">6. Что такое CTE и зачем их использовать</h2>
+<p><strong>Аналогия из жизни:</strong> именованный под-рецепт, который пишешь один раз ("соус для пасты — вот шаги"), а потом просто ссылаешься на него по имени в основном рецепте, вместо того чтобы каждый раз переписывать все шаги заново.</p>
+<p><strong>Суть:</strong> <code>WITH name AS (...)</code> — временный именованный результат запроса, живёт только в рамках этого запроса. Делает сложный запрос читаемым (разбивка на логические шаги) и позволяет рекурсию (<code>WITH RECURSIVE</code> — подробно разобрано в <code>PostgreSQL_Companion.md</code>, раздел про циклы/RBAR).</p>
+<pre><code class="language-sql">WITH high_earners AS (
+    SELECT * FROM employees WHERE salary &gt; 100000
+)
+SELECT department, COUNT(*) FROM high_earners GROUP BY department;
+</code></pre>
+<p><strong>Нюанс для глубины ответа:</strong> до PostgreSQL 12 CTE ВСЕГДА материализовался отдельным шагом (optimization fence — планировщик не мог "протолкнуть" фильтры внутрь него). С версии 12 непереиспользуемый CTE по умолчанию инлайнится в основной запрос, если явно не помечен <code>MATERIALIZED</code>.</p>
+<hr>
+<h2 id="7">7. Как оптимизировать медленный запрос</h2>
+<p>Чек-лист (детали каждого пункта — в <code>PostgreSQL_Companion.md</code> и <code>CSharp_Interview_Questions.md</code>, разделы 13-15):</p>
+<ol>
+<li><code>EXPLAIN ANALYZE</code> — искать <code>Seq Scan</code> там, где ожидался <code>Index Scan</code>.</li>
+<li>Проверить sargability предикатов (функция над индексируемой колонкой в <code>WHERE</code> ломает использование индекса).</li>
+<li>Проверить, есть ли индексы на колонках в <code>JOIN</code>/<code>WHERE</code>/<code>ORDER BY</code>.</li>
+<li>Проверить актуальность статистики (<code>ANALYZE table_name</code>) — устаревшая статистика вводит планировщик в заблуждение.</li>
+<li>Не тянуть <code>SELECT *</code>, если нужны не все колонки.</li>
+<li>Для больших смещений — курсорная пагинация (<code>WHERE id &gt; последний_id</code>) вместо <code>LIMIT/OFFSET</code>, который деградирует на больших смещениях.</li>
+<li>Проверить N+1 на уровне приложения, если запрос вызывается в цикле.</li>
+</ol>
+<hr>
+<h2 id="8">8. Как работают индексы и почему они ускоряют поиск</h2>
+<p><strong>Аналогия из жизни:</strong> указатель терминов в конце книги (уже использовалась для поисковых БД в <code>NoSQL_Companion.md</code>) — вместо чтения всей книги искать нужное слово по алфавитному списку со страницами.</p>
+<p><strong>Суть:</strong> индекс — отдельная, отсортированная структура (обычно B-Tree), которая позволяет находить строки через что-то похожее на бинарный поиск (O(log n)), вместо перебора всей таблицы (O(n), <code>Seq Scan</code>). Плата за это — индекс занимает место на диске и замедляет <code>INSERT</code>/<code>UPDATE</code>/<code>DELETE</code> (каждое изменение обновляет ещё и индекс, не только саму таблицу).</p>
+<hr>
+<h2 id="9-union-union-all">9. UNION и UNION ALL</h2>
+<p><strong>Суть:</strong> оба объединяют результаты двух запросов с одинаковым числом и типом колонок. <code>UNION</code> убирает дубликаты строк (требует неявной сортировки/сравнения — дороже). <code>UNION ALL</code> оставляет всё как есть, включая дубли — быстрее, если дубликаты не мешают или их точно не будет.</p>
+<pre><code class="language-sql">SELECT city FROM customers
+UNION          -- уникальные города
+SELECT city FROM suppliers;
+
+SELECT city FROM customers
+UNION ALL      -- все города, включая повторы
+SELECT city FROM suppliers;
+</code></pre>
+<hr>
+<h2 id="10-null">10. Работа с NULL в агрегатных функциях</h2>
+<p><strong>Ключевые факты:</strong>
+- <code>SUM</code>, <code>AVG</code>, <code>MAX</code>, <code>MIN</code>, <code>COUNT(column)</code> — все ИГНОРИРУЮТ <code>NULL</code>, не учитывают их в расчёте.
+- <code>COUNT(*)</code> считает ВСЕ строки (включая те, где есть NULL в каких-то колонках). <code>COUNT(column)</code> считает только строки, где ЭТА колонка НЕ NULL — классическая разница, которую любят спрашивать.
+- <code>AVG()</code> = <code>SUM()/COUNT()</code>, но раз оба игнорируют NULL — среднее считается только по реально заполненным значениям, NULL НЕ приравнивается к нулю. Частая ошибочная интуиция — что NULL "учтётся как 0" и снизит среднее, это не так.
+- <code>SUM()</code> по колонке, где ВСЕ значения NULL, вернёт <code>NULL</code>, а не <code>0</code>. Если нужен именно <code>0</code> — <code>COALESCE(SUM(col), 0)</code>.</p>
+<hr>
+<h2 id="_1">Источник</h2>
+<p>Собственная подборка — стандартный набор вопросов уровня Middle SQL-собеса, не из внешнего видео.</p></article>
+    <aside class="aside">
+      <strong>В этом документе</strong>
+      <div class="toc"><div class="toc">
+<ul>
+<li><a href="#1-where-having">1. Разница между WHERE и HAVING</a></li>
+<li><a href="#2-join-inner-left-right-full-cross">2. Как работают JOIN (INNER, LEFT, RIGHT, FULL, CROSS)</a></li>
+<li><a href="#3-over-partition-by">3. В чём суть оконных функций (OVER, PARTITION BY)</a></li>
+<li><a href="#4">4. Как найти вторую по величине зарплату</a></li>
+<li><a href="#5-rank-dense_rank-row_number">5. RANK(), DENSE_RANK(), ROW_NUMBER() — разница</a></li>
+<li><a href="#6-cte">6. Что такое CTE и зачем их использовать</a></li>
+<li><a href="#7">7. Как оптимизировать медленный запрос</a></li>
+<li><a href="#8">8. Как работают индексы и почему они ускоряют поиск</a></li>
+<li><a href="#9-union-union-all">9. UNION и UNION ALL</a></li>
+<li><a href="#10-null">10. Работа с NULL в агрегатных функциях</a></li>
+<li><a href="#_1">Источник</a></li>
+</ul>
+</div>
+</div>
+    </aside>
+  </div>
+</main>
+
+
+<script>
+const ROOT = "..";
+
+// ---- тема
+const themeBtn = document.getElementById("theme");
+const paint = () => {
+  const dark = document.documentElement.getAttribute("data-theme") === "dark";
+  themeBtn.textContent = dark ? "☀" : "☾";
+};
+paint();
+themeBtn.addEventListener("click", () => {
+  const next = document.documentElement.getAttribute("data-theme") === "dark" ? "light" : "dark";
+  document.documentElement.setAttribute("data-theme", next);
+  try { localStorage.setItem("kb-theme", next); } catch (e) {}
+  paint();
+});
+
+// ---- поиск
+let index = null;
+const box = document.getElementById("results");
+const hits = document.getElementById("hits");
+const head = box.querySelector("h3");
+const input = document.getElementById("q");
+
+async function ensureIndex() {
+  if (index) return index;
+  const res = await fetch(ROOT + "/search-index.json");
+  index = await res.json();
+  return index;
+}
+
+const esc = (s) => (s || "").replace(/[&<>]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
+
+function hi(text, query) {
+  const i = text.toLowerCase().indexOf(query);
+  if (i < 0) return esc(text);
+  return esc(text.slice(0, i)) + "<mark>" + esc(text.slice(i, i + query.length)) + "</mark>" + esc(text.slice(i + query.length));
+}
+
+input.addEventListener("input", async () => {
+  const q = input.value.trim().toLowerCase();
+  if (q.length < 2) { box.hidden = true; return; }
+  const data = await ensureIndex();
+  const found = [];
+  for (const d of data) {
+    const inTitle = d.title.toLowerCase().includes(q);
+    const inSum = (d.summary || "").toLowerCase().includes(q);
+    const heads = (d.heads || []).filter(h => h.toLowerCase().includes(q));
+    if (inTitle || inSum || heads.length) {
+      found.push({ d, heads, rank: inTitle ? 0 : heads.length ? 1 : 2 });
+    }
+  }
+  found.sort((a, b) => a.rank - b.rank);
+  head.textContent = found.length ? `Нашлось: ${found.length}` : "Ничего не нашлось";
+  hits.innerHTML = found.slice(0, 40).map(({ d, heads }) =>
+    `<a class="hit" href="${ROOT}/d/${d.slug}.html">
+       <b>${hi(d.title, q)}</b>
+       <span>${heads.length ? "→ " + heads.slice(0, 3).map(h => hi(h, q)).join(" · ") : esc(d.summary || "")}</span>
+     </a>`).join("");
+  box.hidden = false;
+});
+
+input.addEventListener("keydown", (e) => { if (e.key === "Escape") { input.value = ""; box.hidden = true; input.blur(); } });
+document.addEventListener("keydown", (e) => {
+  if (e.key === "/" && document.activeElement !== input) { e.preventDefault(); input.focus(); }
+});
+</script>
+</body>
+</html>

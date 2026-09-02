@@ -1,0 +1,235 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>React — недельный крэш-курс (Мосбиржа, дедлайн ~неделя) - База знаний</title>
+<link rel="stylesheet" href="../kb.css">
+<script>
+  // Тему ставим до первой отрисовки, иначе на тёмной системе мигает белым.
+  try {
+    var t = localStorage.getItem("kb-theme");
+    if (!t) t = matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+    document.documentElement.setAttribute("data-theme", t);
+  } catch (e) {}
+</script>
+</head>
+<body>
+
+<header class="top">
+  <div class="top-in">
+    <a class="brand" href="../index.html">База <span>знаний</span></a>
+    <span class="grow"></span>
+    <input id="q" type="search" placeholder="Поиск по всем материалам…" autocomplete="off">
+    <button class="icon-btn" id="theme" type="button" title="Тема"></button>
+  </div>
+</header>
+
+<div id="results" hidden><div class="wrap-r"><h3></h3><div id="hits"></div></div></div>
+
+<main class="wrap">
+  <div class="doc-head">
+    <div class="crumb"><a href="../index.html#companions">Спутники к собеседованиям</a></div>
+    <h1>React — недельный крэш-курс (Мосбиржа, дедлайн ~неделя)</h1>
+    <div class="meta">114 строк · источник <code>l2code/React_Crash_Companion.md</code></div>
+  </div>
+
+  <div class="layout">
+    <article class="prose"><blockquote>
+<p>Не полноценный курс — фокусированный план под конкретную честную договорённость с рекрутером ("могу подтянуть за неделю"). Реалистичная цель: понимать основы, объяснять их своими словами, показать один небольшой рабочий пример — не "прикинуться" опытным React-разработчиком.</p>
+</blockquote>
+<hr>
+<h2 id="_1">Мостики от того, что ты уже знаешь</h2>
+<table>
+<thead>
+<tr>
+<th>React</th>
+<th>Твой аналог из C#</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Component (функция)</td>
+<td>Метод, возвращающий "модель того, что показать"</td>
+</tr>
+<tr>
+<td>Props</td>
+<td>Параметры конструктора / <code>init</code>-only свойства (только читаешь, не меняешь у себя)</td>
+</tr>
+<tr>
+<td>State (<code>useState</code>)</td>
+<td>Приватное mutable поле — но "запись" сама вызывает перерисовку, без ручного Refresh()</td>
+</tr>
+<tr>
+<td><code>useEffect</code></td>
+<td>Что-то среднее между конструктором (пустой массив зависимостей = один раз) и реакцией на изменение свойства</td>
+</tr>
+<tr>
+<td><code>.map()</code> для списков</td>
+<td>LINQ <code>.Select()</code> — та же идея, трансформация коллекции в другую коллекцию (только тут — в UI-элементы)</td>
+</tr>
+<tr>
+<td>JSX</td>
+<td>Синтаксический сахар — как <code>record</code>, просто под капотом вызовы функций, строящих дерево UI</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="1-2-jsx-props">День 1-2 — JSX, компоненты, props</h2>
+<p><strong>Суть:</strong> компонент — функция, возвращающая JSX (HTML-подобный синтаксис внутри JS). Props — то, что передаёт РОДИТЕЛЬ, компонент их только читает.</p>
+<pre><code class="language-jsx">function Greeting({ name, age }) {  // props передаются как объект
+  return &lt;h1&gt;Привет, {name}! Тебе {age} лет.&lt;/h1&gt;;
+}
+
+function App() {
+  return &lt;Greeting name=&quot;Иван&quot; age={28} /&gt;; // как вызов метода с параметрами
+}
+</code></pre>
+<p><strong>Задание:</strong> сделать компонент <code>UserCard({ name, role })</code>, вывести карточку с именем и ролью. Отрендерить 3 разных карточки в <code>App</code>.</p>
+<hr>
+<h2 id="3-4-state-useeffect-react">День 3-4 — State и useEffect (ядро React)</h2>
+<p><strong>Суть:</strong> <code>useState</code> возвращает пару [значение, функция-сеттер]. Вызов сеттера меняет значение И запускает перерисовку компонента.</p>
+<pre><code class="language-jsx">function Counter() {
+  const [count, setCount] = useState(0); // как приватное поле + автоматический Refresh()
+  return (
+    &lt;div&gt;
+      &lt;p&gt;Счётчик: {count}&lt;/p&gt;
+      &lt;button onClick={() =&gt; setCount(count + 1)}&gt;+1&lt;/button&gt;
+    &lt;/div&gt;
+  );
+}
+</code></pre>
+<p><code>useEffect</code> — сайд-эффекты (запросы, подписки, таймеры):</p>
+<pre><code class="language-jsx">useEffect(() =&gt; {
+  console.log(&quot;Выполнится один раз, при первом рендере&quot;);
+}, []); // пустой массив зависимостей = как конструктор
+
+useEffect(() =&gt; {
+  console.log(&quot;Выполнится при КАЖДОМ изменении count&quot;);
+}, [count]); // реагирует на изменение — похоже на property-changed
+</code></pre>
+<p><strong>Задание:</strong> переделать <code>Counter</code>, добавить <code>useEffect</code>, который логирует в консоль каждое изменение счётчика.</p>
+<hr>
+<h2 id="5-api">День 5 — Запрос к API (твоя реальная сильная сторона)</h2>
+<p><strong>Суть:</strong> сама идея запроса к REST API тебе знакома — здесь просто новая обвязка вокруг того же самого.</p>
+<pre><code class="language-jsx">function UserList() {
+  const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() =&gt; {
+    fetch(&quot;https://jsonplaceholder.typicode.com/users&quot;)
+      .then(res =&gt; res.json())
+      .then(data =&gt; { setUsers(data); setLoading(false); });
+  }, []); // один раз при загрузке компонента
+
+  if (loading) return &lt;p&gt;Загрузка...&lt;/p&gt;;
+
+  return (
+    &lt;ul&gt;
+      {users.map(u =&gt; &lt;li key={u.id}&gt;{u.name}&lt;/li&gt;)} {/* .map = твой .Select() */}
+    &lt;/ul&gt;
+  );
+}
+</code></pre>
+<p><strong>Задание:</strong> вывести список пользователей с публичного тестового API (как выше), добавить обработку состояния загрузки и ошибки.</p>
+<hr>
+<h2 id="6-7">День 6-7 — Собрать маленький, но целый пример</h2>
+<p><strong>Задание:</strong> мини-приложение "список заметок" (перекликается с Life Notes):
+- Форма добавления заметки (текстовое поле + кнопка) — управляемый input (<code>value</code> + <code>onChange</code>, снова <code>useState</code>)
+- Список уже добавленных заметок (<code>.map()</code>)
+- Кнопка удаления у каждой заметки</p>
+<p>Это даёт тебе конкретный, реальный (пусть маленький) артефакт, который можно показать и объяснить на созвоне — не абстрактные "прочитал доки", а работающий код.</p>
+<hr>
+<h2 id="_2">Что честно сказать на собесе</h2>
+<ul>
+<li>"Активно погружаюсь последнюю неделю, понимаю компоненты/props/state/hooks, собрал рабочий пример" — правда, не натяжка.</li>
+<li>НЕ утверждать глубокое знание экосистемы (Redux/Router/тестирование компонентов, TypeScript+React) — этого за неделю физически не будет, и это нормально не иметь.</li>
+<li>Сильная сторона — тебе не нужно объяснять, ЗАЧЕМ фронтенду дёргать API, ты это уже знаешь с бэкенд-стороны — упор туда.</li>
+</ul></article>
+    <aside class="aside">
+      <strong>В этом документе</strong>
+      <div class="toc"><div class="toc">
+<ul>
+<li><a href="#_1">Мостики от того, что ты уже знаешь</a></li>
+<li><a href="#1-2-jsx-props">День 1-2 — JSX, компоненты, props</a></li>
+<li><a href="#3-4-state-useeffect-react">День 3-4 — State и useEffect (ядро React)</a></li>
+<li><a href="#5-api">День 5 — Запрос к API (твоя реальная сильная сторона)</a></li>
+<li><a href="#6-7">День 6-7 — Собрать маленький, но целый пример</a></li>
+<li><a href="#_2">Что честно сказать на собесе</a></li>
+</ul>
+</div>
+</div>
+    </aside>
+  </div>
+</main>
+
+
+<script>
+const ROOT = "..";
+
+// ---- тема
+const themeBtn = document.getElementById("theme");
+const paint = () => {
+  const dark = document.documentElement.getAttribute("data-theme") === "dark";
+  themeBtn.textContent = dark ? "☀" : "☾";
+};
+paint();
+themeBtn.addEventListener("click", () => {
+  const next = document.documentElement.getAttribute("data-theme") === "dark" ? "light" : "dark";
+  document.documentElement.setAttribute("data-theme", next);
+  try { localStorage.setItem("kb-theme", next); } catch (e) {}
+  paint();
+});
+
+// ---- поиск
+let index = null;
+const box = document.getElementById("results");
+const hits = document.getElementById("hits");
+const head = box.querySelector("h3");
+const input = document.getElementById("q");
+
+async function ensureIndex() {
+  if (index) return index;
+  const res = await fetch(ROOT + "/search-index.json");
+  index = await res.json();
+  return index;
+}
+
+const esc = (s) => (s || "").replace(/[&<>]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
+
+function hi(text, query) {
+  const i = text.toLowerCase().indexOf(query);
+  if (i < 0) return esc(text);
+  return esc(text.slice(0, i)) + "<mark>" + esc(text.slice(i, i + query.length)) + "</mark>" + esc(text.slice(i + query.length));
+}
+
+input.addEventListener("input", async () => {
+  const q = input.value.trim().toLowerCase();
+  if (q.length < 2) { box.hidden = true; return; }
+  const data = await ensureIndex();
+  const found = [];
+  for (const d of data) {
+    const inTitle = d.title.toLowerCase().includes(q);
+    const inSum = (d.summary || "").toLowerCase().includes(q);
+    const heads = (d.heads || []).filter(h => h.toLowerCase().includes(q));
+    if (inTitle || inSum || heads.length) {
+      found.push({ d, heads, rank: inTitle ? 0 : heads.length ? 1 : 2 });
+    }
+  }
+  found.sort((a, b) => a.rank - b.rank);
+  head.textContent = found.length ? `Нашлось: ${found.length}` : "Ничего не нашлось";
+  hits.innerHTML = found.slice(0, 40).map(({ d, heads }) =>
+    `<a class="hit" href="${ROOT}/d/${d.slug}.html">
+       <b>${hi(d.title, q)}</b>
+       <span>${heads.length ? "→ " + heads.slice(0, 3).map(h => hi(h, q)).join(" · ") : esc(d.summary || "")}</span>
+     </a>`).join("");
+  box.hidden = false;
+});
+
+input.addEventListener("keydown", (e) => { if (e.key === "Escape") { input.value = ""; box.hidden = true; input.blur(); } });
+document.addEventListener("keydown", (e) => {
+  if (e.key === "/" && document.activeElement !== input) { e.preventDefault(); input.focus(); }
+});
+</script>
+</body>
+</html>

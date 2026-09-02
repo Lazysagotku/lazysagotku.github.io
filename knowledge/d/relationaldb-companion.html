@@ -1,0 +1,181 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Реляционные БД — живой companion-документ - База знаний</title>
+<link rel="stylesheet" href="../kb.css">
+<script>
+  // Тему ставим до первой отрисовки, иначе на тёмной системе мигает белым.
+  try {
+    var t = localStorage.getItem("kb-theme");
+    if (!t) t = matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+    document.documentElement.setAttribute("data-theme", t);
+  } catch (e) {}
+</script>
+</head>
+<body>
+
+<header class="top">
+  <div class="top-in">
+    <a class="brand" href="../index.html">База <span>знаний</span></a>
+    <span class="grow"></span>
+    <input id="q" type="search" placeholder="Поиск по всем материалам…" autocomplete="off">
+    <button class="icon-btn" id="theme" type="button" title="Тема"></button>
+  </div>
+</header>
+
+<div id="results" hidden><div class="wrap-r"><h3></h3><div id="hits"></div></div></div>
+
+<main class="wrap">
+  <div class="doc-head">
+    <div class="crumb"><a href="../index.html#companions">Спутники к собеседованиям</a></div>
+    <h1>Реляционные БД — живой companion-документ</h1>
+    <div class="meta">84 строк · источник <code>l2code/RelationalDB_Companion.md</code></div>
+  </div>
+
+  <div class="layout">
+    <article class="prose"><blockquote>
+<p>Часть 3 из видео-конспектов ("реляционные базы данных с нуля"). Пересекается с основами SQL из <code>NoSQL_Companion.md</code> (ACID, примеры БД) — не дублирую, фокус здесь на том, чего там не было: нормализация, типы связей, транзакции подробнее.</p>
+</blockquote>
+<hr>
+<h2 id="_1">С чего всё начинается</h2>
+<p><strong>Аналогия из источника (сохраняю — простая и рабочая):</strong> собираешь деньги на подарок другу, записываешь на бумажке, кто сколько скинул — таблица с именами и суммами, разделённая и структурированная. Это уже база данных. Excel-файл — тот же принцип, но удобнее редактировать/сортировать/удалять.</p>
+<p><strong>Почему одной таблицы/файла недостаточно:</strong> когда данных много и они логически связаны (пользователи, каналы, видео — как в клоне YouTube), одна таблица становится неудобной и медленной. Разделение на несколько связанных таблиц = <strong>реляционная БД</strong> (relation = связь).</p>
+<hr>
+<h2 id="primary-key-foreign-key">Нормализация, Primary Key, Foreign Key</h2>
+<p><strong>Нормализация</strong> — процесс разбиения данных на несколько таблиц, чтобы избавиться от избыточных (повторяющихся) данных.</p>
+<p><strong>Primary Key (первичный ключ)</strong> — уникальный ID записи в таблице. <strong>Foreign Key (внешний ключ)</strong> — то же значение, но в ДРУГОЙ таблице, которая ссылается на первую.</p>
+<hr>
+<h2 id="_2">Три типа связей между таблицами</h2>
+<h3 id="one-to-many-many-to-one-">One-to-Many / Many-to-One (один-ко-многим)</h3>
+<p>У одного канала — много видео, но у каждого видео — только один канал. Это одно и то же отношение, просто смотреть на него можно с двух сторон (канал→видео = один-ко-многим, видео→канал = многие-к-одному).</p>
+<h3 id="one-to-one">One-to-One (один к одному)</h3>
+<p>Редкий тип связи. Пример из источника: один пользователь — максимум один канал.</p>
+<blockquote>
+<p>[!info]+ Уточнение — не только про безопасность
+Источник объясняет one-to-one как способ "для безопасности". На практике причин больше: бизнес-правило (один юзер — один канал), разделение редко используемых/чувствительных полей в отдельную таблицу с другими правами доступа, или вынесение опциональных полей (не у каждой записи они есть) в отдельную таблицу вместо кучи NULL-столбцов в основной.</p>
+</blockquote>
+<h3 id="many-to-many">Many-to-Many (многие ко многим)</h3>
+<p>Нужна промежуточная (junction) таблица. Пример из источника — таблица лайков: хранит пары (ID пользователя, ID видео) — каждый пользователь может лайкнуть любое видео, каждое видео может быть лайкнуто многими пользователями.</p>
+<hr>
+<h2 id="sql">СУБД и SQL</h2>
+<p><strong>СУБД</strong> (система управления базами данных) — программа для создания/редактирования/администрирования БД. <strong>SQL</strong> (Structured Query Language) — язык запросов к ней.</p>
+<pre><code class="language-sql">SELECT name FROM videos WHERE channel_id = 201;
+-- &quot;выбери имена из таблицы видео, где ID канала = 201&quot;
+</code></pre>
+<p>Для данных из нескольких таблиц сразу — <code>JOIN</code>.</p>
+<hr>
+<h2 id="constraints">Схема и ограничения (constraints)</h2>
+<p><strong>Схема (schema)</strong> — описание структуры таблицы, её полей и ограничений. Изменение схемы (добавить/убрать столбец) касается ВСЕХ строк таблицы.</p>
+<p><strong>Зачем нужны ограничения:</strong> для целостности данных. Primary/Foreign Key не дают вставить запись, ссылающуюся на несуществующий ID. Другие ограничения — запрет дублей, запрет пустых (NULL) значений там, где это критично.</p>
+<hr>
+<h2 id="_3">Транзакции</h2>
+<p><strong>Суть:</strong> склеивает несколько SQL-запросов в одну неделимую операцию.</p>
+<p><strong>Пример из источника (хороший, наглядный):</strong> вставляешь запись в первую таблицу, затем во вторую — с ID только что вставленной записи. Без транзакции: если между двумя шагами обрывается соединение, первая запись уже в базе, вторая — нет. При повторной попытке — ошибка "запись уже существует" (из-за первой половины) при том что нужного результата так и нет. С транзакцией: при сбое на любом шаге — полный откат к состоянию ДО начала транзакции, никаких "половинчатых" данных.</p>
+<hr>
+<h2 id="acid-nosql_companionmd">ACID — подробный разбор (дополняет краткую версию из NoSQL_Companion.md)</h2>
+<ul>
+<li><strong>Atomicity (атомарность)</strong> — операция выполняется целиком или не выполняется вообще (см. транзакции выше).</li>
+<li><strong>Consistency (согласованность)</strong> — записываемые данные обязаны соответствовать всем ограничениям (PK/FK/уникальность/NOT NULL).</li>
+<li><strong>Isolation (изолированность)</strong> — параллельно идущие транзакции не влияют друг на друга — критично для высоконагруженных БД.</li>
+<li><strong>Durability (надёжность)</strong> — если транзакция подтверждена (committed), данные сохранены даже при сбое сразу после этого.</li>
+</ul>
+<p><strong>Примеры реляционных БД:</strong> Microsoft SQL Server, Oracle Database, MySQL, MariaDB, PostgreSQL.</p>
+<hr>
+<h2 id="_4">Источник</h2>
+<p>Видео-конспект той же серии, что NoSQL и API-части (эксперт Олег Филиппов) — промо-часть курса в конце не включена как нерелевантная теории.</p></article>
+    <aside class="aside">
+      <strong>В этом документе</strong>
+      <div class="toc"><div class="toc">
+<ul>
+<li><a href="#_1">С чего всё начинается</a></li>
+<li><a href="#primary-key-foreign-key">Нормализация, Primary Key, Foreign Key</a></li>
+<li><a href="#_2">Три типа связей между таблицами</a><ul>
+<li><a href="#one-to-many-many-to-one-">One-to-Many / Many-to-One (один-ко-многим)</a></li>
+<li><a href="#one-to-one">One-to-One (один к одному)</a></li>
+<li><a href="#many-to-many">Many-to-Many (многие ко многим)</a></li>
+</ul>
+</li>
+<li><a href="#sql">СУБД и SQL</a></li>
+<li><a href="#constraints">Схема и ограничения (constraints)</a></li>
+<li><a href="#_3">Транзакции</a></li>
+<li><a href="#acid-nosql_companionmd">ACID — подробный разбор (дополняет краткую версию из NoSQL_Companion.md)</a></li>
+<li><a href="#_4">Источник</a></li>
+</ul>
+</div>
+</div>
+    </aside>
+  </div>
+</main>
+
+
+<script>
+const ROOT = "..";
+
+// ---- тема
+const themeBtn = document.getElementById("theme");
+const paint = () => {
+  const dark = document.documentElement.getAttribute("data-theme") === "dark";
+  themeBtn.textContent = dark ? "☀" : "☾";
+};
+paint();
+themeBtn.addEventListener("click", () => {
+  const next = document.documentElement.getAttribute("data-theme") === "dark" ? "light" : "dark";
+  document.documentElement.setAttribute("data-theme", next);
+  try { localStorage.setItem("kb-theme", next); } catch (e) {}
+  paint();
+});
+
+// ---- поиск
+let index = null;
+const box = document.getElementById("results");
+const hits = document.getElementById("hits");
+const head = box.querySelector("h3");
+const input = document.getElementById("q");
+
+async function ensureIndex() {
+  if (index) return index;
+  const res = await fetch(ROOT + "/search-index.json");
+  index = await res.json();
+  return index;
+}
+
+const esc = (s) => (s || "").replace(/[&<>]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
+
+function hi(text, query) {
+  const i = text.toLowerCase().indexOf(query);
+  if (i < 0) return esc(text);
+  return esc(text.slice(0, i)) + "<mark>" + esc(text.slice(i, i + query.length)) + "</mark>" + esc(text.slice(i + query.length));
+}
+
+input.addEventListener("input", async () => {
+  const q = input.value.trim().toLowerCase();
+  if (q.length < 2) { box.hidden = true; return; }
+  const data = await ensureIndex();
+  const found = [];
+  for (const d of data) {
+    const inTitle = d.title.toLowerCase().includes(q);
+    const inSum = (d.summary || "").toLowerCase().includes(q);
+    const heads = (d.heads || []).filter(h => h.toLowerCase().includes(q));
+    if (inTitle || inSum || heads.length) {
+      found.push({ d, heads, rank: inTitle ? 0 : heads.length ? 1 : 2 });
+    }
+  }
+  found.sort((a, b) => a.rank - b.rank);
+  head.textContent = found.length ? `Нашлось: ${found.length}` : "Ничего не нашлось";
+  hits.innerHTML = found.slice(0, 40).map(({ d, heads }) =>
+    `<a class="hit" href="${ROOT}/d/${d.slug}.html">
+       <b>${hi(d.title, q)}</b>
+       <span>${heads.length ? "→ " + heads.slice(0, 3).map(h => hi(h, q)).join(" · ") : esc(d.summary || "")}</span>
+     </a>`).join("");
+  box.hidden = false;
+});
+
+input.addEventListener("keydown", (e) => { if (e.key === "Escape") { input.value = ""; box.hidden = true; input.blur(); } });
+document.addEventListener("keydown", (e) => {
+  if (e.key === "/" && document.activeElement !== input) { e.preventDefault(); input.focus(); }
+});
+</script>
+</body>
+</html>

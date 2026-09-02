@@ -1,0 +1,201 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Docker и контейнеризация - живой companion-документ - База знаний</title>
+<link rel="stylesheet" href="../kb.css">
+<script>
+  // Тему ставим до первой отрисовки, иначе на тёмной системе мигает белым.
+  try {
+    var t = localStorage.getItem("kb-theme");
+    if (!t) t = matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+    document.documentElement.setAttribute("data-theme", t);
+  } catch (e) {}
+</script>
+</head>
+<body>
+
+<header class="top">
+  <div class="top-in">
+    <a class="brand" href="../index.html">База <span>знаний</span></a>
+    <span class="grow"></span>
+    <input id="q" type="search" placeholder="Поиск по всем материалам…" autocomplete="off">
+    <button class="icon-btn" id="theme" type="button" title="Тема"></button>
+  </div>
+</header>
+
+<div id="results" hidden><div class="wrap-r"><h3></h3><div id="hits"></div></div></div>
+
+<main class="wrap">
+  <div class="doc-head">
+    <div class="crumb"><a href="../index.html#companions">Спутники к собеседованиям</a></div>
+    <h1>Docker и контейнеризация - живой companion-документ</h1>
+    <div class="meta">100 строк · источник <code>l2code/Docker_Companion.md</code></div>
+  </div>
+
+  <div class="layout">
+    <article class="prose"><blockquote>
+<p>Источник - очередная часть "Что такое" (Merion Academy). Пересекается с <code>Kubernetes_Companion.md</code> (там уже разобрано "Docker vs containerd" и базовые Pod/Deployment) - здесь фокус на самом Docker: зачем он нужен, из чего состоит, как собирается образ. Найдены две реальные неточности источника - отмечены ниже.</p>
+</blockquote>
+<hr>
+<h2 id="docker">Зачем вообще Docker, если есть виртуальные машины</h2>
+<p><strong>Аналогия из жизни:</strong> VM - это отдельный дом для каждого жильца, со своим фундаментом и всеми коммуникациями с нуля (свой полноценный "гостевой" фундамент = ядро ОС). Container - это квартиры в ОДНОМ доме: общий фундамент и коммуникации (ядро хост-ОС), но у каждой квартиры своя закрытая дверь и обстановка (изоляция процессов/файловой системы). Строить отдельный дом на каждого жильца дольше, дороже и медленнее, чем нарезать квартиры в уже готовом доме.</p>
+<p><strong>Виртуальные машины (VM):</strong> на сервере с хост-ОС работает <strong>гипервизор</strong> (Hyper-V, VMware ESX, VirtualBox), который эмулирует железо и управляет виртуальными машинами. У каждой VM своя полноценная <strong>гостевая ОС</strong>, приложения работают уже внутри неё - поэтому на винде можно поднять линукс-VM и наоборот.</p>
+<blockquote>
+<p>[!info]+ Уточнение - гипервизоры бывают двух типов
+Источник описывает все три гипервизора (Hyper-V, VMware ESX, VirtualBox) одинаково - "хост-ОС, а поверх неё гипервизор". Это точно только для VirtualBox (<strong>Type 2, hosted</strong> - реально работает как обычная программа поверх готовой ОС). <strong>VMware ESXi и Hyper-V - Type 1, bare-metal</strong>: ESXi сам по себе и есть минимальная ОС сервера, ставится прямо на железо; Hyper-V при включении встраивается НИЖЕ Windows в загрузке, а не работает как обычное приложение поверх неё. Частый вопрос на собесе про инфраструктуру - "чем Type 1 отличается от Type 2".</p>
+</blockquote>
+<p><strong>Проблема VM в мире микросервисов:</strong> каждая VM тащит за собой полную отдельную ОС - при большом числе копий одного приложения (типично для микросервисов) это дорого по ресурсам и медленно по старту.</p>
+<p><strong>Docker:</strong> убирает гипервизор и не виртуализирует железо - виртуализирует только ОС. Контейнеры используют <strong>ядро хост-ОС</strong> напрямую через Docker Engine, поэтому не нужна отдельная гостевая ОС на каждый экземпляр - легче и быстрее VM, при этом приложения всё ещё изолированы друг от друга и от системы.</p>
+<p>Docker - не единственная технология контейнеризации (есть Podman, containerd напрямую, LXC), но самая распространённая.</p>
+<hr>
+<h2 id="docker_1">Три элемента Docker</h2>
+<p><strong>Аналогия из жизни:</strong> Dockerfile - рецепт (пошаговая инструкция). Image (образ) - уже приготовленное блюдо, готовое к раздаче (можно скопировать сколько угодно раз). Container (контейнер) - конкретная порция этого блюда у тебя на тарелке - можно "взять добавку" и запустить ещё один контейнер из того же образа.</p>
+<ul>
+<li><strong>Dockerfile</strong> - набор инструкций: как собрать образ и что в нём должно оказаться.</li>
+<li><strong>Image (образ)</strong> - готовое к запуску приложение: исходный код, библиотеки, зависимости, инструменты. Собирается из Dockerfile.</li>
+<li><strong>Container (контейнер)</strong> - запущенный экземпляр образа.</li>
+</ul>
+<p><strong>Docker Registry</strong> - хранилище образов, которыми можно делиться. <strong>Docker Hub</strong> - самый крупный публичный registry, откуда можно скачать готовый образ приложения или ОС и собрать на его основе свой.</p>
+<hr>
+<h2 id="dockerfile">Пример Dockerfile</h2>
+<pre><code class="language-dockerfile">FROM ubuntu:20.04
+RUN apt-get update
+RUN apt-get -y install nginx
+EXPOSE 80/tcp
+CMD [&quot;/usr/sbin/nginx&quot;, &quot;-g&quot;, &quot;daemon off;&quot;]
+</code></pre>
+<ul>
+<li><code>FROM</code> - базовый образ, от которого отталкиваемся (тянется из Docker Hub).</li>
+<li><code>RUN</code> - команда, выполняется ВО ВРЕМЯ сборки образа (<code>docker build</code>).</li>
+<li><code>EXPOSE</code> - какой порт слушает приложение внутри контейнера.</li>
+<li><code>CMD</code> - команда, которая выполняется при ЗАПУСКЕ контейнера (<code>docker run</code>), не при сборке.</li>
+<li><code>daemon off</code> для nginx обязателен - иначе nginx уйдёт в фон и завершится как процесс, а Docker посчитает, что главный процесс контейнера умер, и остановит сам контейнер.</li>
+</ul>
+<blockquote>
+<p>[!tip]+ Частый вопрос на собесе - "что не так с этим Dockerfile"
+Два отдельных <code>RUN apt-get update</code> и <code>RUN apt-get install</code> - рабочий, но не best-practice вариант. Docker кэширует каждый <code>RUN</code> как отдельный слой: если потом изменить только строку <code>install</code> (добавить пакет), Docker может переиспользовать СТАРЫЙ закэшированный слой <code>update</code> и попытаться поставить пакет по устаревшему списку версий. Правильно - объединять в один слой: <code>RUN apt-get update &amp;&amp; apt-get install -y nginx</code>.</p>
+</blockquote>
+<p><strong>Команды:</strong>
+- <code>docker build</code> - собрать образ из Dockerfile.
+- <code>docker run</code> - запустить контейнер из образа.
+- <code>docker pull nginx</code> - скачать готовый образ с Docker Hub без своего Dockerfile, если кастомизация не нужна.</p>
+<hr>
+<h2 id="_1">Данные и остановка контейнера</h2>
+<blockquote>
+<p>[!info]+ Реальная неточность источника
+В видео сказано: "все изменения внутри контейнера теряются при его остановке (<code>docker stop</code>)". Это НЕВЕРНО в таком виде: изменения в файловой системе контейнера живут в его собственном "слое для записи" и переживают <code>docker stop</code>/<code>docker start</code> - тот же контейнер после повторного запуска содержит те же изменения. Данные реально теряются, когда контейнер УДАЛЯЮТ (<code>docker rm</code>) или создают НОВЫЙ контейнер из образа взамен старого (частый сценарий деплоя - <code>docker run</code> каждый раз создаёт свежий контейнер "с нуля" из образа, старые изменения в нём отсутствуют). Поэтому для данных, которые должны переживать пересоздание контейнера, используют <strong>volumes</strong> (именованные тома) или <strong>bind mounts</strong> (примонтированную папку с хоста) - они существуют отдельно от жизненного цикла конкретного контейнера.</p>
+</blockquote>
+<hr>
+<h2 id="-docker-compose">Несколько контейнеров сразу - docker-compose</h2>
+<p><strong>Аналогия из жизни:</strong> банкетный заказ одним листом - вместо того чтобы заказывать каждое блюдо отдельно, один документ описывает сразу весь стол (все сервисы приложения), и по одной команде подаётся всё сразу.</p>
+<p><strong>Суть:</strong> <code>docker-compose.yml</code> описывает несколько сервисов (контейнеров) и их настройки в одном файле. <code>docker-compose up</code> поднимает весь набор контейнеров разом, вместо ручного запуска каждого по отдельности.</p>
+<hr>
+<h2 id="-">Оркестрация - когда контейнеров десятки/сотни</h2>
+<p>Управление большим числом контейнеров (мониторинг, обновление, распределение ресурсов, балансировка нагрузки) руками не масштабируется - для этого нужны инструменты оркестрации: <strong>Docker Swarm</strong> (родной инструмент самого Docker) или <strong>Kubernetes</strong> (сейчас фактический стандарт индустрии).</p>
+<blockquote>
+<p>Базовые понятия Kubernetes (Pod/Deployment/Service), команды kubectl и разбор "Docker vs containerd в проде" - уже в <code>Kubernetes_Companion.md</code>, здесь не дублируется.</p>
+</blockquote>
+<hr>
+<h2 id="-docker-vm">Итог - если Docker такой удобный, почему VM всё ещё нужны</h2>
+<p>Docker решает не все задачи виртуализации:</p>
+<ol>
+<li><strong>Другое ядро ОС.</strong> Контейнер использует ядро ХОСТА - линукс-контейнер не запустится напрямую на голом Windows-хосте (и наоборот) без прослойки. Если нужно гонять реально другую ОС - нужна VM.</li>
+<li><strong>Более сильная изоляция.</strong> Контейнеры делят одно ядро хоста - если в ядре найдётся уязвимость, потенциально она затрагивает ВСЕ контейнеры на хосте. VM изолированы на уровне гипервизора сильнее - это критично для настоящего multi-tenant хостинга чужого недоверенного кода (например, облачные провайдеры продают VM клиентам именно из-за этого).</li>
+<li><strong>Легаси-приложения</strong>, завязанные на конкретное ядро/драйверы/полноценную ОС, которые не переносятся в контейнер без серьёзной переделки.</li>
+<li><strong>Комплаенс/регуляторные требования</strong>, которые явно требуют изоляции на уровне отдельной ОС или железа, а не просто изоляции процессов.</li>
+</ol>
+<p>На практике VM и контейнеры часто комбинируют: контейнеры запускают ВНУТРИ VM (например, в облаке) - получая изоляцию VM между разными клиентами/командами и лёгкость контейнеров внутри одной команды.</p>
+<hr>
+<h2 id="_2">Другие темы</h2>
+<p><em>(Пополняется по ходу.)</em></p></article>
+    <aside class="aside">
+      <strong>В этом документе</strong>
+      <div class="toc"><div class="toc">
+<ul>
+<li><a href="#docker">Зачем вообще Docker, если есть виртуальные машины</a></li>
+<li><a href="#docker_1">Три элемента Docker</a></li>
+<li><a href="#dockerfile">Пример Dockerfile</a></li>
+<li><a href="#_1">Данные и остановка контейнера</a></li>
+<li><a href="#-docker-compose">Несколько контейнеров сразу - docker-compose</a></li>
+<li><a href="#-">Оркестрация - когда контейнеров десятки/сотни</a></li>
+<li><a href="#-docker-vm">Итог - если Docker такой удобный, почему VM всё ещё нужны</a></li>
+<li><a href="#_2">Другие темы</a></li>
+</ul>
+</div>
+</div>
+    </aside>
+  </div>
+</main>
+
+
+<script>
+const ROOT = "..";
+
+// ---- тема
+const themeBtn = document.getElementById("theme");
+const paint = () => {
+  const dark = document.documentElement.getAttribute("data-theme") === "dark";
+  themeBtn.textContent = dark ? "☀" : "☾";
+};
+paint();
+themeBtn.addEventListener("click", () => {
+  const next = document.documentElement.getAttribute("data-theme") === "dark" ? "light" : "dark";
+  document.documentElement.setAttribute("data-theme", next);
+  try { localStorage.setItem("kb-theme", next); } catch (e) {}
+  paint();
+});
+
+// ---- поиск
+let index = null;
+const box = document.getElementById("results");
+const hits = document.getElementById("hits");
+const head = box.querySelector("h3");
+const input = document.getElementById("q");
+
+async function ensureIndex() {
+  if (index) return index;
+  const res = await fetch(ROOT + "/search-index.json");
+  index = await res.json();
+  return index;
+}
+
+const esc = (s) => (s || "").replace(/[&<>]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
+
+function hi(text, query) {
+  const i = text.toLowerCase().indexOf(query);
+  if (i < 0) return esc(text);
+  return esc(text.slice(0, i)) + "<mark>" + esc(text.slice(i, i + query.length)) + "</mark>" + esc(text.slice(i + query.length));
+}
+
+input.addEventListener("input", async () => {
+  const q = input.value.trim().toLowerCase();
+  if (q.length < 2) { box.hidden = true; return; }
+  const data = await ensureIndex();
+  const found = [];
+  for (const d of data) {
+    const inTitle = d.title.toLowerCase().includes(q);
+    const inSum = (d.summary || "").toLowerCase().includes(q);
+    const heads = (d.heads || []).filter(h => h.toLowerCase().includes(q));
+    if (inTitle || inSum || heads.length) {
+      found.push({ d, heads, rank: inTitle ? 0 : heads.length ? 1 : 2 });
+    }
+  }
+  found.sort((a, b) => a.rank - b.rank);
+  head.textContent = found.length ? `Нашлось: ${found.length}` : "Ничего не нашлось";
+  hits.innerHTML = found.slice(0, 40).map(({ d, heads }) =>
+    `<a class="hit" href="${ROOT}/d/${d.slug}.html">
+       <b>${hi(d.title, q)}</b>
+       <span>${heads.length ? "→ " + heads.slice(0, 3).map(h => hi(h, q)).join(" · ") : esc(d.summary || "")}</span>
+     </a>`).join("");
+  box.hidden = false;
+});
+
+input.addEventListener("keydown", (e) => { if (e.key === "Escape") { input.value = ""; box.hidden = true; input.blur(); } });
+document.addEventListener("keydown", (e) => {
+  if (e.key === "/" && document.activeElement !== input) { e.preventDefault(); input.focus(); }
+});
+</script>
+</body>
+</html>

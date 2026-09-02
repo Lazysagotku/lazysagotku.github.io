@@ -1,0 +1,216 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>📓 C# Backend — Дневник обучения - База знаний</title>
+<link rel="stylesheet" href="../kb.css">
+<script>
+  // Тему ставим до первой отрисовки, иначе на тёмной системе мигает белым.
+  try {
+    var t = localStorage.getItem("kb-theme");
+    if (!t) t = matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+    document.documentElement.setAttribute("data-theme", t);
+  } catch (e) {}
+</script>
+</head>
+<body>
+
+<header class="top">
+  <div class="top-in">
+    <a class="brand" href="../index.html">База <span>знаний</span></a>
+    <span class="grow"></span>
+    <input id="q" type="search" placeholder="Поиск по всем материалам…" autocomplete="off">
+    <button class="icon-btn" id="theme" type="button" title="Тема"></button>
+  </div>
+</header>
+
+<div id="results" hidden><div class="wrap-r"><h3></h3><div id="hits"></div></div></div>
+
+<main class="wrap">
+  <div class="doc-head">
+    <div class="crumb"><a href="../index.html#reference">Справочники</a></div>
+    <h1>📓 C# Backend — Дневник обучения</h1>
+    <div class="meta">55 строк · источник <code>l2code/Learning_Sessions.md</code></div>
+  </div>
+
+  <div class="layout">
+    <article class="prose"><blockquote>
+<p>Цель: C# Backend разработчик к середине августа 2026
+Целевая вакансия: МПП (штрафы/платные дороги) — .NET 9, EF Core, PostgreSQL, Redis, RabbitMQ
+Старт: 16 июня 2026</p>
+</blockquote>
+<hr>
+<h2 id="25">🗓️ Пересчитанный план (до ~25 июля)</h2>
+<blockquote>
+<p>До 19 июня — по 1.5ч/день. После 19 июня — 6-8ч/день (~7 среднее).</p>
+</blockquote>
+<table>
+<thead>
+<tr>
+<th>Период</th>
+<th>Тема</th>
+<th>Статус</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>16-19 июня</td>
+<td>Фаза 1 старт — C# основы (по 1.5ч)</td>
+<td>🔄 Идёт</td>
+</tr>
+<tr>
+<td>20 июня</td>
+<td>Фаза 1 финиш — types, memory, collections</td>
+<td>⏳</td>
+</tr>
+<tr>
+<td>21 июня</td>
+<td>Фаза 2 — ООП быстрый прогон</td>
+<td>⏳</td>
+</tr>
+<tr>
+<td>22-23 июня</td>
+<td>Фаза 3 — Generics, LINQ, <strong>Async/Await</strong></td>
+<td>⏳</td>
+</tr>
+<tr>
+<td>24-27 июня</td>
+<td><strong>ASP.NET Core Web API</strong> (главный пробел)</td>
+<td>⏳</td>
+</tr>
+<tr>
+<td>28-30 июня</td>
+<td><strong>EF Core + PostgreSQL</strong></td>
+<td>⏳</td>
+</tr>
+<tr>
+<td>1-2 июля</td>
+<td>Unit тесты — xUnit, Moq, AAA</td>
+<td>⏳</td>
+</tr>
+<tr>
+<td>3-14 июля</td>
+<td><strong>Портфолио-проект</strong> — мини-сервис штрафов/платежей</td>
+<td>⏳</td>
+</tr>
+<tr>
+<td>15-17 июля</td>
+<td>Redis, Docker (refresh), RabbitMQ обзор</td>
+<td>⏳</td>
+</tr>
+<tr>
+<td>18-25 июля</td>
+<td>Подготовка к интервью, mock-вопросы</td>
+<td>⏳</td>
+</tr>
+</tbody>
+</table>
+<p><strong>🎯 Цель: первые собеседования ~25 июля. Буфер до финдедлайна — 3 недели.</strong></p>
+<hr>
+<h2 id="_1">📅 Сессии</h2>
+<h3 id="1-16-2026">Сессия 1 — 16 июня 2026</h3>
+<p><strong>Тема:</strong> Старт. Анализ уровня, план.
+<strong>Пройдено:</strong>
+- [ ] ...</p>
+<p><strong>Задание:</strong>
+- [ ] ...</p>
+<p><strong>Заметки:</strong></p>
+<hr>
+<p><em>Шаблон новой сессии:</em></p>
+<pre><code>### Сессия N — DD месяц 2026
+**Тема:** 
+**Пройдено:**
+- [ ] 
+
+**Задание:**
+- [ ] 
+
+**Заметки:**
+</code></pre></article>
+    <aside class="aside">
+      <strong>В этом документе</strong>
+      <div class="toc"><div class="toc">
+<ul>
+<li><a href="#25">🗓️ Пересчитанный план (до ~25 июля)</a></li>
+<li><a href="#_1">📅 Сессии</a><ul>
+<li><a href="#1-16-2026">Сессия 1 — 16 июня 2026</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+    </aside>
+  </div>
+</main>
+
+
+<script>
+const ROOT = "..";
+
+// ---- тема
+const themeBtn = document.getElementById("theme");
+const paint = () => {
+  const dark = document.documentElement.getAttribute("data-theme") === "dark";
+  themeBtn.textContent = dark ? "☀" : "☾";
+};
+paint();
+themeBtn.addEventListener("click", () => {
+  const next = document.documentElement.getAttribute("data-theme") === "dark" ? "light" : "dark";
+  document.documentElement.setAttribute("data-theme", next);
+  try { localStorage.setItem("kb-theme", next); } catch (e) {}
+  paint();
+});
+
+// ---- поиск
+let index = null;
+const box = document.getElementById("results");
+const hits = document.getElementById("hits");
+const head = box.querySelector("h3");
+const input = document.getElementById("q");
+
+async function ensureIndex() {
+  if (index) return index;
+  const res = await fetch(ROOT + "/search-index.json");
+  index = await res.json();
+  return index;
+}
+
+const esc = (s) => (s || "").replace(/[&<>]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
+
+function hi(text, query) {
+  const i = text.toLowerCase().indexOf(query);
+  if (i < 0) return esc(text);
+  return esc(text.slice(0, i)) + "<mark>" + esc(text.slice(i, i + query.length)) + "</mark>" + esc(text.slice(i + query.length));
+}
+
+input.addEventListener("input", async () => {
+  const q = input.value.trim().toLowerCase();
+  if (q.length < 2) { box.hidden = true; return; }
+  const data = await ensureIndex();
+  const found = [];
+  for (const d of data) {
+    const inTitle = d.title.toLowerCase().includes(q);
+    const inSum = (d.summary || "").toLowerCase().includes(q);
+    const heads = (d.heads || []).filter(h => h.toLowerCase().includes(q));
+    if (inTitle || inSum || heads.length) {
+      found.push({ d, heads, rank: inTitle ? 0 : heads.length ? 1 : 2 });
+    }
+  }
+  found.sort((a, b) => a.rank - b.rank);
+  head.textContent = found.length ? `Нашлось: ${found.length}` : "Ничего не нашлось";
+  hits.innerHTML = found.slice(0, 40).map(({ d, heads }) =>
+    `<a class="hit" href="${ROOT}/d/${d.slug}.html">
+       <b>${hi(d.title, q)}</b>
+       <span>${heads.length ? "→ " + heads.slice(0, 3).map(h => hi(h, q)).join(" · ") : esc(d.summary || "")}</span>
+     </a>`).join("");
+  box.hidden = false;
+});
+
+input.addEventListener("keydown", (e) => { if (e.key === "Escape") { input.value = ""; box.hidden = true; input.blur(); } });
+document.addEventListener("keydown", (e) => {
+  if (e.key === "/" && document.activeElement !== input) { e.preventDefault(); input.focus(); }
+});
+</script>
+</body>
+</html>

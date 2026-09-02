@@ -1,0 +1,281 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>🗺️ Python Backend Roadmap - База знаний</title>
+<link rel="stylesheet" href="../kb.css">
+<script>
+  // Тему ставим до первой отрисовки, иначе на тёмной системе мигает белым.
+  try {
+    var t = localStorage.getItem("kb-theme");
+    if (!t) t = matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+    document.documentElement.setAttribute("data-theme", t);
+  } catch (e) {}
+</script>
+</head>
+<body>
+
+<header class="top">
+  <div class="top-in">
+    <a class="brand" href="../index.html">База <span>знаний</span></a>
+    <span class="grow"></span>
+    <input id="q" type="search" placeholder="Поиск по всем материалам…" autocomplete="off">
+    <button class="icon-btn" id="theme" type="button" title="Тема"></button>
+  </div>
+</header>
+
+<div id="results" hidden><div class="wrap-r"><h3></h3><div id="hits"></div></div></div>
+
+<main class="wrap">
+  <div class="doc-head">
+    <div class="crumb"><a href="../index.html#roadmaps">Роадмапы</a></div>
+    <h1>🗺️ Python Backend Roadmap</h1>
+    <div class="meta">129 строк · источник <code>l2code/PythonBackend_Roadmap.md</code></div>
+  </div>
+
+  <div class="layout">
+    <article class="prose"><blockquote>
+<p>💤 <strong>СПЯЩИЙ план — не активная работа.</strong> Триггер активации: предложение по Python-резюме приходит РАНЬШЕ, чем завершится C#-курс (Tier 0). До триггера — ноль обязательных часов, файл существует для просмотра "в перерывах", не для прохождения.
+Уровень старта: Python уже знаешь (pandas, Selenium, Flask/Django, threading, self/ООП) — роадмап калиброван под "закрыть бэкенд-паттерны и идиомы", не учить язык с нуля.</p>
+</blockquote>
+<hr>
+<h2 id="_1">📊 Статус</h2>
+<ul>
+<li>[ ] Фаза 1 — Идиомы и продвинутый Python</li>
+<li>[ ] Фаза 2 — Async/Concurrency</li>
+<li>[ ] Фаза 3 — Web-фреймворк (FastAPI) — 🔗 <strong>частично уже написано</strong>, см. ниже</li>
+<li>[ ] Фаза 4 — Базы данных (SQLAlchemy, Alembic)</li>
+<li>[ ] Фаза 5 — Тестирование — 🔗 <strong>частично уже написано</strong></li>
+<li>[ ] Фаза 6 — DevOps</li>
+<li>[ ] Фаза 7 — Архитектура и продакшен-паттерны</li>
+</ul>
+<p><strong>Уже есть готовый материал:</strong> <code>Python_Backend_Crash_Course.md</code> (создан 22 июля) закрывает часть Фазы 3 (Pydantic, Strategy/ABC, FastAPI DI/BackgroundTasks) и часть Фазы 5 (pytest, fixtures, mocking, coverage) — не переписывать заново, использовать как есть, когда дойдёт очередь.</p>
+<hr>
+<h2 id="1-python">🔵 Фаза 1 — Идиомы и продвинутый Python</h2>
+<blockquote>
+<p>Цель: писать на Python не "как на C# с другим синтаксисом", а на его собственных идиомах</p>
+</blockquote>
+<h3 id="_2">Темы</h3>
+<ul>
+<li>[ ] 1.1 Типизация — mutable vs immutable, что реально копируется при присвоении</li>
+<li>[ ] 1.2 List/dict/set comprehensions — когда идиоматично, когда усложняет</li>
+<li>[ ] 1.3 <em>args / </em><em>kwargs — 🎯 </em>уже назван самим Иваном как пробел (объяснено 8 июля)*</li>
+<li>[ ] 1.4 Итераторы и генераторы — <code>yield</code>, ленивые вычисления (мост от C# <code>IEnumerable</code>/<code>yield return</code>)</li>
+<li>[ ] 1.5 Декораторы — свои декораторы, <code>functools.wraps</code>, параметризованные декораторы</li>
+<li>[ ] 1.6 Контекстные менеджеры — <code>with</code>, <code>__enter__</code>/<code>__exit__</code>, <code>contextlib</code> (мост от C# <code>using</code>/<code>IDisposable</code>)</li>
+<li>[ ] 1.7 ООП в Python — dunder-методы (<code>__eq__</code>, <code>__repr__</code>, <code>__hash__</code>), <code>@property</code>, dataclasses (мост от C# <code>record</code>)</li>
+<li>[ ] 1.8 Type hints — <code>typing</code> модуль, <code>Optional</code>/<code>Union</code>, статическая проверка через mypy</li>
+</ul>
+<h3 id="_3">🎯 Итоговое задание</h3>
+<p>Переписать один из существующих реальных Python-скриптов (например CSV-импорт) с применением: типизации через hints, генератора вместо списка там, где уместно, контекстного менеджера для работы с файлом/соединением, dataclass вместо словаря для структуры данных.</p>
+<hr>
+<h2 id="2-asyncconcurrency">🟢 Фаза 2 — Async/Concurrency</h2>
+<blockquote>
+<p>Цель: понимать разницу async/threading/multiprocessing и не путать их применение</p>
+</blockquote>
+<h3 id="_4">Темы</h3>
+<ul>
+<li>[ ] 2.1 GIL (Global Interpreter Lock) — что это и почему <code>threading</code> не даёт настоящего параллелизма для CPU-bound задач</li>
+<li>[ ] 2.2 <code>asyncio</code> — event loop, <code>async</code>/<code>await</code>, <code>Task</code> (мост от C# <code>Task</code>/async-await — тот же паттерн, разный рантайм)</li>
+<li>[ ] 2.3 Когда <code>threading</code>, когда <code>multiprocessing</code>, когда <code>asyncio</code> — I/O-bound vs CPU-bound</li>
+<li>[ ] 2.4 <code>aiohttp</code>/<code>httpx</code> — асинхронные HTTP-запросы</li>
+<li>[ ] 2.5 <code>Semaphore</code>/<code>Lock</code> в asyncio — та же логика, что <code>SemaphoreSlim</code>/<code>lock</code> в C# (Phase3_Advanced.md §3.5), просто другой API</li>
+</ul>
+<h3 id="_5">🎯 Итоговое задание</h3>
+<p>Написать скрипт, параллельно обращающийся к нескольким внешним API (например тестовым эндпоинтам) через <code>asyncio.gather</code> + <code>Semaphore</code> для ограничения одновременных запросов — прямая параллель уже пройденному <code>SemaphoreSlim</code>-примеру из C#-курса.</p>
+<hr>
+<h2 id="3-web-fastapi">🟡 Фаза 3 — Web-фреймворк (FastAPI) — 🔗 частично готово</h2>
+<blockquote>
+<p>Цель: строить REST API на современном Python-стеке (мост от ASP.NET Core)</p>
+</blockquote>
+<h3 id="_6">Темы</h3>
+<ul>
+<li>[ ] 3.1 FastAPI основы — маршрутизация, path/query параметры, статус коды</li>
+<li>[x] 3.2 Pydantic — валидация данных, модели запроса/ответа <em>(есть в Python_Backend_Crash_Course.md, День 1)</em></li>
+<li>[x] 3.3 Dependency Injection — <code>Depends()</code> (мост от C# DI-контейнера) <em>(есть в крэш-курсе, День 2)</em></li>
+<li>[x] 3.4 Strategy pattern через ABC <em>(есть в крэш-курсе, День 1)</em></li>
+<li>[ ] 3.5 Middleware в FastAPI — свой middleware (мост от ASP.NET Core middleware, Фаза 5.8 C#-роадмапа)</li>
+<li>[ ] 3.6 Background Tasks <em>(частично есть в крэш-курсе, День 2 — проверить/расширить)</em></li>
+<li>[ ] 3.7 Аутентификация — OAuth2/JWT в FastAPI (мост от C# JWT, Фаза 5.9)</li>
+</ul>
+<h3 id="_7">🎯 Итоговое задание</h3>
+<p>CRUD REST API (тот же "Task Manager", что и в C#-роадмапе Фазе 5) — но на FastAPI, чтобы напрямую сравнить подход двух экосистем к одной и той же задаче.</p>
+<hr>
+<h2 id="4">🗄️ Фаза 4 — Базы данных</h2>
+<blockquote>
+<p>Цель: ORM-слой на Python (мост от EF Core)</p>
+</blockquote>
+<h3 id="_8">Темы</h3>
+<ul>
+<li>[ ] 4.1 SQLAlchemy — Core vs ORM, модели, сессии (мост от EF Core <code>DbContext</code>)</li>
+<li>[ ] 4.2 Alembic — миграции (уже реально знаком — резюме упоминает Alembic и Django ORM migrations)</li>
+<li>[ ] 4.3 Async SQLAlchemy — <code>asyncpg</code> драйвер, async-сессии</li>
+<li>[ ] 4.4 Repository pattern на Python — тот же принцип, что в C#-роадмапе Фазе 6.5</li>
+</ul>
+<h3 id="_9">🎯 Итоговое задание</h3>
+<p>Подключить SQLAlchemy + PostgreSQL к FastAPI-приложению из Фазы 3, с Alembic-миграцией и repository-слоем.</p>
+<hr>
+<h2 id="5">🧪 Фаза 5 — Тестирование — 🔗 частично готово</h2>
+<blockquote>
+<p>Цель: pytest-экосистема (мост от xUnit/Moq)</p>
+</blockquote>
+<h3 id="_10">Темы</h3>
+<ul>
+<li>[x] 5.1 pytest основы, fixtures <em>(есть в крэш-курсе, День 3)</em></li>
+<li>[x] 5.2 Mocking — <code>pytest-mock</code>, <code>unittest.mock</code> (мост от Moq) <em>(есть в крэш-курсе)</em></li>
+<li>[x] 5.3 Coverage <em>(есть в крэш-курсе)</em></li>
+<li>[ ] 5.4 Integration-тесты FastAPI — <code>TestClient</code>/<code>httpx.AsyncClient</code> (мост от <code>WebApplicationFactory</code>)</li>
+<li>[ ] 5.5 Параметризованные тесты — <code>@pytest.mark.parametrize</code></li>
+</ul>
+<h3 id="_11">🎯 Итоговое задание</h3>
+<p>Покрыть FastAPI-приложение из Фазы 3-4 unit- и integration-тестами (тот же принцип "80%+ на сервисном слое", что в C#-роадмапе Фазе 7).</p>
+<hr>
+<h2 id="6-devops">🚀 Фаза 6 — DevOps</h2>
+<blockquote>
+<p>Большая часть уже знакома по C#-треку — концепции переносятся 1:1, меняется только конкретный синтаксис</p>
+</blockquote>
+<h3 id="_12">Темы</h3>
+<ul>
+<li>[ ] 6.1 Docker для Python-приложений — отличия от .NET-контейнеров (нет отдельного шага компиляции)</li>
+<li>[ ] 6.2 <code>uvicorn</code>/<code>gunicorn</code> — как реально запускают FastAPI в проде</li>
+<li>[ ] 6.3 <code>pydantic-settings</code> — конфигурация через env vars (мост от C# <code>IOptions</code>)</li>
+<li>[ ] 6.4 CI/CD — тот же GitLab CI, что и в C#-треке, просто другой build-шаг</li>
+</ul>
+<h3 id="_13">🎯 Итоговое задание</h3>
+<p>Docker-контейнер для FastAPI-приложения + <code>docker-compose</code> с PostgreSQL, аналогично тому, что предполагается для Life Notes.</p>
+<hr>
+<h2 id="7-">🏛️ Фаза 7 — Архитектура и продакшен-паттерны</h2>
+<h3 id="_14">Темы</h3>
+<ul>
+<li>[ ] 7.1 Clean Architecture на Python — те же слои, что в C#-роадмапе Фазе 9.2</li>
+<li>[ ] 7.2 Celery — фоновые задачи/очереди (мост от RabbitMQ-темы C#-роадмапа)</li>
+<li>[ ] 7.3 <code>redis-py</code> — кэширование (мост от Redis-темы)</li>
+<li>[ ] 7.4 FastAPI vs Django vs Flask — когда что выбрать (у тебя уже реальный опыт с двумя последними)</li>
+</ul>
+<hr>
+<h2 id="_15">📚 Ресурсы</h2>
+<ul>
+<li><a href="https://fastapi.tiangolo.com">fastapi.tiangolo.com</a> — официальная документация, одна из лучших в экосистеме</li>
+<li><a href="https://docs.sqlalchemy.org">docs.sqlalchemy.org</a></li>
+<li><code>Python_Backend_Crash_Course.md</code> — уже написанный материал под Фазы 3 и 5</li>
+</ul>
+<hr>
+<p><em>Создано: 2026-08-18 | Статус: спящий, ждёт триггера</em></p></article>
+    <aside class="aside">
+      <strong>В этом документе</strong>
+      <div class="toc"><div class="toc">
+<ul>
+<li><a href="#_1">📊 Статус</a></li>
+<li><a href="#1-python">🔵 Фаза 1 — Идиомы и продвинутый Python</a><ul>
+<li><a href="#_2">Темы</a></li>
+<li><a href="#_3">🎯 Итоговое задание</a></li>
+</ul>
+</li>
+<li><a href="#2-asyncconcurrency">🟢 Фаза 2 — Async/Concurrency</a><ul>
+<li><a href="#_4">Темы</a></li>
+<li><a href="#_5">🎯 Итоговое задание</a></li>
+</ul>
+</li>
+<li><a href="#3-web-fastapi">🟡 Фаза 3 — Web-фреймворк (FastAPI) — 🔗 частично готово</a><ul>
+<li><a href="#_6">Темы</a></li>
+<li><a href="#_7">🎯 Итоговое задание</a></li>
+</ul>
+</li>
+<li><a href="#4">🗄️ Фаза 4 — Базы данных</a><ul>
+<li><a href="#_8">Темы</a></li>
+<li><a href="#_9">🎯 Итоговое задание</a></li>
+</ul>
+</li>
+<li><a href="#5">🧪 Фаза 5 — Тестирование — 🔗 частично готово</a><ul>
+<li><a href="#_10">Темы</a></li>
+<li><a href="#_11">🎯 Итоговое задание</a></li>
+</ul>
+</li>
+<li><a href="#6-devops">🚀 Фаза 6 — DevOps</a><ul>
+<li><a href="#_12">Темы</a></li>
+<li><a href="#_13">🎯 Итоговое задание</a></li>
+</ul>
+</li>
+<li><a href="#7-">🏛️ Фаза 7 — Архитектура и продакшен-паттерны</a><ul>
+<li><a href="#_14">Темы</a></li>
+</ul>
+</li>
+<li><a href="#_15">📚 Ресурсы</a></li>
+</ul>
+</div>
+</div>
+    </aside>
+  </div>
+</main>
+
+
+<script>
+const ROOT = "..";
+
+// ---- тема
+const themeBtn = document.getElementById("theme");
+const paint = () => {
+  const dark = document.documentElement.getAttribute("data-theme") === "dark";
+  themeBtn.textContent = dark ? "☀" : "☾";
+};
+paint();
+themeBtn.addEventListener("click", () => {
+  const next = document.documentElement.getAttribute("data-theme") === "dark" ? "light" : "dark";
+  document.documentElement.setAttribute("data-theme", next);
+  try { localStorage.setItem("kb-theme", next); } catch (e) {}
+  paint();
+});
+
+// ---- поиск
+let index = null;
+const box = document.getElementById("results");
+const hits = document.getElementById("hits");
+const head = box.querySelector("h3");
+const input = document.getElementById("q");
+
+async function ensureIndex() {
+  if (index) return index;
+  const res = await fetch(ROOT + "/search-index.json");
+  index = await res.json();
+  return index;
+}
+
+const esc = (s) => (s || "").replace(/[&<>]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
+
+function hi(text, query) {
+  const i = text.toLowerCase().indexOf(query);
+  if (i < 0) return esc(text);
+  return esc(text.slice(0, i)) + "<mark>" + esc(text.slice(i, i + query.length)) + "</mark>" + esc(text.slice(i + query.length));
+}
+
+input.addEventListener("input", async () => {
+  const q = input.value.trim().toLowerCase();
+  if (q.length < 2) { box.hidden = true; return; }
+  const data = await ensureIndex();
+  const found = [];
+  for (const d of data) {
+    const inTitle = d.title.toLowerCase().includes(q);
+    const inSum = (d.summary || "").toLowerCase().includes(q);
+    const heads = (d.heads || []).filter(h => h.toLowerCase().includes(q));
+    if (inTitle || inSum || heads.length) {
+      found.push({ d, heads, rank: inTitle ? 0 : heads.length ? 1 : 2 });
+    }
+  }
+  found.sort((a, b) => a.rank - b.rank);
+  head.textContent = found.length ? `Нашлось: ${found.length}` : "Ничего не нашлось";
+  hits.innerHTML = found.slice(0, 40).map(({ d, heads }) =>
+    `<a class="hit" href="${ROOT}/d/${d.slug}.html">
+       <b>${hi(d.title, q)}</b>
+       <span>${heads.length ? "→ " + heads.slice(0, 3).map(h => hi(h, q)).join(" · ") : esc(d.summary || "")}</span>
+     </a>`).join("");
+  box.hidden = false;
+});
+
+input.addEventListener("keydown", (e) => { if (e.key === "Escape") { input.value = ""; box.hidden = true; input.blur(); } });
+document.addEventListener("keydown", (e) => {
+  if (e.key === "/" && document.activeElement !== input) { e.preventDefault(); input.focus(); }
+});
+</script>
+</body>
+</html>

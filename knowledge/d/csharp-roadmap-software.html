@@ -1,0 +1,534 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>🗺️ C# Roadmap — Разработка ПО (Desktop / Backend) - База знаний</title>
+<link rel="stylesheet" href="../kb.css">
+<script>
+  // Тему ставим до первой отрисовки, иначе на тёмной системе мигает белым.
+  try {
+    var t = localStorage.getItem("kb-theme");
+    if (!t) t = matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+    document.documentElement.setAttribute("data-theme", t);
+  } catch (e) {}
+</script>
+</head>
+<body>
+
+<header class="top">
+  <div class="top-in">
+    <a class="brand" href="../index.html">База <span>знаний</span></a>
+    <span class="grow"></span>
+    <input id="q" type="search" placeholder="Поиск по всем материалам…" autocomplete="off">
+    <button class="icon-btn" id="theme" type="button" title="Тема"></button>
+  </div>
+</header>
+
+<div id="results" hidden><div class="wrap-r"><h3></h3><div id="hits"></div></div></div>
+
+<main class="wrap">
+  <div class="doc-head">
+    <div class="crumb"><a href="../index.html#roadmaps">Роадмапы</a></div>
+    <h1>🗺️ C# Roadmap — Разработка ПО (Desktop / Backend)</h1>
+    <div class="meta">329 строк · источник <code>l2code/CSharp_Roadmap_Software.md</code></div>
+  </div>
+
+  <div class="layout">
+    <article class="prose"><blockquote>
+<p>Уровень старта: <strong>Пишу интуитивно</strong> → Цель: <strong>Уверенный разработчик</strong>
+Теги: #csharp #roadmap #software-dev</p>
+</blockquote>
+<hr>
+<h2 id="18-2026">📊 Прогресс (обновлено 🆕 18 августа 2026)</h2>
+<blockquote>
+<p>Собеседования сдвигались дважды по ходу дела (3-5 авг → 11-12 авг → <strong>~18-20 авг</strong>, текущее окно) — контент ни разу не резался ради даты, только сдвигался темп. Финансовый буфер продлён до конца сентября 2026 (семья помогла) — паника по срокам снята, но фокус остаётся собранным.
+Портфолио-проект: <strong>Life Notes</strong> (github.com/Lazysagotku/life-notes) — закрывает весь backend стек, сейчас активно строится (Web API на ASP.NET Core + EF Core + PostgreSQL).
+Три живых companion-документа завелись по ходу подготовки и постоянно пополняются — держать рядом с этим роадмапом: <code>Algorithms_Companion.md</code>, <code>SystemDesign_Companion.md</code>, <code>PostgreSQL_Companion.md</code>.</p>
+</blockquote>
+<ul>
+<li>[x] Фаза 1 — Теоретический фундамент — <strong>полностью завершена</strong> (1.1–1.8 + Contact Manager, всё проверено запуском)</li>
+<li>[x] Фаза 2 — ООП и архитектура — <strong>полностью завершена</strong> (2.1–2.9 + финальный рефакторинг Contact Manager, 3 раунда ревью, DIP реально применён через <code>IContactRepository</code>)</li>
+<li>[~] Фаза 3 — Продвинутый C# + <strong>LeetCode Easy</strong> — <strong>теория написана полностью</strong> (включая 2 добавленных гэпа — исключения, ref/out/in/params), Playground-практика и LeetCode ещё идут</li>
+<li>[x] ~~Фаза 4 — Desktop (WinForms / WPF)~~ <strong>ПРОПУЩЕНА</strong> — не нужна для backend-вакансии</li>
+<li>[~] Фаза 5 — Backend (.NET / ASP.NET Core) → Life Notes — <strong>в активной работе прямо сейчас</strong></li>
+<li>[ ] Фаза 6 — Базы данных → Life Notes (даты ниже пересчитаны)</li>
+<li>[ ] Фаза 7 — Тестирование → Life Notes</li>
+<li>[ ] Фаза 8 — DevOps + Redis/RabbitMQ → Life Notes</li>
+<li>[ ] Фаза 9 — Архитектурные паттерны</li>
+</ul>
+<p><strong>🆕 Добавлено к плану 9 июля (калибровка против global top + Python/AI приоритеты):</strong>
+- 📣 <strong>Behavioral prep</strong> — STAR-метод, 15 мин/день начиная с 8 июля
+- 🧩 <strong>LeetCode Easy</strong> — 5-7 задач в Фазе 3, чередуя C# (нечётные) и Python (чётные) — поддержка Python без доп. часов
+- 🎙️ <strong>devinterview.ai</strong> — mock checkpoint после каждой фазы (30 мин)
+- 🏗️ <strong>System Design mini</strong> — 1 вечер 1 августа (URL shortener, чат, Life Notes × 1М)
+- 🤖 <strong>AI Product Engineer</strong> — теория вплетена прямо в темы ниже (пометки 🤖), само строительство — отдельный трек после трудоустройства (не раньше сентября)</p>
+<blockquote>
+<p>[!info]+ 🆕 Анализ рынка вакансий (9 июля 2026)
+Прочёсано ~10 источников по Middle C#/.NET Москва (включая финтех). <strong>Зарплата-ориентир: Middle ~183-260 тыс ₽.</strong></p>
+<p><strong>Подтвердилось:</strong> весь текущий стек плана (ASP.NET Core, EF Core, PostgreSQL, Redis, RabbitMQ, Docker, SOLID, unit-тесты) — точно бьёт в рынок. Azure/AWS в русских вакансиях почти нет (санкции) — план верно их не включает. Kubernetes на Middle — чаще "плюс", остаётся в Фазе 9 без спешки.</p>
+<p><strong>Новые пробелы:</strong> CQRS+MediatR (теория подтянута к собесу), Kafka (в паре с RabbitMQ), gRPC (альтернатива REST), Polly (retry/circuit breaker — связь с "высоконагруженные системы"), GitLab CI/CD (российские компании используют GitLab, не GitHub Actions). Добавлены как теория для собеса — ноль часов сверх бюджета.</p>
+</blockquote>
+<hr>
+<h2 id="1-c">🔵 Фаза 1 — Теоретический фундамент C</h2>
+<blockquote>
+<p>Цель: понять <em>почему</em> код работает именно так</p>
+</blockquote>
+<h3 id="_1">Темы</h3>
+<ul>
+<li>[x] 1.1 Типы данных — value vs reference типы</li>
+<li>[x] 1.2 Стек и куча (Stack &amp; Heap) — как хранится память</li>
+<li>[x] 1.3 Строки — почему string иммутабелен, StringBuilder</li>
+<li>[x] 1.4 Приведение типов — implicit, explicit, as, is</li>
+<li>[x] 1.5 Nullable типы — <code>int?</code>, <code>Nullable&lt;T&gt;</code>, null-операторы <code>?.</code> <code>??</code> <code>??=</code></li>
+<li>🆕🤖 <em>AI-инженерия (9 июля):</em> опциональные поля в ответах LLM API (<code>stop_reason</code>, <code>tool_use</code>) — то же мышление о null, просто в JSON.</li>
+<li>[x] 1.6 Управляющие конструкции — switch expression, pattern matching</li>
+<li>🆕🤖 <em>AI-инженерия (9 июля):</em> ответ Claude API — массив content-блоков разных типов (<code>text</code>/<code>tool_use</code>/<code>thinking</code>) — pattern matching разбирает их естественно.</li>
+<li>[x] 1.7 Массивы и коллекции — Array, List, Dictionary, HashSet, Queue, Stack</li>
+<li>🆕🤖 <em>AI-инженерия (9 июля):</em> история диалога с LLM = <code>List&lt;Message&gt;</code>. Очередь задач агента = FIFO на <code>Queue&lt;T&gt;</code> (см. подробный разбор FIFO/LIFO в Phase1_CSharp_Fundamentals.md).</li>
+<li>[x] 1.8 Итераторы и <code>foreach</code> — как работает IEnumerable под капотом ← <strong>Fibonacci + deferred execution — оба сданы чисто</strong></li>
+<li>🆕🤖 <em>AI-инженерия (9 июля):</em> <strong>прямое попадание</strong> — стриминг ответа LLM токен-за-токеном = <code>IAsyncEnumerable&lt;T&gt;</code> в C# SDK.</li>
+</ul>
+<h3 id="1">🎯 Итоговое задание фазы 1 ✅ ЗАВЕРШЕНО</h3>
+<pre><code>Написать консольное приложение &quot;Менеджер контактов&quot;:
+- Хранить контакты в Dictionary&lt;string, Contact&gt;
+- Contact — структура или класс с именем, телефоном, email
+- Операции: добавить, найти, удалить, вывести всех
+- Обработка случаев когда контакт не найден (nullable + проверки)
+</code></pre>
+<p>Проверено запуском: основной сценарий + граничные случаи (дубликат, ненайденный контакт, пустой ввод) — всё работает без единого сбоя. Отдельно хорошо: разделение ContactBook (данные)/ContactManager (ввод-вывод) — предвестник Repository pattern из Life Notes Фазы 2; <code>ToLowerInvariant()</code> вместо <code>ToLower()</code> (Turkish-I bug); try-паттерн вместо исключений.</p>
+<hr>
+<h2 id="2">🟢 Фаза 2 — ООП и архитектура мышления ✅ ЗАВЕРШЕНА</h2>
+<blockquote>
+<p>Цель: писать код как профессионал, не копипастить</p>
+</blockquote>
+<h3 id="_2">Темы</h3>
+<ul>
+<li>[x] 2.1 Классы и объекты — конструкторы, деструкторы, инициализаторы</li>
+<li>[x] 2.2 Инкапсуляция — модификаторы доступа, свойства (get/set/init) + <code>readonly</code>/<code>const</code>/<code>init</code> разбор</li>
+<li>[x] 2.3 Наследование — base, virtual, override, sealed</li>
+<li>[x] 2.4 Полиморфизм — статический и динамический</li>
+<li>[x] 2.5 Абстракция — abstract классы vs интерфейсы (когда что использовать)</li>
+<li>🤖 <em>AI-инженерия:</em> агентные системы строятся на абстракции <code>ITool</code> — каждый инструмент реализует один интерфейс, агент вызывает их одинаково.</li>
+<li>[x] 2.6 Интерфейсы — IComparable разобран и сдан (Task26)</li>
+<li>[x] 2.7 Принципы SOLID — S, O, L, I, D с примерами на C#, включая Hexagonal Architecture как DIP-расширение</li>
+<li>🤖 <em>AI-инженерия:</em> Interface Segregation = чистый дизайн инструментов агента. Open/Closed = добавляешь инструмент не трогая ядро агента.</li>
+<li>[x] 2.8 Статические классы и синглтон — <code>Lazy&lt;Logger&gt;</code> реализован и сдан (Task28)</li>
+<li>[x] 2.9 record типы (C# 9+) — <code>with</code>-выражение + ловушка List-эквивалентности в record сданы (Task29)</li>
+<li>🤖 <em>AI-инженерия:</em> request/response тела для LLM API — идеальный кандидат на record: неизменяемые данные, value equality для кэширования по содержимому промпта.</li>
+</ul>
+<h3 id="2-3">🎯 Итоговое задание фазы 2 ✅ ЗАВЕРШЕНО (3 раунда ревью)</h3>
+<pre><code>Рефакторинг &quot;Менеджера контактов&quot;:
+- Применить интерфейс IContactRepository
+- Реализовать принцип единственной ответственности (SRP)
+- Добавить наследование: Contact → WorkContact с полем Company
+- Использовать record для Contact
+</code></pre>
+<p>Commit <code>d8b1ce1</code>. DIP реально применён (<code>IContactRepository Book</code> в <code>ContactManager</code>), не просто продекларирован.</p>
+<hr>
+<h2 id="3-c-leetcode-easy">🟡 Фаза 3 — Продвинутый C# + LeetCode Easy</h2>
+<blockquote>
+<p>Цель: писать современный, выразительный код + снять страх перед coding-вопросами на собесе
+<strong>Реальная структура (по факту написанного в <code>Phase3_Advanced.md</code>) отличается от изначального плана ниже</strong> — консолидировалась иначе по ходу дела, актуальный источник истины — сам файл, не этот список.</p>
+</blockquote>
+<h3 id="_3">Темы — теория написана полностью</h3>
+<ul>
+<li>[x] 3.0.1 Исключения — try/catch/finally, custom exceptions, throw vs throw ex (добавлено позже как закрытие реального гэпа)</li>
+<li>[x] 3.0.2 ref/out/in/params (тот же гэп-закрывающий добавок)</li>
+<li>[x] 3.1 Generics — обобщённые типы, constraints, ковариантность/контравариантность</li>
+<li>🤖 <em>AI-инженерия:</em> <code>IToolHandler&lt;TInput, TOutput&gt;</code> — так типизируют обработчики инструментов агента.</li>
+<li>[x] 3.2 Делегаты и события — Action/Func/Predicate, multicast, event vs публичный делегат</li>
+<li>🤖 <em>AI-инженерия:</em> <code>Func&lt;ToolCall, Task&lt;ToolResult&gt;&gt;</code> — сигнатура обработчика вызова инструмента в C# агентных фреймворках.</li>
+<li>[x] 3.3 LINQ глубже — deferred execution, IQueryable Expression Tree механика</li>
+<li>🤖 <em>AI-инженерия:</em> разбор ответа LLM — LINQ по массиву content-блоков: <code>response.Content.Where(b =&gt; b.Type == "tool_use")</code>.</li>
+<li>[x] 3.4 Async/Await под капотом — state machine, ConfigureAwait, ThreadPool starvation, deadlock-разбор, CancellationToken</li>
+<li>🤖 <em>AI-инженерия:</em> <strong>фундамент направления</strong> — каждый вызов LLM API асинхронный. <code>CancellationToken</code> — прервать долгую генерацию.</li>
+<li>[x] 3.5 Параллелизм — примитивы синхронизации (lock/Monitor, Mutex, SemaphoreSlim, Interlocked, Channels) — <strong>самый частый вопрос по банку Ozon (2733 использования)</strong></li>
+<li>🤖 <em>AI-инженерия:</em> параллельные вызовы нескольких инструментов агентом одновременно вместо по очереди.</li>
+</ul>
+<p><em>(Extension methods, атрибуты/рефлексия отдельными темами не писались — низкий приоритет по рыночным данным, не всплывали ни в одном реальном источнике вопросов.)</em></p>
+<h3 id="3">🎯 Итоговое задание фазы 3 — практика идёт</h3>
+<p>Комбинирующий пример (<code>AsyncCachedRepository&lt;T&gt;</code> с SemaphoreSlim) и финальный проект (generic+async расширение Contact Manager) написаны в <code>Phase3_Advanced.md</code>. Playground: Task31 (Generics) заскаффолжен.</p>
+<p><strong>LeetCode-трекер (<code>Algorithms_Companion.md</code>):</strong> Two Sum ✅ (C#+Python), Two Sum II ✅ (C#) — Container With Most Water, Max Sum Subarray, Longest Substring без повторов ещё ⏳.</p>
+<hr>
+<h2 id="4-desktop">🖥️ Фаза 4 — Desktop разработка</h2>
+<blockquote>
+<p>Выбери трек: WinForms (проще) или WPF (мощнее, MVVM)</p>
+</blockquote>
+<h3 id="winforms">WinForms трек</h3>
+<ul>
+<li>[ ] 4.1 Архитектура WinForms — Form, Controls, Events</li>
+<li>[ ] 4.2 NotifyIcon и System Tray приложения ← <em>твой текущий проект!</em></li>
+<li>[ ] 4.3 Многопоточность в UI — BackgroundWorker, Invoke/BeginInvoke</li>
+<li>[ ] 4.4 Работа с таймерами — System.Windows.Forms.Timer vs System.Threading.Timer</li>
+<li>[ ] 4.5 Настройки приложения — ApplicationSettings, конфиги</li>
+</ul>
+<h3 id="wpf-winforms">WPF трек (рекомендую изучить после WinForms)</h3>
+<ul>
+<li>[ ] 4.6 XAML основы — разметка, биндинги</li>
+<li>[ ] 4.7 Паттерн MVVM — Model, View, ViewModel</li>
+<li>[ ] 4.8 Data Binding — INotifyPropertyChanged</li>
+<li>[ ] 4.9 Commands — ICommand, RelayCommand</li>
+<li>[ ] 4.10 Стили и темы</li>
+</ul>
+<h3 id="4">🎯 Итоговое задание фазы 4</h3>
+<pre><code>Улучшить твой System Tray проект:
+- Вынести логику из формы (MVVM или MVP)
+- Сделать обновление иконки через таймер без блокировки UI
+- Добавить анимацию/плавность при открытии формы
+- Правильно работать с потоками
+</code></pre>
+<hr>
+<h2 id="5-backend-net-aspnet-core">🌐 Фаза 5 — Backend (.NET / ASP.NET Core) — 🔄 В АКТИВНОЙ РАБОТЕ</h2>
+<blockquote>
+<p>Цель: уметь писать API и серверные приложения
+Строится прямо сейчас внутри Life Notes (Web API на ASP.NET Core + EF Core + PostgreSQL) — не с чистого листа, а параллельно с уже идущими откликами на собеседования.</p>
+</blockquote>
+<h3 id="_4">Темы</h3>
+<ul>
+<li>[ ] 5.1 .NET платформа — CLR, JIT, сборка мусора (GC)</li>
+<li>📝 <em>Life Notes:</em> Life Notes — не консольный скрипт, а долгоживущий серверный процесс. Понимание GC объясняет, почему поведение памяти отличается от Phase 1 примеров.</li>
+<li>[ ] 5.2 ASP.NET Core — структура проекта, middleware, DI</li>
+<li>📝 <em>Life Notes:</em> это буквально скелет самого приложения — конвейер, через который пройдёт каждый запрос "создать/получить/удалить заметку".</li>
+<li>[ ] 5.3 Dependency Injection — IoC контейнер, жизненные циклы (Singleton, Scoped, Transient)</li>
+<li>📝 <em>Life Notes:</em> NoteService/UserService нужно правильно связать между собой — перепутать Scoped/Singleton для DbContext = реальный класс production-багов ("общий DbContext на все запросы").</li>
+<li>[ ] 5.4 REST API — контроллеры, маршрутизация, статус коды</li>
+<li>📝 <em>Life Notes:</em> сам интерфейс, через который заметки создаются/читаются/обновляются/удаляются — <code>GET /notes</code>, <code>POST /notes</code>, корректные 201/404 вместо "всегда 200".</li>
+<li>[ ] 5.5 Minimal API (современный подход)</li>
+<li>📝 <em>Life Notes:</em> можно сравнить оба подхода на одном маленьком эндпоинте (например health-check) — на собесе иногда спрашивают, чем отличаются.</li>
+<li>[ ] 5.6 Конфигурация — appsettings.json, переменные окружения, IOptions</li>
+<li>📝 <em>Life Notes:</em> строка подключения к БД и JWT-секрет никогда не хардкодятся — учит правильному разделению dev/prod настроек с нуля.</li>
+<li>[ ] 5.7 Логирование — ILogger, Serilog</li>
+<li>📝 <em>Life Notes:</em> когда заметка не сохранилась или поиск сломался — нужны структурированные логи, а не гадание. Раньше уже был закрыт как найденный гэп (Сачков-видео).</li>
+<li>[ ] 5.8 Middleware — написание своего</li>
+<li>📝 <em>Life Notes:</em> свой middleware для глобальной обработки ошибок (чистый JSON вместо голого stack trace) или логирования длительности каждого запроса.</li>
+<li>[ ] 5.9 Аутентификация — JWT, Cookie Auth</li>
+<li>📝 <em>Life Notes:</em> заметки — личные, нужно реально знать, ЧЬИ они. Здесь появляется настоящая защита эндпоинтов, не декоративная.</li>
+<li>[ ] 5.10 Background Services — IHostedService, Worker Service</li>
+<li>📝 <em>Life Notes:</em> например фоновая переиндексация заметок для поиска или очистка старой корзины — работа, которая не должна блокировать обработку обычных запросов.</li>
+</ul>
+<h3 id="5">🎯 Итоговое задание фазы 5</h3>
+<pre><code>REST API &quot;Task Manager&quot;:
+- CRUD для задач (GET/POST/PUT/DELETE)
+- Аутентификация через JWT
+- Логирование всех запросов через middleware
+- DI — все зависимости через интерфейсы
+</code></pre>
+<hr>
+<h2 id="6">🗄️ Фаза 6 — Базы данных</h2>
+<blockquote>
+<p>Цель: уметь работать с данными профессионально</p>
+</blockquote>
+<h3 id="_5">Темы</h3>
+<ul>
+<li>[ ] 6.1 ADO.NET — основы (понять что под капотом)</li>
+<li>📝 <em>Life Notes:</em> объясняет, что EF Core реально делает "под капотом" при обращении к Postgres — снимает ощущение магии.</li>
+<li>[ ] 6.2 Entity Framework Core — Code First, миграции, DbContext</li>
+<li>📝 <em>Life Notes:</em> основной способ хранить заметки в Postgres — схема будет реально эволюционировать (добавятся теги/папки), миграции здесь не абстрактный пример, а рабочий процесс.</li>
+<li>[ ] 6.3 LINQ to Entities — запросы через EF</li>
+<li>📝 <em>Life Notes:</em> поиск по тегу, фильтр по дате, сортировка по последнему изменению — всё пройдёт через это. Разница IQueryable (уходит в SQL) vs IEnumerable (в памяти) здесь не теория, а реальная ловушка производительности на растущей таблице.</li>
+<li>[ ] 6.4 Dapper — легковесный ORM для сложных запросов</li>
+<li>📝 <em>Life Notes:</em> если EF сгенерирует неэффективный SQL для сложного поиска по заметкам — можно спуститься до Dapper за прямым контролем.</li>
+<li>[ ] 6.5 Репозиторий паттерн — Repository + Unit of Work</li>
+<li>📝 <em>Life Notes:</em> тот же DIP-принцип из Phase 2 Contact Manager, но уже на реальном масштабе — логика хранения заметок отделена и тестируема.</li>
+<li>[ ] 6.6 Транзакции и параллельный доступ</li>
+<li>📝 <em>Life Notes:</em> что если одну заметку редактируют с двух устройств одновременно? Настоящий вопрос конкурентного доступа, не гипотетический.</li>
+<li>[ ] 6.7 Оптимизация запросов — индексы, N+1 проблема</li>
+<li>📝 <em>Life Notes:</em> список заметок + их теги в цикле — классическое место, где N+1 прячется. Здесь это можно реально поймать и починить, не только пересказать теорию с мок-собеса.</li>
+<li>[ ] 6.8 SQLite (для desktop) / PostgreSQL (для backend)</li>
+<li>📝 <em>Life Notes:</em> сразу PostgreSQL, не SQLite — целевая вакансия требует именно это, учимся на проде-уровне с первого дня.</li>
+</ul>
+<h3 id="6_1">🎯 Итоговое задание фазы 6</h3>
+<pre><code>Подключить БД к Task Manager API:
+- EF Core + PostgreSQL/SQLite
+- Миграции
+- Паттерн Repository
+- Решить N+1 при загрузке задач с пользователями
+</code></pre>
+<hr>
+<h2 id="7">🧪 Фаза 7 — Тестирование и качество кода</h2>
+<blockquote>
+<p>Цель: писать код, которому можно доверять</p>
+</blockquote>
+<h3 id="_6">Темы</h3>
+<ul>
+<li>[ ] 7.1 Unit тесты — xUnit, NUnit (выбрать один)</li>
+<li>📝 <em>Life Notes:</em> доказывает, что логика NoteService (валидация, бизнес-правила) реально работает, без ручного прокликивания через API каждый раз — плюс прямое требование целевой вакансии.</li>
+<li>[ ] 7.2 Паттерн AAA — Arrange, Act, Assert</li>
+<li>📝 <em>Life Notes:</em> держит тесты читаемыми по мере роста набора — иначе через месяц сам не разберёшься, что тестировалось.</li>
+<li>[ ] 7.3 Моки — Moq, NSubstitute</li>
+<li>📝 <em>Life Notes:</em> тестировать логику NoteService БЕЗ реального похода в БД каждый раз — быстрые, изолированные тесты через мок <code>IRepository</code>.</li>
+<li>[ ] 7.4 Integration тесты — WebApplicationFactory</li>
+<li>📝 <em>Life Notes:</em> доказывает, что весь API реально работает целиком (запрос → БД → ответ) — ловит баги связки, которые unit-тесты пропускают.</li>
+<li>[ ] 7.5 TDD основы — написать тест сначала</li>
+<li>📝 <em>Life Notes:</em> например тест "нельзя создать заметку с пустым заголовком" — сначала красный, потом зелёный. Не обязательно применять везде, но полезная мышечная память.</li>
+<li>[ ] 7.6 Code coverage — что это и зачем</li>
+<li>📝 <em>Life Notes:</em> проверка, что ядро логики заметок реально покрыто, а не только очевидные места — и что высокий % не значит автоматически "хорошие тесты".</li>
+<li>[ ] 7.7 Анализаторы кода — Roslyn analyzers, SonarQube</li>
+<li>📝 <em>Life Notes:</em> автоматически ловит баги/code smell в реальном коде проекта — та же категория инструментов, что использует настоящая команда в CI, не ручная вычитка.</li>
+</ul>
+<h3 id="7_1">🎯 Итоговое задание фазы 7</h3>
+<pre><code>Написать unit тесты для Task Manager:
+- Покрыть сервисный слой на 80%+
+- Мокировать репозиторий
+- Один integration тест для API endpoint
+</code></pre>
+<hr>
+<h2 id="8-devops">🚀 Фаза 8 — DevOps и деплой</h2>
+<blockquote>
+<p>Цель: уметь доставить приложение до пользователя</p>
+</blockquote>
+<h3 id="_7">Темы</h3>
+<ul>
+<li>[ ] 8.1 Git — ветвление, merge, rebase, конфликты</li>
+<li>📝 <em>Life Notes:</em> реальные feature-ветки вместо коммита прямо в main — повторяет настоящий командный workflow, включая настоящие конфликты, не выдуманные.</li>
+<li>[ ] 8.2 GitHub Actions — базовый CI/CD pipeline</li>
+<li>📝 <em>Life Notes:</em> тесты Life Notes автоматически гоняются на каждый пуш — ловит регрессии до того, как заметил сам. Плюс демонстрируемый артефакт для резюме.</li>
+<li>[ ] 8.3 Docker — контейнеризация .NET приложения</li>
+<li>📝 <em>Life Notes:</em> упаковать API + Postgres так, чтобы запускалось одинаково где угодно — прямое требование целевой вакансии, не абстрактная тема.</li>
+<li>[ ] 8.4 Публикация desktop — installer, self-contained exe</li>
+<li>📝 <em>Life Notes:</em> НЕ относится — Life Notes веб-API, не десктоп. Низкий приоритет, можно пропустить без потерь.</li>
+<li>[ ] 8.5 NuGet — создание и публикация пакетов</li>
+<li>📝 <em>Life Notes:</em> актуально только если вынести переиспользуемый кусок (например DTO/валидацию) в отдельный пакет — не приоритет сейчас.</li>
+<li>[ ] 8.6 Версионирование — SemVer</li>
+<li>📝 <em>Life Notes:</em> пригодится, если появятся версии самого API — сейчас достаточно знать теорию, без практики.</li>
+</ul>
+<hr>
+<h2 id="9">🏛️ Фаза 9 — Архитектурные паттерны</h2>
+<blockquote>
+<p>Цель: мыслить системно</p>
+</blockquote>
+<h3 id="_8">Темы</h3>
+<ul>
+<li>[ ] 9.1 Паттерны проектирования — Creational, Structural, Behavioral (GoF)</li>
+<li>📝 <em>Life Notes:</em> учит НАЗЫВАТЬ паттерны, которые уже наверняка появятся сами по себе (Repository, Strategy для форматирования заметок) — легче обсуждать свой же код на собесе.</li>
+<li>[ ] 9.2 Clean Architecture — слои, зависимости</li>
+<li>📝 <em>Life Notes:</em> по мере роста держит доменную логику независимой от EF Core/ASP.NET деталей — тестируемо и заменяемо, не срослось намертво.</li>
+<li>[ ] 9.3 DDD основы — Domain, Application, Infrastructure слои</li>
+<li>📝 <em>Life Notes:</em> реальные доменные понятия (Note, Tag, Folder, User) — мыслить в терминах домена, а не только "таблицы БД".</li>
+<li>[ ] 9.4 CQRS + MediatR — 🆕 <em>теория подтянута к Фазе 6 (собес), практика здесь как обычно</em></li>
+<li>📝 <em>Life Notes:</em> разделить "получить мои заметки" (запрос) от "создать заметку" (команда) по мере роста функциональности — паттерн, который рынок явно ценит (банк вопросов Ozon).</li>
+<li>[ ] 9.5 Event-driven архитектура</li>
+<li>📝 <em>Life Notes:</em> например событие "заметка создана" запускает фоновую переиндексацию для поиска — асинхронная реакция вместо всего подряд внутри одного запроса.</li>
+<li>[ ] 9.6 Microservices vs Monolith — когда что выбрать</li>
+<li>📝 <em>Life Notes:</em> остаётся монолитом (правильно для pet-проекта) — но нужно уметь ОБЪЯСНИТЬ это решение на собесе, не просто сделать по умолчанию.</li>
+<li>[ ] 9.7 🆕 Kafka vs RabbitMQ</li>
+<li>📝 <em>Life Notes:</em> Фаза 5 плана добавляет RabbitMQ реально — например асинхронная задача "экспортировать заметку в PDF". Не только концепция, а конкретная интеграция.</li>
+<li>[ ] 9.8 🆕 gRPC vs REST</li>
+<li>📝 <em>Life Notes:</em> скорее всего останется только теорией — REST правильный выбор для публичного API заметок. Полезно уметь объяснить, ПОЧЕМУ не gRPC — классическая ловушка "оверинжиниринга" из SystemDesign_Companion.md.</li>
+<li>[ ] 9.9 🆕 Polly — retry, circuit breaker, timeout, fallback</li>
+<li>📝 <em>Life Notes:</em> если появится вызов внешнего сервиса (например AI-инсайты по заметке через Claude API — прямая связь с твоим AI-интересом) — нужна устойчивость к сбоям, не просто try/catch и надежда.</li>
+<li>[ ] 9.10 🆕 GitLab CI/CD</li>
+<li>📝 <em>Life Notes:</em> сама демка скорее всего останется на GitHub Actions, но GitLab — то, что реально используют российские работодатели (по рыночному анализу) — знать по названию и структуре важно для собеса.</li>
+</ul>
+<hr>
+<h2 id="18">📅 Реальный темп (пересчитано 18 августа, горизонт — конец сентября)</h2>
+<table>
+<thead>
+<tr>
+<th>Фаза</th>
+<th>Статус</th>
+<th>Ориентир</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Фаза 1</td>
+<td>✅ Завершена</td>
+<td>—</td>
+</tr>
+<tr>
+<td>Фаза 2</td>
+<td>✅ Завершена</td>
+<td>—</td>
+</tr>
+<tr>
+<td>Фаза 3 (теория)</td>
+<td>✅ Завершена</td>
+<td>—</td>
+</tr>
+<tr>
+<td>Фаза 3 (LeetCode)</td>
+<td>🔄 Идёт, 2/5 сделано</td>
+<td>до конца августа, параллельно с остальным</td>
+</tr>
+<tr>
+<td>Фаза 4</td>
+<td>⏭️ Пропущена</td>
+<td>—</td>
+</tr>
+<tr>
+<td>Фаза 5</td>
+<td>🔄 Активно (Life Notes Web API)</td>
+<td>конец августа</td>
+</tr>
+<tr>
+<td>Фаза 6</td>
+<td>⏳ Следующая</td>
+<td>начало сентября</td>
+</tr>
+<tr>
+<td>Фаза 7</td>
+<td>⏳</td>
+<td>середина сентября</td>
+</tr>
+<tr>
+<td>Фаза 8</td>
+<td>⏳</td>
+<td>середина-конец сентября</td>
+</tr>
+<tr>
+<td>Фаза 9</td>
+<td>🔵 По мере роста</td>
+<td>не критично к дедлайну</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Важно:</strong> собеседования уже идут (текущее окно ~18-20 авг) ПАРАЛЛЕЛЬНО с Фазами 5-9, не после них — финансовый буфер до конца сентября даёт время продолжать углубляться в фоне, пока идут отклики/тестовые/интервью по нескольким трекам одновременно (основной C#-поиск + подстраховочные вакансии).</p>
+<hr>
+<h2 id="_9">🛠️ Инструменты разработки</h2>
+<ul>
+<li><strong>IDE</strong>: Visual Studio 2022 (Community — бесплатно) или Rider</li>
+<li><strong>БД</strong>: DBeaver (GUI), pgAdmin (PostgreSQL)</li>
+<li><strong>API тестирование</strong>: Postman или Bruno</li>
+<li><strong>Git GUI</strong>: GitKraken или Fork</li>
+<li><strong>Профилировщик</strong>: dotMemory, PerfView (бесплатно)</li>
+</ul>
+<hr>
+<h2 id="_10">📚 Полезные ресурсы</h2>
+<ul>
+<li><a href="https://docs.microsoft.com/dotnet">docs.microsoft.com/dotnet</a> — официальная дока</li>
+<li><a href="https://refactoring.guru/ru">refactoring.guru</a> — паттерны на русском</li>
+<li>LeetCode / Codewars — практика алгоритмов на C#</li>
+</ul>
+<hr>
+<p><em>Создано: 2026-03-05 | Тьютор: Claude</em></p></article>
+    <aside class="aside">
+      <strong>В этом документе</strong>
+      <div class="toc"><div class="toc">
+<ul>
+<li><a href="#18-2026">📊 Прогресс (обновлено 🆕 18 августа 2026)</a></li>
+<li><a href="#1-c">🔵 Фаза 1 — Теоретический фундамент C</a><ul>
+<li><a href="#_1">Темы</a></li>
+<li><a href="#1">🎯 Итоговое задание фазы 1 ✅ ЗАВЕРШЕНО</a></li>
+</ul>
+</li>
+<li><a href="#2">🟢 Фаза 2 — ООП и архитектура мышления ✅ ЗАВЕРШЕНА</a><ul>
+<li><a href="#_2">Темы</a></li>
+<li><a href="#2-3">🎯 Итоговое задание фазы 2 ✅ ЗАВЕРШЕНО (3 раунда ревью)</a></li>
+</ul>
+</li>
+<li><a href="#3-c-leetcode-easy">🟡 Фаза 3 — Продвинутый C# + LeetCode Easy</a><ul>
+<li><a href="#_3">Темы — теория написана полностью</a></li>
+<li><a href="#3">🎯 Итоговое задание фазы 3 — практика идёт</a></li>
+</ul>
+</li>
+<li><a href="#4-desktop">🖥️ Фаза 4 — Desktop разработка</a><ul>
+<li><a href="#winforms">WinForms трек</a></li>
+<li><a href="#wpf-winforms">WPF трек (рекомендую изучить после WinForms)</a></li>
+<li><a href="#4">🎯 Итоговое задание фазы 4</a></li>
+</ul>
+</li>
+<li><a href="#5-backend-net-aspnet-core">🌐 Фаза 5 — Backend (.NET / ASP.NET Core) — 🔄 В АКТИВНОЙ РАБОТЕ</a><ul>
+<li><a href="#_4">Темы</a></li>
+<li><a href="#5">🎯 Итоговое задание фазы 5</a></li>
+</ul>
+</li>
+<li><a href="#6">🗄️ Фаза 6 — Базы данных</a><ul>
+<li><a href="#_5">Темы</a></li>
+<li><a href="#6_1">🎯 Итоговое задание фазы 6</a></li>
+</ul>
+</li>
+<li><a href="#7">🧪 Фаза 7 — Тестирование и качество кода</a><ul>
+<li><a href="#_6">Темы</a></li>
+<li><a href="#7_1">🎯 Итоговое задание фазы 7</a></li>
+</ul>
+</li>
+<li><a href="#8-devops">🚀 Фаза 8 — DevOps и деплой</a><ul>
+<li><a href="#_7">Темы</a></li>
+</ul>
+</li>
+<li><a href="#9">🏛️ Фаза 9 — Архитектурные паттерны</a><ul>
+<li><a href="#_8">Темы</a></li>
+</ul>
+</li>
+<li><a href="#18">📅 Реальный темп (пересчитано 18 августа, горизонт — конец сентября)</a></li>
+<li><a href="#_9">🛠️ Инструменты разработки</a></li>
+<li><a href="#_10">📚 Полезные ресурсы</a></li>
+</ul>
+</div>
+</div>
+    </aside>
+  </div>
+</main>
+
+
+<script>
+const ROOT = "..";
+
+// ---- тема
+const themeBtn = document.getElementById("theme");
+const paint = () => {
+  const dark = document.documentElement.getAttribute("data-theme") === "dark";
+  themeBtn.textContent = dark ? "☀" : "☾";
+};
+paint();
+themeBtn.addEventListener("click", () => {
+  const next = document.documentElement.getAttribute("data-theme") === "dark" ? "light" : "dark";
+  document.documentElement.setAttribute("data-theme", next);
+  try { localStorage.setItem("kb-theme", next); } catch (e) {}
+  paint();
+});
+
+// ---- поиск
+let index = null;
+const box = document.getElementById("results");
+const hits = document.getElementById("hits");
+const head = box.querySelector("h3");
+const input = document.getElementById("q");
+
+async function ensureIndex() {
+  if (index) return index;
+  const res = await fetch(ROOT + "/search-index.json");
+  index = await res.json();
+  return index;
+}
+
+const esc = (s) => (s || "").replace(/[&<>]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
+
+function hi(text, query) {
+  const i = text.toLowerCase().indexOf(query);
+  if (i < 0) return esc(text);
+  return esc(text.slice(0, i)) + "<mark>" + esc(text.slice(i, i + query.length)) + "</mark>" + esc(text.slice(i + query.length));
+}
+
+input.addEventListener("input", async () => {
+  const q = input.value.trim().toLowerCase();
+  if (q.length < 2) { box.hidden = true; return; }
+  const data = await ensureIndex();
+  const found = [];
+  for (const d of data) {
+    const inTitle = d.title.toLowerCase().includes(q);
+    const inSum = (d.summary || "").toLowerCase().includes(q);
+    const heads = (d.heads || []).filter(h => h.toLowerCase().includes(q));
+    if (inTitle || inSum || heads.length) {
+      found.push({ d, heads, rank: inTitle ? 0 : heads.length ? 1 : 2 });
+    }
+  }
+  found.sort((a, b) => a.rank - b.rank);
+  head.textContent = found.length ? `Нашлось: ${found.length}` : "Ничего не нашлось";
+  hits.innerHTML = found.slice(0, 40).map(({ d, heads }) =>
+    `<a class="hit" href="${ROOT}/d/${d.slug}.html">
+       <b>${hi(d.title, q)}</b>
+       <span>${heads.length ? "→ " + heads.slice(0, 3).map(h => hi(h, q)).join(" · ") : esc(d.summary || "")}</span>
+     </a>`).join("");
+  box.hidden = false;
+});
+
+input.addEventListener("keydown", (e) => { if (e.key === "Escape") { input.value = ""; box.hidden = true; input.blur(); } });
+document.addEventListener("keydown", (e) => {
+  if (e.key === "/" && document.activeElement !== input) { e.preventDefault(); input.focus(); }
+});
+</script>
+</body>
+</html>

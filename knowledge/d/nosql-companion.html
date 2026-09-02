@@ -1,0 +1,187 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NoSQL — живой companion-документ - База знаний</title>
+<link rel="stylesheet" href="../kb.css">
+<script>
+  // Тему ставим до первой отрисовки, иначе на тёмной системе мигает белым.
+  try {
+    var t = localStorage.getItem("kb-theme");
+    if (!t) t = matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+    document.documentElement.setAttribute("data-theme", t);
+  } catch (e) {}
+</script>
+</head>
+<body>
+
+<header class="top">
+  <div class="top-in">
+    <a class="brand" href="../index.html">База <span>знаний</span></a>
+    <span class="grow"></span>
+    <input id="q" type="search" placeholder="Поиск по всем материалам…" autocomplete="off">
+    <button class="icon-btn" id="theme" type="button" title="Тема"></button>
+  </div>
+</header>
+
+<div id="results" hidden><div class="wrap-r"><h3></h3><div id="hits"></div></div></div>
+
+<main class="wrap">
+  <div class="doc-head">
+    <div class="crumb"><a href="../index.html#companions">Спутники к собеседованиям</a></div>
+    <h1>NoSQL — живой companion-документ</h1>
+    <div class="meta">99 строк · источник <code>l2code/NoSQL_Companion.md</code></div>
+  </div>
+
+  <div class="layout">
+    <article class="prose"><blockquote>
+<p>Как остальные companion-файлы — постоянно пополняется. Источник — присланный видео-конспект (часть 1: "Что такое NoSQL"), структурирован и проверен на точность, с исправлением пары неточностей.</p>
+</blockquote>
+<hr>
+<h2 id="sql-no">Сначала SQL — от чего мы говорим "No"</h2>
+<p><strong>Аналогия из жизни:</strong> реляционная БД — как таблица в Excel, только с возможностью СВЯЗЫВАТЬ данные между разными листами через общий идентификатор.</p>
+<p><strong>Суть:</strong> реляционные БД хранят данные в таблицах (строки + столбцы), логически связанных между собой (relation = связь). Столбец — тип данных, ячейка — значение, строка — набор значений одного объекта. <strong>Первичный ключ</strong> — уникальный идентификатор строки; используется в другой таблице как <strong>внешний ключ</strong> для связи.</p>
+<p><strong>Ключевые свойства:</strong>
+- <strong>Схема (schema)</strong> — жёсткое описание структуры таблицы заранее. Изменение структуры (добавить/убрать столбец) затрагивает ВСЕ данные в таблице.
+- <strong>ACID</strong> — целостность и согласованность данных гарантирована даже при сбоях сети/железа. Критично для финансовых данных.</p>
+<p><strong>Примеры:</strong> MS SQL Server, Oracle Database, MySQL, PostgreSQL.</p>
+<hr>
+<h2 id="nosql">NoSQL — узкоспециализированные форматы под конкретные задачи</h2>
+<p>Общая идея: хранить данные НЕ в реляционных таблицах — ради производительности, масштабируемости или удобства под конкретный сценарий использования.</p>
+<h3 id="1-key-value-">1. Key-Value (ключ-значение)</h3>
+<p><strong>Аналогия из жизни:</strong> гардероб в театре — сдаёшь пальто, получаешь номерок (ключ). Чтобы забрать пальто (значение), нужен только номерок — никто не спрашивает, из чего пальто сшито и какого оно фасона.</p>
+<p><strong>Суть:</strong> пара "уникальный ключ → значение", без предопределённой структуры (значением может быть число, строка, даже другая пара ключ-значение). Многие такие БД хранят данные в RAM — меньше объём, но огромная скорость. Никаких сложных запросов и связей — только "запиши по ключу" / "получи по ключу".</p>
+<p><strong>Где использовать:</strong> кэш, пользовательские сессии, корзина в интернет-магазине (ключ — id пользователя, значение — товары в корзине).</p>
+<p><strong>Примеры:</strong> Redis, Memcached, DynamoDB.</p>
+<h3 id="2-wide-column">2. Wide-Column (широкие столбцы / колоночные)</h3>
+<p><strong>Суть:</strong> развитие key-value — в значении можно хранить сразу несколько столбцов. Похоже на реляционную БД, но БЕЗ схемы — можно хранить разнородные неструктурированные данные.</p>
+<p><strong>Где использовать:</strong> логи, данные с IoT-устройств, аналитика больших объёмов.</p>
+<p><strong>Примеры:</strong> Cassandra, HBase, (⚠️ см. ниже про ClickHouse).</p>
+<blockquote>
+<p>[!info]+ Уточнение точности — ClickHouse не совсем та же категория
+Источник объединяет Cassandra/HBase и ClickHouse в одну группу — это упрощение. Cassandra/HBase — классические wide-column NoSQL для быстрой записи и поиска по ключу при огромном масштабе. ClickHouse — колоночная <strong>аналитическая (OLAP)</strong> база для быстрой агрегации по большим таблицам — решает другую задачу (аналитика/отчёты, не key-based lookup). На собесе стоит различать эти два случая, если разговор зайдёт глубже "оба хранят данные по столбцам".</p>
+</blockquote>
+<h3 id="3-document-db">3. Document DB (документоориентированные)</h3>
+<p><strong>Аналогия из жизни (из источника, хорошая — сохраняю):</strong> шкаф с ящиками на работе — в один ящик кладём трудовые договоры, в другой — договоры с партнёрами. Ничто не мешает свалить всё в кучу, но так удобнее. Ящики — это и есть коллекции. Отсутствие схемы позволяет класть в один ящик документы, логически похожие, но разные по структуре внутри.</p>
+<p><strong>Суть:</strong> документ — набор пар ключ-значение, без схемы, можно свободно добавлять/удалять поля (в отличие от реляционных БД, где это затронуло бы всю таблицу). Документы могут быть вложенными. Форматы — XML, YAML, чаще всего JSON. Документы группируются в коллекции.</p>
+<p><strong>Где использовать:</strong> мобильные приложения, игры, блоги, интернет-магазины — везде, где много контента с плавающей структурой.</p>
+<p><strong>Примеры:</strong> MongoDB, Amazon DynamoDB, CouchDB.</p>
+<h3 id="4-graph-db">4. Graph DB (графовые)</h3>
+<p><strong>Аналогия из жизни:</strong> карта друзей в соцсети — важнее не то, что написано в профиле у каждого человека, а КТО с КЕМ знаком и как связи ветвятся дальше.</p>
+<p><strong>Суть:</strong> узлы (данные) + рёбра (связи между данными) — связь хранится напрямую, не через отдельную таблицу, как в реляционных БД.</p>
+<p><strong>Где использовать:</strong> рекомендательные алгоритмы, соцсети, управление сетями и маршрутизацией, обнаружение мошенничества.</p>
+<p><strong>Примеры:</strong> Neo4j, Dgraph.</p>
+<h3 id="5-search-engine-db">5. Search-engine DB (поисковые)</h3>
+<p><strong>Аналогия из жизни (из источника, хорошая — сохраняю):</strong> указатель терминов в конце книги — вместо того чтобы читать всю книгу в поисках слова, смотришь в указатель и сразу попадаешь на нужную страницу.</p>
+<p><strong>Суть:</strong> документы с текстом индексируются заранее; поиск сканирует только индекс, не все документы целиком.</p>
+<p><strong>Где использовать:</strong> полнотекстовый поиск, хранение и анализ логов.</p>
+<p><strong>Примеры:</strong> Elasticsearch, Solr, Algolia.</p>
+<h3 id="6-time-series-db">6. Time-Series DB (временных рядов)</h3>
+<p><strong>Аналогия из жизни:</strong> фитнес-браслет, который каждую минуту пишет пульс — важен не поиск "по имени", а вопросы вроде "какой был пульс в 15:00" или "покажи тренд за день".</p>
+<p><strong>Суть:</strong> оптимизированы для данных с отметкой времени (значение + момент времени).</p>
+<p><strong>Где использовать:</strong> мониторинг систем (нагрузка сервера, число подключений).</p>
+<p><strong>Примеры:</strong> InfluxDB, Prometheus.</p>
+<h3 id="7-multi-model-">7. Multi-model (много-модульные)</h3>
+<p><strong>Суть:</strong> одна БД поддерживает несколько моделей данных сразу — не нужно выбирать один тип NoSQL раз и навсегда.</p>
+<p><strong>Пример:</strong> Redis — база в первую очередь key-value, но с дополнительными модулями умеет документы и time-series.</p>
+<blockquote>
+<p>[!info]+ Уточнение точности — графовый модуль Redis устарел
+Источник упоминает, что Redis "умеет в графы" — это ссылка на модуль RedisGraph, который <strong>Redis Inc. официально свернул (EOL) в 2023 году</strong>, рекомендовав пользователям переходить на форк FalkorDB или отдельные графовые БД. На собесе безопаснее не заявлять "Redis работает с графами" как актуальный факт.</p>
+</blockquote>
+<hr>
+<h2 id="_1">Источник</h2>
+<p>Видео-конспект курса по NoSQL (эксперт Олег Филиппов) — материал структурирован и проверен, промо-часть курса в конце не включена как нерелевантная теории.</p></article>
+    <aside class="aside">
+      <strong>В этом документе</strong>
+      <div class="toc"><div class="toc">
+<ul>
+<li><a href="#sql-no">Сначала SQL — от чего мы говорим "No"</a></li>
+<li><a href="#nosql">NoSQL — узкоспециализированные форматы под конкретные задачи</a><ul>
+<li><a href="#1-key-value-">1. Key-Value (ключ-значение)</a></li>
+<li><a href="#2-wide-column">2. Wide-Column (широкие столбцы / колоночные)</a></li>
+<li><a href="#3-document-db">3. Document DB (документоориентированные)</a></li>
+<li><a href="#4-graph-db">4. Graph DB (графовые)</a></li>
+<li><a href="#5-search-engine-db">5. Search-engine DB (поисковые)</a></li>
+<li><a href="#6-time-series-db">6. Time-Series DB (временных рядов)</a></li>
+<li><a href="#7-multi-model-">7. Multi-model (много-модульные)</a></li>
+</ul>
+</li>
+<li><a href="#_1">Источник</a></li>
+</ul>
+</div>
+</div>
+    </aside>
+  </div>
+</main>
+
+
+<script>
+const ROOT = "..";
+
+// ---- тема
+const themeBtn = document.getElementById("theme");
+const paint = () => {
+  const dark = document.documentElement.getAttribute("data-theme") === "dark";
+  themeBtn.textContent = dark ? "☀" : "☾";
+};
+paint();
+themeBtn.addEventListener("click", () => {
+  const next = document.documentElement.getAttribute("data-theme") === "dark" ? "light" : "dark";
+  document.documentElement.setAttribute("data-theme", next);
+  try { localStorage.setItem("kb-theme", next); } catch (e) {}
+  paint();
+});
+
+// ---- поиск
+let index = null;
+const box = document.getElementById("results");
+const hits = document.getElementById("hits");
+const head = box.querySelector("h3");
+const input = document.getElementById("q");
+
+async function ensureIndex() {
+  if (index) return index;
+  const res = await fetch(ROOT + "/search-index.json");
+  index = await res.json();
+  return index;
+}
+
+const esc = (s) => (s || "").replace(/[&<>]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
+
+function hi(text, query) {
+  const i = text.toLowerCase().indexOf(query);
+  if (i < 0) return esc(text);
+  return esc(text.slice(0, i)) + "<mark>" + esc(text.slice(i, i + query.length)) + "</mark>" + esc(text.slice(i + query.length));
+}
+
+input.addEventListener("input", async () => {
+  const q = input.value.trim().toLowerCase();
+  if (q.length < 2) { box.hidden = true; return; }
+  const data = await ensureIndex();
+  const found = [];
+  for (const d of data) {
+    const inTitle = d.title.toLowerCase().includes(q);
+    const inSum = (d.summary || "").toLowerCase().includes(q);
+    const heads = (d.heads || []).filter(h => h.toLowerCase().includes(q));
+    if (inTitle || inSum || heads.length) {
+      found.push({ d, heads, rank: inTitle ? 0 : heads.length ? 1 : 2 });
+    }
+  }
+  found.sort((a, b) => a.rank - b.rank);
+  head.textContent = found.length ? `Нашлось: ${found.length}` : "Ничего не нашлось";
+  hits.innerHTML = found.slice(0, 40).map(({ d, heads }) =>
+    `<a class="hit" href="${ROOT}/d/${d.slug}.html">
+       <b>${hi(d.title, q)}</b>
+       <span>${heads.length ? "→ " + heads.slice(0, 3).map(h => hi(h, q)).join(" · ") : esc(d.summary || "")}</span>
+     </a>`).join("");
+  box.hidden = false;
+});
+
+input.addEventListener("keydown", (e) => { if (e.key === "Escape") { input.value = ""; box.hidden = true; input.blur(); } });
+document.addEventListener("keydown", (e) => {
+  if (e.key === "/" && document.activeElement !== input) { e.preventDefault(); input.focus(); }
+});
+</script>
+</body>
+</html>

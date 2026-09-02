@@ -1,0 +1,380 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Основы программирования — краткий справочник - База знаний</title>
+<link rel="stylesheet" href="../kb.css">
+<script>
+  // Тему ставим до первой отрисовки, иначе на тёмной системе мигает белым.
+  try {
+    var t = localStorage.getItem("kb-theme");
+    if (!t) t = matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+    document.documentElement.setAttribute("data-theme", t);
+  } catch (e) {}
+</script>
+</head>
+<body>
+
+<header class="top">
+  <div class="top-in">
+    <a class="brand" href="../index.html">База <span>знаний</span></a>
+    <span class="grow"></span>
+    <input id="q" type="search" placeholder="Поиск по всем материалам…" autocomplete="off">
+    <button class="icon-btn" id="theme" type="button" title="Тема"></button>
+  </div>
+</header>
+
+<div id="results" hidden><div class="wrap-r"><h3></h3><div id="hits"></div></div></div>
+
+<main class="wrap">
+  <div class="doc-head">
+    <div class="crumb"><a href="../index.html#reference">Справочники</a></div>
+    <h1>Основы программирования — краткий справочник</h1>
+    <div class="meta">337 строк · источник <code>l2code/Programming_Fundamentals_QA.md</code></div>
+  </div>
+
+  <div class="layout">
+    <article class="prose"><blockquote>
+<p>Ответы на список базовых вопросов (логика, типы данных, функции, ветвления, циклы, рекурсия) — привязаны к C#. Более глубокие смежные темы (value/reference types, коллекции) уже разобраны подробнее в <a href="Phase1_CSharp_Fundamentals.md">Phase1_CSharp_Fundamentals.md</a> — здесь только то, чего там не было, плюс краткая сводка остального для целостности документа.</p>
+</blockquote>
+<hr>
+<h2 id="1-true-false">1. Что такое true и false в логике</h2>
+<p>Единственные два значения типа <code>bool</code> — истина и ложь. Основа любого условия и логической операции.</p>
+<pre><code class="language-csharp">bool isReady = true;
+bool hasError = false;
+
+bool canProceed = isReady &amp;&amp; !hasError; // true
+</code></pre>
+<h2 id="2">2. Что такое простые типы данных</h2>
+<p>Хранят одно неделимое значение напрямую (value types) — <code>int</code>, <code>double</code>, <code>bool</code>, <code>char</code>, <code>decimal</code>. Подробный разбор value vs reference — <a href="Phase1_CSharp_Fundamentals.md">Phase1_CSharp_Fundamentals.md §1.1</a>.</p>
+<pre><code class="language-csharp">int age = 28;
+double price = 19.99;
+char grade = 'A';
+</code></pre>
+<h2 id="3">3. Что такое сложные типы данных</h2>
+<p>Составные структуры, собранные из простых типов и/или других сложных: массивы, списки, словари, объекты собственных классов, кортежи.</p>
+<pre><code class="language-csharp">var user = new { Name = &quot;Ivan&quot;, Age = 28 };          // анонимный объект
+var pair = (Name: &quot;Ivan&quot;, Age: 28);                    // кортеж
+List&lt;int&gt; scores = new() { 90, 85, 77 };
+</code></pre>
+<h2 id="4">4. Что нужно знать о множествах</h2>
+<p>Множество (set) — коллекция <strong>уникальных</strong> значений без гарантированного порядка. В C# — <code>HashSet&lt;T&gt;</code> (хеш-based, O(1) в среднем для <code>Add</code>/<code>Contains</code>/<code>Remove</code>) или <code>SortedSet&lt;T&gt;</code> (на дереве, O(log n), но элементы идут по возрастанию).</p>
+<pre><code class="language-csharp">var a = new HashSet&lt;int&gt; { 1, 2, 3 };
+var b = new HashSet&lt;int&gt; { 2, 3, 4 };
+
+a.Contains(2);           // true, O(1)
+a.IntersectWith(b);      // a становится {2, 3}
+a.UnionWith(b);          // объединение
+a.ExceptWith(b);         // разность
+</code></pre>
+<p>Подробнее про <code>HashSet&lt;T&gt;</code> в контексте остальных коллекций — <a href="Phase1_CSharp_Fundamentals.md">Phase1_CSharp_Fundamentals.md §1.7</a>.</p>
+<h2 id="5">5. Что такое выражение, ветвление и цикл</h2>
+<p>Три базовых строительных блока любой программы:
+- <strong>Выражение (expression)</strong> — вычисляется и даёт значение (<code>2 + 2</code>, <code>x &gt; 5</code>, вызов метода с возвратом).
+- <strong>Ветвление (branching)</strong> — выбор одного из путей выполнения (<code>if</code>/<code>else</code>, <code>switch</code>).
+- <strong>Цикл (loop)</strong> — повторение блока кода, пока выполняется условие.</p>
+<pre><code class="language-csharp">int x = 5 + 3;              // выражение → 8
+if (x &gt; 5) Console.WriteLine(&quot;больше 5&quot;);   // ветвление
+for (int i = 0; i &lt; 3; i++) Console.WriteLine(i); // цикл
+</code></pre>
+<h2 id="6">6. Что такое функции и окружение</h2>
+<p><strong>Функция</strong> — именованный блок кода с входом (параметры) и выходом (возвращаемое значение). <strong>Окружение (environment/scope)</strong> — набор переменных, доступных в текущей точке выполнения: параметры функции, локальные переменные, всё, что "видно" изнутри функции на момент её вызова.</p>
+<pre><code class="language-csharp">int multiplier = 10; // часть окружения снаружи
+
+int Scale(int x) =&gt; x * multiplier; // видит multiplier из внешнего окружения (замыкание)
+</code></pre>
+<h2 id="7">7. Что такое рекурсия, рекурсивный и итеративный процессы</h2>
+<p><strong>Рекурсия</strong> — функция вызывает сама себя. Но важно различать не синтаксис, а <strong>форму процесса</strong>, который получается при выполнении:</p>
+<p><strong>Рекурсивный процесс</strong> — после рекурсивного вызова остаётся отложенная операция (умножение, сложение), поэтому вызовы копятся в стеке, пока не дойдут до базового случая, и только потом "разворачиваются" обратно:</p>
+<pre><code class="language-csharp">int Factorial(int n) =&gt; n &lt;= 1 ? 1 : n * Factorial(n - 1);
+// Factorial(4) = 4 * Factorial(3) = 4 * (3 * Factorial(2)) = ...
+// умножение ЖДЁТ результат вложенного вызова — растущая цепочка в стеке
+</code></pre>
+<p><strong>Итеративный процесс</strong> — состояние целиком передаётся через параметры (аккумулятор), никакой операции после рекурсивного вызова не остаётся — по форме это уже "цикл, просто записанный через вызов функции":</p>
+<pre><code class="language-csharp">int FactorialIter(int n, int acc = 1) =&gt;
+    n &lt;= 1 ? acc : FactorialIter(n - 1, acc * n);
+// умножение происходит ДО вызова, не после — ничего не откладывается
+</code></pre>
+<p><strong>Важный нюанс для C# (в отличие от Scheme/F#):</strong> .NET JIT <strong>не гарантирует</strong> оптимизацию хвостовой рекурсии (TCO) — поэтому даже "итеративный по форме" рекурсивный код всё равно может переполнить стек на больших <code>n</code>. Если нужна настоящая защита от <code>StackOverflowException</code> — используйте обычный <code>for</code>/<code>while</code>, не полагайтесь на то, что компилятор сам превратит рекурсию в цикл.</p>
+<h2 id="8">8. Что такое функция и как её создать</h2>
+<pre><code class="language-csharp">// модификатор доступа  тип возврата  имя      параметры
+   public              int          Add(int a, int b)
+{
+    return a + b;
+}
+
+// Expression-bodied (C# 6+) — короткая форма для однострочных функций
+public int Add(int a, int b) =&gt; a + b;
+</code></pre>
+<h2 id="9">9. Как начать работать с функциями</h2>
+<p>Вызов передаёт управление внутрь функции, выполнение возвращается к месту вызова после <code>return</code> (или после последней строки для <code>void</code>).</p>
+<pre><code class="language-csharp">int result = Add(2, 3); // управление уходит в Add, возвращается с result = 5
+Console.WriteLine(result);
+</code></pre>
+<h2 id="10">10. Как задавать аргументы и работать с ними</h2>
+<pre><code class="language-csharp">void Greet(string name, string greeting = &quot;Привет&quot;) // значение по умолчанию
+    =&gt; Console.WriteLine($&quot;{greeting}, {name}!&quot;);
+
+Greet(&quot;Иван&quot;);                    // &quot;Привет, Иван!&quot;
+Greet(&quot;Иван&quot;, &quot;Здравствуй&quot;);      // позиционно
+Greet(name: &quot;Иван&quot;, greeting: &quot;Хай&quot;); // именованные аргументы
+
+void Sum(params int[] numbers) { /* Sum(1,2,3,4) — сколько угодно аргументов */ }
+</code></pre>
+<p><code>ref</code>/<code>out</code>/<code>in</code> — отдельная тема (передача по ссылке, гарантированная инициализация внутри метода, запрет изменения) — уже разобрана как отдельный вопрос с собеседований в <code>CSharp_Interview_Questions.md</code>.</p>
+<h2 id="11">11. Как работать с локальными и глобальными переменными</h2>
+<p><strong>Локальная переменная</strong> — существует только внутри блока, где объявлена (метод, <code>if</code>, <code>for</code>). <strong>"Глобальная"</strong> в классическом C# отсутствует буквально — ближайший аналог — <code>static</code> поле класса, видимое отовсюду через имя класса.</p>
+<pre><code class="language-csharp">class Counter
+{
+    public static int GlobalCount = 0; // &quot;глобальная&quot; — общая на всё приложение
+
+    public void Increment()
+    {
+        int local = 1; // видна только внутри Increment
+        GlobalCount += local;
+    }
+}
+</code></pre>
+<p>Локальная переменная с тем же именем, что и поле класса, <strong>затеняет</strong> (shadowing) его внутри своего блока — доступ к полю тогда нужен через <code>this.</code>.</p>
+<h2 id="12">12. Как документировать функцию и возвращать несколько значений из функции</h2>
+<p><strong>Документирование</strong> — XML doc comments (<code>///</code>), IDE подхватывает их в подсказках:</p>
+<pre><code class="language-csharp">/// &lt;summary&gt;Считает сумму двух чисел.&lt;/summary&gt;
+/// &lt;param name=&quot;a&quot;&gt;Первое слагаемое&lt;/param&gt;
+/// &lt;param name=&quot;b&quot;&gt;Второе слагаемое&lt;/param&gt;
+/// &lt;returns&gt;Сумма a и b&lt;/returns&gt;
+public int Add(int a, int b) =&gt; a + b;
+</code></pre>
+<p><strong>Несколько значений из функции</strong> — три варианта, от простого к строгому:</p>
+<pre><code class="language-csharp">// 1. Tuple — быстро, но менее самодокументируемо
+(int min, int max) FindMinMax(int[] nums) =&gt; (nums.Min(), nums.Max());
+var (min, max) = FindMinMax(new[] { 3, 1, 9 });
+
+// 2. out-параметры — привычно из TryParse-стиля
+bool TryDivide(int a, int b, out int result)
+{
+    if (b == 0) { result = 0; return false; }
+    result = a / b;
+    return true;
+}
+
+// 3. record — когда значений много и важна читаемость (предпочтительно)
+record MinMaxResult(int Min, int Max);
+MinMaxResult FindMinMax2(int[] nums) =&gt; new(nums.Min(), nums.Max());
+</code></pre>
+<h2 id="13">13. Как работать с конструкциями</h2>
+<p>"Конструкции" языка — это условия, циклы и функции вместе: строительные блоки, из которых собирается любая программа. Работа с ними — это их комбинирование: функция содержит внутри себя ветвления и циклы, циклы могут содержать вызовы функций, и так далее, слоями.</p>
+<h2 id="14">14. Что такое условия и как с ними работать</h2>
+<pre><code class="language-csharp">int score = 75;
+
+if (score &gt;= 90) Console.WriteLine(&quot;Отлично&quot;);
+else if (score &gt;= 75) Console.WriteLine(&quot;Хорошо&quot;);
+else Console.WriteLine(&quot;Нужно подтянуть&quot;);
+</code></pre>
+<h2 id="15">15. Как использовать условные операторы в функциях и комбинировать условия</h2>
+<p><code>&amp;&amp;</code> (И), <code>||</code> (ИЛИ), <code>!</code> (НЕ) — с <strong>коротким замыканием</strong> (short-circuit): если левая часть <code>&amp;&amp;</code> уже <code>false</code>, правая не вычисляется вообще.</p>
+<pre><code class="language-csharp">bool CanWithdraw(decimal balance, decimal amount, bool accountActive)
+    =&gt; accountActive &amp;&amp; balance &gt;= amount &amp;&amp; amount &gt; 0;
+    // если accountActive == false — остальное даже не проверяется
+</code></pre>
+<h2 id="16">16. Что такое тернарный оператор</h2>
+<p>Сокращённая форма <code>if/else</code>, которая сама является выражением (возвращает значение):</p>
+<pre><code class="language-csharp">string status = age &gt;= 18 ? &quot;взрослый&quot; : &quot;несовершеннолетний&quot;;
+// эквивалент:
+// string status; if (age &gt;= 18) status = &quot;взрослый&quot;; else status = &quot;несовершеннолетний&quot;;
+</code></pre>
+<h2 id="17">17. Как использовать условный оператор в коде: методика раннего прерывания</h2>
+<p><strong>Early return / guard clause</strong> — выйти из функции сразу, как только условие делает дальнейшую работу бессмысленной, вместо вложенных <code>if</code>:</p>
+<pre><code class="language-csharp">// ПЛОХО — вложенность растёт с каждым условием
+void Process(User? user)
+{
+    if (user != null)
+    {
+        if (user.IsActive)
+        {
+            // основная логика тут, на 3-м уровне вложенности
+        }
+    }
+}
+
+// ХОРОШО — guard clauses, основная логика на верхнем уровне
+void Process(User? user)
+{
+    if (user is null) return;
+    if (!user.IsActive) return;
+
+    // основная логика тут, плоско
+}
+</code></pre>
+<h2 id="18">18. Как избегать длинных условий в коде</h2>
+<p>Выносить куски условия в переменные или методы с говорящим именем — само условие превращается в читаемое предложение:</p>
+<pre><code class="language-csharp">// ПЛОХО
+if (user.Age &gt;= 18 &amp;&amp; user.HasVerifiedEmail &amp;&amp; !user.IsBanned &amp;&amp; user.Country == &quot;RU&quot;)
+
+// ХОРОШО
+bool isEligible = user.Age &gt;= 18 &amp;&amp; user.HasVerifiedEmail;
+bool isAllowed = !user.IsBanned &amp;&amp; user.Country == &quot;RU&quot;;
+if (isEligible &amp;&amp; isAllowed)
+</code></pre>
+<h2 id="19">19. Как избегать дублирований</h2>
+<p>Принцип <strong>DRY</strong> (Don't Repeat Yourself) — повторяющийся код выносится в отдельный метод/функцию один раз, а не копируется:</p>
+<pre><code class="language-csharp">// ПЛОХО — одна и та же формула скопирована трижды
+double a1 = width1 * height1 / 2;
+double a2 = width2 * height2 / 2;
+double a3 = width3 * height3 / 2;
+
+// ХОРОШО
+double TriangleArea(double w, double h) =&gt; w * h / 2;
+double a1 = TriangleArea(width1, height1);
+</code></pre>
+<h2 id="20">20. Как не усложнять код</h2>
+<p>Принцип <strong>KISS</strong> (Keep It Simple) — из двух одинаково рабочих решений выбирать более простое и читаемое, а не более "умное". Признаки переусложнения: слишком общая абстракция под единственный текущий сценарий, вложенность больше 2-3 уровней, метод длиннее экрана. Простой, скучный код, который сразу понятен — лучше, чем эффектный, но требующий разбора.</p>
+<h2 id="21-c">21. Что такое циклы в C# и как с ними работать</h2>
+<pre><code class="language-csharp">// for — когда известно количество итераций
+for (int i = 0; i &lt; 5; i++) Console.WriteLine(i);
+
+// foreach — перебор коллекции без ручного индекса
+foreach (var item in new[] { &quot;a&quot;, &quot;b&quot;, &quot;c&quot; }) Console.WriteLine(item);
+
+// while — пока условие истинно, проверка ДО тела
+while (queue.Count &gt; 0) Process(queue.Dequeue());
+
+// do-while — тело выполнится минимум 1 раз, проверка ПОСЛЕ
+do { attempt++; } while (attempt &lt; maxAttempts);
+
+// break — досрочный выход, continue — пропуск текущей итерации
+foreach (var n in numbers)
+{
+    if (n &lt; 0) continue;   // пропустить отрицательные
+    if (n &gt; 100) break;    // остановиться на первом &gt; 100
+    Console.WriteLine(n);
+}
+</code></pre>
+<h2 id="22-c">22. Что такое рекурсии в C</h2>
+<p>Функция, вызывающая саму себя, с обязательным базовым случаем (иначе — <code>StackOverflowException</code>):</p>
+<pre><code class="language-csharp">int Fibonacci(int n)
+{
+    if (n &lt;= 1) return n;            // базовый случай — останавливает рекурсию
+    return Fibonacci(n - 1) + Fibonacci(n - 2); // рекурсивный случай
+}
+</code></pre>
+<p>См. пункт 7 выше — важно понимать разницу между рекурсивным и итеративным процессом, и что C# не гарантирует TCO.</p>
+<h2 id="23-c">23. Как работать с лямбда-функциями в C</h2>
+<p>Лямбда — короткая безымянная функция, чаще всего используется там, где нужно передать "поведение" как аргумент (LINQ, обработчики событий, делегаты).</p>
+<pre><code class="language-csharp">// Синтаксис: (параметры) =&gt; выражение_или_блок
+Func&lt;int, int, int&gt; add = (a, b) =&gt; a + b;
+Action&lt;string&gt; log = msg =&gt; Console.WriteLine(msg);
+Predicate&lt;int&gt; isEven = n =&gt; n % 2 == 0;
+
+// Самое частое применение — внутри LINQ
+var evens = new[] { 1, 2, 3, 4 }.Where(n =&gt; n % 2 == 0).ToList();
+
+// Захват переменных из окружения (closure) — см. пункт 6
+int threshold = 10;
+Func&lt;int, bool&gt; aboveThreshold = n =&gt; n &gt; threshold; // захватила threshold
+</code></pre>
+<p>Подробнее делегаты (<code>Func</code>/<code>Action</code>/<code>Predicate</code>) и multicast-делегаты — <a href="Phase3_Advanced.md">Phase3_Advanced.md §3.2</a>.</p></article>
+    <aside class="aside">
+      <strong>В этом документе</strong>
+      <div class="toc"><div class="toc">
+<ul>
+<li><a href="#1-true-false">1. Что такое true и false в логике</a></li>
+<li><a href="#2">2. Что такое простые типы данных</a></li>
+<li><a href="#3">3. Что такое сложные типы данных</a></li>
+<li><a href="#4">4. Что нужно знать о множествах</a></li>
+<li><a href="#5">5. Что такое выражение, ветвление и цикл</a></li>
+<li><a href="#6">6. Что такое функции и окружение</a></li>
+<li><a href="#7">7. Что такое рекурсия, рекурсивный и итеративный процессы</a></li>
+<li><a href="#8">8. Что такое функция и как её создать</a></li>
+<li><a href="#9">9. Как начать работать с функциями</a></li>
+<li><a href="#10">10. Как задавать аргументы и работать с ними</a></li>
+<li><a href="#11">11. Как работать с локальными и глобальными переменными</a></li>
+<li><a href="#12">12. Как документировать функцию и возвращать несколько значений из функции</a></li>
+<li><a href="#13">13. Как работать с конструкциями</a></li>
+<li><a href="#14">14. Что такое условия и как с ними работать</a></li>
+<li><a href="#15">15. Как использовать условные операторы в функциях и комбинировать условия</a></li>
+<li><a href="#16">16. Что такое тернарный оператор</a></li>
+<li><a href="#17">17. Как использовать условный оператор в коде: методика раннего прерывания</a></li>
+<li><a href="#18">18. Как избегать длинных условий в коде</a></li>
+<li><a href="#19">19. Как избегать дублирований</a></li>
+<li><a href="#20">20. Как не усложнять код</a></li>
+<li><a href="#21-c">21. Что такое циклы в C# и как с ними работать</a></li>
+<li><a href="#22-c">22. Что такое рекурсии в C</a></li>
+<li><a href="#23-c">23. Как работать с лямбда-функциями в C</a></li>
+</ul>
+</div>
+</div>
+    </aside>
+  </div>
+</main>
+
+
+<script>
+const ROOT = "..";
+
+// ---- тема
+const themeBtn = document.getElementById("theme");
+const paint = () => {
+  const dark = document.documentElement.getAttribute("data-theme") === "dark";
+  themeBtn.textContent = dark ? "☀" : "☾";
+};
+paint();
+themeBtn.addEventListener("click", () => {
+  const next = document.documentElement.getAttribute("data-theme") === "dark" ? "light" : "dark";
+  document.documentElement.setAttribute("data-theme", next);
+  try { localStorage.setItem("kb-theme", next); } catch (e) {}
+  paint();
+});
+
+// ---- поиск
+let index = null;
+const box = document.getElementById("results");
+const hits = document.getElementById("hits");
+const head = box.querySelector("h3");
+const input = document.getElementById("q");
+
+async function ensureIndex() {
+  if (index) return index;
+  const res = await fetch(ROOT + "/search-index.json");
+  index = await res.json();
+  return index;
+}
+
+const esc = (s) => (s || "").replace(/[&<>]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
+
+function hi(text, query) {
+  const i = text.toLowerCase().indexOf(query);
+  if (i < 0) return esc(text);
+  return esc(text.slice(0, i)) + "<mark>" + esc(text.slice(i, i + query.length)) + "</mark>" + esc(text.slice(i + query.length));
+}
+
+input.addEventListener("input", async () => {
+  const q = input.value.trim().toLowerCase();
+  if (q.length < 2) { box.hidden = true; return; }
+  const data = await ensureIndex();
+  const found = [];
+  for (const d of data) {
+    const inTitle = d.title.toLowerCase().includes(q);
+    const inSum = (d.summary || "").toLowerCase().includes(q);
+    const heads = (d.heads || []).filter(h => h.toLowerCase().includes(q));
+    if (inTitle || inSum || heads.length) {
+      found.push({ d, heads, rank: inTitle ? 0 : heads.length ? 1 : 2 });
+    }
+  }
+  found.sort((a, b) => a.rank - b.rank);
+  head.textContent = found.length ? `Нашлось: ${found.length}` : "Ничего не нашлось";
+  hits.innerHTML = found.slice(0, 40).map(({ d, heads }) =>
+    `<a class="hit" href="${ROOT}/d/${d.slug}.html">
+       <b>${hi(d.title, q)}</b>
+       <span>${heads.length ? "→ " + heads.slice(0, 3).map(h => hi(h, q)).join(" · ") : esc(d.summary || "")}</span>
+     </a>`).join("");
+  box.hidden = false;
+});
+
+input.addEventListener("keydown", (e) => { if (e.key === "Escape") { input.value = ""; box.hidden = true; input.blur(); } });
+document.addEventListener("keydown", (e) => {
+  if (e.key === "/" && document.activeElement !== input) { e.preventDefault(); input.focus(); }
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,1208 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Фаза 1 — Теоретический фундамент C# - База знаний</title>
+<link rel="stylesheet" href="../kb.css">
+<script>
+  // Тему ставим до первой отрисовки, иначе на тёмной системе мигает белым.
+  try {
+    var t = localStorage.getItem("kb-theme");
+    if (!t) t = matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+    document.documentElement.setAttribute("data-theme", t);
+  } catch (e) {}
+</script>
+</head>
+<body>
+
+<header class="top">
+  <div class="top-in">
+    <a class="brand" href="../index.html">База <span>знаний</span></a>
+    <span class="grow"></span>
+    <input id="q" type="search" placeholder="Поиск по всем материалам…" autocomplete="off">
+    <button class="icon-btn" id="theme" type="button" title="Тема"></button>
+  </div>
+</header>
+
+<div id="results" hidden><div class="wrap-r"><h3></h3><div id="hits"></div></div></div>
+
+<main class="wrap">
+  <div class="doc-head">
+    <div class="crumb"><a href="../index.html#phases">Фазы C#</a></div>
+    <h1>Фаза 1 — Теоретический фундамент C#</h1>
+    <div class="meta">1215 строк · источник <code>l2code/Phase1_CSharp_Fundamentals.md</code></div>
+  </div>
+
+  <div class="layout">
+    <article class="prose"><blockquote>
+<p><strong>Как читать:</strong> Каждая тема = теория (почему так) + пример + мини-задание.
+В конце — итоговый проект "Менеджер контактов".
+Время: ~6-8 часов (можно за один день после 19 июня).</p>
+</blockquote>
+<hr>
+<h2 id="11-value-types-vs-reference-types">1.1 Value types vs Reference types</h2>
+<h3 id="_1">Почему это важно</h3>
+<p>Это самое фундаментальное разделение в C#. Оно объясняет почему одни переменные "копируются", а другие "ссылаются" — и из-за этого возникает большинство неожиданных багов у начинающих.</p>
+<h3 id="_2">Аналогия из жизни</h3>
+<p>Value type - переписываешь рецепт на новый листок и отдаёшь другу. Теперь у каждого свой листок: друг зачеркнул "соль" - твой рецепт не изменился. Reference type - даёшь другу ссылку на Google Docs. Вы оба смотрите на один и тот же документ: друг исправил рецепт - ты тоже видишь изменения.</p>
+<h3 id="_3">Теория</h3>
+<p><strong>Value types</strong> (типы-значения) хранят данные <strong>напрямую</strong>:
+- <code>int</code>, <code>double</code>, <code>bool</code>, <code>char</code>, <code>float</code>, <code>decimal</code>
+- <code>struct</code> (в т.ч. <code>DateTime</code>, <code>Guid</code>)
+- <code>enum</code></p>
+<p><strong>Reference types</strong> (ссылочные типы) хранят <strong>адрес</strong> объекта в памяти:
+- <code>class</code>
+- <code>string</code> (особый случай — ниже)
+- <code>array</code> (даже <code>int[]</code>)
+- <code>interface</code>, <code>delegate</code></p>
+<h3 id="_4">Ключевое различие: что происходит при присвоении</h3>
+<pre><code class="language-csharp">// VALUE TYPE — копируется значение
+int a = 10;
+int b = a;   // b получает КОПИЮ значения
+b = 20;
+Console.WriteLine(a); // 10 — a не изменился
+
+// REFERENCE TYPE — копируется ссылка (адрес)
+var list1 = new List&lt;int&gt; { 1, 2, 3 };
+var list2 = list1;   // list2 указывает на ТОТ ЖЕ объект
+list2.Add(4);
+Console.WriteLine(list1.Count); // 4 — list1 тоже изменился!
+</code></pre>
+<h3 id="_5">Передача в методы</h3>
+<pre><code class="language-csharp">void DoubleValue(int x) { x = x * 2; }
+void AddItem(List&lt;int&gt; list) { list.Add(99); }
+
+int num = 5;
+DoubleValue(num);
+Console.WriteLine(num); // 5 — метод получил КОПИЮ
+
+var numbers = new List&lt;int&gt; { 1, 2 };
+AddItem(numbers);
+Console.WriteLine(numbers.Count); // 3 — метод работал с ОРИГИНАЛОМ
+</code></pre>
+<h3 id="struct-vs-class">Struct vs Class — когда что выбрать</h3>
+<pre><code class="language-csharp">// Struct — когда объект маленький, неизменяемый, копирование ОК
+struct Point { public int X; public int Y; }
+
+// Class — когда объект большой, изменяемый, нужна идентичность
+class User { public string Name; public List&lt;string&gt; Roles; }
+</code></pre>
+<p><strong>Правило:</strong> Если данных меньше ~16 байт и объект не изменяется — struct. Во всех остальных случаях — class.</p>
+<blockquote>
+<p>[!info]+ 🆕 Добавлено 1 августа — классическая ловушка: метод "меняет" struct, но снаружи ничего не поменялось (реальная задачка с собеседования)
+```csharp
+struct Reader { public string Message; }</p>
+<p>void Read(Reader r) =&gt; r.Message = "прочитано";</p>
+<p>var reader = new Reader { Message = "новое" };
+Read(reader);
+Console.WriteLine(reader.Message); // "новое" — НЕ "прочитано"!
+<code>Метод получил ПОЛНУЮ КОПИЮ `reader` (см. "Передача в методы" выше) — работал со своей копией, оригинал снаружи не тронут. Чтобы метод реально изменил оригинал, нужно передавать по ссылке явно:</code>csharp
+void Read(ref Reader r) =&gt; r.Message = "прочитано"; // ref — можно и читать, и писать
+Read(ref reader);
+Console.WriteLine(reader.Message); // "прочитано"
+<code>``</code>out<code>подошёл бы, если бы метод был обязан САМ полностью проинициализировать объект (вызывающий может передать даже неинициализированную переменную) — здесь</code>ref`, потому что читаем существующее значение и его же меняем.</p>
+</blockquote>
+<h3 id="-11">Мини-задание 1.1</h3>
+<pre><code>Что выведет следующий код? Объясни почему перед тем как запустить.
+
+struct Rectangle { public int Width; public int Height; }
+
+Rectangle r1 = new Rectangle { Width = 10, Height = 5 };
+Rectangle r2 = r1;
+r2.Width = 20;
+
+Console.WriteLine(r1.Width); // ?
+Console.WriteLine(r2.Width); // ?
+
+// Теперь замени struct на class и повтори.
+// Что изменилось и почему?
+</code></pre>
+<hr>
+<h2 id="12-stack-heap">1.2 Stack и Heap — как хранится память</h2>
+<h3 id="_6">Почему это важно</h3>
+<p>Понимание стека и кучи объясняет производительность кода, почему GC (сборщик мусора) существует, и почему некоторые операции быстрее других.</p>
+<h3 id="_7">Аналогия из жизни</h3>
+<p>Стек - стопка подносов в столовой: берёшь и кладёшь только сверху, быстро, но много не наставишь. Куча - большой склад с каталогом: положить или найти конкретную вещь медленнее, зато места почти неограниченно, и нужен отдельный работник (сборщик мусора), который убирает то, что уже никому не нужно.</p>
+<h3 id="_8">Теория</h3>
+<p><strong>Stack (стек)</strong>
+- Выделяет и освобождает память автоматически (LIFO)
+- Очень быстрый (просто сдвиг указателя)
+- Ограниченный размер (~1-8 МБ)
+- Хранит: локальные переменные, параметры методов, value types (в локальном контексте), <strong>ссылки</strong> на объекты</p>
+<p><strong>Heap (куча)</strong>
+- Управляется Garbage Collector
+- Медленнее (надо найти место, потом убрать)
+- Практически неограниченный размер
+- Хранит: все объекты (reference types), данные массивов</p>
+<h3 id="_9">Визуализация</h3>
+<pre><code class="language-csharp">void Process()
+{
+    int age = 25;              // Stack: значение 25
+    string name = &quot;Ivan&quot;;      // Stack: ссылка → Heap: &quot;Ivan&quot;
+    var user = new User();     // Stack: ссылка → Heap: объект User
+}
+// После выхода из метода — стек очищается автоматически
+// Объекты на Heap остаются до сбора GC
+</code></pre>
+<pre><code>STACK                    HEAP
+┌──────────┐            ┌──────────────┐
+│ age = 25 │            │ &quot;Ivan&quot;       │
+│ name ────┼───────────▶│──────────────│
+│ user ────┼──────────┐ │ User object  │
+└──────────┘          └▶│  ...         │
+                        └──────────────┘
+</code></pre>
+<h3 id="boxing-unboxing">Boxing и Unboxing — скрытая проблема производительности</h3>
+<pre><code class="language-csharp">// Boxing: value type → object (упаковка в кучу)
+int x = 42;
+object boxed = x;    // Выделяется память в Heap, копируется значение
+
+// Unboxing: object → value type (распаковка)
+int y = (int)boxed;  // Явное приведение обязательно
+
+// Проблема: в цикле это катастрофа для производительности
+var list = new ArrayList(); // старый тип, хранит object
+for (int i = 0; i &lt; 1_000_000; i++)
+    list.Add(i); // Миллион операций boxing!
+
+// Решение: используй generic коллекции
+var list2 = new List&lt;int&gt;(); // Нет boxing — int хранится как int
+</code></pre>
+<h3 id="-12">Мини-задание 1.2</h3>
+<pre><code>1. Объясни своими словами: почему ArrayList медленнее List&lt;int&gt;
+   для хранения чисел?
+
+2. Посмотри на код ниже. Сколько объектов будет на Heap после выполнения?
+
+   int a = 1;
+   int b = 2;
+   string s = &quot;hello&quot;;
+   int[] arr = new int[] { 1, 2, 3 };
+   object o = a; // подсказка: это boxing
+
+   Ответ: ___ объектов на Heap
+</code></pre>
+<hr>
+<h2 id="13-string">1.3 Строки — почему string иммутабелен</h2>
+<h3 id="_10">Почему это важно</h3>
+<p>String — один из самых используемых типов. Непонимание иммутабельности приводит к багам и серьёзным проблемам производительности в циклах.</p>
+<h3 id="_11">Аналогия из жизни</h3>
+<p>Напечатанная книга - нельзя стереть слово в уже напечатанном тираже, можно только напечатать НОВУЮ книгу с изменением. <code>string</code> работает так же: каждое "изменение" на самом деле печатает новый экземпляр, а старый идёт в макулатуру (мусор для GC).</p>
+<h3 id="_12">Теория</h3>
+<p><strong>String — reference type, но ведёт себя как value type при сравнении.</strong></p>
+<p>Иммутабельность означает: после создания строку <strong>нельзя изменить</strong>. Каждая операция создаёт <strong>новый объект</strong>.</p>
+<pre><code class="language-csharp">string s = &quot;Hello&quot;;
+s += &quot; World&quot;; // s НЕ изменилась — создана новая строка &quot;Hello World&quot;
+               // Старая &quot;Hello&quot; стала мусором для GC
+</code></pre>
+<p><strong>Зачем это сделано?</strong>
+1. <strong>Безопасность</strong> — строку-ключ в Dictionary нельзя изменить снаружи
+2. <strong>Thread safety</strong> — несколько потоков могут читать одну строку без блокировок
+3. <strong>String interning</strong> — одинаковые строки-литералы хранятся в одном месте</p>
+<h3 id="_13">Катастрофа в цикле</h3>
+<pre><code class="language-csharp">// ПЛОХО: O(n²) — каждая итерация создаёт новую строку
+string result = &quot;&quot;;
+for (int i = 0; i &lt; 10_000; i++)
+    result += i.ToString(); // 10 000 объектов в куче!
+
+// ХОРОШО: StringBuilder — изменяемый буфер
+var sb = new StringBuilder();
+for (int i = 0; i &lt; 10_000; i++)
+    sb.Append(i);
+string result2 = sb.ToString(); // Один итоговый объект
+</code></pre>
+<h3 id="_14">Сравнение строк</h3>
+<pre><code class="language-csharp">string a = &quot;hello&quot;;
+string b = &quot;hello&quot;;
+string c = new string(&quot;hello&quot;.ToCharArray()); // принудительно новый объект
+
+// == для string сравнивает СОДЕРЖИМОЕ (не адрес)
+Console.WriteLine(a == b);           // True
+Console.WriteLine(a == c);           // True
+
+// ReferenceEquals сравнивает АДРЕС
+Console.WriteLine(ReferenceEquals(a, b)); // True (string interning!)
+Console.WriteLine(ReferenceEquals(a, c)); // False (разные объекты)
+
+// Сравнение без учёта регистра
+Console.WriteLine(string.Equals(&quot;Hello&quot;, &quot;hello&quot;,
+    StringComparison.OrdinalIgnoreCase)); // True
+</code></pre>
+<h3 id="_15">Полезные методы</h3>
+<pre><code class="language-csharp">string s = &quot;  Hello, World!  &quot;;
+
+s.Trim()                        // &quot;Hello, World!&quot;
+s.ToLower()                     // &quot;  hello, world!  &quot;
+s.Replace(&quot;World&quot;, &quot;Ivan&quot;)      // &quot;  Hello, Ivan!  &quot;
+s.Split(',')                    // [&quot;  Hello&quot;, &quot; World!  &quot;]
+s.Contains(&quot;World&quot;)             // true
+s.StartsWith(&quot;  Hello&quot;)         // true
+s.Substring(2, 5)               // &quot;Hello&quot;
+string.IsNullOrWhiteSpace(s)    // false
+string.IsNullOrEmpty(s)         // false
+
+// Интерполяция (предпочтительный способ)
+string name = &quot;Ivan&quot;;
+int age = 28;
+string msg = $&quot;Меня зовут {name}, мне {age} лет&quot;;
+</code></pre>
+<h3 id="-13">Мини-задание 1.3</h3>
+<pre><code class="language-csharp">// Задание 1: Найди проблему и исправь
+string BuildCsv(List&lt;string&gt; items)
+{
+    string result = &quot;&quot;;
+    foreach (var item in items)
+        result += item + &quot;,&quot;;
+    return result.TrimEnd(',');
+}
+
+// Задание 2: Что выведет код?
+string x = &quot;test&quot;;
+string y = x;
+x = &quot;changed&quot;;
+Console.WriteLine(y); // ?
+
+// Задание 3: Напиши метод, который принимает List&lt;string&gt; с именами
+// и возвращает строку вида &quot;Ivan, Anna, Petr&quot; (через запятую)
+// Используй StringBuilder или string.Join
+</code></pre>
+<hr>
+<h2 id="14">1.4 Приведение типов</h2>
+<h3 id="_16">Почему это важно</h3>
+<p>Приведение типов — источник <code>InvalidCastException</code> и <code>NullReferenceException</code>. Нужно точно знать когда что использовать.</p>
+<h3 id="_17">Аналогия из жизни</h3>
+<p>Implicit - переливаешь воду из маленького стакана в большое ведро: ничего не проливается, безопасно и автоматически. Explicit - переливаешь из ведра обратно в маленький стакан: сам решаешь так сделать, но часть воды может выплеснуться (потеря данных). <code>as</code> - спрашиваешь заранее "поместится ли" и не пытаешься, если нет, вместо того чтобы устроить потоп.</p>
+<h3 id="_18">Теория</h3>
+<p><strong>Implicit (неявное)</strong> — компилятор делает сам, гарантированно без потери данных:</p>
+<pre><code class="language-csharp">int i = 42;
+long l = i;      // int → long: всегда безопасно, автоматически
+double d = i;    // int → double: тоже безопасно
+</code></pre>
+<p><strong>Explicit (явное приведение)</strong> — ты говоришь компилятору "я знаю что делаю":</p>
+<pre><code class="language-csharp">double pi = 3.14159;
+int truncated = (int)pi;  // 3 — дробная часть ТЕРЯЕТСЯ
+
+long big = 300;
+byte small = (byte)big;   // 44 — переполнение, биты обрезаются!
+</code></pre>
+<p><strong><code>as</code> — безопасное приведение, возвращает null при неудаче:</strong></p>
+<pre><code class="language-csharp">object obj = &quot;Hello&quot;;
+
+string s = obj as string;   // &quot;Hello&quot; — успешно
+Console.WriteLine(s);
+
+object num = 42;
+string fail = num as string; // null — не строка, но нет исключения
+Console.WriteLine(fail ?? &quot;не строка&quot;);
+
+// as работает ТОЛЬКО с reference types и nullable
+// int x = obj as int; // ошибка компиляции — нужно int?
+int? x = obj as int?; // null, если obj не int
+</code></pre>
+<p><strong><code>is</code> — проверка типа:</strong></p>
+<pre><code class="language-csharp">object obj = &quot;Hello&quot;;
+
+if (obj is string)
+    Console.WriteLine(&quot;это строка&quot;);
+
+// C# 7+ — pattern matching с is
+if (obj is string str)          // проверяет И присваивает
+    Console.WriteLine(str.ToUpper());
+
+// C# 9+ — расширенный pattern matching
+if (obj is string { Length: &gt; 3 } s)  // свойство тоже проверяем
+    Console.WriteLine($&quot;Длинная строка: {s}&quot;);
+</code></pre>
+<h3 id="_19">Иерархия — когда что использовать</h3>
+<pre><code>Нужно привести тип?
+│
+├── Это числа? (int→long, double→int)
+│   ├── Без потери данных → implicit (автоматически)
+│   └── Возможна потеря → explicit (int)value
+│
+└── Это классы/интерфейсы?
+    ├── Уверен что это тот тип → explicit (MyClass)obj ← бросит исключение если нет
+    ├── Не уверен, хочу null если нет → as
+    └── Просто проверить тип → is
+</code></pre>
+<h3 id="-14">Мини-задание 1.4</h3>
+<pre><code class="language-csharp">// Есть метод, который получает object.
+// Напиши безопасную версию без исключений:
+
+void ProcessItem(object item)
+{
+    // Если item — строка, выведи её в верхнем регистре
+    // Если item — int, выведи квадрат числа
+    // Если item — List&lt;string&gt;, выведи количество элементов
+    // Иначе: &quot;Неизвестный тип: {тип}&quot;
+}
+
+// Протестируй с:
+ProcessItem(&quot;hello&quot;);
+ProcessItem(5);
+ProcessItem(new List&lt;string&gt; { &quot;a&quot;, &quot;b&quot; });
+ProcessItem(3.14);
+</code></pre>
+<hr>
+<h2 id="15-nullable-null-">1.5 Nullable типы и null-операторы</h2>
+<h3 id="_20">Почему это важно</h3>
+<p>Null — "billion dollar mistake" по словам его автора. C# постепенно добавляет инструменты чтобы с ним работать безопасно. Это то что ты будешь использовать каждый день.</p>
+<blockquote>
+<p>🤖 <em>AI-инженерия (добавлено 9 июля):</em> ответы LLM API почти всегда содержат опциональные поля (<code>stop_reason</code>, <code>tool_use</code> может отсутствовать) — то же мышление о null, просто в JSON от API вместо C#-объекта.</p>
+</blockquote>
+<h3 id="_21">Аналогия из жизни</h3>
+<p>Анкета с необязательным полем "отчество" - поле может быть пустым (<code>null</code>). <code>?.</code> - "если поле заполнено, прочитай оттуда информацию, если нет - не пытайся и не падай". <code>??</code> - "если поле пустое, подставь значение по умолчанию".</p>
+<h3 id="_22">Теория</h3>
+<p>Value types по умолчанию <strong>не могут быть null</strong>. Но иногда нужно:</p>
+<pre><code class="language-csharp">int age = null;  // ошибка компиляции!
+
+// Nullable&lt;T&gt; — обёртка над value type
+Nullable&lt;int&gt; age1 = null;  // OK
+int? age2 = null;           // Короткий синтаксис, то же самое
+
+// Проверка
+if (age2.HasValue)
+    Console.WriteLine(age2.Value);  // получаем значение
+
+// GetValueOrDefault — вернёт значение или дефолт
+Console.WriteLine(age2.GetValueOrDefault());     // 0
+Console.WriteLine(age2.GetValueOrDefault(-1));   // -1
+</code></pre>
+<h3 id="null-">Null-операторы — используй каждый день</h3>
+<p><strong><code>?.</code> — null-conditional (элиминирует NullReferenceException):</strong></p>
+<pre><code class="language-csharp">User user = GetUser(); // может вернуть null
+
+// БЕЗ оператора — классический NullReferenceException
+string name = user.Name.ToUpper(); // бросит если user = null
+
+// С оператором — безопасно
+string name = user?.Name?.ToUpper(); // null если user = null или Name = null
+
+// С коллекциями
+int? count = user?.Orders?.Count; // null если user или Orders = null
+</code></pre>
+<p><strong><code>??</code> — null-coalescing (значение по умолчанию):</strong></p>
+<pre><code class="language-csharp">string name = GetName() ?? &quot;Гость&quot;;  // если GetName() вернул null — &quot;Гость&quot;
+
+// Цепочка
+string result = first ?? second ?? third ?? &quot;default&quot;;
+
+// Комбо с ?.
+string city = user?.Address?.City ?? &quot;Москва&quot;;
+</code></pre>
+<p><strong><code>??=</code> — null-coalescing assignment (C# 8+):</strong></p>
+<pre><code class="language-csharp">List&lt;string&gt; items = null;
+items ??= new List&lt;string&gt;(); // присваивает ТОЛЬКО если items == null
+
+// Эквивалент:
+if (items == null) items = new List&lt;string&gt;();
+</code></pre>
+<h3 id="_23">Реальный пример</h3>
+<pre><code class="language-csharp">class Order
+{
+    public int Id { get; set; }
+    public Customer? Customer { get; set; }
+}
+
+class Customer
+{
+    public string Name { get; set; }
+    public Address? Address { get; set; }
+}
+
+class Address
+{
+    public string City { get; set; }
+}
+
+// Безопасное извлечение вложенных данных
+Order order = GetOrder();
+string city = order?.Customer?.Address?.City ?? &quot;Не указан&quot;;
+int nameLength = order?.Customer?.Name?.Length ?? 0;
+</code></pre>
+<h3 id="-15">Мини-задание 1.5</h3>
+<pre><code class="language-csharp">// Задание: Напиши метод ParseAge который:
+// - принимает string (может быть null, пустым, или числом)
+// - возвращает int? (null если не удалось распарсить)
+// - используй int.TryParse
+
+int? ParseAge(string input)
+{
+    // твой код
+}
+
+// Затем напиши метод GetAgeLabel:
+// - принимает int? age
+// - возвращает &quot;X лет&quot; если есть значение
+// - возвращает &quot;Возраст не указан&quot; если null
+// - используй ?? и ?.
+
+string GetAgeLabel(int? age)
+{
+    // твой код
+}
+</code></pre>
+<hr>
+<h2 id="16-switch-expression-pattern-matching">1.6 Switch expression и Pattern Matching</h2>
+<h3 id="_24">Почему это важно</h3>
+<p>Современный C# (8, 9, 10+) кардинально улучшил switch. Это читается в разы чище и компилятор проверяет полноту вариантов.</p>
+<blockquote>
+<p>🤖 <em>AI-инженерия (добавлено 9 июля):</em> ответ Claude API — это массив content-блоков разных типов (<code>text</code>, <code>tool_use</code>, <code>thinking</code>). Именно pattern matching (<code>switch</code> по типу блока) — стандартный способ их разбирать в C# SDK.</p>
+</blockquote>
+<h3 id="_25">Аналогия из жизни</h3>
+<p>Автоматическая сортировочная машина на почте: посылка сама попадает в нужный лоток по своей категории и весу, а не сотрудник вручную проверяет каждую посылку цепочкой "если это, то...".</p>
+<h3 id="switch">Классический switch (знаком)</h3>
+<pre><code class="language-csharp">int day = 3;
+string name;
+switch (day)
+{
+    case 1: name = &quot;Понедельник&quot;; break;
+    case 2: name = &quot;Вторник&quot;; break;
+    default: name = &quot;Другой&quot;; break;
+}
+</code></pre>
+<h3 id="switch-expression-c-8">Switch expression (C# 8+) — компактный и возвращает значение</h3>
+<pre><code class="language-csharp">int day = 3;
+string name = day switch
+{
+    1 =&gt; &quot;Понедельник&quot;,
+    2 =&gt; &quot;Вторник&quot;,
+    3 =&gt; &quot;Среда&quot;,
+    4 =&gt; &quot;Четверг&quot;,
+    5 =&gt; &quot;Пятница&quot;,
+    _ =&gt; &quot;Выходной&quot;  // _ = default
+};
+</code></pre>
+<h3 id="pattern-matching">Pattern matching — мощный инструмент</h3>
+<p><strong>Type patterns:</strong></p>
+<pre><code class="language-csharp">object shape = GetShape();
+
+string description = shape switch
+{
+    Circle c    =&gt; $&quot;Круг, радиус {c.Radius}&quot;,
+    Rectangle r =&gt; $&quot;Прямоугольник {r.Width}x{r.Height}&quot;,
+    null        =&gt; &quot;Нет фигуры&quot;,
+    _           =&gt; &quot;Неизвестная фигура&quot;
+};
+</code></pre>
+<p><strong>Property patterns:</strong></p>
+<pre><code class="language-csharp">var point = new Point(3, -5);
+
+string quadrant = point switch
+{
+    { X: &gt; 0, Y: &gt; 0 } =&gt; &quot;I квадрант&quot;,
+    { X: &lt; 0, Y: &gt; 0 } =&gt; &quot;II квадрант&quot;,
+    { X: &lt; 0, Y: &lt; 0 } =&gt; &quot;III квадрант&quot;,
+    { X: &gt; 0, Y: &lt; 0 } =&gt; &quot;IV квадрант&quot;,
+    { X: 0 } or { Y: 0 } =&gt; &quot;На оси&quot;,
+    _ =&gt; &quot;Начало координат&quot;
+};
+</code></pre>
+<p><strong>When guards:</strong></p>
+<pre><code class="language-csharp">int score = 75;
+string grade = score switch
+{
+    &gt;= 90 =&gt; &quot;Отлично&quot;,
+    &gt;= 75 =&gt; &quot;Хорошо&quot;,
+    &gt;= 60 =&gt; &quot;Удовлетворительно&quot;,
+    _     =&gt; &quot;Неудовлетворительно&quot;
+};
+</code></pre>
+<p><strong>Tuple patterns:</strong></p>
+<pre><code class="language-csharp">(bool isLoggedIn, bool isAdmin) state = (true, false);
+
+string access = state switch
+{
+    (true, true)  =&gt; &quot;Полный доступ&quot;,
+    (true, false) =&gt; &quot;Обычный доступ&quot;,
+    (false, _)    =&gt; &quot;Нет доступа&quot;
+};
+</code></pre>
+<h3 id="-16">Мини-задание 1.6</h3>
+<pre><code class="language-csharp">// Задание 1: Перепиши на switch expression
+string GetHttpStatusMessage(int code)
+{
+    if (code == 200) return &quot;OK&quot;;
+    if (code == 201) return &quot;Created&quot;;
+    if (code == 400) return &quot;Bad Request&quot;;
+    if (code == 401) return &quot;Unauthorized&quot;;
+    if (code == 403) return &quot;Forbidden&quot;;
+    if (code == 404) return &quot;Not Found&quot;;
+    if (code == 500) return &quot;Internal Server Error&quot;;
+    return &quot;Unknown&quot;;
+}
+
+// Задание 2: Используй property pattern
+// Есть класс Employee { string Name; decimal Salary; string Department; }
+// Напиши метод GetBonus(Employee e) который возвращает decimal:
+// - IT отдел и зарплата &gt; 100k → бонус 20%
+// - IT отдел → бонус 15%
+// - Sales и зарплата &gt; 80k → бонус 25%
+// - Остальные → бонус 10%
+</code></pre>
+<hr>
+<h2 id="17">1.7 Массивы и коллекции</h2>
+<h3 id="_26">Почему это важно</h3>
+<p>Выбор правильной коллекции влияет на производительность кода в разы. Dictionary с O(1) vs List с O(n) для поиска — принципиальная разница при тысячах записей.</p>
+<blockquote>
+<p>🤖 <em>AI-инженерия (добавлено 9 июля):</em> история диалога с LLM — это <code>List&lt;Message&gt;</code>. <code>Dictionary</code> — естественная модель для kwargs-подобных гибких параметров запроса.</p>
+</blockquote>
+<h3 id="_27">Аналогия из жизни</h3>
+<p>Array - полка фиксированного размера: сколько ячеек изначально сделал, столько и есть. <code>List&lt;T&gt;</code> - расширяемый шкаф, сам докупает секции по мере необходимости. <code>Dictionary</code> - картотека с именными ярлычками: находишь нужную папку мгновенно по имени, не перебирая все подряд.</p>
+<h3 id="array">Array — базовый, фиксированный размер</h3>
+<pre><code class="language-csharp">int[] nums = new int[5];           // [0, 0, 0, 0, 0]
+int[] nums2 = { 1, 2, 3, 4, 5 };  // инициализатор
+int[,] matrix = new int[3, 3];    // двумерный
+
+// Быстрый доступ по индексу: O(1)
+int first = nums2[0];
+int last = nums2[^1];   // C# 8+ — с конца
+int[] slice = nums2[1..3]; // [2, 3] — range
+
+nums2.Length;       // 5
+Array.Sort(nums2);
+Array.Reverse(nums2);
+</code></pre>
+<h3 id="listt">List\&lt;T&gt; — динамический массив (используется чаще всего)</h3>
+<pre><code class="language-csharp">var list = new List&lt;string&gt;();
+list.Add(&quot;Ivan&quot;);
+list.Add(&quot;Anna&quot;);
+list.AddRange(new[] { &quot;Petr&quot;, &quot;Maria&quot; });
+
+list.Insert(0, &quot;First&quot;);     // вставить по индексу
+list.Remove(&quot;Anna&quot;);          // удалить по значению
+list.RemoveAt(0);             // удалить по индексу
+list.Contains(&quot;Ivan&quot;);        // true — O(n)
+list.Count;                   // количество
+
+// Внутри — массив, который удваивается при переполнении
+// Если знаешь размер заранее:
+var list2 = new List&lt;string&gt;(capacity: 1000); // избегает реаллокаций
+</code></pre>
+<h3 id="dictionarytkey-tvalue-o1">Dictionary\&lt;TKey, TValue&gt; — хеш-таблица, O(1) для поиска</h3>
+<pre><code class="language-csharp">var dict = new Dictionary&lt;string, int&gt;();
+dict[&quot;Ivan&quot;] = 28;
+dict[&quot;Anna&quot;] = 25;
+dict.Add(&quot;Petr&quot;, 30);  // Add бросает исключение если ключ есть
+
+// Безопасное получение
+if (dict.TryGetValue(&quot;Ivan&quot;, out int age))
+    Console.WriteLine(age); // 28
+
+// Проверка существования
+dict.ContainsKey(&quot;Anna&quot;);   // true
+dict.ContainsValue(25);     // true — но O(n)!
+
+// Перебор
+foreach (var (key, value) in dict)
+    Console.WriteLine($&quot;{key}: {value}&quot;);
+
+// Ключ любого типа с правильным GetHashCode + Equals
+var byId = new Dictionary&lt;int, User&gt;();
+</code></pre>
+<blockquote>
+<p>[!info]+ 🆕 Добавлено 28 июля — что внутри Dictionary на самом деле (реальный вопрос с собеседования)
+Внутри — два массива, не один: <strong><code>buckets</code></strong> (по хэшу ключа указывает, с какого индекса в <code>entries</code> искать) и <strong><code>entries</code></strong> (хранит сам хэш, ключ, значение и индекс <strong><code>next</code></strong> — ссылку на следующий элемент, если в этот же бакет попал ещё один ключ с таким же хэшем, то есть коллизия). Это и есть механизм "цепочки" при коллизиях — без создания отдельных List-объектов под каждый бакет.</p>
+<p><strong>Самая дорогая операция — resize.</strong> Когда элементов становится больше текущей ёмкости (capacity), Dictionary создаёт НОВЫЕ, увеличенные массивы <code>buckets</code>/<code>entries</code> и перекладывает туда ВСЕ существующие элементы (пересчитывая их позиции). Если заранее известен примерный итоговый размер — стоит сразу задать capacity через конструктор:
+<code>csharp
+var dict = new Dictionary&lt;string, int&gt;(capacity: 10_000); // сразу под нужный объём
+// вместо постепенного добавления, которое вызовет несколько resize подряд</code>
+Это ровно та же логика, что уже видел у <code>List&lt;T&gt;</code> (Count vs Capacity, удвоение при росте) — просто для Dictionary это дороже, потому что при resize нужно ещё и пересчитать хэши всех элементов заново под новый размер массива бакетов.</p>
+</blockquote>
+<h3 id="hashsett-o1-contains">HashSet\&lt;T&gt; — уникальные значения, O(1) для Contains</h3>
+<pre><code class="language-csharp">var set = new HashSet&lt;string&gt; { &quot;a&quot;, &quot;b&quot;, &quot;c&quot; };
+set.Add(&quot;a&quot;);   // false — уже есть, не добавляет
+set.Add(&quot;d&quot;);   // true — добавлено
+
+set.Contains(&quot;b&quot;);  // true — O(1), в отличие от List.Contains
+
+// Операции над множествами
+var set2 = new HashSet&lt;string&gt; { &quot;c&quot;, &quot;d&quot;, &quot;e&quot; };
+set.IntersectWith(set2);  // пересечение: {&quot;c&quot;, &quot;d&quot;}
+set.UnionWith(set2);      // объединение
+set.ExceptWith(set2);     // разность
+</code></pre>
+<h3 id="queuet-fifo">Queue\&lt;T&gt; — очередь FIFO</h3>
+<pre><code class="language-csharp">var queue = new Queue&lt;string&gt;();
+queue.Enqueue(&quot;Первый&quot;);
+queue.Enqueue(&quot;Второй&quot;);
+queue.Enqueue(&quot;Третий&quot;);
+
+queue.Dequeue();    // &quot;Первый&quot; — извлечь из начала
+queue.Peek();       // &quot;Второй&quot; — посмотреть без извлечения
+queue.Count;        // 2
+</code></pre>
+<h3 id="stackt-lifo">Stack\&lt;T&gt; — стек LIFO</h3>
+<pre><code class="language-csharp">var stack = new Stack&lt;string&gt;();
+stack.Push(&quot;Первый&quot;);
+stack.Push(&quot;Второй&quot;);
+stack.Push(&quot;Третий&quot;);
+
+stack.Pop();    // &quot;Третий&quot; — извлечь с вершины
+stack.Peek();   // &quot;Второй&quot; — посмотреть без извлечения
+</code></pre>
+<blockquote>
+<p>[!info]+ 🆕 Добавлено 9 июля — FIFO и LIFO подробнее
+<strong>FIFO — First In, First Out</strong> (первый вошёл — первый вышел). Представь очередь в кассу: кто пришёл первым — того первым и обслужат.
+<code>csharp
+queue.Enqueue("Иван");    // пришёл первым
+queue.Enqueue("Мария");
+queue.Enqueue("Алексей"); // пришёл последним
+queue.Dequeue(); // → "Иван"   ← первый вошёл, первый вышел</code>
+Где используется: очередь задач, HTTP-запросы в обработку, RabbitMQ (сообщения обрабатываются по порядку поступления).</p>
+<p><strong>LIFO — Last In, First Out</strong> (последний вошёл — первый вышел). Представь стопку тарелок: кладёшь сверху — берёшь тоже сверху.
+<code>csharp
+stack.Push("шаг 1");
+stack.Push("шаг 2");
+stack.Push("шаг 3"); // положил последним
+stack.Pop(); // → "шаг 3"  ← последний вошёл, первый вышел</code>
+Где используется: Ctrl+Z (отмена действий), call stack в отладчике, история браузера "назад".</p>
+<p>🤖 <em>AI-инженерия (добавлено 9 июля):</em> история диалога с LLM — это <code>List&lt;Message&gt;</code>. Очередь задач для агента (кто обрабатывается первым) — тот самый FIFO на <code>Queue&lt;T&gt;</code>.</p>
+</blockquote>
+<h3 id="_28">Когда что использовать</h3>
+<pre><code>Нужна коллекция?
+│
+├── Фиксированный размер, индексный доступ → Array
+├── Меняющийся размер, порядок важен, дубликаты OK → List&lt;T&gt;
+├── Поиск по ключу (O(1)) → Dictionary&lt;TKey, TValue&gt;
+├── Уникальные значения, быстрый Contains → HashSet&lt;T&gt;
+├── Обработка в порядке поступления (очередь задач) → Queue&lt;T&gt;
+└── Откат действий, история → Stack&lt;T&gt;
+</code></pre>
+<h3 id="-17">Мини-задание 1.7</h3>
+<pre><code class="language-csharp">// Задание 1: Подсчитай частоту слов в тексте
+// Используй Dictionary&lt;string, int&gt;
+Dictionary&lt;string, int&gt; CountWords(string text)
+{
+    // Разбей на слова (Split), подсчитай каждое
+    // Подсказка: TryGetValue или dict[word] = dict.GetValueOrDefault(word) + 1
+}
+
+// Задание 2: Найди дубликаты в списке
+// Используй HashSet&lt;T&gt;
+List&lt;string&gt; FindDuplicates(List&lt;string&gt; items)
+{
+    // Верни список элементов, которые встречаются больше одного раза
+}
+
+// Задание 3: Реализуй простую очередь задач
+// - Добавить задачу
+// - Обработать следующую задачу (вывести и удалить)
+// - Показать все ожидающие задачи
+</code></pre>
+<hr>
+<h2 id="18-ienumerable-foreach">1.8 IEnumerable и foreach под капотом</h2>
+<h3 id="_29">Почему это важно</h3>
+<p>LINQ работает с любой коллекцией через IEnumerable. Понимание этого механизма объясняет как работает <code>yield return</code> и почему некоторые операции "ленивые".</p>
+<blockquote>
+<p>🤖 <em>AI-инженерия (добавлено 9 июля):</em> <strong>прямое попадание</strong> — стриминг ответа от LLM (токен за токеном) в C# SDK реализован именно как <code>IAsyncEnumerable&lt;T&gt;</code>. Поймёшь IEnumerable — поймёшь механику стриминга бесплатно.</p>
+</blockquote>
+<h3 id="_30">Аналогия из жизни</h3>
+<p>Экскурсовод ведёт группу по залам музея один за другим, не имея заранее полного плана всех залов в голове - просто на каждом шаге знает, куда идти дальше (<code>MoveNext</code>) и что показать прямо сейчас (<code>Current</code>).</p>
+<h3 id="foreach">Как на самом деле работает foreach</h3>
+<p>Компилятор превращает <code>foreach</code> вот в это:</p>
+<pre><code class="language-csharp">// Ты пишешь:
+foreach (var item in collection)
+    Console.WriteLine(item);
+
+// Компилятор делает:
+IEnumerator enumerator = collection.GetEnumerator();
+try
+{
+    while (enumerator.MoveNext())
+    {
+        var item = enumerator.Current;
+        Console.WriteLine(item);
+    }
+}
+finally
+{
+    (enumerator as IDisposable)?.Dispose();
+}
+</code></pre>
+<blockquote>
+<p>[!info]+ 🆕 Добавлено 9 июля — что такое <code>IDisposable</code> и <code>Dispose()</code> подробнее
+<strong>Зачем нужен Dispose.</strong> Garbage Collector сам удаляет объекты из <strong>управляемой</strong> памяти. Но есть ресурсы, которые GC не контролирует: файлы, соединения с БД, сетевые сокеты, потоки. Их нужно освобождать вручную — иначе файл останется заблокирован, соединение не закроется.</p>
+<p><code>csharp
+public interface IDisposable
+{
+    void Dispose(); // освободи всё что занял
+}</code></p>
+<p><strong><code>using</code> — синтаксический сахар над <code>try/finally</code>.</strong> Dispose вызывается всегда, даже при исключении:
+<code>csharp
+using var file = new StreamWriter("file.txt");
+file.WriteLine("hello");
+// Dispose вызовется автоматически в конце блока</code></p>
+<p><strong>Почему в коде выше <code>(enumerator as IDisposable)?.Dispose()</code>, а не просто <code>.Dispose()</code>.</strong> <code>IEnumerator</code> (без <code>&lt;T&gt;</code>) не наследует <code>IDisposable</code> — напрямую <code>.Dispose()</code> не скомпилируется. <code>as IDisposable</code> — безопасное приведение (null если тип не реализует интерфейс), <code>?.Dispose()</code> — null-safe вызов. <code>foreach</code> делает это автоматически, поэтому он предпочтительнее ручного enumerator.</p>
+<p><strong>Стандартный паттерн реализации:</strong>
+```csharp
+public class DatabaseConnection : IDisposable
+{
+    private SqlConnection _connection;
+    private bool _disposed = false; // защита от двойного Dispose</p>
+<pre><code>public void Dispose()
+{
+    if (_disposed) return;
+    _connection?.Close();
+    _connection?.Dispose();
+    _disposed = true;
+}
+</code></pre>
+<p>}
+```</p>
+<p>На собесе: "Что будет если не вызвать Dispose?" → resource leak — файл останется заблокирован, соединение не закроется, память ОС не вернётся.</p>
+<p>[!info]+ 🆕 Добавлено 28 июля — полная версия паттерна: финализатор + <code>GC.SuppressFinalize</code> (реальный вопрос с собеседования)
+Пример выше — упрощённый (без финализатора). Полная, "правильная" версия Dispose-паттерна выглядит так:
+```csharp
+public class DatabaseConnection : IDisposable
+{
+    private SqlConnection _connection;
+    private bool _disposed = false;</p>
+<pre><code>public void Dispose()
+{
+    if (_disposed) return;
+    _connection?.Close();
+    _connection?.Dispose();
+    _disposed = true;
+    GC.SuppressFinalize(this); // "не ставь меня в очередь финализации — я уже сам всё освободил"
+}
+
+~DatabaseConnection() // финализатор — подстраховка на случай, если Dispose() ЗАБЫЛИ вызвать
+{
+    // тут НЕЛЬЗЯ трогать managed-объекты (_connection) — они могли быть уже собраны GC
+    // финализатор — только для неуправляемых ресурсов напрямую (P/Invoke-хендлы и т.п.)
+}
+</code></pre>
+<p>}
+<code>``
+**Зачем</code>GC.SuppressFinalize(this)<code>.** Без него объект ВСЕГДА попадает в очередь финализации, даже если</code>Dispose()<code>уже всё честно освободил — GC потратит лишний цикл на бесполезный вызов финализатора позже.</code>SuppressFinalize` говорит "не трать на меня время, я уже закрыт".</p>
+<p><strong>Почему финализатор — именно подстраховка, а не основной путь.</strong> Момент вызова финализатора непредсказуем (решает GC), в отличие от <code>Dispose()</code>, который вызывается ДЕТЕРМИНИРОВАННО и сразу (через <code>using</code>). Правильная практика — рассчитывать на <code>Dispose()</code>/<code>using</code> как на основной механизм, финализатор — только "если разработчик забыл <code>Dispose()</code>, хоть что-то будет освобождено, пусть и позже".</p>
+</blockquote>
+<h3 id="_31">Интерфейсы</h3>
+<pre><code class="language-csharp">// IEnumerable&lt;T&gt; — &quot;я могу предоставить перечислитель&quot;
+interface IEnumerable&lt;T&gt;
+{
+    IEnumerator&lt;T&gt; GetEnumerator();
+}
+
+// IEnumerator&lt;T&gt; — &quot;я умею двигаться по элементам&quot;
+interface IEnumerator&lt;T&gt;
+{
+    T Current { get; }
+    bool MoveNext();
+    void Reset();
+}
+</code></pre>
+<blockquote>
+<p>[!info]+ 🆕 Добавлено 1 августа — модифицировать коллекцию ВНУТРИ <code>foreach</code> по ней самой (реальная задачка с собеседования)
+<code>csharp
+var list = new List&lt;int&gt; { 1, 2, 3 };
+foreach (var item in list)
+{
+    if (item == 2) list.Remove(item);
+}
+// Компилируется без ошибок. В РАНТАЙМЕ: InvalidOperationException:
+// "Collection was modified; enumeration operation may not execute."</code>
+Смотри на разворачивание <code>foreach</code> выше: <code>enumerator.MoveNext()</code> внутри себя сверяет "версию" коллекции с той, что была на момент <code>GetEnumerator()</code>. Любое изменение состава коллекции (<code>Add</code>/<code>Remove</code>, но НЕ изменение значения существующего элемента) во время активного перебора меняет версию — следующий <code>MoveNext()</code> это увидит и бросит исключение, даже если само удаление прошло "успешно".
+<strong>Решения:</strong> <code>for</code> с обратным перебором индексов (<code>for (int i = list.Count - 1; i &gt;= 0; i--)</code>), либо <code>list.RemoveAll(предикат)</code>, либо собрать элементы на удаление в отдельный список и удалить их уже ПОСЛЕ завершения <code>foreach</code>.</p>
+</blockquote>
+<h3 id="yield-return">yield return — ленивая генерация</h3>
+<p><code>yield return</code> позволяет создавать последовательности без хранения всех элементов в памяти:</p>
+<pre><code class="language-csharp">// Без yield — создаёт весь список в памяти сразу
+List&lt;int&gt; GetEvenNumbers(int max)
+{
+    var result = new List&lt;int&gt;();
+    for (int i = 0; i &lt;= max; i++)
+        if (i % 2 == 0)
+            result.Add(i);
+    return result;
+}
+
+// С yield — генерирует по одному, только когда нужно
+IEnumerable&lt;int&gt; GetEvenNumbersLazy(int max)
+{
+    for (int i = 0; i &lt;= max; i++)
+        if (i % 2 == 0)
+            yield return i; // приостанавливается и возвращает элемент
+}
+
+// Если нужны только первые 3 — остальные НЕ вычисляются
+foreach (var n in GetEvenNumbersLazy(1_000_000).Take(3))
+    Console.WriteLine(n); // 0, 2, 4 — и всё
+</code></pre>
+<h3 id="linq-ienumerable">LINQ — работает через IEnumerable</h3>
+<pre><code class="language-csharp">// Любой foreach — потенциальный LINQ
+var numbers = new List&lt;int&gt; { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
+
+// Базовый LINQ (детально в Фазе 3, сейчас просто понять синтаксис)
+var evens = numbers.Where(n =&gt; n % 2 == 0);         // фильтр
+var doubled = numbers.Select(n =&gt; n * 2);            // преобразование
+var sum = numbers.Sum();                             // агрегация
+var first = numbers.FirstOrDefault(n =&gt; n &gt; 5);     // первый или default
+</code></pre>
+<h3 id="_32">Важно: отложенное выполнение</h3>
+<pre><code class="language-csharp">var query = numbers.Where(n =&gt; n &gt; 5); // НЕ выполняется здесь!
+
+numbers.Add(11); // добавляем элемент ПОСЛЕ создания запроса
+
+foreach (var n in query) // выполняется ЗДЕСЬ, 11 тоже попадёт
+    Console.WriteLine(n); // 6, 7, 8, 9, 10, 11
+
+// Чтобы зафиксировать результат сразу:
+var result = numbers.Where(n =&gt; n &gt; 5).ToList(); // выполняется немедленно
+</code></pre>
+<blockquote>
+<p>[!info]+ 🆕 Добавлено 1 августа — какие методы откладывают, а какие выполняют сразу (реальный вопрос с собеседования)
+<strong>Откладывают выполнение</strong> (не трогают источник, пока не начнётся перебор): <code>.Where()</code>, <code>.OrderBy()</code>, <code>.Select()</code> — все они просто СТРОЯТ запрос, а не выполняют его.
+<strong>Выполняют НЕМЕДЛЕННО</strong> (сразу проходят по данным): <code>.FirstOrDefault()</code>, <code>.Count()</code>, <code>.Any()</code>, <code>.Sum()</code>, <code>.ToList()</code> — им нужен результат прямо сейчас, поэтому они форсируют выполнение всего, что отложено ДО них в цепочке.</p>
+<p>Важный нюанс для <code>IQueryable</code> (например, EF Core поверх БД): <code>.FirstOrDefault()</code> транслируется в SQL с <code>LIMIT 1</code> — забирает только ОДНУ строку с сервера, не всю таблицу. Для обычного <code>IEnumerable</code> (LINQ по коллекции в памяти) <code>.FirstOrDefault()</code> просто останавливает перебор на первом подходящем элементе — тоже не проходит всю коллекцию до конца, если совпадение нашлось раньше.</p>
+</blockquote>
+<h3 id="-18">Мини-задание 1.8</h3>
+<pre><code class="language-csharp">// Задание 1: Напиши метод с yield return который генерирует
+// числа Фибоначчи до заданного максимума
+IEnumerable&lt;int&gt; Fibonacci(int max)
+{
+    // 0, 1, 1, 2, 3, 5, 8, 13, 21, ...
+}
+
+// Задание 2: Что выведет код? Объясни порядок выполнения.
+var list = new List&lt;int&gt; { 1, 2, 3 };
+var query = list.Where(x =&gt; { Console.WriteLine($&quot;Filter {x}&quot;); return x &gt; 1; });
+Console.WriteLine(&quot;После создания запроса&quot;);
+list.Add(4);
+Console.WriteLine(&quot;После добавления 4&quot;);
+foreach (var x in query)
+    Console.WriteLine($&quot;Result: {x}&quot;);
+</code></pre>
+<hr>
+<h2 id="1">🎯 Итоговое задание Фазы 1 — Менеджер контактов</h2>
+<h3 id="_33">Техническое задание</h3>
+<p>Создай консольное приложение <strong>ContactManager</strong> которое демонстрирует все темы фазы 1.</p>
+<h3 id="_34">Структура проекта</h3>
+<pre><code>ContactManager/
+├── Program.cs
+├── Models/
+│   └── Contact.cs
+└── Services/
+    └── ContactBook.cs
+</code></pre>
+<h3 id="contactcs">Contact.cs</h3>
+<pre><code class="language-csharp">// Используй record для неизменяемой модели данных
+public record Contact(
+    string Name,
+    string Phone,
+    string? Email  // nullable — email необязателен
+);
+</code></pre>
+<h3 id="contactbookcs">ContactBook.cs — требования</h3>
+<pre><code class="language-csharp">public class ContactBook
+{
+    // Хранить контакты в Dictionary&lt;string, Contact&gt;
+    // Ключ — нормализованное имя (нижний регистр, trim)
+
+    // Методы:
+    bool Add(string name, string phone, string? email = null);
+    // false если контакт с таким именем уже есть
+
+    Contact? Find(string name);
+    // null если не найден — использовать nullable return type
+
+    bool Delete(string name);
+    // false если не найден
+
+    IEnumerable&lt;Contact&gt; GetAll();
+    // отсортированные по имени
+
+    IEnumerable&lt;Contact&gt; Search(string query);
+    // поиск по имени или телефону (Contains, case-insensitive)
+}
+</code></pre>
+<h3 id="programcs">Program.cs — требования</h3>
+<pre><code class="language-csharp">// Интерактивное меню:
+// 1. Добавить контакт
+// 2. Найти контакт
+// 3. Удалить контакт
+// 4. Показать все
+// 5. Поиск
+// 0. Выход
+
+// Обработка всех nullable случаев:
+// - контакт не найден → сообщение, не исключение
+// - email не введён → null (необязателен)
+// - пустой ввод → валидация
+</code></pre>
+<h3 id="_35">Чекпоинты (что должно быть в коде)</h3>
+<ul>
+<li>[ ] <code>Dictionary&lt;string, Contact&gt;</code> как основное хранилище</li>
+<li>[ ] <code>record Contact</code> с nullable Email</li>
+<li>[ ] <code>?.</code> оператор при обращении к свойствам</li>
+<li>[ ] <code>??</code> оператор для значений по умолчанию</li>
+<li>[ ] <code>switch expression</code> в меню</li>
+<li>[ ] <code>IEnumerable&lt;Contact&gt;</code> как возвращаемый тип GetAll/Search</li>
+<li>[ ] Нормализация ключа (ToLower().Trim())</li>
+<li>[ ] Обработка случая "не найдено" без исключений</li>
+</ul>
+<h3 id="_36">Пример работы</h3>
+<pre><code>=== Менеджер контактов ===
+1. Добавить   2. Найти   3. Удалить   4. Все   5. Поиск   0. Выход
+&gt; 1
+Имя: Ivan
+Телефон: +7 999 123-45-67
+Email (Enter пропустить): ivan@mail.ru
+✓ Контакт добавлен
+
+&gt; 2
+Имя: ivan
+Найден: Ivan | +7 999 123-45-67 | ivan@mail.ru
+
+&gt; 2
+Имя: Anna
+Контакт не найден
+
+&gt; 4
+Все контакты (1):
+  Ivan | +7 999 123-45-67 | ivan@mail.ru
+</code></pre>
+<hr>
+<h2 id="-">Ответы к мини-заданиям</h2>
+<details>
+<summary>1.1 — Struct vs Class присвоение</summary>
+
+
+<pre><code>r1.Width = 10 (struct копируется, r2 независима)
+r2.Width = 20
+При class: r1.Width = 20 (оба указывают на один объект)
+</code></pre>
+
+</details>
+
+<details>
+<summary>1.2 — Объектов на Heap</summary>
+
+
+<pre><code>3 объекта: &quot;hello&quot; (string), int[] { 1,2,3 } (массив), int 'a' упакованный в object o
+int a и int b — на стеке
+</code></pre>
+
+</details>
+
+<details>
+<summary>1.3 — Что выведет код</summary>
+
+
+<pre><code>y = &quot;test&quot;
+Строки иммутабельны. x = &quot;changed&quot; создаёт новую строку и
+переприсваивает переменную x. y продолжает указывать на &quot;test&quot;.
+</code></pre>
+
+</details>
+
+<details>
+<summary>1.5 — ParseAge</summary>
+
+
+<pre><code class="language-csharp">int? ParseAge(string input)
+{
+    if (int.TryParse(input, out int age))
+        return age;
+    return null;
+}
+
+string GetAgeLabel(int? age) =&gt;
+    age.HasValue ? $&quot;{age.Value} лет&quot; : &quot;Возраст не указан&quot;;
+// или: age?.ToString() + &quot; лет&quot; ?? &quot;Возраст не указан&quot;
+</code></pre>
+
+</details>
+
+<details>
+<summary>1.8 — Порядок выполнения</summary>
+
+
+<pre><code>После создания запроса     ← сразу
+После добавления 4         ← сразу
+Filter 1                   ← только при foreach
+Filter 2
+Result: 2
+Filter 3
+Result: 3
+Filter 4
+Result: 4
+</code></pre>
+
+</details>
+
+<hr>
+<p><em>Фаза 1 завершена → <a href="Phase2_OOP.md">Фаза 2 — ООП</a></em></p></article>
+    <aside class="aside">
+      <strong>В этом документе</strong>
+      <div class="toc"><div class="toc">
+<ul>
+<li><a href="#11-value-types-vs-reference-types">1.1 Value types vs Reference types</a><ul>
+<li><a href="#_1">Почему это важно</a></li>
+<li><a href="#_2">Аналогия из жизни</a></li>
+<li><a href="#_3">Теория</a></li>
+<li><a href="#_4">Ключевое различие: что происходит при присвоении</a></li>
+<li><a href="#_5">Передача в методы</a></li>
+<li><a href="#struct-vs-class">Struct vs Class — когда что выбрать</a></li>
+<li><a href="#-11">Мини-задание 1.1</a></li>
+</ul>
+</li>
+<li><a href="#12-stack-heap">1.2 Stack и Heap — как хранится память</a><ul>
+<li><a href="#_6">Почему это важно</a></li>
+<li><a href="#_7">Аналогия из жизни</a></li>
+<li><a href="#_8">Теория</a></li>
+<li><a href="#_9">Визуализация</a></li>
+<li><a href="#boxing-unboxing">Boxing и Unboxing — скрытая проблема производительности</a></li>
+<li><a href="#-12">Мини-задание 1.2</a></li>
+</ul>
+</li>
+<li><a href="#13-string">1.3 Строки — почему string иммутабелен</a><ul>
+<li><a href="#_10">Почему это важно</a></li>
+<li><a href="#_11">Аналогия из жизни</a></li>
+<li><a href="#_12">Теория</a></li>
+<li><a href="#_13">Катастрофа в цикле</a></li>
+<li><a href="#_14">Сравнение строк</a></li>
+<li><a href="#_15">Полезные методы</a></li>
+<li><a href="#-13">Мини-задание 1.3</a></li>
+</ul>
+</li>
+<li><a href="#14">1.4 Приведение типов</a><ul>
+<li><a href="#_16">Почему это важно</a></li>
+<li><a href="#_17">Аналогия из жизни</a></li>
+<li><a href="#_18">Теория</a></li>
+<li><a href="#_19">Иерархия — когда что использовать</a></li>
+<li><a href="#-14">Мини-задание 1.4</a></li>
+</ul>
+</li>
+<li><a href="#15-nullable-null-">1.5 Nullable типы и null-операторы</a><ul>
+<li><a href="#_20">Почему это важно</a></li>
+<li><a href="#_21">Аналогия из жизни</a></li>
+<li><a href="#_22">Теория</a></li>
+<li><a href="#null-">Null-операторы — используй каждый день</a></li>
+<li><a href="#_23">Реальный пример</a></li>
+<li><a href="#-15">Мини-задание 1.5</a></li>
+</ul>
+</li>
+<li><a href="#16-switch-expression-pattern-matching">1.6 Switch expression и Pattern Matching</a><ul>
+<li><a href="#_24">Почему это важно</a></li>
+<li><a href="#_25">Аналогия из жизни</a></li>
+<li><a href="#switch">Классический switch (знаком)</a></li>
+<li><a href="#switch-expression-c-8">Switch expression (C# 8+) — компактный и возвращает значение</a></li>
+<li><a href="#pattern-matching">Pattern matching — мощный инструмент</a></li>
+<li><a href="#-16">Мини-задание 1.6</a></li>
+</ul>
+</li>
+<li><a href="#17">1.7 Массивы и коллекции</a><ul>
+<li><a href="#_26">Почему это важно</a></li>
+<li><a href="#_27">Аналогия из жизни</a></li>
+<li><a href="#array">Array — базовый, фиксированный размер</a></li>
+<li><a href="#listt">List\&lt;T&gt; — динамический массив (используется чаще всего)</a></li>
+<li><a href="#dictionarytkey-tvalue-o1">Dictionary\&lt;TKey, TValue&gt; — хеш-таблица, O(1) для поиска</a></li>
+<li><a href="#hashsett-o1-contains">HashSet\&lt;T&gt; — уникальные значения, O(1) для Contains</a></li>
+<li><a href="#queuet-fifo">Queue\&lt;T&gt; — очередь FIFO</a></li>
+<li><a href="#stackt-lifo">Stack\&lt;T&gt; — стек LIFO</a></li>
+<li><a href="#_28">Когда что использовать</a></li>
+<li><a href="#-17">Мини-задание 1.7</a></li>
+</ul>
+</li>
+<li><a href="#18-ienumerable-foreach">1.8 IEnumerable и foreach под капотом</a><ul>
+<li><a href="#_29">Почему это важно</a></li>
+<li><a href="#_30">Аналогия из жизни</a></li>
+<li><a href="#foreach">Как на самом деле работает foreach</a></li>
+<li><a href="#_31">Интерфейсы</a></li>
+<li><a href="#yield-return">yield return — ленивая генерация</a></li>
+<li><a href="#linq-ienumerable">LINQ — работает через IEnumerable</a></li>
+<li><a href="#_32">Важно: отложенное выполнение</a></li>
+<li><a href="#-18">Мини-задание 1.8</a></li>
+</ul>
+</li>
+<li><a href="#1">🎯 Итоговое задание Фазы 1 — Менеджер контактов</a><ul>
+<li><a href="#_33">Техническое задание</a></li>
+<li><a href="#_34">Структура проекта</a></li>
+<li><a href="#contactcs">Contact.cs</a></li>
+<li><a href="#contactbookcs">ContactBook.cs — требования</a></li>
+<li><a href="#programcs">Program.cs — требования</a></li>
+<li><a href="#_35">Чекпоинты (что должно быть в коде)</a></li>
+<li><a href="#_36">Пример работы</a></li>
+</ul>
+</li>
+<li><a href="#-">Ответы к мини-заданиям</a></li>
+</ul>
+</div>
+</div>
+    </aside>
+  </div>
+</main>
+
+
+<script>
+const ROOT = "..";
+
+// ---- тема
+const themeBtn = document.getElementById("theme");
+const paint = () => {
+  const dark = document.documentElement.getAttribute("data-theme") === "dark";
+  themeBtn.textContent = dark ? "☀" : "☾";
+};
+paint();
+themeBtn.addEventListener("click", () => {
+  const next = document.documentElement.getAttribute("data-theme") === "dark" ? "light" : "dark";
+  document.documentElement.setAttribute("data-theme", next);
+  try { localStorage.setItem("kb-theme", next); } catch (e) {}
+  paint();
+});
+
+// ---- поиск
+let index = null;
+const box = document.getElementById("results");
+const hits = document.getElementById("hits");
+const head = box.querySelector("h3");
+const input = document.getElementById("q");
+
+async function ensureIndex() {
+  if (index) return index;
+  const res = await fetch(ROOT + "/search-index.json");
+  index = await res.json();
+  return index;
+}
+
+const esc = (s) => (s || "").replace(/[&<>]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
+
+function hi(text, query) {
+  const i = text.toLowerCase().indexOf(query);
+  if (i < 0) return esc(text);
+  return esc(text.slice(0, i)) + "<mark>" + esc(text.slice(i, i + query.length)) + "</mark>" + esc(text.slice(i + query.length));
+}
+
+input.addEventListener("input", async () => {
+  const q = input.value.trim().toLowerCase();
+  if (q.length < 2) { box.hidden = true; return; }
+  const data = await ensureIndex();
+  const found = [];
+  for (const d of data) {
+    const inTitle = d.title.toLowerCase().includes(q);
+    const inSum = (d.summary || "").toLowerCase().includes(q);
+    const heads = (d.heads || []).filter(h => h.toLowerCase().includes(q));
+    if (inTitle || inSum || heads.length) {
+      found.push({ d, heads, rank: inTitle ? 0 : heads.length ? 1 : 2 });
+    }
+  }
+  found.sort((a, b) => a.rank - b.rank);
+  head.textContent = found.length ? `Нашлось: ${found.length}` : "Ничего не нашлось";
+  hits.innerHTML = found.slice(0, 40).map(({ d, heads }) =>
+    `<a class="hit" href="${ROOT}/d/${d.slug}.html">
+       <b>${hi(d.title, q)}</b>
+       <span>${heads.length ? "→ " + heads.slice(0, 3).map(h => hi(h, q)).join(" · ") : esc(d.summary || "")}</span>
+     </a>`).join("");
+  box.hidden = false;
+});
+
+input.addEventListener("keydown", (e) => { if (e.key === "Escape") { input.value = ""; box.hidden = true; input.blur(); } });
+document.addEventListener("keydown", (e) => {
+  if (e.key === "/" && document.activeElement !== input) { e.preventDefault(); input.focus(); }
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>API — живой companion-документ - База знаний</title>
+<link rel="stylesheet" href="../kb.css">
+<script>
+  // Тему ставим до первой отрисовки, иначе на тёмной системе мигает белым.
+  try {
+    var t = localStorage.getItem("kb-theme");
+    if (!t) t = matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+    document.documentElement.setAttribute("data-theme", t);
+  } catch (e) {}
+</script>
+</head>
+<body>
+
+<header class="top">
+  <div class="top-in">
+    <a class="brand" href="../index.html">База <span>знаний</span></a>
+    <span class="grow"></span>
+    <input id="q" type="search" placeholder="Поиск по всем материалам…" autocomplete="off">
+    <button class="icon-btn" id="theme" type="button" title="Тема"></button>
+  </div>
+</header>
+
+<div id="results" hidden><div class="wrap-r"><h3></h3><div id="hits"></div></div></div>
+
+<main class="wrap">
+  <div class="doc-head">
+    <div class="crumb"><a href="../index.html#companions">Спутники к собеседованиям</a></div>
+    <h1>API — живой companion-документ</h1>
+    <div class="meta">57 строк · источник <code>l2code/API_Companion.md</code></div>
+  </div>
+
+  <div class="layout">
+    <article class="prose"><blockquote>
+<p>Часть 2 из видео-конспектов ("Что такое API"). HTTP-методы и коды ответа уже подробно разобраны в <code>Postman_ClientServer_Companion.md</code> — здесь не дублирую, фокус на стандартах (REST/SOAP/gRPC/GraphQL).</p>
+</blockquote>
+<hr>
+<h2 id="api">Что такое API</h2>
+<p><strong>Аналогия из жизни (из источника, отличная — сохраняю):</strong> официант в ресторане — интерфейс твоего взаимодействия с кухней. Просишь меню, делаешь заказ, просишь счёт — не зная, как готовится еда и как считается чек. Официант скрывает сложные детали и просто передаёт запрос/ответ между тобой и кухней.</p>
+<p><strong>Суть:</strong> API — описание способов взаимодействия между программами: как они общаются и передают данные. API даёт доступ ТОЛЬКО к тем функциям, которые заложил разработчик — нельзя попросить того, чего там нет (официант не почитает вслух книгу, если это не его функционал).</p>
+<p><strong>API бывает не только клиент-сервер, но и сервер-сервер</strong> — например сайт продажи авиабилетов сам вызывает API стороннего сервиса погоды, чтобы показать прогноз (и вероятно платит за каждый запрос). API также существует у операционных систем и железа (например доступ к камере устройства) — не только у веб-сервисов через HTTP.</p>
+<hr>
+<h2 id="soap-rest">SOAP — исторический предшественник REST</h2>
+<p>⚠️ <strong>Исправление точности:</strong> в источнике SOAP расшифрован как "Service Object Access Protocol" — это ОШИБКА. Правильно: <strong>Simple</strong> Object Access Protocol.</p>
+<p><strong>Суть:</strong> SOAP — протокол (не архитектурный стиль, в отличие от REST), задаёт строгий синтаксис сообщений. Все сообщения — обязательно в формате XML (Extensible Markup Language — данные в тегах, читаемо и человеком, и машиной), передаются через HTTP или SMTP.</p>
+<p><strong>Аналогия из источника (сохраняю — точная и смешная):</strong> SOAP — как завернуть каждое сообщение в XML, "надеть на него шапочку и шарфик" — много обязательной формальности вокруг сути сообщения.</p>
+<hr>
+<h2 id="rest-restful">REST / RESTful</h2>
+<p><strong>Суть:</strong> REST — архитектурный СТИЛЬ (не протокол). Данные — ресурсы, у каждого свой уникальный URL. API, соответствующий REST — называется RESTful. Использует HTTP-методы (GET/POST/и другие — см. Postman companion) для работы с ресурсами.</p>
+<p><strong>Отличие от SOAP:</strong> RESTful поддерживает разные форматы данных (текст, HTML, YAML, XML, JSON), SOAP — только XML. JSON (JavaScript Object Notation) — самый популярный формат, простые пары ключ-значение.</p>
+<p><strong>Аналогия из жизни:</strong> REST-ресурс — как точный адрес в городе: идёшь прямо по адресу (URL) и взаимодействуешь с тем, что там есть, без формального протокола записи на приём, как в SOAP.</p>
+<hr>
+<h2 id="grpc">gRPC</h2>
+<p><strong>Суть:</strong> используется в основном для связи МЕЖДУ сервисами (не для публичных веб-API). Быстрый благодаря HTTP/2 (сжатие заголовков и другие оптимизации) и формату <strong>Protocol Buffers (protobuf)</strong> вместо JSON/XML — бинарный, компактный, требует меньше ресурсов.</p>
+<p><strong>Аналогия из жизни:</strong> JSON/XML — как писать полное предложение в письме ("Здравствуйте, меня зовут Иван, мне 28 лет") — понятно человеку, но многословно. Protobuf — как заранее согласованный код между двумя людьми, которые давно знают формат друг друга: компактная последовательность, непонятная постороннему напрямую, зато очень быстрая, потому что обе стороны заранее знают точную структуру (схему).</p>
+<p><strong>Забавный факт:</strong> официального фиксированного значения буквы "g" в gRPC нет — Google в разных релизах даёт разные шуточные расшифровки (в этом источнике — "gRPC Remote Procedure Calls" — это один из принятых Google вариантов, не ошибка, просто такова природа названия).</p>
+<hr>
+<h2 id="graphql">GraphQL</h2>
+<p><strong>Суть:</strong> язык запросов для API — позволяет клиенту указать ТОЧНО те данные, которые нужны, и получить их одним вызовом, даже если данные приходят из нескольких источников.</p>
+<p><strong>Аналогия из источника (сохраняю — хорошо передаёт идею):</strong> планируешь поездку в Дубай — нужен билет у окна, жильё с видом на Бурдж-Халифу и нарукавники с принтом Свинки Пеппы. Без GraphQL — три отдельных обращения в три места. С GraphQL — один вызов API с адресами всех трёх источников, получаешь всё нужное сразу.</p>
+<hr>
+<h2 id="_1">Источник</h2>
+<p>Видео-конспект (та же серия, что и NoSQL-часть) — промо-часть в конце не включена как нерелевантная теории.</p></article>
+    <aside class="aside">
+      <strong>В этом документе</strong>
+      <div class="toc"><div class="toc">
+<ul>
+<li><a href="#api">Что такое API</a></li>
+<li><a href="#soap-rest">SOAP — исторический предшественник REST</a></li>
+<li><a href="#rest-restful">REST / RESTful</a></li>
+<li><a href="#grpc">gRPC</a></li>
+<li><a href="#graphql">GraphQL</a></li>
+<li><a href="#_1">Источник</a></li>
+</ul>
+</div>
+</div>
+    </aside>
+  </div>
+</main>
+
+
+<script>
+const ROOT = "..";
+
+// ---- тема
+const themeBtn = document.getElementById("theme");
+const paint = () => {
+  const dark = document.documentElement.getAttribute("data-theme") === "dark";
+  themeBtn.textContent = dark ? "☀" : "☾";
+};
+paint();
+themeBtn.addEventListener("click", () => {
+  const next = document.documentElement.getAttribute("data-theme") === "dark" ? "light" : "dark";
+  document.documentElement.setAttribute("data-theme", next);
+  try { localStorage.setItem("kb-theme", next); } catch (e) {}
+  paint();
+});
+
+// ---- поиск
+let index = null;
+const box = document.getElementById("results");
+const hits = document.getElementById("hits");
+const head = box.querySelector("h3");
+const input = document.getElementById("q");
+
+async function ensureIndex() {
+  if (index) return index;
+  const res = await fetch(ROOT + "/search-index.json");
+  index = await res.json();
+  return index;
+}
+
+const esc = (s) => (s || "").replace(/[&<>]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
+
+function hi(text, query) {
+  const i = text.toLowerCase().indexOf(query);
+  if (i < 0) return esc(text);
+  return esc(text.slice(0, i)) + "<mark>" + esc(text.slice(i, i + query.length)) + "</mark>" + esc(text.slice(i + query.length));
+}
+
+input.addEventListener("input", async () => {
+  const q = input.value.trim().toLowerCase();
+  if (q.length < 2) { box.hidden = true; return; }
+  const data = await ensureIndex();
+  const found = [];
+  for (const d of data) {
+    const inTitle = d.title.toLowerCase().includes(q);
+    const inSum = (d.summary || "").toLowerCase().includes(q);
+    const heads = (d.heads || []).filter(h => h.toLowerCase().includes(q));
+    if (inTitle || inSum || heads.length) {
+      found.push({ d, heads, rank: inTitle ? 0 : heads.length ? 1 : 2 });
+    }
+  }
+  found.sort((a, b) => a.rank - b.rank);
+  head.textContent = found.length ? `Нашлось: ${found.length}` : "Ничего не нашлось";
+  hits.innerHTML = found.slice(0, 40).map(({ d, heads }) =>
+    `<a class="hit" href="${ROOT}/d/${d.slug}.html">
+       <b>${hi(d.title, q)}</b>
+       <span>${heads.length ? "→ " + heads.slice(0, 3).map(h => hi(h, q)).join(" · ") : esc(d.summary || "")}</span>
+     </a>`).join("");
+  box.hidden = false;
+});
+
+input.addEventListener("keydown", (e) => { if (e.key === "Escape") { input.value = ""; box.hidden = true; input.blur(); } });
+document.addEventListener("keydown", (e) => {
+  if (e.key === "/" && document.activeElement !== input) { e.preventDefault(); input.focus(); }
+});
+</script>
+</body>
+</html>

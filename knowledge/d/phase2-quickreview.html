@@ -1,0 +1,269 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Фаза 2 — быстрый повтор - База знаний</title>
+<link rel="stylesheet" href="../kb.css">
+<script>
+  // Тему ставим до первой отрисовки, иначе на тёмной системе мигает белым.
+  try {
+    var t = localStorage.getItem("kb-theme");
+    if (!t) t = matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+    document.documentElement.setAttribute("data-theme", t);
+  } catch (e) {}
+</script>
+</head>
+<body>
+
+<header class="top">
+  <div class="top-in">
+    <a class="brand" href="../index.html">База <span>знаний</span></a>
+    <span class="grow"></span>
+    <input id="q" type="search" placeholder="Поиск по всем материалам…" autocomplete="off">
+    <button class="icon-btn" id="theme" type="button" title="Тема"></button>
+  </div>
+</header>
+
+<div id="results" hidden><div class="wrap-r"><h3></h3><div id="hits"></div></div></div>
+
+<main class="wrap">
+  <div class="doc-head">
+    <div class="crumb"><a href="../index.html#phases">Фазы C#</a></div>
+    <h1>Фаза 2 — быстрый повтор</h1>
+    <div class="meta">207 строк · источник <code>l2code/Phase2_QuickReview.md</code></div>
+  </div>
+
+  <div class="layout">
+    <article class="prose"><blockquote>
+<p>Не замена полной теории (<code>Phase2_OOP.md</code>) — для быстрого обновления в голове. Полные примеры/мини-задания/собес-блоки — в основном файле фазы.</p>
+</blockquote>
+<hr>
+<h3 id="21">2.1 Классы и объекты</h3>
+<p><strong>Аналогия:</strong> чертёж дома (класс) один, домов по нему (объекты) сколько угодно — у каждого свой участок, независимые друг от друга.</p>
+<p><strong>Суть:</strong> класс — чертёж, объект — экземпляр. Конструктор без возвращаемого типа, имя = имя класса, вызывается на <code>new</code>. <code>this(...)</code> — не вызов метода, а цепочка к ДРУГОМУ конструктору этого же класса, выполняется целиком ДО тела текущего.</p>
+<pre><code class="language-csharp">public class Rectangle
+{
+    public double Width, Height;
+    public Rectangle(double width, double height) { Width = width; Height = height; }
+
+    // this(side, side) выполнится ПОЛНОСТЬЮ первым, потом пустое тело —
+    // не дублируем логику инициализации в каждом конструкторе
+    public Rectangle(double side) : this(side, side) { }
+}
+</code></pre>
+<p><strong>Q&amp;A:</strong>
+- Конструктор vs обычный метод? → без возвращаемого типа, имя = имя класса, вызывается автоматически на <code>new</code>.
+- Что выполнится первым — <code>this(...)</code> или тело? → всегда <code>this(...)</code> целиком, потом тело.
+- Что если не написать ни одного конструктора? → компилятор создаст пустой <code>public</code> — но только если нет НИ ОДНОГО явного.</p>
+<hr>
+<h3 id="22">2.2 Инкапсуляция</h3>
+<p><strong>Аналогия:</strong> банкомат не даёт залезть руками в сейф — только через контролируемый интерфейс (PIN, сумма).</p>
+<p><strong>Суть:</strong> private-поле + property с проверкой в <code>set</code> — контроль над изменением состояния, не просто "спрятать поля". Auto-property — компилятор сам генерирует backing field. <code>init</code> — присвоить можно только при создании (даже изнутри класса дальше нельзя), в отличие от <code>private set</code> (менять можно из любого метода класса в любой момент).</p>
+<pre><code class="language-csharp">public decimal Balance
+{
+    get =&gt; _balance;
+    private set // менять можно только изнутри класса
+    {
+        if (value &lt; 0) throw new ArgumentException(&quot;Баланс не может быть отрицательным&quot;);
+        _balance = value;
+    }
+}
+</code></pre>
+<p><strong>Q&amp;A:</strong>
+- Чем <code>private set</code> отличается от <code>init</code>? → <code>private set</code> — можно менять из любого метода класса в любой момент; <code>init</code> — только один раз, при создании.
+- Зачем private-поле+property, если можно public auto-property? → auto-property не даёт контроля/валидации при изменении значения.</p>
+<hr>
+<h3 id="23">2.3 Наследование</h3>
+<p><strong>Аналогия:</strong> семейные черты — ребёнок наследует базовые черты родителя, но может развить свою версию (override), оставаясь узнаваемым потомком.</p>
+<p><strong>Суть:</strong> <code>base(...)</code> вызывает конструктор родителя. <code>virtual</code>+<code>override</code> — оба обязательны В ПАРЕ (без <code>virtual</code> в базовом — ошибка компиляции <code>CS0506</code>). <code>sealed</code> — запрещает дальнейшее наследование/переопределение. <code>new</code> (hiding) — это НЕ override: решается на этапе КОМПИЛЯЦИИ по типу переменной, а не по реальному типу объекта.</p>
+<pre><code class="language-csharp">Penguin p = new Penguin();
+p.Move();          // &quot;Пингвин ковыляет&quot; — переменная типа Penguin
+
+Bird b = p;         // тот же объект, но переменная типа Bird
+b.Move();           // &quot;Птица передвигается&quot; — вызвалась версия Bird! (это new, не override)
+</code></pre>
+<p><strong>Q&amp;A:</strong>
+- Разница <code>override</code> vs <code>new</code> (hiding)? → <code>override</code> — решение в рантайме, по реальному типу объекта; <code>new</code> — на компиляции, по типу переменной.
+- Что если не вызвать <code>base(...)</code> явно? → неявно вызовется пустой конструктор родителя, если он есть; если нет — ошибка компиляции.
+- Почему в C# нет множественного наследования классов? → чтобы избежать diamond problem; с интерфейсами эта проблема не возникает.</p>
+<hr>
+<h3 id="24">2.4 Полиморфизм — статический и динамический</h3>
+<p><strong>Аналогия:</strong> кнопка "Вкл" на универсальном пульте — для телевизора включает экран, для кондиционера запускает охлаждение, в зависимости от того, что реально стоит за кнопкой.</p>
+<p><strong>Суть:</strong> статический (перегрузки/overload) — разные методы с разной сигнатурой, выбор на этапе КОМПИЛЯЦИИ. Динамический (<code>virtual</code>/<code>override</code>) — один и тот же вызов, разное поведение по РЕАЛЬНОМУ типу объекта, выбор в рантайме. Ловушка: вызов <code>virtual</code>-метода из конструктора БАЗОВОГО класса вызовет <code>override</code>-версию наследника ДО того, как поля наследника инициализированы.</p>
+<pre><code class="language-csharp">public class Base
+{
+    public Base() =&gt; Init(); // опасно — вызов virtual ИЗ конструктора
+    public virtual void Init() =&gt; Console.WriteLine(&quot;Base.Init&quot;);
+}
+public class Derived : Base
+{
+    private string _name = &quot;готово&quot;;
+    public override void Init() =&gt; Console.WriteLine($&quot;_name = {_name}&quot;); // выведет ПУСТУЮ строку!
+}
+</code></pre>
+<p><strong>Q&amp;A:</strong>
+- Overload vs override? → overload — разные методы/сигнатуры, решается на компиляции; override — тот же метод, решается в рантайме по типу объекта.
+- Можно достичь полиморфизма без наследования от общего класса? → да, через интерфейсы.</p>
+<hr>
+<h3 id="25-abstract-vs">2.5 Абстракция — abstract класс vs интерфейс</h3>
+<p><strong>Аналогия:</strong> руль и педали в машине — жмёшь на газ, не зная, что происходит в двигателе. Детали реализации скрыты за контрактом.</p>
+<p><strong>Суть:</strong> <code>abstract class</code> — общий код/состояние, "это разновидность X", только ОДИНОЧНОЕ наследование. <code>interface</code> — чистый контракт (или default-методы с C#8+), "умеет делать Y", МНОЖЕСТВЕННАЯ реализация возможна.</p>
+<pre><code class="language-csharp">public abstract class Shape
+{
+    public void PrintName() =&gt; Console.WriteLine(Name); // общий код — наследуется как есть
+    public abstract double Area(); // контракт — наследник ОБЯЗАН написать
+}
+// var s = new Shape(); // ОШИБКА — нельзя создать объект abstract класса
+</code></pre>
+<p><strong>Q&amp;A:</strong>
+- abstract class vs interface — когда что? → общее состояние нужно всем наследникам → abstract class; несвязанные классы с общим "умением" → interface.
+- Может ли abstract класс иметь конструктор? → да, вызывается через <code>base(...)</code> из наследника при создании ЕГО объекта.</p>
+<hr>
+<h3 id="26-icomparable-idisposable-ienumerable-iequatable">2.6 Интерфейсы — IComparable, IDisposable, IEnumerable, IEquatable</h3>
+<p><strong>Аналогия:</strong> разъём USB — неважно, что внутри устройства, если разъём совпадает, оно подключится и заработает по общим правилам.</p>
+<p><strong>Суть:</strong> реализация стандартных интерфейсов "подключает" класс к языковым механизмам: <code>IComparable&lt;T&gt;</code> → <code>Array.Sort()</code>/<code>.Sort()</code>, <code>IDisposable</code> → <code>using</code>, <code>IEnumerable&lt;T&gt;</code> → <code>foreach</code>. <code>record</code> генерирует <code>IEquatable</code>-подобное сравнение автоматически — вручную (Пример D в теме) видно, что именно он делает за тебя.</p>
+<pre><code class="language-csharp">public class Product : IComparable&lt;Product&gt;
+{
+    public decimal Price { get; init; }
+    public int CompareTo(Product? other) =&gt;
+        other is null ? 1 : Price.CompareTo(other.Price);
+}
+products.Sort(); // теперь работает — использует твой CompareTo
+</code></pre>
+<p><strong>Q&amp;A:</strong>
+- Зачем generic <code>IComparable&lt;T&gt;</code>, если есть non-generic? → non-generic требует boxing и приведения типов, не типобезопасен.
+- Что если реализовать <code>CompareTo</code>, но не <code>Equals</code>/<code>GetHashCode</code>? → сортировка работает, но сравнение на равенство (<code>==</code>, ключ в Dictionary) остаётся по ССЫЛКЕ.</p>
+<hr>
+<h3 id="27-solid">2.7 Принципы SOLID</h3>
+<p><strong>Аналогия:</strong> кухня ресторана — у каждого повара своя зона (S), меню растёт без переписывания чужой работы (O), любой повар заменяет другого без сюрпризов (L), никто не обязан знать чужие рецепты (I), шеф просит "морковь по спецификации X", не важно кто принесёт (D).</p>
+<p><strong>Суть:</strong> <strong>S</strong> — один класс, одна причина для изменения. <strong>O</strong> — новое поведение через новый класс, не правку старого. <strong>L</strong> — наследник должен ПОЛНОЦЕННО заменять родителя (не кидать исключение там, где родитель работал). <strong>I</strong> — маленькие специфичные интерфейсы вместо одного гигантского. <strong>D</strong> — зависеть от абстракций (интерфейсов), конкретную реализацию передавать снаружи (= Dependency Injection).</p>
+<pre><code class="language-csharp">public interface IDatabase { void Save(Order order); }
+public class OrderService
+{
+    private readonly IDatabase _db;
+    public OrderService(IDatabase db) =&gt; _db = db; // реализацию решает вызывающий код, не сам сервис
+}
+</code></pre>
+<p><strong>Q&amp;A:</strong>
+- Как SOLID связан с Dependency Injection? → <code>D</code> — теоретический принцип, DI — практический механизм передачи абстракций (обычно через конструктор).
+- Пример скрытого нарушения LSP (не через exception)? → наследник формально совпадает по сигнатуре, но работает в разы медленнее/с побочными эффектами, которых вызывающий код не ожидает.</p>
+<hr>
+<h3 id="28-singleton">2.8 Статические классы и Singleton</h3>
+<p><strong>Аналогия:</strong> один принтер на весь этаж офиса — все обращаются к одному и тому же устройству, не заводят себе персональную копию.</p>
+<p><strong>Суть:</strong> <code>static class</code> — вообще НЕ объект: нельзя передать как зависимость через интерфейс, нет полиморфизма, нельзя замокать в тестах. Singleton — обычный объект (приватный конструктор гарантирует единственность), можно спрятать за интерфейсом. <code>Lazy&lt;T&gt;</code> — потокобезопасный Singleton без ручного <code>lock</code>.</p>
+<pre><code class="language-csharp">public class ConfigManager
+{
+    private static readonly Lazy&lt;ConfigManager&gt; _lazy = new(() =&gt; new ConfigManager());
+    public static ConfigManager Instance =&gt; _lazy.Value; // Lazy&lt;T&gt; сам даёт потокобезопасность
+    private ConfigManager() { }
+}
+</code></pre>
+<p><strong>Q&amp;A:</strong>
+- Почему Singleton считают антипаттерном? → скрытая глобальная зависимость, сложно тестировать изолированно.
+- static class vs Singleton, если оба "один экземпляр логики"? → static class нельзя передать как зависимость/замокать; Singleton — обычный объект, можно спрятать за интерфейсом.</p>
+<hr>
+<h3 id="29-record">2.9 Record типы — глубже</h3>
+<p><strong>Аналогия:</strong> бланк техпаспорта — два бланка с одинаковыми данными (тот же VIN) считаются одним документом по содержанию (value equality), не потому что это физически один лист бумаги, как было бы у class.</p>
+<p><strong>Суть:</strong> <code>record</code> даёт value equality (сравнение по значениям полей, а не по ссылке) и <code>with</code> — неразрушающую копию с изменением части полей. Ловушка: value equality зависит от того, переопределяет ли КАЖДОЕ поле свой <code>Equals</code> — <code>string</code> да (сравнение по содержимому встроено в язык), <code>List&lt;T&gt;</code> и подобные коллекции — нет (сравнение по ссылке для этого конкретного поля).</p>
+<pre><code class="language-csharp">public record Order(string Id, List&lt;string&gt; Items);
+var o1 = new Order(&quot;1&quot;, new List&lt;string&gt; { &quot;хлеб&quot; });
+var o2 = new Order(&quot;1&quot;, new List&lt;string&gt; { &quot;хлеб&quot; });
+Console.WriteLine(o1 == o2); // False! Items сравнивается по ссылке, не по содержимому
+</code></pre>
+<p><strong>Q&amp;A:</strong>
+- Почему <code>record</code> с <code>List&lt;T&gt;</code> внутри может дать <code>False</code> при одинаковых на вид данных? → <code>List&lt;T&gt;</code> не переопределяет <code>Equals</code> по значению — для этого поля сравнение идёт по ссылке.
+- Что делает <code>with</code> под капотом? → вызывает скрытый copy-конструктор, копирует все поля, затем переприсваивает указанные в <code>{ ... }</code>.
+- Что обычно быстрее для маленьких неизменяемых данных — <code>record</code> или <code>record struct</code>? → <code>record struct</code> (value type, не грузит GC), но копируется целиком при каждой передаче.</p>
+<hr>
+<p><em>Дальше — Фаза 3 (Generics, LINQ, Async/Await), быстрый повтор появится по мере написания теории фазы.</em></p></article>
+    <aside class="aside">
+      <strong>В этом документе</strong>
+      <div class="toc"><div class="toc">
+<ul>
+<li><a href="#21">2.1 Классы и объекты</a></li>
+<li><a href="#22">2.2 Инкапсуляция</a></li>
+<li><a href="#23">2.3 Наследование</a></li>
+<li><a href="#24">2.4 Полиморфизм — статический и динамический</a></li>
+<li><a href="#25-abstract-vs">2.5 Абстракция — abstract класс vs интерфейс</a></li>
+<li><a href="#26-icomparable-idisposable-ienumerable-iequatable">2.6 Интерфейсы — IComparable, IDisposable, IEnumerable, IEquatable</a></li>
+<li><a href="#27-solid">2.7 Принципы SOLID</a></li>
+<li><a href="#28-singleton">2.8 Статические классы и Singleton</a></li>
+<li><a href="#29-record">2.9 Record типы — глубже</a></li>
+</ul>
+</div>
+</div>
+    </aside>
+  </div>
+</main>
+
+
+<script>
+const ROOT = "..";
+
+// ---- тема
+const themeBtn = document.getElementById("theme");
+const paint = () => {
+  const dark = document.documentElement.getAttribute("data-theme") === "dark";
+  themeBtn.textContent = dark ? "☀" : "☾";
+};
+paint();
+themeBtn.addEventListener("click", () => {
+  const next = document.documentElement.getAttribute("data-theme") === "dark" ? "light" : "dark";
+  document.documentElement.setAttribute("data-theme", next);
+  try { localStorage.setItem("kb-theme", next); } catch (e) {}
+  paint();
+});
+
+// ---- поиск
+let index = null;
+const box = document.getElementById("results");
+const hits = document.getElementById("hits");
+const head = box.querySelector("h3");
+const input = document.getElementById("q");
+
+async function ensureIndex() {
+  if (index) return index;
+  const res = await fetch(ROOT + "/search-index.json");
+  index = await res.json();
+  return index;
+}
+
+const esc = (s) => (s || "").replace(/[&<>]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
+
+function hi(text, query) {
+  const i = text.toLowerCase().indexOf(query);
+  if (i < 0) return esc(text);
+  return esc(text.slice(0, i)) + "<mark>" + esc(text.slice(i, i + query.length)) + "</mark>" + esc(text.slice(i + query.length));
+}
+
+input.addEventListener("input", async () => {
+  const q = input.value.trim().toLowerCase();
+  if (q.length < 2) { box.hidden = true; return; }
+  const data = await ensureIndex();
+  const found = [];
+  for (const d of data) {
+    const inTitle = d.title.toLowerCase().includes(q);
+    const inSum = (d.summary || "").toLowerCase().includes(q);
+    const heads = (d.heads || []).filter(h => h.toLowerCase().includes(q));
+    if (inTitle || inSum || heads.length) {
+      found.push({ d, heads, rank: inTitle ? 0 : heads.length ? 1 : 2 });
+    }
+  }
+  found.sort((a, b) => a.rank - b.rank);
+  head.textContent = found.length ? `Нашлось: ${found.length}` : "Ничего не нашлось";
+  hits.innerHTML = found.slice(0, 40).map(({ d, heads }) =>
+    `<a class="hit" href="${ROOT}/d/${d.slug}.html">
+       <b>${hi(d.title, q)}</b>
+       <span>${heads.length ? "→ " + heads.slice(0, 3).map(h => hi(h, q)).join(" · ") : esc(d.summary || "")}</span>
+     </a>`).join("");
+  box.hidden = false;
+});
+
+input.addEventListener("keydown", (e) => { if (e.key === "Escape") { input.value = ""; box.hidden = true; input.blur(); } });
+document.addEventListener("keydown", (e) => {
+  if (e.key === "/" && document.activeElement !== input) { e.preventDefault(); input.focus(); }
+});
+</script>
+</body>
+</html>

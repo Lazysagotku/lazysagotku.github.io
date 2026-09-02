@@ -1,0 +1,349 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Где брать сервер под стенд: разбор и решение - База знаний</title>
+<link rel="stylesheet" href="../kb.css">
+<script>
+  // Тему ставим до первой отрисовки, иначе на тёмной системе мигает белым.
+  try {
+    var t = localStorage.getItem("kb-theme");
+    if (!t) t = matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+    document.documentElement.setAttribute("data-theme", t);
+  } catch (e) {}
+</script>
+</head>
+<body>
+
+<header class="top">
+  <div class="top-in">
+    <a class="brand" href="../index.html">База <span>знаний</span></a>
+    <span class="grow"></span>
+    <input id="q" type="search" placeholder="Поиск по всем материалам…" autocomplete="off">
+    <button class="icon-btn" id="theme" type="button" title="Тема"></button>
+  </div>
+</header>
+
+<div id="results" hidden><div class="wrap-r"><h3></h3><div id="hits"></div></div></div>
+
+<main class="wrap">
+  <div class="doc-head">
+    <div class="crumb"><a href="../index.html#reference">Справочники</a></div>
+    <h1>Где брать сервер под стенд: разбор и решение</h1>
+    <div class="meta">118 строк · источник <code>l2code/VPS_Choice.md</code></div>
+  </div>
+
+  <div class="layout">
+    <article class="prose"><p><strong>Дата:</strong> 1 сентября 2026. Цены собраны в этот день, они меняются - перед покупкой сверить.</p>
+<hr>
+<h2 id="_1">Сначала о терминах, потому что вопрос стоял именно так</h2>
+<p><strong>«Сервер» и «облако» в нашем случае - одно и то же, две подписки не нужны.</strong></p>
+<p>Когда покупаешь VPS у российского провайдера, ты покупаешь виртуальную машину в его дата-центре. Это и есть облачный сервер: ты платишь помесячно, можешь в любой момент увеличить память, снести и создать заново. Слово «облако» в маркетинге означает ровно это.</p>
+<p>Что действительно бывает отдельными продуктами и <strong>что нам не нужно</strong>:</p>
+<table>
+<thead>
+<tr>
+<th>Продукт</th>
+<th>Что это</th>
+<th>Берём?</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>VPS / облачный сервер</strong></td>
+<td>Виртуальная машина с белым IP</td>
+<td>✅ это и покупаем</td>
+</tr>
+<tr>
+<td>Managed Kubernetes</td>
+<td>Готовый кластер, провайдер держит control plane</td>
+<td>❌ цель - научиться поднимать самому</td>
+</tr>
+<tr>
+<td>Объектное хранилище S3</td>
+<td>Файлы по HTTP</td>
+<td>❌ не нужно на стенде</td>
+</tr>
+<tr>
+<td>Выделенный сервер</td>
+<td>Физическая машина целиком</td>
+<td>❌ дорого и избыточно</td>
+</tr>
+<tr>
+<td>Managed PostgreSQL</td>
+<td>База, которую администрирует провайдер</td>
+<td>❌ нам нужно администрировать самим</td>
+</tr>
+</tbody>
+</table>
+<p>Итог: <strong>одна покупка - один VPS.</strong> Всё остальное ставим на него руками, в этом и смысл стенда.</p>
+<hr>
+<h2 id="_2">Сколько ресурсов надо по слоям</h2>
+<table>
+<thead>
+<tr>
+<th>Слой</th>
+<th>Что крутится</th>
+<th>RAM</th>
+<th>Влезает в 2 ГБ?</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0. Стенд</td>
+<td>Docker, ufw</td>
+<td>~300 МБ</td>
+<td>✅ с запасом</td>
+</tr>
+<tr>
+<td>1. Nginx + TLS</td>
+<td>+ nginx, certbot</td>
+<td>~400 МБ</td>
+<td>✅</td>
+</tr>
+<tr>
+<td>2. CI/CD</td>
+<td>+ gitlab-runner</td>
+<td>~700 МБ</td>
+<td>✅</td>
+</tr>
+<tr>
+<td>3. Мониторинг</td>
+<td>+ Prometheus, Grafana, node-exporter</td>
+<td>~1.5 ГБ</td>
+<td>🟡 впритык</td>
+</tr>
+<tr>
+<td>4. <strong>Kubernetes (k3s)</strong></td>
+<td>+ control plane, поды</td>
+<td>~2.5-3 ГБ</td>
+<td>❌ <strong>нужно 4 ГБ</strong></td>
+</tr>
+<tr>
+<td>5. ClickHouse</td>
+<td>+ сам ClickHouse</td>
+<td>+1 ГБ</td>
+<td>❌ только с 4 ГБ</td>
+</tr>
+<tr>
+<td>6-7. Python, Linux</td>
+<td>ничего нового</td>
+<td>-</td>
+<td>✅</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Перелом на слое 4.</strong> До него хватает двух гигабайт, с k3s начинается четыре. Официальный минимум k3s - 512 МБ, но это для пустого кластера; с мониторингом и приложениями двух гигабайт уже мало.</p>
+<h2 id="gitlab">⚠️ Важное ограничение: GitLab на свой сервер не ставим</h2>
+<p>GitLab self-hosted требует <strong>минимум 4 ГБ только под себя</strong>, и разработчики прямо не рекомендуют держать на той же машине ещё и раннер. То есть GitLab + k3s + мониторинг на одном сервере не уживутся никогда - ни за 1200 рублей, ни за 3000.</p>
+<p><strong>Решение:</strong> репозиторий держим на <strong>gitlab.com</strong> (бесплатный тариф), а на своём сервере ставим только <code>gitlab-runner</code> - он ест около 100 МБ. Пайплайн живёт в облаке, выполняется на твоём сервере, деплоит туда же.</p>
+<p>Это не компромисс от бедности, а нормальная практика: так работает множество команд. И на собеседовании звучит правильно - «раннер на своих мощностях, потому что деплой идёт во внутренний контур».</p>
+<hr>
+<h2 id="01092026">Провайдеры: цены на 01.09.2026</h2>
+<table>
+<thead>
+<tr>
+<th>Провайдер</th>
+<th>2 ГБ RAM</th>
+<th>4 ГБ RAM</th>
+<th>Замечания</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Timeweb Cloud</strong></td>
+<td>~880 ₽ (при годовой оплате)</td>
+<td><strong>1 180 ₽</strong> (2 vCPU, 50 ГБ NVMe)</td>
+<td>почасовая тарификация, Москва, простая панель</td>
+</tr>
+<tr>
+<td><strong>AEZA</strong></td>
+<td>593 ₽ (shared CPU)</td>
+<td>~850-1 200 ₽</td>
+<td>дешевле всех на входе, современное железо</td>
+</tr>
+<tr>
+<td><strong>VDSina</strong></td>
+<td>~$15</td>
+<td>~$20 (2 ядра, 80 ГБ)</td>
+<td>цены в долларах, резкий скачок после 1 ГБ</td>
+</tr>
+<tr>
+<td><strong>Selectel</strong></td>
+<td>от 490 ₽ (1 ГБ)</td>
+<td><strong>2 856 ₽</strong></td>
+<td>дорого для наших задач, силён в корпоративном</td>
+</tr>
+<tr>
+<td><strong>Beget</strong></td>
+<td>от 210 ₽</td>
+<td>нет точных данных</td>
+<td>известен поддержкой, тарифы от дешёвых</td>
+</tr>
+<tr>
+<td><strong>RUVDS</strong></td>
+<td>-</td>
+<td>-</td>
+<td>надёжен, но дорог на базовых конфигурациях</td>
+</tr>
+</tbody>
+</table>
+<h2 id="_3">Решение</h2>
+<p><strong>Timeweb Cloud, 2 vCPU / 4 ГБ / 50 ГБ NVMe, 1 180 ₽ в месяц, оплата помесячно.</strong></p>
+<p>Почему он, а не самый дешёвый:</p>
+<ol>
+<li><strong>Почасовая тарификация.</strong> Если что-то сломаешь до неузнаваемости - сносишь и создаёшь заново, потеряв рубли, а не месяц оплаты. На учебном стенде это будет происходить регулярно, и это нормально.</li>
+<li><strong>Москва.</strong> Показываешь работающим - страница открывается мгновенно, а не «подождите, сейчас прогрузится».</li>
+<li><strong>Апгрейд без пересоздания.</strong> Если 4 ГБ окажется мало на ClickHouse, добавляешь память в панели.</li>
+<li><strong>Простая панель и понятная документация.</strong> Тебе нужно учить Kubernetes, а не разбираться в интерфейсе провайдера.</li>
+</ol>
+<p><strong>Дешевле:</strong> AEZA за 593 ₽ с 2 ГБ, с апгрейдом перед слоем 4. Экономия за первые десять дней - около 200 рублей. Не стоит риска отвлечься на миграцию в середине месяца.</p>
+<p>⚠️ <strong>Про «300-500 ₽», которые стояли в роадмапе.</strong> Это была оценка под 2 ГБ, до того как посчитали Kubernetes с мониторингом. Реальный бюджет - <strong>около 1 200 ₽ в месяц</strong>. Роадмап поправлен.</p>
+<hr>
+<h2 id="_4">Домен</h2>
+<p>Для настоящего сертификата Let's Encrypt нужен домен - на голый IP его не выдадут.</p>
+<ul>
+<li>Домен в зоне <code>.ru</code> - <strong>200-400 ₽ в год</strong>. Разово, дешевле месяца сервера.</li>
+<li>Бесплатный вариант: технический поддомен от провайдера (<code>что-то.timeweb.cloud</code>) - работает, но на визитке выглядит хуже.</li>
+</ul>
+<p><strong>Рекомендую свой домен.</strong> Ссылка вида <code>arkhipov.ru/tracker</code> в резюме - это часть впечатления, а на собеседовании по инфраструктуре домен с валидным сертификатом сам по себе доказательство, что ты умеешь его выпустить и продлить.</p>
+<hr>
+<h2 id="-">Что покупать и когда - по слоям роадмапа</h2>
+<table>
+<thead>
+<tr>
+<th>Когда</th>
+<th>Что</th>
+<th>Сколько</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>День 1, перед слоем 0</strong></td>
+<td>VPS 4 ГБ + домен</td>
+<td>1 180 ₽/мес + 300 ₽/год</td>
+</tr>
+<tr>
+<td>Слой 2</td>
+<td>ничего - gitlab.com бесплатен</td>
+<td>0 ₽</td>
+</tr>
+<tr>
+<td>Слой 4</td>
+<td>ничего - k3s уже влезает</td>
+<td>0 ₽</td>
+</tr>
+<tr>
+<td>Слой 5</td>
+<td>если ClickHouse не влезет - апгрейд до 8 ГБ</td>
+<td>+800 ₽/мес, скорее всего не понадобится</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Ответ на вопрос «всё сразу или поэтапно»: всё сразу, потому что «всё» - это одна покупка.</strong> Одного VPS на 4 ГБ хватает на все восемь слоёв. Единственное, что можно отложить - домен, но он стоит как чашка кофе в год.</p>
+<h2 id="_5">Итог по деньгам</h2>
+<p><strong>1 200 ₽ в месяц плюс 300 ₽ разово за домен.</strong></p>
+<p>При буфере до конца сентября это заметная, но не критичная сумма - примерно один поход в магазин. Обратная сторона: без белого IP не будет ссылки, которую можно дать работодателю, а именно она отличает «изучал Kubernetes» от «вот мой кластер, откройте».</p>
+<hr>
+<h2 id="_6">Источники</h2>
+<ul>
+<li><a href="https://habr.com/ru/articles/1045690/">Лучшие российские VPS/VDS-хостинги в 2026 году - Хабр</a></li>
+<li><a href="https://timeweb.cloud/services/vds-vps">Тарифы Timeweb Cloud</a></li>
+<li><a href="https://selectel.ru/prices/">Цены Selectel</a></li>
+<li><a href="https://vdsina.com/pricing/standard">Тарифы VDSina</a></li>
+<li><a href="https://vc.ru/top-raiting/2628070-luchshie-deshevye-vps-vds">ТОП дешёвых VPS 2026 - vc.ru</a></li>
+<li><a href="https://docs.k3s.io/reference/resource-profiling">K3s Resource Profiling - официальная документация</a></li>
+<li><a href="https://docs.gitlab.com/install/requirements">GitLab installation requirements</a></li>
+<li><a href="https://docs.gitlab.com/omnibus/settings/memory_constrained_envs/">Running GitLab in a memory-constrained environment</a></li>
+</ul></article>
+    <aside class="aside">
+      <strong>В этом документе</strong>
+      <div class="toc"><div class="toc">
+<ul>
+<li><a href="#_1">Сначала о терминах, потому что вопрос стоял именно так</a></li>
+<li><a href="#_2">Сколько ресурсов надо по слоям</a></li>
+<li><a href="#gitlab">⚠️ Важное ограничение: GitLab на свой сервер не ставим</a></li>
+<li><a href="#01092026">Провайдеры: цены на 01.09.2026</a></li>
+<li><a href="#_3">Решение</a></li>
+<li><a href="#_4">Домен</a></li>
+<li><a href="#-">Что покупать и когда - по слоям роадмапа</a></li>
+<li><a href="#_5">Итог по деньгам</a></li>
+<li><a href="#_6">Источники</a></li>
+</ul>
+</div>
+</div>
+    </aside>
+  </div>
+</main>
+
+
+<script>
+const ROOT = "..";
+
+// ---- тема
+const themeBtn = document.getElementById("theme");
+const paint = () => {
+  const dark = document.documentElement.getAttribute("data-theme") === "dark";
+  themeBtn.textContent = dark ? "☀" : "☾";
+};
+paint();
+themeBtn.addEventListener("click", () => {
+  const next = document.documentElement.getAttribute("data-theme") === "dark" ? "light" : "dark";
+  document.documentElement.setAttribute("data-theme", next);
+  try { localStorage.setItem("kb-theme", next); } catch (e) {}
+  paint();
+});
+
+// ---- поиск
+let index = null;
+const box = document.getElementById("results");
+const hits = document.getElementById("hits");
+const head = box.querySelector("h3");
+const input = document.getElementById("q");
+
+async function ensureIndex() {
+  if (index) return index;
+  const res = await fetch(ROOT + "/search-index.json");
+  index = await res.json();
+  return index;
+}
+
+const esc = (s) => (s || "").replace(/[&<>]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
+
+function hi(text, query) {
+  const i = text.toLowerCase().indexOf(query);
+  if (i < 0) return esc(text);
+  return esc(text.slice(0, i)) + "<mark>" + esc(text.slice(i, i + query.length)) + "</mark>" + esc(text.slice(i + query.length));
+}
+
+input.addEventListener("input", async () => {
+  const q = input.value.trim().toLowerCase();
+  if (q.length < 2) { box.hidden = true; return; }
+  const data = await ensureIndex();
+  const found = [];
+  for (const d of data) {
+    const inTitle = d.title.toLowerCase().includes(q);
+    const inSum = (d.summary || "").toLowerCase().includes(q);
+    const heads = (d.heads || []).filter(h => h.toLowerCase().includes(q));
+    if (inTitle || inSum || heads.length) {
+      found.push({ d, heads, rank: inTitle ? 0 : heads.length ? 1 : 2 });
+    }
+  }
+  found.sort((a, b) => a.rank - b.rank);
+  head.textContent = found.length ? `Нашлось: ${found.length}` : "Ничего не нашлось";
+  hits.innerHTML = found.slice(0, 40).map(({ d, heads }) =>
+    `<a class="hit" href="${ROOT}/d/${d.slug}.html">
+       <b>${hi(d.title, q)}</b>
+       <span>${heads.length ? "→ " + heads.slice(0, 3).map(h => hi(h, q)).join(" · ") : esc(d.summary || "")}</span>
+     </a>`).join("");
+  box.hidden = false;
+});
+
+input.addEventListener("keydown", (e) => { if (e.key === "Escape") { input.value = ""; box.hidden = true; input.blur(); } });
+document.addEventListener("keydown", (e) => {
+  if (e.key === "/" && document.activeElement !== input) { e.preventDefault(); input.focus(); }
+});
+</script>
+</body>
+</html>

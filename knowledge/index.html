@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>База знаний Ивана Архипова</title>
+<link rel="stylesheet" href="./kb.css">
+<script>
+  // Тему ставим до первой отрисовки, иначе на тёмной системе мигает белым.
+  try {
+    var t = localStorage.getItem("kb-theme");
+    if (!t) t = matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+    document.documentElement.setAttribute("data-theme", t);
+  } catch (e) {}
+</script>
+</head>
+<body>
+
+<header class="top">
+  <div class="top-in">
+    <a class="brand" href="./index.html">База <span>знаний</span></a>
+    <span class="grow"></span>
+    <input id="q" type="search" placeholder="Поиск по всем материалам…" autocomplete="off">
+    <button class="icon-btn" id="theme" type="button" title="Тема"></button>
+  </div>
+</header>
+
+<div id="results" hidden><div class="wrap-r"><h3></h3><div id="hits"></div></div></div>
+
+<main class="wrap">
+  <div class="hero">
+    <h1>Всё, что собрано и разобрано</h1>
+    <p>Теория, роадмапы, разборы собеседований и вакансий - в одном месте, с поиском и нормальным чтением. Собирается из рабочих заметок одной командой, так что здесь всегда свежая версия.</p>
+    <div class="stats">
+      <b><i>31</i> документов</b>
+      <b><i>9 196</i> строк</b>
+      <b><i>5</i> разделов</b>
+      <b>публичная версия</b>
+    </div>
+  </div>
+
+  <nav class="chips"><a href="#roadmaps">🗺 Роадмапы</a>
+<a href="#phases">📘 Фазы C#</a>
+<a href="#companions">🧭 Спутники к собеседованиям</a>
+<a href="#questions">❓ Вопросы с собеседований</a>
+<a href="#reference">📑 Справочники</a></nav>
+
+  <section class="group" id="roadmaps"><h2><i>🗺</i>Роадмапы<em>4</em></h2><p class="hint">Планы обучения: что, в каком порядке и зачем</p><ul class="docs"><li><a href="d/aiengineer-roadmap.html"><b>🗺️ AI Product Engineer Roadmap</b><span>-   Фаза 1 — Фундамент LLM (концептуально, без матчасти) -   Фаза 2 — Работа с LLM API -   Фаза 3 — RAG (Retrieval Augmented Generation) -   Фаза 4 — Агенты и MCP -   Фаза 5 — Продакшен AI-и…</span></a></li>
+<li><a href="d/csharp-roadmap-software.html"><b>🗺️ C# Roadmap — Разработка ПО (Desktop / Backend)</b><span>- x Фаза 1 — Теоретический фундамент — полностью завершена (1.1–1.8 + Contact Manager, всё проверено запуском) - x Фаза 2 — ООП и архитектура — полностью завершена (2.1–2.9 + финальный рефак…</span></a></li>
+<li><a href="d/pythonbackend-roadmap.html"><b>🗺️ Python Backend Roadmap</b><span>-   Фаза 1 — Идиомы и продвинутый Python -   Фаза 2 — Async/Concurrency -   Фаза 3 — Web-фреймворк (FastAPI) — 🔗 частично уже написано, см. ниже -   Фаза 4 — Базы данных (SQLAlchemy, Alembic…</span></a></li>
+<li><a href="d/roadmap-infra-sept2026.html"><b>Роадмап «Стенд с нуля» - сентябрь 2026</b><span>Формулировка Ивана, вокруг которой всё построено: «я получаю от безопасников готовый сервер, и вот туда мне надо всё залить: CI/CD, Docker, Kubernetes, мониторинг».</span></a></li></ul></section>
+<section class="group" id="phases"><h2><i>📘</i>Фазы C#<em>6</em></h2><p class="hint">Пройденная теория по языку, от основ к продвинутому</p><ul class="docs"><li><a href="d/phase1-csharp-fundamentals.html"><b>Фаза 1 — Теоретический фундамент C#</b><span>Это самое фундаментальное разделение в C#. Оно объясняет почему одни переменные "копируются", а другие "ссылаются" — и из-за этого возникает большинство неожиданных багов у начинающих.</span></a></li>
+<li><a href="d/phase1-quickreview.html"><b>Фаза 1 — быстрый повтор</b><span>Аналогия: value type — переписал рецепт на новый листок, у каждого свой; reference type — дал ссылку на Google Docs, оба смотрят на один документ.</span></a></li>
+<li><a href="d/phase2-oop.html"><b>Фаза 2 — ООП и архитектура мышления</b><span>До сих пор весь код был статическим (static class Task17, методы без состояния). Классы вводят объекты с собственным состоянием — это переход от "функций, обрабатывающих данные" к "данным, к…</span></a></li>
+<li><a href="d/phase2-quickreview.html"><b>Фаза 2 — быстрый повтор</b><span>Аналогия: чертёж дома (класс) один, домов по нему (объекты) сколько угодно — у каждого свой участок, независимые друг от друга.</span></a></li>
+<li><a href="d/phase3-advanced.html"><b>Фаза 3 — Продвинутый C# (Generics, LINQ, Async/Await, Параллелизм)</b><span>Обработка ошибок — то, с чем сталкивается любой код, работающий с внешним миром (ввод пользователя, файлы, сеть, БД). Правильно понятый try/catch/finally — это не просто синтаксис, а гаранти…</span></a></li>
+<li><a href="d/phase3-quickreview.html"><b>Фаза 3 — быстрый повтор</b><span>Аналогия: готовишь ужин (try) → вспыхнуло масло, берёшь ИМЕННО тот огнетушитель (catch по типу) → плиту выключаешь всегда, сгорело или нет (finally).</span></a></li></ul></section>
+<section class="group" id="companions"><h2><i>🧭</i>Спутники к собеседованиям<em>12</em></h2><p class="hint">Разборы тем, которые спрашивают</p><ul class="docs"><li><a href="d/algorithms-companion.html"><b>Алгоритмы и LeetCode — живой companion-документ</b><span>Что это вообще такое. Big O описывает, как время (или память) работы алгоритма РАСТЁТ с увеличением размера входных данных n — не секунды на конкретном железе, а форму роста. Считаем худший …</span></a></li>
+<li><a href="d/api-companion.html"><b>API — живой companion-документ</b><span>Аналогия из жизни (из источника, отличная — сохраняю): официант в ресторане — интерфейс твоего взаимодействия с кухней. Просишь меню, делаешь заказ, просишь счёт — не зная, как готовится еда…</span></a></li>
+<li><a href="d/docker-companion.html"><b>Docker и контейнеризация - живой companion-документ</b><span>Аналогия из жизни: VM - это отдельный дом для каждого жильца, со своим фундаментом и всеми коммуникациями с нуля (свой полноценный "гостевой" фундамент = ядро ОС). Container - это квартиры в…</span></a></li>
+<li><a href="d/kubernetes-companion.html"><b>Kubernetes и мониторинг серверов — живой companion-документ (базовый уровень)</b><span>Аналогия из жизни: приборная панель автомобиля. Метрики — спидометр и датчик температуры (текущие числовые показатели прямо сейчас). Логи — бортовой журнал поездок (что произошло и когда, со…</span></a></li>
+<li><a href="d/networking-devops-companion.html"><b>Сети, DevOps и общая IT-база - живой companion-документ</b><span>Аналогия из жизни: отправка посылки через логистическую компанию. - Физический - сам грузовик, который везёт коробку (биты по проводу/оптике). - Канальный - ярлык с адресом склада для конкре…</span></a></li>
+<li><a href="d/nosql-companion.html"><b>NoSQL — живой companion-документ</b><span>Аналогия из жизни: реляционная БД — как таблица в Excel, только с возможностью СВЯЗЫВАТЬ данные между разными листами через общий идентификатор.</span></a></li>
+<li><a href="d/postgresql-companion.html"><b>PostgreSQL — живой companion-документ</b><span>Раз у тебя уже есть реальный опыт с триггерами/хранимыми процедурами, база явно есть — но декларативный SQL (обычные запросы) и процедурный PL/pgSQL (код внутри функций/процедур) — разные ре…</span></a></li>
+<li><a href="d/postman-clientserver-companion.html"><b>Postman и клиент-серверная архитектура — живой companion-документ</b><span>Аналогия из жизни: ресторан. Клиент (посетитель) не готовит еду сам и не заходит на кухню — он делает ЗАПРОС официанту (отправляет HTTP-запрос), кухня (сервер) готовит и возвращает ОТВЕТ. Од…</span></a></li>
+<li><a href="d/react-crash-companion.html"><b>React — недельный крэш-курс (Мосбиржа, дедлайн ~неделя)</b><span>| React | Твой аналог из C# | |---|---| | Component (функция) | Метод, возвращающий "модель того, что показать" | | Props | Параметры конструктора / init-only свойства (только читаешь, не ме…</span></a></li>
+<li><a href="d/relationaldb-companion.html"><b>Реляционные БД — живой companion-документ</b><span>Аналогия из источника (сохраняю — простая и рабочая): собираешь деньги на подарок другу, записываешь на бумажке, кто сколько скинул — таблица с именами и суммами, разделённая и структурирова…</span></a></li>
+<li><a href="d/sql-interview-companion.html"><b>SQL — вопросы с собеседования (живой companion-документ)</b><span>Суть: WHERE фильтрует СТРОКИ до группировки — не может использовать агрегатные функции. HAVING фильтрует ГРУППЫ после GROUP BY — работает именно с результатами агрегации.</span></a></li>
+<li><a href="d/systemdesign-companion.html"><b>System Design — живой companion-документ</b><span>Единственная явная цифра по времени во всей главе: "скорее всего, у тебя будет не больше часа от начала интервью до его завершения" — поэтапной раскладки по минутам в источнике НЕТ, только о…</span></a></li></ul></section>
+<section class="group" id="questions"><h2><i>❓</i>Вопросы с собеседований<em>2</em></h2><p class="hint">Реальные формулировки и как отвечать</p><ul class="docs"><li><a href="d/csharp-interview-questions.html"><b>C# / .NET — свод вопросов с собеседований</b><span>Q: В чём разница между value type и reference type? A: Value type хранит данные напрямую (в стеке, если это локальная переменная), копируется целиком при присвоении. Reference type хранит сс…</span></a></li>
+<li><a href="d/interview-questions-infra.html"><b>Вопросы с собеседований по слоям роадмапа «Стенд с нуля»</b><span>Собрано: 1 сентября 2026, из подборок вопросов Хабра, Tproger, Timeweb, Rebrain и DevOpsSchool. Зачем: роадмап учит делать. Этот файл показывает, что за это спросят - чтобы практика сразу ло…</span></a></li></ul></section>
+<section class="group" id="reference"><h2><i>📑</i>Справочники<em>7</em></h2><p class="hint">То, что открывают за конкретным ответом</p><ul class="docs"><li><a href="d/backend-typical-sprint.html"><b>Как выглядит типичный спринт бэкенд-разработчика</b><span>Реальный двухнедельный спринт Middle-разработчика выглядит примерно так (я специально смешал разные типы задач — это и есть реальность):</span></a></li>
+<li><a href="d/fastapi-reference-10min.html"><b>FastAPI — справка на 10 минут</b><span>FastAPI — современный Python-фреймворк для API, построен на Starlette (ASGI, т.е. async-first) + Pydantic (валидация данных через типы). Появился в 2018, сейчас — стандарт для нового Python-…</span></a></li>
+<li><a href="d/learning-sessions.html"><b>📓 C# Backend — Дневник обучения</b><span>| Период | Тема | Статус | |--------|------|--------| | 16-19 июня | Фаза 1 старт — C# основы (по 1.5ч) | 🔄 Идёт | | 20 июня | Фаза 1 финиш — types, memory, collections | ⏳ | | 21 июня | Фаз…</span></a></li>
+<li><a href="d/programming-fundamentals-qa.html"><b>Основы программирования — краткий справочник</b><span>Единственные два значения типа bool — истина и ложь. Основа любого условия и логической операции.</span></a></li>
+<li><a href="d/python-backend-crash-course.html"><b>Python Backend Crash Course — 🌙 СПЯЩИЙ (dormant contingency)</b><span>В C# у тебя типы проверяет компилятор ДО запуска. В Python типов на рантайме никто не проверяет — def f(x: int) пропустит строку без единой жалобы. Pydantic закрывает эту дыру: BaseModel вал…</span></a></li>
+<li><a href="d/server-migration-plan.html"><b>Переезд проектов на свой сервер</b><span>Дата: 2 сентября 2026 Повод: сейчас всё живое крутится на localhost и видно только с одной машины. Портфолио на GitHub Pages умеет отдавать статику, но не умеет запускать бэкенд.</span></a></li>
+<li><a href="d/vps-choice.html"><b>Где брать сервер под стенд: разбор и решение</b><span>Дата: 1 сентября 2026. Цены собраны в этот день, они меняются - перед покупкой сверить.</span></a></li></ul></section>
+
+  <footer>
+    Собрано из <code>l2code</code>, <code>career-notes</code> и <code>life-notes</code>.
+    Пересобрать: <code>python knowledge-base/build.py</code>. Поиск - клавиша <code>/</code>.
+  </footer>
+</main>
+
+
+<script>
+const ROOT = ".";
+
+// ---- тема
+const themeBtn = document.getElementById("theme");
+const paint = () => {
+  const dark = document.documentElement.getAttribute("data-theme") === "dark";
+  themeBtn.textContent = dark ? "☀" : "☾";
+};
+paint();
+themeBtn.addEventListener("click", () => {
+  const next = document.documentElement.getAttribute("data-theme") === "dark" ? "light" : "dark";
+  document.documentElement.setAttribute("data-theme", next);
+  try { localStorage.setItem("kb-theme", next); } catch (e) {}
+  paint();
+});
+
+// ---- поиск
+let index = null;
+const box = document.getElementById("results");
+const hits = document.getElementById("hits");
+const head = box.querySelector("h3");
+const input = document.getElementById("q");
+
+async function ensureIndex() {
+  if (index) return index;
+  const res = await fetch(ROOT + "/search-index.json");
+  index = await res.json();
+  return index;
+}
+
+const esc = (s) => (s || "").replace(/[&<>]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
+
+function hi(text, query) {
+  const i = text.toLowerCase().indexOf(query);
+  if (i < 0) return esc(text);
+  return esc(text.slice(0, i)) + "<mark>" + esc(text.slice(i, i + query.length)) + "</mark>" + esc(text.slice(i + query.length));
+}
+
+input.addEventListener("input", async () => {
+  const q = input.value.trim().toLowerCase();
+  if (q.length < 2) { box.hidden = true; return; }
+  const data = await ensureIndex();
+  const found = [];
+  for (const d of data) {
+    const inTitle = d.title.toLowerCase().includes(q);
+    const inSum = (d.summary || "").toLowerCase().includes(q);
+    const heads = (d.heads || []).filter(h => h.toLowerCase().includes(q));
+    if (inTitle || inSum || heads.length) {
+      found.push({ d, heads, rank: inTitle ? 0 : heads.length ? 1 : 2 });
+    }
+  }
+  found.sort((a, b) => a.rank - b.rank);
+  head.textContent = found.length ? `Нашлось: ${found.length}` : "Ничего не нашлось";
+  hits.innerHTML = found.slice(0, 40).map(({ d, heads }) =>
+    `<a class="hit" href="${ROOT}/d/${d.slug}.html">
+       <b>${hi(d.title, q)}</b>
+       <span>${heads.length ? "→ " + heads.slice(0, 3).map(h => hi(h, q)).join(" · ") : esc(d.summary || "")}</span>
+     </a>`).join("");
+  box.hidden = false;
+});
+
+input.addEventListener("keydown", (e) => { if (e.key === "Escape") { input.value = ""; box.hidden = true; input.blur(); } });
+document.addEventListener("keydown", (e) => {
+  if (e.key === "/" && document.activeElement !== input) { e.preventDefault(); input.focus(); }
+});
+</script>
+</body>
+</html>

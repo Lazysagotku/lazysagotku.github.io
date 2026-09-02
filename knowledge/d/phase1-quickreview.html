@@ -1,0 +1,244 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Фаза 1 — быстрый повтор - База знаний</title>
+<link rel="stylesheet" href="../kb.css">
+<script>
+  // Тему ставим до первой отрисовки, иначе на тёмной системе мигает белым.
+  try {
+    var t = localStorage.getItem("kb-theme");
+    if (!t) t = matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+    document.documentElement.setAttribute("data-theme", t);
+  } catch (e) {}
+</script>
+</head>
+<body>
+
+<header class="top">
+  <div class="top-in">
+    <a class="brand" href="../index.html">База <span>знаний</span></a>
+    <span class="grow"></span>
+    <input id="q" type="search" placeholder="Поиск по всем материалам…" autocomplete="off">
+    <button class="icon-btn" id="theme" type="button" title="Тема"></button>
+  </div>
+</header>
+
+<div id="results" hidden><div class="wrap-r"><h3></h3><div id="hits"></div></div></div>
+
+<main class="wrap">
+  <div class="doc-head">
+    <div class="crumb"><a href="../index.html#phases">Фазы C#</a></div>
+    <h1>Фаза 1 — быстрый повтор</h1>
+    <div class="meta">176 строк · источник <code>l2code/Phase1_QuickReview.md</code></div>
+  </div>
+
+  <div class="layout">
+    <article class="prose"><blockquote>
+<p>Не замена полной теории (<code>Phase1_CSharp_Fundamentals.md</code>) и не конспект в тетрадку — это для обновления в голове: прочитал Q, прочитал A, глянул код. Полный текст с примерами/мини-заданиями — в основном файле фазы.</p>
+</blockquote>
+<hr>
+<h3 id="11-value-types-vs-reference-types">1.1 Value types vs Reference types</h3>
+<p><strong>Аналогия:</strong> value type — переписал рецепт на новый листок, у каждого свой; reference type — дал ссылку на Google Docs, оба смотрят на один документ.</p>
+<p><strong>Суть:</strong> Value types (<code>int</code>, <code>struct</code>, <code>enum</code>) хранят данные напрямую, копируются целиком при присвоении. Reference types (<code>class</code>, <code>array</code>, <code>interface</code>) хранят адрес — копируется ссылка, оба указывают на один объект. Struct — для маленьких неизменяемых данных (~≤16 байт), иначе class.</p>
+<pre><code class="language-csharp">int a = 10; int b = a; b = 20;
+Console.WriteLine(a); // 10 — независимая копия
+
+var list1 = new List&lt;int&gt; { 1 };
+var list2 = list1; list2.Add(2);
+Console.WriteLine(list1.Count); // 2 — та же ссылка
+</code></pre>
+<p><strong>Q&amp;A:</strong>
+- Что копируется при <code>b = a</code> для <code>int</code>? → значение, независимая копия.
+- Что копируется для <code>List</code>/<code>class</code>? → ссылка, оба указывают на один объект.
+- Когда выбрать struct, а когда class? → struct: маленький, неизменяемый, ~≤16 байт; иначе class.</p>
+<hr>
+<h3 id="12-stack-heap">1.2 Stack и Heap</h3>
+<p><strong>Аналогия:</strong> стек — стопка подносов в столовой, берёшь и кладёшь только сверху; куча — большой склад с каталогом, места много, но нужен работник (GC), чтобы убирать лишнее.</p>
+<p><strong>Суть:</strong> Stack — быстрый, LIFO, очищается автоматически, хранит локальные переменные/ссылки/value types. Heap — управляется GC, хранит все объекты (reference types). Boxing — упаковка value type в <code>object</code> (аллокация в куче), unboxing — обратно; в цикле это катастрофа по производительности.</p>
+<pre><code class="language-csharp">var list = new ArrayList();
+for (int i = 0; i &lt; 1_000_000; i++)
+    list.Add(i); // boxing на КАЖДОЙ итерации — int упаковывается в object
+
+var list2 = new List&lt;int&gt;(); // generic — без boxing вообще
+</code></pre>
+<p><strong>Q&amp;A:</strong>
+- Почему <code>ArrayList</code> медленнее <code>List&lt;int&gt;</code> для чисел? → boxing каждого <code>int</code> при добавлении в object-based коллекцию.
+- Что происходит со стеком после выхода из метода? → очищается автоматически; объекты на куче остаются до сборки GC.</p>
+<hr>
+<h3 id="13">1.3 Строки — иммутабельность</h3>
+<p><strong>Аналогия:</strong> напечатанная книга — нельзя стереть слово в тираже, можно только напечатать новую книгу с изменением.</p>
+<p><strong>Суть:</strong> <code>string</code> — reference type, но иммутабелен: любая "модификация" создаёт НОВЫЙ объект, старый — мусор для GC. <code>==</code> для строк сравнивает содержимое (перегружен), <code>ReferenceEquals</code> — адрес. <code>+=</code> в цикле — O(n²), решение — <code>StringBuilder</code>.</p>
+<pre><code class="language-csharp">string result = &quot;&quot;;
+for (int i = 0; i &lt; 10_000; i++)
+    result += i; // 10 000 новых объектов в куче — O(n²)
+
+var sb = new StringBuilder();
+for (int i = 0; i &lt; 10_000; i++)
+    sb.Append(i); // один изменяемый буфер
+</code></pre>
+<p><strong>Q&amp;A:</strong>
+- <code>string y = x; x = "changed";</code> — что в <code>y</code>? → старое значение, строки иммутабельны, <code>x</code> просто указывает на новый объект.
+- Зачем нужна иммутабельность? → безопасность ключей в Dictionary, thread-safety без блокировок, string interning.</p>
+<hr>
+<h3 id="14">1.4 Приведение типов</h3>
+<p><strong>Аналогия:</strong> implicit — переливаешь из маленького стакана в большое ведро, ничего не проливается; explicit — обратно в стакан, часть может выплеснуться.</p>
+<p><strong>Суть:</strong> implicit — компилятор сам, без потери данных (<code>int→long</code>). explicit — принудительное, может терять данные (<code>(int)3.14</code>). <code>as</code> — безопасное приведение (только reference types/<code>Nullable&lt;T&gt;</code>), <code>null</code> при неудаче вместо исключения. <code>is</code> — проверка типа, с C# 7+ сразу присваивает переменную (pattern matching).</p>
+<pre><code class="language-csharp">object obj = 42;
+string s = obj as string;      // null — не строка, БЕЗ исключения
+
+if (obj is int i)               // проверяет И присваивает
+    Console.WriteLine(i * i);
+</code></pre>
+<p><strong>Q&amp;A:</strong>
+- Чем <code>as</code> отличается от явного <code>(Type)obj</code>? → <code>as</code> возвращает <code>null</code> при неудаче; explicit cast бросает <code>InvalidCastException</code>.
+- Работает ли <code>as</code> с value types напрямую? → нет, только с reference types и <code>Nullable&lt;T&gt;</code> (<code>obj as int?</code>).</p>
+<hr>
+<h3 id="15-nullable-null-">1.5 Nullable и null-операторы</h3>
+<p><strong>Аналогия:</strong> анкета с необязательным полем "отчество" — <code>?.</code> читает, только если поле заполнено; <code>??</code> подставляет значение по умолчанию, если пусто.</p>
+<p><strong>Суть:</strong> value types по умолчанию не бывают <code>null</code> — <code>int?</code>/<code>Nullable&lt;T&gt;</code> оборачивает. <code>?.</code> — безопасный доступ (не бросает <code>NullReferenceException</code>). <code>??</code> — значение по умолчанию. <code>??=</code> — присвоить, только если сейчас <code>null</code>.</p>
+<pre><code class="language-csharp">string city = user?.Address?.City ?? &quot;Москва&quot;; // null на любом шаге → &quot;Москва&quot;
+
+List&lt;string&gt; items = null;
+items ??= new List&lt;string&gt;(); // создаётся, только если был null
+</code></pre>
+<p><strong>Q&amp;A:</strong>
+- Что вернёт <code>user?.Name?.ToUpper()</code>, если <code>user == null</code>? → <code>null</code>, без исключения.
+- Чем <code>??=</code> отличается от <code>??</code>? → <code>??=</code> присваивает переменной; <code>??</code> просто подставляет значение в выражении, ничего не меняя.</p>
+<hr>
+<h3 id="16-switch-expression-pattern-matching">1.6 Switch expression и Pattern Matching</h3>
+<p><strong>Аналогия:</strong> сортировочная машина на почте — посылка сама попадает в нужный лоток по категории, а не сотрудник вручную проверяет каждую цепочкой "если это, то...".</p>
+<p><strong>Суть:</strong> <code>switch</code> как ВЫРАЖЕНИЕ (не оператор) — возвращает значение через <code>=&gt;</code>, компилятор проверяет полноту вариантов. Есть type patterns, property patterns, when-условия (диапазоны), tuple patterns.</p>
+<pre><code class="language-csharp">string quadrant = point switch
+{
+    { X: &gt; 0, Y: &gt; 0 } =&gt; &quot;I квадрант&quot;,
+    { X: &lt; 0, Y: &gt; 0 } =&gt; &quot;II квадрант&quot;,
+    _ =&gt; &quot;На оси или начало координат&quot;
+};
+</code></pre>
+<p><strong>Q&amp;A:</strong>
+- Чем switch expression отличается от классического switch? → возвращает значение напрямую, компактнее, компилятор следит за полнотой вариантов.
+- Что делает <code>_</code> в switch expression? → catch-all/default, ловит всё, что не совпало выше.</p>
+<hr>
+<h3 id="17">1.7 Массивы и коллекции</h3>
+<p><strong>Аналогия:</strong> Array — полка фиксированного размера; List — расширяемый шкаф; Dictionary — картотека с именными ярлычками, находишь папку мгновенно по имени.</p>
+<p><strong>Суть:</strong> <code>Array</code> — фиксированный размер. <code>List&lt;T&gt;</code> — динамический (внутри массив, удваивается при переполнении). <code>Dictionary</code> — хэш-таблица O(1) (внутри <code>buckets</code>+<code>entries</code>, resize — самая дорогая операция, задавай <code>capacity</code> заранее, если знаешь объём). <code>HashSet</code> — уникальные значения, O(1) <code>Contains</code>. <code>Queue</code> — FIFO, <code>Stack</code> — LIFO.</p>
+<pre><code class="language-csharp">var dict = new Dictionary&lt;string, int&gt;(capacity: 10_000); // избегаем повторных resize
+dict[&quot;Ivan&quot;] = 28;
+if (dict.TryGetValue(&quot;Ivan&quot;, out int age)) Console.WriteLine(age);
+</code></pre>
+<p><strong>Q&amp;A:</strong>
+- Почему Dictionary даёт O(1) для поиска? → хэш ключа сразу указывает нужный bucket, не перебор всех элементов.
+- Самая дорогая операция Dictionary? → resize — пересоздание <code>buckets</code>/<code>entries</code> и пересчёт хэшей ВСЕХ элементов.
+- FIFO vs LIFO — где используется? → FIFO (<code>Queue</code>): очередь задач, RabbitMQ. LIFO (<code>Stack</code>): Ctrl+Z, call stack в отладчике.</p>
+<hr>
+<h3 id="18-ienumerable-foreach">1.8 IEnumerable и foreach под капотом</h3>
+<p><strong>Аналогия:</strong> экскурсовод ведёт группу по залам музея один за другим, не имея заранее всего плана — на каждом шаге знает, куда идти дальше (MoveNext) и что показать сейчас (Current).</p>
+<p><strong>Суть:</strong> <code>foreach</code> разворачивается в <code>GetEnumerator()</code> → <code>while(MoveNext())</code> → <code>Dispose()</code> в <code>finally</code>. <code>IDisposable</code> — для ресурсов, которые GC НЕ контролирует (файлы, сокеты, БД); <code>using</code> — сахар над <code>try/finally</code>. <code>yield return</code> — ленивая генерация, элемент за элементом, без создания всей коллекции сразу. LINQ работает через <code>IEnumerable</code>, выполнение ОТЛОЖЕННОЕ — запрос не считается, пока не начнётся перебор.</p>
+<pre><code class="language-csharp">IEnumerable&lt;int&gt; GetEvenNumbersLazy(int max)
+{
+    for (int i = 0; i &lt;= max; i++)
+        if (i % 2 == 0)
+            yield return i; // приостанавливается здесь, возвращает по одному
+}
+
+var query = numbers.Where(n =&gt; n &gt; 5); // ЕЩЁ НЕ выполнилось
+numbers.Add(11);
+foreach (var n in query) ...             // выполнится ТУТ, 11 тоже попадёт
+</code></pre>
+<p><strong>Q&amp;A:</strong>
+- Зачем <code>Dispose</code>, если есть GC? → GC не знает про файлы/сокеты/соединения — их нужно освобождать вручную.
+- Что значит "отложенное выполнение" в LINQ? → <code>.Where(...)</code> не считается в момент объявления, а только когда реально начинается перебор (<code>foreach</code>/<code>.ToList()</code>).
+- Что делает <code>yield return</code>? → приостанавливает метод, возвращает один элемент, не создавая всю коллекцию в памяти сразу.</p>
+<hr>
+<p><em>Дальше → <a href="Phase2_QuickReview.md">Фаза 2 — быстрый повтор</a></em></p></article>
+    <aside class="aside">
+      <strong>В этом документе</strong>
+      <div class="toc"><div class="toc">
+<ul>
+<li><a href="#11-value-types-vs-reference-types">1.1 Value types vs Reference types</a></li>
+<li><a href="#12-stack-heap">1.2 Stack и Heap</a></li>
+<li><a href="#13">1.3 Строки — иммутабельность</a></li>
+<li><a href="#14">1.4 Приведение типов</a></li>
+<li><a href="#15-nullable-null-">1.5 Nullable и null-операторы</a></li>
+<li><a href="#16-switch-expression-pattern-matching">1.6 Switch expression и Pattern Matching</a></li>
+<li><a href="#17">1.7 Массивы и коллекции</a></li>
+<li><a href="#18-ienumerable-foreach">1.8 IEnumerable и foreach под капотом</a></li>
+</ul>
+</div>
+</div>
+    </aside>
+  </div>
+</main>
+
+
+<script>
+const ROOT = "..";
+
+// ---- тема
+const themeBtn = document.getElementById("theme");
+const paint = () => {
+  const dark = document.documentElement.getAttribute("data-theme") === "dark";
+  themeBtn.textContent = dark ? "☀" : "☾";
+};
+paint();
+themeBtn.addEventListener("click", () => {
+  const next = document.documentElement.getAttribute("data-theme") === "dark" ? "light" : "dark";
+  document.documentElement.setAttribute("data-theme", next);
+  try { localStorage.setItem("kb-theme", next); } catch (e) {}
+  paint();
+});
+
+// ---- поиск
+let index = null;
+const box = document.getElementById("results");
+const hits = document.getElementById("hits");
+const head = box.querySelector("h3");
+const input = document.getElementById("q");
+
+async function ensureIndex() {
+  if (index) return index;
+  const res = await fetch(ROOT + "/search-index.json");
+  index = await res.json();
+  return index;
+}
+
+const esc = (s) => (s || "").replace(/[&<>]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
+
+function hi(text, query) {
+  const i = text.toLowerCase().indexOf(query);
+  if (i < 0) return esc(text);
+  return esc(text.slice(0, i)) + "<mark>" + esc(text.slice(i, i + query.length)) + "</mark>" + esc(text.slice(i + query.length));
+}
+
+input.addEventListener("input", async () => {
+  const q = input.value.trim().toLowerCase();
+  if (q.length < 2) { box.hidden = true; return; }
+  const data = await ensureIndex();
+  const found = [];
+  for (const d of data) {
+    const inTitle = d.title.toLowerCase().includes(q);
+    const inSum = (d.summary || "").toLowerCase().includes(q);
+    const heads = (d.heads || []).filter(h => h.toLowerCase().includes(q));
+    if (inTitle || inSum || heads.length) {
+      found.push({ d, heads, rank: inTitle ? 0 : heads.length ? 1 : 2 });
+    }
+  }
+  found.sort((a, b) => a.rank - b.rank);
+  head.textContent = found.length ? `Нашлось: ${found.length}` : "Ничего не нашлось";
+  hits.innerHTML = found.slice(0, 40).map(({ d, heads }) =>
+    `<a class="hit" href="${ROOT}/d/${d.slug}.html">
+       <b>${hi(d.title, q)}</b>
+       <span>${heads.length ? "→ " + heads.slice(0, 3).map(h => hi(h, q)).join(" · ") : esc(d.summary || "")}</span>
+     </a>`).join("");
+  box.hidden = false;
+});
+
+input.addEventListener("keydown", (e) => { if (e.key === "Escape") { input.value = ""; box.hidden = true; input.blur(); } });
+document.addEventListener("keydown", (e) => {
+  if (e.key === "/" && document.activeElement !== input) { e.preventDefault(); input.focus(); }
+});
+</script>
+</body>
+</html>

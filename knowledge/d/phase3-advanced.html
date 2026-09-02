@@ -1,0 +1,867 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Фаза 3 — Продвинутый C# (Generics, LINQ, Async/Await, Параллелизм) - База знаний</title>
+<link rel="stylesheet" href="../kb.css">
+<script>
+  // Тему ставим до первой отрисовки, иначе на тёмной системе мигает белым.
+  try {
+    var t = localStorage.getItem("kb-theme");
+    if (!t) t = matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+    document.documentElement.setAttribute("data-theme", t);
+  } catch (e) {}
+</script>
+</head>
+<body>
+
+<header class="top">
+  <div class="top-in">
+    <a class="brand" href="../index.html">База <span>знаний</span></a>
+    <span class="grow"></span>
+    <input id="q" type="search" placeholder="Поиск по всем материалам…" autocomplete="off">
+    <button class="icon-btn" id="theme" type="button" title="Тема"></button>
+  </div>
+</header>
+
+<div id="results" hidden><div class="wrap-r"><h3></h3><div id="hits"></div></div></div>
+
+<main class="wrap">
+  <div class="doc-head">
+    <div class="crumb"><a href="../index.html#phases">Фазы C#</a></div>
+    <h1>Фаза 3 — Продвинутый C# (Generics, LINQ, Async/Await, Параллелизм)</h1>
+    <div class="meta">846 строк · источник <code>l2code/Phase3_Advanced.md</code></div>
+  </div>
+
+  <div class="layout">
+    <article class="prose"><blockquote>
+<p><strong>Как читать:</strong> Каждая тема = теория (почему так) + 3-4 примера + мини-задание + <strong>вопросы с собеседования</strong>.
+Эта фаза плотнее предыдущих — здесь собран материал с наивысшим приоритетом по банку реальных вопросов Ozon (примитивы синхронизации — самый частый вопрос вообще, ~2733 использования; async/await internals — ~4200 суммарно) и по находкам из живых мок-собеседований и research-прохода по Habr/Tproger.
+Многое в этой фазе уже было ПОДГОТОВЛЕНО заранее — в Фазах 1-2 и в <code>CSharp_Interview_Questions.md</code> были forward-references с пометкой "🔜 Фаза 3". Здесь они собраны в полноценную теорию, а не разрозненные абзацы.
+Первыми пунктами — два реальных пробела, которые не входили ни в одну фазу (<code>CSharp_Interview_Questions.md</code>, разделы 6-7): исключения и ref/out/in/params. Проще того, что дальше — специально поставлены перед Generics.</p>
+</blockquote>
+<hr>
+<h2 id="301-trycatchfinally">3.0.1 Исключения — try/catch/finally</h2>
+<h3 id="_1">Почему это важно</h3>
+<p>Обработка ошибок — то, с чем сталкивается любой код, работающий с внешним миром (ввод пользователя, файлы, сеть, БД). Правильно понятый try/catch/finally — это не просто синтаксис, а гарантия, что ресурсы освобождаются и код ведёт себя предсказуемо даже при сбое.</p>
+<h3 id="_2">Аналогия из жизни</h3>
+<p>Готовишь ужин (<code>try</code>). Если на сковороде вспыхнуло масло - хватаешь ИМЕННО ТОТ огнетушитель, что подходит под этот тип возгорания (<code>catch</code> конкретного типа), не первый попавшийся. Но плиту выключаешь и фартук снимаешь ВСЕГДА в конце - сгорел ужин или нет (<code>finally</code>).</p>
+<h3 id="_3">Теория</h3>
+<p><code>try</code> — блок кода, который может бросить исключение. <code>catch</code> — перехват и обработка конкретного (или любого) типа исключения; порядок catch-блоков важен — от самого специфичного типа к самому общему, иначе компилятор укажет на недостижимый код. <code>finally</code> — выполняется ВСЕГДА: было исключение или нет, был <code>return</code> внутри try/catch или нет — обычно используется для освобождения ресурсов (хотя для этого чаще подходит <code>using</code>, см. <a href="Phase1_CSharp_Fundamentals.md">Phase1_CSharp_Fundamentals.md §1.8</a> про <code>IDisposable</code>).</p>
+<h3 id="a-catch">Пример A — базовая структура и порядок catch</h3>
+<pre><code class="language-csharp">try
+{
+    var result = 10 / int.Parse(input);
+}
+catch (DivideByZeroException ex)       // сначала более специфичный тип
+{
+    Console.WriteLine(&quot;Деление на ноль&quot;);
+}
+catch (FormatException ex)
+{
+    Console.WriteLine(&quot;Не число&quot;);
+}
+catch (Exception ex)                    // общий тип — всегда ПОСЛЕДНИМ
+{
+    Console.WriteLine($&quot;Неожиданная ошибка: {ex.Message}&quot;);
+}
+finally
+{
+    Console.WriteLine(&quot;Выполнится всегда&quot;);
+}
+</code></pre>
+<blockquote>
+<p>[!info]+ Если поставить <code>catch (Exception ex)</code> раньше <code>catch (DivideByZeroException ex)</code> — компилятор выдаст ошибку "A previous catch clause already catches all exceptions of this or of a super type": более общий catch делает следующие недостижимыми.</p>
+</blockquote>
+<h3 id="b-finally-return">Пример B — finally выполняется даже при return</h3>
+<pre><code class="language-csharp">static int Test()
+{
+    try
+    {
+        return 1;
+    }
+    finally
+    {
+        Console.WriteLine(&quot;finally — ДО того как 1 реально вернётся вызывающему коду&quot;);
+    }
+}
+</code></pre>
+<h3 id="c">Пример C — свой класс исключения</h3>
+<pre><code class="language-csharp">public class InsufficientFundsException : Exception
+{
+    public decimal Requested { get; }
+    public decimal Available { get; }
+
+    public InsufficientFundsException(decimal requested, decimal available)
+        : base($&quot;Недостаточно средств: запрошено {requested}, доступно {available}&quot;)
+    {
+        Requested = requested;
+        Available = available;
+    }
+}
+
+// Зачем: доменная информация об ошибке, которую не выразить стандартным Exception
+if (balance &lt; amount)
+    throw new InsufficientFundsException(amount, balance);
+</code></pre>
+<h3 id="d-throw-vs-throw-ex">Пример D — throw vs throw ex</h3>
+<p><strong>Аналогия из жизни:</strong> <code>throw;</code> - переслать письмо (Forward) целиком, со всей цепочкой переписки внизу: получатель видит, кто и когда написал первое сообщение. <code>throw ex;</code> - скопировать последний абзац в НОВОЕ письмо от своего имени: получатель думает, что это ты автор, а история, кто написал изначально, потеряна.</p>
+<pre><code class="language-csharp">void Repro()
+{
+    try
+    {
+        DoSomethingThatThrows();
+    }
+    catch (Exception ex)
+    {
+        // throw;     — сохраняет ПОЛНЫЙ исходный stack trace (откуда ошибка ПРИШЛА)
+        // throw ex;  — перезаписывает stack trace этой строкой (будто ошибка родилась ЗДЕСЬ)
+        throw; // всегда используй так при перевыбросе
+    }
+}
+</code></pre>
+<blockquote>
+<p>[!info]+ Почему нельзя ловить <code>catch (Exception ex)</code> бездумно везде
+Это "проглатывает" любую ошибку, включая ту, что ты не предвидел и не умеешь правильно обработать (например <code>OutOfMemoryException</code>) — маскирует реальные баги вместо того чтобы дать им проявиться там, где их можно исправить.</p>
+</blockquote>
+<h3 id="e-idisposable-using-tryfinally">Пример E — IDisposable под капотом: using это тот же try/finally</h3>
+<pre><code class="language-csharp">using var file = new StreamWriter(&quot;file.txt&quot;);
+file.WriteLine(&quot;hello&quot;);
+
+// компилятор разворачивает это ровно в то, что уже разобрано в Примере A-B:
+StreamWriter file = new StreamWriter(&quot;file.txt&quot;);
+try
+{
+    file.WriteLine(&quot;hello&quot;);
+}
+finally
+{
+    file?.Dispose(); // вызовется ВСЕГДА, даже если WriteLine бросит исключение
+}
+</code></pre>
+<blockquote>
+<p>[!info]+ Полная механика Dispose-паттерна (финализатор, <code>GC.SuppressFinalize</code>, почему финализатор — лишь подстраховка) — уже разобрана в <a href="Phase1_CSharp_Fundamentals.md">Phase1_CSharp_Fundamentals.md §1.8</a>, не дублирую здесь. Важное именно для этой темы: <code>using</code> — не отдельный механизм освобождения ресурсов, а ровно тот же <code>try/finally</code>, который мы только что разбирали, просто с автоматически подставленным <code>Dispose()</code> в <code>finally</code>.</p>
+</blockquote>
+<h3 id="-301">Мини-задание 3.0.1</h3>
+<pre><code class="language-csharp">// Метод ParseAndDivide(string a, string b) должен:
+// - распарсить оба аргумента как int
+// - поделить первое на второе
+// - вернуть результат
+// Обработай отдельно: FormatException (не число), DivideByZeroException (деление на 0)
+// В finally выведи &quot;Попытка завершена&quot;
+// Добавь свой класс исключения NegativeNumberException — бросай его,
+// если результат деления получился отрицательным
+</code></pre>
+<h3 id="_4">🎤 Вопросы с собеседования</h3>
+<p><strong>Q: Как работает try/catch/finally?</strong>
+A: <code>try</code> — код, который может бросить исключение. <code>catch</code> — обработка конкретного (или любого) типа исключения. <code>finally</code> — выполняется ВСЕГДА, даже если было исключение или <code>return</code> внутри try/catch.</p>
+<p><strong>Q: Почему нельзя ловить <code>catch (Exception ex)</code> везде подряд?</strong>
+A: Маскирует реальные баги и ошибки, которые ты не предвидел и не умеешь правильно обработать — усложняет отладку. Лучше ловить конкретные типы, которые реально ожидаешь.</p>
+<p><strong>Q: Когда стоит создавать свой класс исключения?</strong>
+A: Когда нужно передать доменную бизнес-информацию об ошибке, которую не выразить стандартными исключениями.</p>
+<p><strong>Q: throw vs throw ex — в чём разница?</strong>
+A: <code>throw;</code> сохраняет полный исходный stack trace. <code>throw ex;</code> перезаписывает его, будто исключение возникло здесь — теряется информация, откуда оно пришло на самом деле.</p>
+<p><strong>Q: Как <code>using</code> связан с try/finally?</strong>
+A: <code>using</code> — синтаксический сахар: компилятор оборачивает код в <code>try</code> и вызывает <code>Dispose()</code> в <code>finally</code> — та же гарантия освобождения ресурса даже при исключении, что и у ручного try/finally, просто без ручного написания.</p>
+<hr>
+<h2 id="302-refoutin-params">3.0.2 ref/out/in, params — передача аргументов</h2>
+<h3 id="_5">Почему это важно</h3>
+<p>По умолчанию в C# аргументы передаются по значению (копией) для value types и по значению ссылки для reference types (см. <a href="Phase1_CSharp_Fundamentals.md">Phase1_CSharp_Fundamentals.md §1.1</a>). <code>ref</code>/<code>out</code>/<code>in</code> меняют это поведение явно — регулярно спрашивают на Middle-собесах именно потому, что три модификатора легко перепутать друг с другом.</p>
+<h3 id="_6">Аналогия из жизни</h3>
+<p><code>ref</code> - даёшь другу свой блокнот с записями: может дописать или зачеркнуть, возвращает изменённым. <code>out</code> - даёшь ЧИСТЫЙ блокнот, друг обязан хоть что-то в него вписать перед возвратом. <code>in</code> - даёшь блокнот со словами "только почитай, не пиши". <code>params</code> - вместо одного блокнота вручаешь стопку стикеров любой высоты, сколько нужно.</p>
+<h3 id="_7">Теория</h3>
+<p><code>ref</code> — передача по ссылке, переменная должна быть проинициализирована ДО вызова, метод может её и прочитать, и изменить. <code>out</code> — тоже по ссылке, но переменная может быть НЕ проинициализирована заранее — метод ОБЯЗАН её присвоить перед выходом (классический пример — <code>int.TryParse(s, out int result)</code>). <code>in</code> — по ссылке, но только для чтения внутри метода: используется для больших struct, чтобы не копировать их при каждом вызове, при этом компилятор не даёт их случайно изменить.</p>
+<h3 id="a-ref">Пример A — ref</h3>
+<pre><code class="language-csharp">void Increment(ref int x) =&gt; x++;
+
+int number = 5;
+Increment(ref number); // number должен быть проинициализирован ДО вызова
+Console.WriteLine(number); // 6 — метод изменил ОРИГИНАЛ, не копию
+</code></pre>
+<h3 id="b-out-tryparse-">Пример B — out (TryParse-паттерн)</h3>
+<pre><code class="language-csharp">bool TryDivide(int a, int b, out int result)
+{
+    if (b == 0) { result = 0; return false; } // ОБЯЗАН присвоить result в любой ветке
+    result = a / b;
+    return true;
+}
+
+if (TryDivide(10, 2, out int quotient))
+    Console.WriteLine(quotient); // 5
+// result не нужно инициализировать заранее — компилятор проверит,
+// что метод присвоил его во ВСЕХ путях выполнения
+</code></pre>
+<h3 id="c-in-readonly-reference">Пример C — in (readonly reference)</h3>
+<pre><code class="language-csharp">readonly struct Vector3D { public double X, Y, Z; }
+
+// Без in — Vector3D копируется при КАЖДОМ вызове
+double Length(Vector3D v) =&gt; Math.Sqrt(v.X * v.X + v.Y * v.Y + v.Z * v.Z);
+
+// С in — передаётся по ссылке, копирования нет, но изменить v внутри нельзя
+double LengthFast(in Vector3D v) =&gt; Math.Sqrt(v.X * v.X + v.Y * v.Y + v.Z * v.Z);
+</code></pre>
+<h3 id="d-params">Пример D — params</h3>
+<pre><code class="language-csharp">int Sum(params int[] numbers) =&gt; numbers.Sum();
+
+Sum(1, 2, 3);       // упаковывается в int[] { 1, 2, 3 }
+Sum(1, 2, 3, 4, 5); // работает с любым количеством
+Sum();              // тоже валидно — пустой массив
+</code></pre>
+<blockquote>
+<p>[!info]+ Ограничение, которое часто ловит на собесе: <code>ref</code>/<code>out</code>/<code>in</code> нельзя использовать в async-методах
+<code>csharp
+async Task Foo(out int x) { ... } // ошибка компиляции</code>
+State machine, в которую компилятор превращает async-метод (см. тему 3.4 ниже), не может гарантированно сохранить ссылку на стековую переменную через <code>await</code> — стек может быть уже другим к моменту продолжения.</p>
+</blockquote>
+<h3 id="-302">Мини-задание 3.0.2</h3>
+<pre><code class="language-csharp">// 1. Напиши Swap&lt;T&gt;(ref T a, ref T b) — меняет местами значения двух переменных
+// 2. Напиши TryParseCoordinates(string input, out double x, out double y)
+//    — парсит строку вида &quot;3.5,7.2&quot; в две координаты, false если формат неверный
+// 3. Перепиши метод Length(Vector3D v) выше на использование in
+//    — объясни словами, что изменилось с точки зрения производительности
+</code></pre>
+<h3 id="_8">🎤 Вопросы с собеседования</h3>
+<p><strong>Q: Чем <code>ref</code>, <code>out</code> и <code>in</code> параметры отличаются друг от друга?</strong>
+A: <code>ref</code> — передача по ссылке, переменная должна быть проинициализирована до вызова, метод может её прочитать и изменить. <code>out</code> — тоже по ссылке, но переменная может быть не проинициализирована, метод обязан её присвоить перед выходом. <code>in</code> — по ссылке, только для чтения (защита от изменения, эффективнее для больших struct).</p>
+<p><strong>Q: Что делает <code>params</code>?</strong>
+A: Позволяет передать переменное количество аргументов одного типа как единый массив внутри метода.</p>
+<p><strong>Q: Можно ли использовать <code>ref</code>/<code>out</code> в async-методах?</strong>
+A: Нет — компилятор не разрешит. State machine async-метода не может гарантированно сохранить ссылку на стековую переменную через <code>await</code>.</p>
+<hr>
+<h2 id="31-generics">3.1 Generics — обобщённые типы</h2>
+<h3 id="_9">Почему это важно</h3>
+<p>Без generics — либо дублировать код под каждый тип (<code>IntStack</code>, <code>StringStack</code>, ...), либо использовать <code>object</code> и терять типобезопасность (плюс boxing/unboxing для value types — дорого). Generics дают код, который пишется один раз и работает с любым типом безопасно на этапе компиляции.</p>
+<h3 id="_10">Аналогия из жизни</h3>
+<p>Универсальный ящик для переезда - один и тот же ящик подходит и для книг, и для посуды, и для одежды. Ты каждый раз кладёшь в него что-то ОДНО конкретное, подписываешь снаружи, что внутри - но сам ящик один и тот же, не нужно проектировать отдельный ящик под каждый тип вещей.</p>
+<h3 id="_11">Теория</h3>
+<p><code>T</code> — заглушка для реального типа, который подставится при использовании. Компилятор проверяет типы на этапе компиляции — ошибка несовпадения типов ловится сразу, не в рантайме. Для value types generics избегают boxing: <code>List&lt;int&gt;</code> хранит <code>int</code> напрямую, а не упакованный в <code>object</code>.</p>
+<h3 id="a-generic">Пример A — generic метод</h3>
+<pre><code class="language-csharp">// Без generics — либо object (boxing + потеря типобезопасности), либо дублирование
+public static T Max&lt;T&gt;(T a, T b) where T : IComparable&lt;T&gt; =&gt;
+    a.CompareTo(b) &gt; 0 ? a : b;
+
+int maxInt = Max(5, 10);           // T выведен как int
+string maxStr = Max(&quot;a&quot;, &quot;b&quot;);     // T выведен как string — тот же метод, без дублирования
+</code></pre>
+<h3 id="b-generic">Пример B — generic класс</h3>
+<pre><code class="language-csharp">public class Repository&lt;T&gt; where T : class
+{
+    private readonly List&lt;T&gt; _items = [];
+
+    public void Add(T item) =&gt; _items.Add(item);
+    public IEnumerable&lt;T&gt; GetAll() =&gt; _items;
+    public T? Find(Func&lt;T, bool&gt; predicate) =&gt; _items.FirstOrDefault(predicate);
+}
+
+var contactRepo = new Repository&lt;Contact&gt;();      // T = Contact
+var productRepo = new Repository&lt;Product&gt;();      // T = Product — тот же класс, два независимых хранилища
+</code></pre>
+<h3 id="c-constraints-where">Пример C — constraints (<code>where</code>)</h3>
+<pre><code class="language-csharp">public class Cache&lt;T&gt; where T : class, new()
+//                            ^класс (не struct)  ^есть публичный конструктор без параметров
+{
+    public T CreateDefault() =&gt; new T(); // new() constraint разрешает вызывать new T()
+}
+
+// Другие частые constraints:
+// where T : struct           — только value types
+// where T : IComparable&lt;T&gt;   — только типы, которые можно сравнивать (см. Пример A)
+// where T : SomeBaseClass    — T обязан наследовать конкретный базовый класс
+// where T : U                — T обязан быть тем же типом или наследником другого generic-параметра U
+</code></pre>
+<h3 id="d-outin">Пример D — ковариантность и контравариантность (<code>out</code>/<code>in</code>)</h3>
+<pre><code class="language-csharp">// IEnumerable&lt;out T&gt; — КОВАРИАНТНЫЙ: можно присвоить более узкий тип более широкой переменной
+IEnumerable&lt;string&gt; strings = new List&lt;string&gt; { &quot;a&quot;, &quot;b&quot; };
+IEnumerable&lt;object&gt; objects = strings; // OK — string это object, и IEnumerable только ЧИТАЕТ T
+
+// Action&lt;in T&gt; — КОНТРАВАРИАНТНЫЙ: можно присвоить более широкий тип более узкой переменной
+Action&lt;object&gt; logAny = obj =&gt; Console.WriteLine(obj);
+Action&lt;string&gt; logString = logAny; // OK — если умеет обработать любой object, справится и со string
+</code></pre>
+<blockquote>
+<p>[!info]+ Почему <code>List&lt;T&gt;</code> НЕ ковариантен, а <code>IEnumerable&lt;T&gt;</code> — да
+Ковариантность (<code>out T</code>) безопасна только для типов, которые ТОЛЬКО ВОЗВРАЩАЮТ <code>T</code> (только для чтения) — <code>IEnumerable&lt;T&gt;</code>, <code>IReadOnlyList&lt;T&gt;</code>. <code>List&lt;T&gt;</code> же позволяет и <code>Add(T item)</code> — если бы <code>List&lt;string&gt;</code> можно было присвоить <code>List&lt;object&gt;</code>, ничто не помешало бы вызвать <code>list.Add(42)</code> (int — тоже object) и получить <code>InvalidCastException</code> при попытке достать элемент как <code>string</code>. Поэтому изменяемые коллекции — инвариантны.</p>
+</blockquote>
+<h3 id="-31">Мини-задание 3.1</h3>
+<pre><code class="language-csharp">// Напиши generic класс Stack&lt;T&gt; (свой, не System.Collections.Generic.Stack&lt;T&gt;)
+// с методами Push(T item), T Pop(), bool IsEmpty.
+// Добавь constraint where T : IComparable&lt;T&gt; и метод T Max(), возвращающий наибольший элемент.
+</code></pre>
+<h3 id="_12">🎤 Вопросы с собеседования</h3>
+<p><strong>Q: Зачем нужны generics, если есть <code>object</code>?</strong>
+A: <code>object</code> требует boxing/unboxing для value types (дорого) и не даёт проверку типов на этапе компиляции (ошибка вылезет только в рантайме). Generics — типобезопасность на этапе компиляции, без boxing.</p>
+<p><strong>Q: Что делает <code>where T : ...</code> (constraint)?</strong>
+A: Ограничивает, какие типы допустимы в качестве <code>T</code> — например <code>where T : class</code> (только reference types), <code>where T : IComparable&lt;T&gt;</code> (только типы, которые можно сравнивать), <code>where T : new()</code> (только типы с публичным конструктором без параметров).</p>
+<p><strong>Q: В чём разница между ковариантностью (<code>out T</code>) и контравариантностью (<code>in T</code>)?</strong>
+A: Ковариантность — можно присвоить более узкий (производный) тип более широкой переменной, безопасна только для "только чтения" (<code>IEnumerable&lt;out T&gt;</code>). Контравариантность — можно присвоить более широкий тип более узкой переменной, безопасна для "только записи/приёма" (<code>Action&lt;in T&gt;</code>). Изменяемые структуры вроде <code>List&lt;T&gt;</code> — ни то, ни другое (инвариантны), иначе легко сломать типобезопасность.</p>
+<hr>
+<h2 id="32">3.2 Делегаты и события</h2>
+<h3 id="_13">Почему это важно</h3>
+<p>Делегат — типобезопасная ссылка на метод: можно передать метод как параметр, сохранить в переменную, вызвать позже. Вся LINQ построена на делегатах (<code>Func</code>, <code>Predicate</code>). События — способ уведомить "кого-то" о произошедшем, не зная заранее, кто именно подписан.</p>
+<h3 id="_14">Аналогия из жизни</h3>
+<p>Делегат - это розетка определённого стандарта: в неё можно включить любой прибор с подходящей вилкой, не важно чайник это или лампа - главное, форма совпадает. Event - это звонок в дверь подъезда: жильцы подписываются на звонок (<code>+=</code>/<code>-=</code>), но позвонить в чужую дверь снаружи или стереть чужую подписку может только хозяин подъезда, не любой прохожий.</p>
+<h3 id="_15">Теория</h3>
+<p>Делегат объявляет СИГНАТУРУ метода (параметры + тип возврата), а не конкретную реализацию. Любой метод с подходящей сигнатурой можно присвоить переменной этого типа делегата.</p>
+<h3 id="a">Пример A — свой делегат</h3>
+<pre><code class="language-csharp">public delegate int Operation(int a, int b); // сигнатура: два int → int
+
+int Add(int a, int b) =&gt; a + b;
+int Multiply(int a, int b) =&gt; a * b;
+
+Operation op = Add;
+Console.WriteLine(op(2, 3));   // 5
+
+op = Multiply;
+Console.WriteLine(op(2, 3));   // 6 — та же переменная, другой метод
+</code></pre>
+<h3 id="b-action-func-predicate">Пример B — встроенные делегаты: Action, Func, Predicate</h3>
+<pre><code class="language-csharp">Action&lt;string&gt; log = msg =&gt; Console.WriteLine($&quot;[LOG] {msg}&quot;);        // без возврата
+Func&lt;int, int, int&gt; add = (a, b) =&gt; a + b;                             // с возвратом (последний параметр — тип результата)
+Predicate&lt;int&gt; isEven = n =&gt; n % 2 == 0;                               // Func&lt;T, bool&gt;, именованный частный случай
+
+log(&quot;Старт&quot;);
+Console.WriteLine(add(2, 3));       // 5
+Console.WriteLine(isEven(4));       // True
+</code></pre>
+<h3 id="c-multicast-">Пример C — multicast-делегаты</h3>
+<pre><code class="language-csharp">Action pipeline = () =&gt; Console.WriteLine(&quot;Шаг 1&quot;);
+pipeline += () =&gt; Console.WriteLine(&quot;Шаг 2&quot;);
+pipeline += () =&gt; Console.WriteLine(&quot;Шаг 3&quot;);
+pipeline(); // вызовутся ВСЕ три по порядку добавления
+
+// Ловушка: если делегат ВОЗВРАЩАЕТ значение — при вызове ты получишь
+// результат только ПОСЛЕДНЕГО метода в цепочке, промежуточные результаты потеряны.
+Func&lt;int&gt; multi = () =&gt; 1;
+multi += () =&gt; 2;
+multi += () =&gt; 3;
+Console.WriteLine(multi()); // 3, не 1+2+3 и не список [1,2,3]
+</code></pre>
+<h3 id="d-event">Пример D — события (<code>event</code>)</h3>
+<pre><code class="language-csharp">public class Logger
+{
+    // event поверх делегата: снаружи класса можно ТОЛЬКО += / -=, нельзя вызвать
+    // напрямую или перезаписать = (в отличие от обычного public поля-делегата)
+    public event Action&lt;string&gt;? OnMessage;
+
+    public void Log(string message)
+    {
+        Console.WriteLine(message);
+        OnMessage?.Invoke(message); // null-conditional — если подписчиков нет, ничего не сломается
+    }
+}
+
+var logger = new Logger();
+logger.OnMessage += msg =&gt; Console.WriteLine($&quot;Подписчик 1 увидел: {msg}&quot;);
+logger.OnMessage += msg =&gt; File.AppendAllText(&quot;log.txt&quot;, msg + &quot;\n&quot;);
+logger.Log(&quot;Что-то произошло&quot;); // выведется, плюс оба подписчика сработают
+</code></pre>
+<blockquote>
+<p>🤖 <em>AI-инженерия:</em> агентные системы часто описывают инструменты как <code>Func&lt;ToolCall, Task&lt;Result&gt;&gt;</code> — делегат, принимающий вызов инструмента и асинхронно возвращающий результат. Реестр инструментов агента — по сути <code>Dictionary&lt;string, Func&lt;...&gt;&gt;</code>, где ключ — имя инструмента.</p>
+</blockquote>
+<h3 id="-32">Мини-задание 3.2</h3>
+<pre><code class="language-csharp">// Класс OrderProcessor с событием event Action&lt;decimal&gt; OnOrderProcessed.
+// Метод ProcessOrder(decimal amount), который &quot;обрабатывает&quot; заказ и вызывает событие.
+// Подпишись минимум двумя обработчиками: один печатает сумму, другой ведёт счётчик обработанных заказов.
+</code></pre>
+<h3 id="_16">🎤 Вопросы с собеседования</h3>
+<p><strong>Q: Чем <code>Action</code>, <code>Func</code>, <code>Predicate</code> отличаются друг от друга?</strong>
+A: <code>Action&lt;T&gt;</code> — делегат без возвращаемого значения. <code>Func&lt;T, TResult&gt;</code> — с возвращаемым значением (последний параметр типа — тип результата). <code>Predicate&lt;T&gt;</code> — то же самое, что <code>Func&lt;T, bool&gt;</code>, просто именованный частный случай для условий.</p>
+<p><strong>Q: Чем <code>event</code> отличается от обычного публичного поля-делегата?</strong>
+A: <code>event</code> ограничивает доступ снаружи класса только до <code>+=</code>/<code>-=</code> — нельзя вызвать напрямую (<code>logger.OnMessage()</code> не скомпилируется извне) и нельзя перезаписать через <code>=</code>, стерев все чужие подписки. Обычное публичное поле-делегат этого не защищает — инкапсуляция подписки, а не только вызова.</p>
+<p><strong>Q: Что произойдёт при вызове multicast-делегата, который возвращает значение?</strong>
+A: Вызовутся ВСЕ подписанные методы по порядку, но вызывающий код получит результат только ПОСЛЕДНЕГО — промежуточные результаты теряются молча. Частая причина багов, если ожидать список результатов.</p>
+<hr>
+<h2 id="33-linq">3.3 LINQ — глубже</h2>
+<h3 id="_17">Почему это важно</h3>
+<p>Основы (<code>Where</code>/<code>Select</code>/<code>Sum</code>, отложенное выполнение) уже разобраны в Фазе 1 (1.8). Здесь — то, что реально спрашивают на Middle+: КАК LINQ превращается в SQL для <code>IQueryable</code>, и полный набор операторов, которыми пользуешься каждый день.</p>
+<h3 id="_18">Аналогия из жизни</h3>
+<p>LINQ-запрос без <code>.ToList()</code> - это список покупок, лежащий на столе, а не поход в магазин. Пока список просто составлен - в холодильнике ничего не меняется. Как только кто-то реально идёт в магазин (<code>foreach</code>/<code>.ToList()</code>) - вот тогда список исполняется, и если содержимое исходных данных за это время поменялось, в магазине купят уже по новому списку.</p>
+<h3 id="_19">Теория</h3>
+<p>LINQ — это набор extension-методов над <code>IEnumerable&lt;T&gt;</code> (LINQ to Objects, выполняется в памяти) и <code>IQueryable&lt;T&gt;</code> (LINQ to Entities/SQL через EF Core, выполняется в СУБД). Метод-синтаксис (<code>.Where(...)</code>) и query-синтаксис (<code>from x in ... where ...</code>) компилируются в одно и то же — метод-синтаксис используется в разы чаще на практике.</p>
+<h3 id="a_1">Пример A — основные операторы</h3>
+<pre><code class="language-csharp">var numbers = new List&lt;int&gt; { 5, 3, 8, 1, 9, 2 };
+
+var filtered = numbers.Where(n =&gt; n &gt; 3);                    // фильтр
+var doubled = numbers.Select(n =&gt; n * 2);                    // преобразование
+var sorted = numbers.OrderBy(n =&gt; n);                        // сортировка (ASC)
+var grouped = numbers.GroupBy(n =&gt; n % 2 == 0 ? &quot;чёт&quot; : &quot;нечёт&quot;); // группировка
+var joined = numbers.Join(doubled, n =&gt; n, d =&gt; d / 2, (n, d) =&gt; (n, d)); // соединение по ключу
+
+// Агрегация — выполняется НЕМЕДЛЕННО (см. Пример B)
+var sum = numbers.Sum();
+var max = numbers.Max();
+var count = numbers.Count(n =&gt; n &gt; 3);
+</code></pre>
+<h3 id="b-vs-18">Пример B — отложенное vs немедленное выполнение (напоминание из 1.8 + расширение)</h3>
+<pre><code class="language-csharp">var query = numbers.Where(n =&gt; n &gt; 3).OrderBy(n =&gt; n); // НИЧЕГО не выполнилось — построен план
+numbers.Add(100);                                       // добавили ПОСЛЕ построения запроса
+
+foreach (var n in query) Console.WriteLine(n);           // ВОТ здесь выполнилось, 100 тоже попадёт
+
+// Откладывают: Where, Select, OrderBy, GroupBy, Join, Skip, Take
+// Выполняют немедленно: ToList, ToArray, Count, Sum, First(OrDefault), Any, Max, Min
+</code></pre>
+<h3 id="c-iqueryable-vs-ienumerable-sql">Пример C — IQueryable vs IEnumerable: как это доезжает до SQL</h3>
+<pre><code class="language-csharp">// IQueryable&lt;T&gt; (EF Core) — .Where() НЕ содержит логики фильтрации.
+// Он строит Expression Tree и передаёт её в IQueryProvider.CreateQuery() —
+// это создаёт НОВЫЙ объект запроса, ничего не выполняя.
+IQueryable&lt;Contact&gt; query = dbContext.Contacts.Where(c =&gt; c.Name.StartsWith(&quot;И&quot;));
+// В этот момент SQL ещё не отправлен — только построено дерево выражений
+
+var results = query.ToList(); // ВОТ тут IQueryProvider транслирует дерево в SQL и выполняет запрос в БД
+
+// IEnumerable&lt;T&gt; (LINQ to Objects) — тот же .Where() тут уже настоящий делегат,
+// выполняется built-in кодом .NET прямо в памяти, никакого SQL вообще нет.
+</code></pre>
+<blockquote>
+<p>[!info]+ 🆕 Механика IQueryable — откуда берётся трансляция в SQL
+Extension-методы <code>IQueryable&lt;T&gt;</code> не выполняют работу сами — они достраивают <strong>дерево выражений</strong> (Expression Tree) и через <code>IQueryProvider.CreateQuery()</code> создают новый экземпляр запроса. Реальное выполнение (и трансляция в SQL) запускается только при <code>Execute()</code> — то есть при материализации (<code>.ToList()</code>, <code>foreach</code>, и т.д.). Источник: разбор механики IQueryable-провайдеров (Habr, research-проход 2026-08-02).</p>
+</blockquote>
+<h3 id="d-yield-return-linq-">Пример D — <code>yield return</code> для собственных LINQ-совместимых последовательностей</h3>
+<pre><code class="language-csharp">// Напоминание из 1.8: yield делает метод &quot;ленивым генератором&quot; — совместим с любым LINQ-оператором
+IEnumerable&lt;int&gt; Fibonacci()
+{
+    int a = 0, b = 1;
+    while (true) // бесконечная последовательность — безопасно благодаря лени
+    {
+        yield return a;
+        (a, b) = (b, a + b);
+    }
+}
+
+var first5 = Fibonacci().Take(5).ToList(); // [0, 1, 1, 2, 3] — вычислено ровно 5 значений, не больше
+</code></pre>
+<h3 id="-33">Мини-задание 3.3</h3>
+<pre><code class="language-csharp">// На списке List&lt;Contact&gt; (с полем WorkContact.Company у части записей):
+// 1. Сгруппируй контакты по Company через GroupBy (для Contact без Company — своя группа &quot;без компании&quot;).
+// 2. Для каждой группы выведи количество контактов и отсортируй группы по убыванию размера.
+// 3. Объясни словами: если бы это был IQueryable&lt;Contact&gt; из EF Core, а не List&lt;Contact&gt; —
+//    что изменилось бы в том, КОГДА выполняется группировка?
+</code></pre>
+<h3 id="_20">🎤 Вопросы с собеседования</h3>
+<p><strong>Q: <code>.Where()</code>, <code>.OrderBy()</code>, <code>.Select()</code> — все они откладывают выполнение? А <code>.FirstOrDefault()</code>, <code>.Count()</code>?</strong>
+A: <code>.Where()</code>, <code>.OrderBy()</code>, <code>.Select()</code> — ВСЕ откладывают выполнение. <code>.FirstOrDefault()</code>, <code>.Count()</code>, <code>.Any()</code>, <code>.Sum()</code>, <code>.ToList()</code> — выполняются немедленно. Для <code>IQueryable</code> (EF Core) <code>.FirstOrDefault()</code> транслируется в SQL с <code>LIMIT 1</code> — не тянет всю таблицу.</p>
+<p><strong>Q: КАК именно LINQ-запрос через <code>IQueryable</code> превращается в SQL?</strong>
+A: Extension-методы <code>IQueryable</code> строят дерево выражений (Expression Tree) через <code>IQueryProvider.CreateQuery()</code>, не выполняя ничего. Трансляция в SQL и реальное выполнение запускаются только при материализации (<code>.ToList()</code>, <code>foreach</code>).</p>
+<hr>
+<h2 id="34-asyncawait">3.4 Async/Await — под капотом</h2>
+<h3 id="_21">Почему это важно</h3>
+<p>По банку реальных вопросов Ozon — async/await internals (~4200 использований суммарно) и связанные темы (Task vs Thread, deadlock, ConfigureAwait) — один из самых частых блоков вопросов вообще. Поверхностного "это машина состояний" уже недостаточно на Middle+ уровне.</p>
+<h3 id="_22">Аналогия из жизни</h3>
+<p>Заказ в ресторане, не готовка дома. Сделал заказ (<code>await</code>) - официант не стоит рядом, пока жарится стейк, а уходит и обслуживает другие столики. Тебя позовут, когда стейк готов. ThreadPool - это ограниченное число официантов на весь зал: если все столики одновременно закажут долгую готовку, официантов на всех не хватит, и обслуживание встанет, даже если кухня не занята.</p>
+<h3 id="_23">Теория</h3>
+<p><code>async</code>/<code>await</code> — синтаксический сахар над явной композицией продолжений (continuations). Компилятор разворачивает <code>async</code>-метод в отдельный сгенерированный класс — машину состояний.</p>
+<h3 id="a_2">Пример A — базовый синтаксис</h3>
+<pre><code class="language-csharp">async Task&lt;int&gt; GetDataAsync()
+{
+    await Task.Delay(1000); // не блокирует поток — освобождает его на время ожидания
+    return 42;
+}
+
+int result = await GetDataAsync(); // await &quot;разворачивает&quot; Task&lt;int&gt; в int
+</code></pre>
+<h3 id="b">Пример B — что генерирует компилятор (машина состояний)</h3>
+<pre><code class="language-csharp">// Компилятор превращает async-метод в класс-структуру с полями:
+// - &lt;&gt;1__state          — текущее состояние (в каком месте метода мы находимся)
+// - builder             — AsyncTaskMethodBuilder, управляет жизненным циклом Task
+// - awaiter-поля        — по одному на каждый await в методе
+// - временные локальные — переменные метода, &quot;переживающие&quot; await
+//
+// Каждый await — точка перехода между состояниями MoveNext().
+// Именно поэтому исключение в async-методе &quot;прилетает&quot; туда, где его ждали (await),
+// а не туда, где было брошено — Task хранит исключение, await его перевыбрасывает.
+</code></pre>
+<blockquote>
+<p>[!info]+ 🆕 Источник — канонический разбор Стивена Тоуба (разработчик .NET runtime)
+Это описание — не пересказ "по слухам", а прямое изложение серии статей Стивена Тоуба про внутреннее устройство async/await (перевод на Habr, research-проход 2026-08-02) — самый авторитетный русскоязычный материал по теме из найденных.</p>
+</blockquote>
+<h3 id="c-result">Пример C — классический дедлок на <code>.Result</code>, пошагово</h3>
+<pre><code class="language-csharp">// В UI/классическом ASP.NET (не ASP.NET Core) с SynchronizationContext:
+async Task&lt;int&gt; SlowMethodAsync()
+{
+    await Task.Delay(1000); // после await продолжение хочет вернуться на UI-поток
+    return 42;
+}
+
+// В обработчике клика UI-потока:
+int result = SlowMethodAsync().Result; // ДЕДЛОК
+</code></pre>
+<p>Пошагово, почему зависает:
+1. UI-поток вызывает <code>.Result</code> — блокирует САМ СЕБЯ, ожидая завершения задачи.
+2. Внутри <code>SlowMethodAsync</code> после <code>await Task.Delay(1000)</code> продолжение пытается вернуться на ТОТ ЖЕ UI-поток (<code>SynchronizationContext</code> захвачен).
+3. UI-поток занят ожиданием на шаге 1 — не может выполнить продолжение из шага 2.
+4. Взаимная блокировка: никто не двигается.</p>
+<blockquote>
+<p>В ASP.NET Core <code>SynchronizationContext</code> отсутствует — классический вариант этого дедлока там не воспроизводится. Но <code>.Result</code>/<code>.Wait()</code> там всё равно опасны — см. Пример D.</p>
+</blockquote>
+<h3 id="d-configureawaitfalse-result-aspnet-core">Пример D — <code>ConfigureAwait(false)</code> и почему <code>.Result</code> убивает ASP.NET Core иначе</h3>
+<pre><code class="language-csharp">// ConfigureAwait(false) — явно говорит: &quot;продолжению не обязательно
+// возвращаться в исходный SynchronizationContext/контекст, можно на любом потоке пула&quot;
+await SomeMethodAsync().ConfigureAwait(false);
+// Хорошая практика для БИБЛИОТЕЧНОГО кода — не тащит за собой контекст без необходимости.
+// TaskScheduler — второй, менее известный механизм возврата продолжения,
+// используется когда SynchronizationContext отсутствует (например, в консоли/сервисе).
+</code></pre>
+<blockquote>
+<p>[!info]+ 🆕 ASP.NET Core: <code>.Result</code> не даёт дедлок, но убивает через ThreadPool starvation — с реальными цифрами
+Замер: 50 000 RPS с p99=40мс превращаются в <strong>12 000 RPS с p99=4 сек</strong> при загрузке CPU всего <strong>8%</strong>. Причина не дедлок, а массовая блокировка потоков пула: <code>.Result</code> синхронно блокирует поток, пока не завершится асинхронная операция — поток "заморожен", но числится занятым. ThreadPool наращивает число потоков по алгоритму hill-climbing (медленно, с задержкой ~6.4 сек на решение) — на массово заблокированных потоках это даёт разрушительную положительную обратную связь. Диагностика: <code>dotnet-counters</code>, метрики <code>threadpool.thread.count</code>/<code>threadpool.queue.length</code>. Решение — убрать <code>.Result</code> полностью, НЕ "лечить" через <code>Task.Run()</code> (создаёт ещё один блокирующий поток). Источник: research-проход по Habr, 2026-08-02.</p>
+<p>[!info]+ 🆕 CPU-bound vs I/O-bound — тема, где "даже опытные кандидаты проваливаются"
+<code>await</code> НЕ занимает поток на время ожидания I/O (сеть, диск, БД) — поток освобождается обратно в пул, а не простаивает. Для CPU-bound работы (реальные вычисления, не ожидание) <code>await</code> сам по себе ничего не ускоряет — там нужен <code>Task.Run()</code>, чтобы явно уйти в пул потоков. Путать эти два случая — источник и дедлоков, и ненужной траты потоков.</p>
+</blockquote>
+<p><strong>Что будет, если забыть <code>await</code>:</strong></p>
+<pre><code class="language-csharp">async Task DoWorkAsync()
+{
+    SomeAsyncMethod(); // забыли await — метод ЗАПУЩЕН, но никто не ждёт его завершения
+    Console.WriteLine(&quot;Готово&quot;); // выведется РАНЬШЕ, чем SomeAsyncMethod реально закончит
+    // Плюс: если SomeAsyncMethod бросит исключение — оно &quot;потеряется&quot;,
+    // никто его не перехватит (Task, за которым никто не следит через await).
+}
+</code></pre>
+<p><strong><code>CancellationToken</code> — кооперативная отмена:</strong></p>
+<pre><code class="language-csharp">async Task DoWorkAsync(CancellationToken token)
+{
+    for (int i = 0; i &lt; 1000; i++)
+    {
+        token.ThrowIfCancellationRequested(); // сам метод должен ПРОВЕРЯТЬ токен
+        await Task.Delay(10, token);
+    }
+}
+// Отмена — КООПЕРАТИВНАЯ: токен сам ничего не останавливает силой,
+// метод должен согласиться проверять его и вежливо выйти.
+</code></pre>
+<h3 id="-34">Мини-задание 3.4</h3>
+<pre><code class="language-csharp">// 1. Напиши метод, который синхронно (.Result) вызывает другой async-метод —
+//    объясни словами (комментарием), почему в консольном приложении дедлока НЕ будет,
+//    хотя в WPF/WinForms он бы случился.
+// 2. Напиши async-метод, принимающий CancellationToken, и продемонстрируй
+//    его отмену через CancellationTokenSource.Cancel() посреди выполнения.
+</code></pre>
+<h3 id="_24">🎤 Вопросы с собеседования</h3>
+<p><strong>Q: Во что конкретно разворачивается async/await — из чего состоит сгенерированная машина состояний?</strong>
+A: Класс-структура с полями: <code>&lt;&gt;1__state</code> (текущее состояние), builder (<code>AsyncTaskMethodBuilder</code>), awaiter-поля (по одному на каждый <code>await</code>), временные локальные переменные метода. Каждый <code>await</code> — точка перехода между состояниями <code>MoveNext()</code>.</p>
+<p><strong>Q: В чём разница между <code>Task</code> и <code>Thread</code>?</strong>
+A: <code>Thread</code> — реальный поток ОС, дорогой ресурс. <code>Task</code> — абстракция единицы работы, выполняется через <code>ThreadPool</code> (пул переиспользуемых потоков) — намного дешевле создавать, особенно много задач одновременно.</p>
+<p><strong>Q: Что такое deadlock и как его избежать при async/await?</strong>
+A: Классический deadlock в UI/старом ASP.NET — синхронное ожидание (<code>.Result</code>/<code>.Wait()</code>) асинхронного метода в потоке с контекстом синхронизации, который сам ждёт освобождения потока для продолжения. Решение — <code>async</code> до самого верха (<code>async all the way</code>), не смешивать sync/async вызовы.</p>
+<p><strong>Q: В ASP.NET Core <code>SynchronizationContext</code> нет — значит ли это, что <code>.Result</code> безопасен?</strong>
+A: Нет. Механизм убийства другой — ThreadPool starvation: <code>.Result</code> блокирует поток пула, поток числится занятым, но фактически простаивает в ожидании. При массовой блокировке throughput обваливается (см. Пример D — 50k→12k RPS при CPU всего 8%).</p>
+<p><strong>Q: Что делает <code>ConfigureAwait(false)</code>?</strong>
+A: Говорит, что продолжение после <code>await</code> не обязано возвращаться в исходный контекст синхронизации — избегает лишних переключений контекста, снижает риск deadlock в библиотечном коде.</p>
+<p><strong>Q: Что будет, если забыть <code>await</code> перед асинхронным вызовом?</strong>
+A: Метод запустится, но выполнение продолжится сразу дальше, не дожидаясь его завершения ("fire and forget" непреднамеренно) — плюс исключение из незаконченного Task потеряется, если за ним никто не следит.</p>
+<p><strong>Q: Как отменить асинхронную задачу через <code>CancellationToken</code>?</strong>
+A: <code>CancellationToken</code> передаётся ВНУТРЬ метода как параметр. Метод сам периодически проверяет <code>token.IsCancellationRequested</code>/<code>ThrowIfCancellationRequested()</code> и прерывает работу. Отмена кооперативная — токен ничего не останавливает силой.</p>
+<hr>
+<h2 id="35">3.5 Параллелизм — примитивы синхронизации</h2>
+<h3 id="_25">Почему это важно</h3>
+<p>По банку реальных вопросов Ozon это <strong>самый частый вопрос вообще</strong> — 2733 использования, больше любой другой темы в базе.</p>
+<h3 id="_26">Аналогия из жизни</h3>
+<p><code>lock</code> - ключ от переговорки: пока один человек внутри с ключом, остальные ждут в коридоре, зайти не может никто, даже если у них "срочно". <code>SemaphoreSlim</code> - та же переговорка, но рассчитанная на несколько человек сразу (например максимум 3 одновременно), а не строго на одного.</p>
+<h3 id="_27">Теория</h3>
+<p>Когда несколько потоков одновременно читают/пишут общее состояние — нужна синхронизация, иначе race condition (гонка данных): результат зависит от непредсказуемого порядка выполнения потоков.</p>
+<h3 id="a-lock-monitor">Пример A — <code>lock</code> (Monitor)</h3>
+<pre><code class="language-csharp">private readonly object _lock = new();
+private int _counter;
+
+public void Increment()
+{
+    lock (_lock) // только один поток одновременно внутри блока
+    {
+        _counter++;
+    }
+}
+// lock(obj) { ... } разворачивается в:
+// Monitor.Enter(obj, ref lockTaken); try { ... } finally { Monitor.Exit(obj); }
+// НЕ работает со значимыми типами (value type копировался бы, каждый поток блокировал бы свою копию).
+// НЕ работает с await внутри — ошибка КОМПИЛЯЦИИ, не рантайма.
+</code></pre>
+<h3 id="b-mutex">Пример B — <code>Mutex</code> (межпроцессный)</h3>
+<pre><code class="language-csharp">using var mutex = new Mutex(false, &quot;Global\\MyAppSingleInstance&quot;);
+if (mutex.WaitOne(TimeSpan.Zero))
+{
+    // единственный экземпляр процесса во всей системе, не только в этом процессе
+}
+// lock работает только ВНУТРИ процесса. Для межпроцессной синхронизации — именованный Mutex/Semaphore.
+</code></pre>
+<h3 id="c-semaphoreslim-async-n">Пример C — <code>SemaphoreSlim</code> (async-совместимый, N потоков одновременно)</h3>
+<pre><code class="language-csharp">private readonly SemaphoreSlim _semaphore = new(initialCount: 3); // максимум 3 одновременно
+
+public async Task DoLimitedWorkAsync()
+{
+    await _semaphore.WaitAsync(); // в отличие от lock — совместим с await
+    try
+    {
+        await SomeExpensiveOperationAsync();
+    }
+    finally
+    {
+        _semaphore.Release();
+    }
+}
+</code></pre>
+<h3 id="d-interlocked">Пример D — <code>Interlocked</code> (атомарные операции без блокировки)</h3>
+<pre><code class="language-csharp">private int _counter;
+
+public void Increment() =&gt; Interlocked.Increment(ref _counter);
+// Для простых операций (инкремент, сложение, обмен значений) — быстрее lock,
+// не создаёт блокировку вообще, атомарность обеспечивает сам процессор.
+</code></pre>
+<blockquote>
+<p>[!info]+ 🆕 <code>System.Threading.Channels</code> — явно назван в банке Ozon, но раньше нигде не разбирался
+<code>Channel&lt;T&gt;</code> — lock-free producer/consumer очередь с полноценным async API (<code>WriteAsync</code>, <code>TryWrite</code>, <code>WaitToWriteAsync</code>, <code>ReadAllAsync</code>) — в отличие от устаревшего <code>BlockingCollection&lt;T&gt;</code> (блокирующий <code>Monitor.Wait</code>, нет async-варианта). Bounded-канал поддерживает 4 режима переполнения (<code>BoundedChannelFullMode</code>: Wait / DropNewest / DropOldest / DropWrite). Источник: research-проход по Habr, 2026-08-02.
+<code>csharp
+var channel = Channel.CreateBounded&lt;int&gt;(capacity: 100);
+await channel.Writer.WriteAsync(42);           // producer
+await foreach (var item in channel.Reader.ReadAllAsync()) { /* consumer */ }</code></p>
+<p>[!info]+ Race condition — пример и почему его сложно заметить
+<code>csharp
+// Без синхронизации: _counter++ — это ЧТЕНИЕ + ИНКРЕМЕНТ + ЗАПИСЬ, три отдельных шага.
+// Два потока могут прочитать одно и то же значение ДО того, как первый запишет своё —
+// один инкремент "теряется". На маленькой нагрузке баг может не проявляться вообще.</code></p>
+</blockquote>
+<h3 id="-35">Мини-задание 3.5</h3>
+<pre><code class="language-csharp">// 1. Напиши класс BankAccount с методом Withdraw(decimal amount), защищённым lock —
+//    докажи через несколько параллельных Task.Run(), что баланс не уходит в минус
+//    при одновременных попытках снять деньги.
+// 2. Замени lock на SemaphoreSlim(1,1) — покажи, что можно вызвать WaitAsync() вместо
+//    блокирующего lock (актуально, если внутри критической секции есть await).
+</code></pre>
+<h3 id="_28">🎤 Вопросы с собеседования</h3>
+<p><strong>Q: Какие примитивы синхронизации вы знаете, какой принцип работы?</strong>
+A: <code>Monitor</code>/<code>lock</code> (внутрипроцессный), <code>Mutex</code> (может быть именованным — межпроцессный), <code>Semaphore</code>/<code>SemaphoreSlim</code> (N потоков одновременно, Slim — async+CancellationToken), <code>ReaderWriterLockSlim</code> (раздельные блокировки чтения/записи), <code>Interlocked</code> (атомарные операции без блокировки), <code>System.Threading.Channels</code> (асинхронные очереди producer/consumer).</p>
+<p><strong>Q: Можно ли использовать <code>lock</code> с <code>async</code>/<code>await</code>?</strong>
+A: Нет — ошибка компиляции (<code>await</code> физически запрещён внутри <code>lock</code>). Решение — убрать асинхронный код из-под лока или использовать <code>SemaphoreSlim.WaitAsync()</code>.</p>
+<p><strong>Q: Во что разворачивается <code>lock</code>, работает ли он со значимыми типами?</strong>
+A: <code>lock(obj) { ... }</code> → <code>Monitor.Enter(obj, ref lockTaken); try { ... } finally { Monitor.Exit(obj); }</code>. Со значимыми типами НЕ работает — value type передаётся по значению, каждый поток блокировал бы свою копию, а не общий объект.</p>
+<p><strong>Q: Можно ли использовать <code>lock</code> для межпроцессного взаимодействия?</strong>
+A: Нет — <code>lock</code> разворачивается в <code>Monitor</code>, сериализует доступ только ВНУТРИ процесса. Для межпроцессной синхронизации — именованный <code>Mutex</code> или <code>Semaphore</code>.</p>
+<p><strong>Q: Что такое race condition и как его обнаружить/предотвратить?</strong>
+A: Результат зависит от непредсказуемого порядка выполнения потоков при одновременном доступе к общему состоянию. Предотвращается синхронизацией (<code>lock</code>, <code>Interlocked</code>, потокобезопасные коллекции). Обнаружить сложно — баг может не проявляться на малой нагрузке и всплыть только в проде под реальной конкуренцией потоков.</p>
+<p><strong>Q: Что такое <code>System.Threading.Channels</code> и чем он лучше <code>BlockingCollection&lt;T&gt;</code>?</strong>
+A: Lock-free producer/consumer очередь с полноценным async API. <code>BlockingCollection&lt;T&gt;</code> использует блокирующий <code>Monitor.Wait</code> и не даёт async-варианта вообще.</p>
+<hr>
+<h2 id="_29">🧩 Собираем всё вместе — переходный пример перед итоговым заданием</h2>
+<pre><code class="language-csharp">// Generics (3.1) + LINQ (3.3) + Async (3.4) + примитивы (3.5) на одной задаче:
+// асинхронный generic-репозиторий с потокобезопасным кэшем.
+
+public class AsyncCachedRepository&lt;T&gt; where T : class
+{
+    private readonly Dictionary&lt;int, T&gt; _cache = new();
+    private readonly SemaphoreSlim _lock = new(1, 1); // async-совместимая защита кэша
+
+    public async Task&lt;T?&gt; GetOrLoadAsync(int id, Func&lt;int, Task&lt;T?&gt;&gt; loader)
+    {
+        await _lock.WaitAsync();
+        try
+        {
+            if (_cache.TryGetValue(id, out var cached))
+                return cached; // уже в кэше — не грузим повторно
+
+            var loaded = await loader(id); // асинхронная загрузка (условно — из БД/API)
+            if (loaded is not null)
+                _cache[id] = loaded;
+
+            return loaded;
+        }
+        finally
+        {
+            _lock.Release();
+        }
+    }
+
+    // LINQ поверх закэшированных данных — уже загруженное, синхронное чтение
+    public IEnumerable&lt;T&gt; GetAllCached() =&gt; _cache.Values;
+}
+</code></pre>
+<p>Что здесь произошло: <code>AsyncCachedRepository&lt;T&gt;</code> (generic, 3.1) хранит что угодно → <code>SemaphoreSlim</code> (3.5) защищает кэш от гонки при параллельных запросах, при этом совместим с <code>await</code> внутри → <code>GetOrLoadAsync</code> (3.4) асинхронно грузит данные только один раз на <code>id</code>, дальше отдаёт из кэша → <code>GetAllCached()</code> открывает результат для LINQ (3.3) без дублирования логики хранения.</p>
+<hr>
+<h2 id="3-generic-async-contact-manager">🎯 Итоговое задание Фазы 3 — Generic + Async Contact Manager</h2>
+<p>Возьми проект из Фазы 2 (<code>Playground/Phase2/FinalProject</code>) и:</p>
+<ol>
+<li><strong>Обобщи <code>IContactRepository</code></strong> до <code>IRepository&lt;T&gt;</code> (generic-версия с теми же операциями Add/Find/Delete/GetAll/Search) — <code>ContactBook</code> становится <code>Repository&lt;Contact&gt; : IRepository&lt;Contact&gt;</code> (3.1).</li>
+<li><strong>Сделай сохранение асинхронным</strong>: <code>Task&lt;bool&gt; AddAsync(T item)</code>, <code>Task&lt;T?&gt; FindAsync(string name)</code> и так далее — используй <code>Task.FromResult(...)</code> внутри (реальный I/O появится в Life Notes с БД) (3.4).</li>
+<li><strong>Добавь отчёт через LINQ</strong>: метод <code>GetGroupedByCompany()</code>, группирующий контакты по <code>Company</code> (для <code>WorkContact</code>) с подсчётом (3.3).</li>
+<li><strong>Защити доступ к хранилищу</strong> через <code>SemaphoreSlim</code>, если несколько операций могут выполняться параллельно (3.5).</li>
+</ol>
+<h3 id="_30">Чекпоинты</h3>
+<ul>
+<li>[ ] <code>IRepository&lt;T&gt;</code> — generic-интерфейс, <code>Repository&lt;Contact&gt;</code> его реализует</li>
+<li>[ ] Методы репозитория асинхронные (<code>Task</code>/<code>Task&lt;T&gt;</code>), вызовы через <code>await</code></li>
+<li>[ ] <code>GetGroupedByCompany()</code> — LINQ <code>GroupBy</code>, работает корректно и для <code>Contact</code>, и для <code>WorkContact</code></li>
+<li>[ ] Доступ к внутреннему хранилищу защищён <code>SemaphoreSlim</code> (или <code>lock</code>, если без <code>await</code> внутри)</li>
+<li>[ ] Код компилируется, все команды меню продолжают работать (с <code>await</code> на вызовах)</li>
+</ul>
+<hr>
+<p><em>Фаза 3 завершена → дальше Life Notes: реальный ASP.NET Core Web API поверх всего пройденного.</em></p></article>
+    <aside class="aside">
+      <strong>В этом документе</strong>
+      <div class="toc"><div class="toc">
+<ul>
+<li><a href="#301-trycatchfinally">3.0.1 Исключения — try/catch/finally</a><ul>
+<li><a href="#_1">Почему это важно</a></li>
+<li><a href="#_2">Аналогия из жизни</a></li>
+<li><a href="#_3">Теория</a></li>
+<li><a href="#a-catch">Пример A — базовая структура и порядок catch</a></li>
+<li><a href="#b-finally-return">Пример B — finally выполняется даже при return</a></li>
+<li><a href="#c">Пример C — свой класс исключения</a></li>
+<li><a href="#d-throw-vs-throw-ex">Пример D — throw vs throw ex</a></li>
+<li><a href="#e-idisposable-using-tryfinally">Пример E — IDisposable под капотом: using это тот же try/finally</a></li>
+<li><a href="#-301">Мини-задание 3.0.1</a></li>
+<li><a href="#_4">🎤 Вопросы с собеседования</a></li>
+</ul>
+</li>
+<li><a href="#302-refoutin-params">3.0.2 ref/out/in, params — передача аргументов</a><ul>
+<li><a href="#_5">Почему это важно</a></li>
+<li><a href="#_6">Аналогия из жизни</a></li>
+<li><a href="#_7">Теория</a></li>
+<li><a href="#a-ref">Пример A — ref</a></li>
+<li><a href="#b-out-tryparse-">Пример B — out (TryParse-паттерн)</a></li>
+<li><a href="#c-in-readonly-reference">Пример C — in (readonly reference)</a></li>
+<li><a href="#d-params">Пример D — params</a></li>
+<li><a href="#-302">Мини-задание 3.0.2</a></li>
+<li><a href="#_8">🎤 Вопросы с собеседования</a></li>
+</ul>
+</li>
+<li><a href="#31-generics">3.1 Generics — обобщённые типы</a><ul>
+<li><a href="#_9">Почему это важно</a></li>
+<li><a href="#_10">Аналогия из жизни</a></li>
+<li><a href="#_11">Теория</a></li>
+<li><a href="#a-generic">Пример A — generic метод</a></li>
+<li><a href="#b-generic">Пример B — generic класс</a></li>
+<li><a href="#c-constraints-where">Пример C — constraints (where)</a></li>
+<li><a href="#d-outin">Пример D — ковариантность и контравариантность (out/in)</a></li>
+<li><a href="#-31">Мини-задание 3.1</a></li>
+<li><a href="#_12">🎤 Вопросы с собеседования</a></li>
+</ul>
+</li>
+<li><a href="#32">3.2 Делегаты и события</a><ul>
+<li><a href="#_13">Почему это важно</a></li>
+<li><a href="#_14">Аналогия из жизни</a></li>
+<li><a href="#_15">Теория</a></li>
+<li><a href="#a">Пример A — свой делегат</a></li>
+<li><a href="#b-action-func-predicate">Пример B — встроенные делегаты: Action, Func, Predicate</a></li>
+<li><a href="#c-multicast-">Пример C — multicast-делегаты</a></li>
+<li><a href="#d-event">Пример D — события (event)</a></li>
+<li><a href="#-32">Мини-задание 3.2</a></li>
+<li><a href="#_16">🎤 Вопросы с собеседования</a></li>
+</ul>
+</li>
+<li><a href="#33-linq">3.3 LINQ — глубже</a><ul>
+<li><a href="#_17">Почему это важно</a></li>
+<li><a href="#_18">Аналогия из жизни</a></li>
+<li><a href="#_19">Теория</a></li>
+<li><a href="#a_1">Пример A — основные операторы</a></li>
+<li><a href="#b-vs-18">Пример B — отложенное vs немедленное выполнение (напоминание из 1.8 + расширение)</a></li>
+<li><a href="#c-iqueryable-vs-ienumerable-sql">Пример C — IQueryable vs IEnumerable: как это доезжает до SQL</a></li>
+<li><a href="#d-yield-return-linq-">Пример D — yield return для собственных LINQ-совместимых последовательностей</a></li>
+<li><a href="#-33">Мини-задание 3.3</a></li>
+<li><a href="#_20">🎤 Вопросы с собеседования</a></li>
+</ul>
+</li>
+<li><a href="#34-asyncawait">3.4 Async/Await — под капотом</a><ul>
+<li><a href="#_21">Почему это важно</a></li>
+<li><a href="#_22">Аналогия из жизни</a></li>
+<li><a href="#_23">Теория</a></li>
+<li><a href="#a_2">Пример A — базовый синтаксис</a></li>
+<li><a href="#b">Пример B — что генерирует компилятор (машина состояний)</a></li>
+<li><a href="#c-result">Пример C — классический дедлок на .Result, пошагово</a></li>
+<li><a href="#d-configureawaitfalse-result-aspnet-core">Пример D — ConfigureAwait(false) и почему .Result убивает ASP.NET Core иначе</a></li>
+<li><a href="#-34">Мини-задание 3.4</a></li>
+<li><a href="#_24">🎤 Вопросы с собеседования</a></li>
+</ul>
+</li>
+<li><a href="#35">3.5 Параллелизм — примитивы синхронизации</a><ul>
+<li><a href="#_25">Почему это важно</a></li>
+<li><a href="#_26">Аналогия из жизни</a></li>
+<li><a href="#_27">Теория</a></li>
+<li><a href="#a-lock-monitor">Пример A — lock (Monitor)</a></li>
+<li><a href="#b-mutex">Пример B — Mutex (межпроцессный)</a></li>
+<li><a href="#c-semaphoreslim-async-n">Пример C — SemaphoreSlim (async-совместимый, N потоков одновременно)</a></li>
+<li><a href="#d-interlocked">Пример D — Interlocked (атомарные операции без блокировки)</a></li>
+<li><a href="#-35">Мини-задание 3.5</a></li>
+<li><a href="#_28">🎤 Вопросы с собеседования</a></li>
+</ul>
+</li>
+<li><a href="#_29">🧩 Собираем всё вместе — переходный пример перед итоговым заданием</a></li>
+<li><a href="#3-generic-async-contact-manager">🎯 Итоговое задание Фазы 3 — Generic + Async Contact Manager</a><ul>
+<li><a href="#_30">Чекпоинты</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+    </aside>
+  </div>
+</main>
+
+
+<script>
+const ROOT = "..";
+
+// ---- тема
+const themeBtn = document.getElementById("theme");
+const paint = () => {
+  const dark = document.documentElement.getAttribute("data-theme") === "dark";
+  themeBtn.textContent = dark ? "☀" : "☾";
+};
+paint();
+themeBtn.addEventListener("click", () => {
+  const next = document.documentElement.getAttribute("data-theme") === "dark" ? "light" : "dark";
+  document.documentElement.setAttribute("data-theme", next);
+  try { localStorage.setItem("kb-theme", next); } catch (e) {}
+  paint();
+});
+
+// ---- поиск
+let index = null;
+const box = document.getElementById("results");
+const hits = document.getElementById("hits");
+const head = box.querySelector("h3");
+const input = document.getElementById("q");
+
+async function ensureIndex() {
+  if (index) return index;
+  const res = await fetch(ROOT + "/search-index.json");
+  index = await res.json();
+  return index;
+}
+
+const esc = (s) => (s || "").replace(/[&<>]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
+
+function hi(text, query) {
+  const i = text.toLowerCase().indexOf(query);
+  if (i < 0) return esc(text);
+  return esc(text.slice(0, i)) + "<mark>" + esc(text.slice(i, i + query.length)) + "</mark>" + esc(text.slice(i + query.length));
+}
+
+input.addEventListener("input", async () => {
+  const q = input.value.trim().toLowerCase();
+  if (q.length < 2) { box.hidden = true; return; }
+  const data = await ensureIndex();
+  const found = [];
+  for (const d of data) {
+    const inTitle = d.title.toLowerCase().includes(q);
+    const inSum = (d.summary || "").toLowerCase().includes(q);
+    const heads = (d.heads || []).filter(h => h.toLowerCase().includes(q));
+    if (inTitle || inSum || heads.length) {
+      found.push({ d, heads, rank: inTitle ? 0 : heads.length ? 1 : 2 });
+    }
+  }
+  found.sort((a, b) => a.rank - b.rank);
+  head.textContent = found.length ? `Нашлось: ${found.length}` : "Ничего не нашлось";
+  hits.innerHTML = found.slice(0, 40).map(({ d, heads }) =>
+    `<a class="hit" href="${ROOT}/d/${d.slug}.html">
+       <b>${hi(d.title, q)}</b>
+       <span>${heads.length ? "→ " + heads.slice(0, 3).map(h => hi(h, q)).join(" · ") : esc(d.summary || "")}</span>
+     </a>`).join("");
+  box.hidden = false;
+});
+
+input.addEventListener("keydown", (e) => { if (e.key === "Escape") { input.value = ""; box.hidden = true; input.blur(); } });
+document.addEventListener("keydown", (e) => {
+  if (e.key === "/" && document.activeElement !== input) { e.preventDefault(); input.focus(); }
+});
+</script>
+</body>
+</html>

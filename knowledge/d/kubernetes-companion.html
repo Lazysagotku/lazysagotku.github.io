@@ -1,0 +1,269 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kubernetes и мониторинг серверов — живой companion-документ (базовый уровень) - База знаний</title>
+<link rel="stylesheet" href="../kb.css">
+<script>
+  // Тему ставим до первой отрисовки, иначе на тёмной системе мигает белым.
+  try {
+    var t = localStorage.getItem("kb-theme");
+    if (!t) t = matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+    document.documentElement.setAttribute("data-theme", t);
+  } catch (e) {}
+</script>
+</head>
+<body>
+
+<header class="top">
+  <div class="top-in">
+    <a class="brand" href="../index.html">База <span>знаний</span></a>
+    <span class="grow"></span>
+    <input id="q" type="search" placeholder="Поиск по всем материалам…" autocomplete="off">
+    <button class="icon-btn" id="theme" type="button" title="Тема"></button>
+  </div>
+</header>
+
+<div id="results" hidden><div class="wrap-r"><h3></h3><div id="hits"></div></div></div>
+
+<main class="wrap">
+  <div class="doc-head">
+    <div class="crumb"><a href="../index.html#companions">Спутники к собеседованиям</a></div>
+    <h1>Kubernetes и мониторинг серверов — живой companion-документ (базовый уровень)</h1>
+    <div class="meta">198 строк · источник <code>l2code/Kubernetes_Companion.md</code></div>
+  </div>
+
+  <div class="layout">
+    <article class="prose"><h2 id="metricslogstraces">Мониторинг — три опоры (metrics/logs/traces)</h2>
+<p><strong>Аналогия из жизни:</strong> приборная панель автомобиля. Метрики — спидометр и датчик температуры (текущие числовые показатели прямо сейчас). Логи — бортовой журнал поездок (что произошло и когда, событие за событием). Трейсинг — GPS-трек маршрута (путь одного конкретного запроса через несколько систем).</p>
+<p><strong>Метрики</strong> — числовые показатели во времени: CPU, память, число запросов в секунду, процент ошибок. Смотрятся на дашборде, по ним настраиваются алерты ("CPU &gt; 90% дольше 5 минут → уведомление").</p>
+<p><strong>Логи</strong> — записи событий (что произошло). Первое, куда смотрят при инциденте — <code>journalctl</code>/<code>tail -f /var/log/...</code> (уже разбирали под Спецавтобазу).</p>
+<p><strong>Трейсинг</strong> — путь одного запроса через несколько сервисов (актуально для микросервисной архитектуры) — показывает, на каком именно шаге запрос затормозил.</p>
+<p><strong>Популярные инструменты:</strong>
+- <strong>Zabbix</strong> — классический, agent-based, силён в мониторинге инфраструктуры (CPU/диск/сеть серверов).
+- <strong>Prometheus</strong> — pull-based, хранит метрики как time-series, стандарт в cloud-native/K8s мире.
+- <strong>Grafana</strong> — визуализация (дашборды), может подключаться к Prometheus, Zabbix, даже напрямую к PostgreSQL.
+- <strong>Elasticsearch (в связке ELK/EFK-стек)</strong> — третья опора, логи в МАСШТАБЕ. <code>journalctl</code>/<code>tail -f</code> (уже разбирали выше) работают для одного сервера — когда логов много и они с десятков серверов/сервисов, нужен централизованный поиск. ELK = <strong>E</strong>lasticsearch (хранит и индексирует логи — тот же движок, что разобран как поисковая БД в <code>NoSQL_Companion.md</code>) + <strong>L</strong>ogstash/Fluentd (собирает и парсит логи с источников) + <strong>K</strong>ibana (визуализация — аналог Grafana, но заточен под логи, не метрики).</p>
+<h2 id="_1">Мониторинг конкретных систем</h2>
+<p><strong>RabbitMQ и Kafka - реальный опыт есть.</strong> Через PIX Robotics: RabbitMQ настраивал внутри RPA-процессов, Kafka была привязана к личному кабинету с портфелями брокеров/инвесторов - работал на уровне подключения и мониторинга очереди (список сообщений, прохождение).</p>
+<p><strong>Что конкретно мониторят у RabbitMQ:</strong> глубина очереди (queue depth - сколько сообщений скопилось необработанными: если растёт без остановки, консьюмеры не успевают), число активных консьюмеров, неподтверждённые сообщения (unacked). Встроенный плагин <code>rabbitmq_management</code> даёт веб-дашборд и HTTP API для этих метрик "из коробки".</p>
+<p><strong>Что конкретно мониторят у Kafka:</strong> <strong>consumer lag</strong> - разрыв между последним записанным сообщением и тем, что консьюмер реально уже обработал - САМАЯ важная метрика Kafka (растущий lag = потребитель отстаёт от потока). Плюс здоровье брокеров, распределение партиций, throughput (сообщений/байт в секунду).</p>
+<p><strong>Redis - встроенный мониторинг:</strong>
+- <code>INFO</code> - память, число подключений, операций в секунду, hit/miss ratio для кэша.
+- <code>redis-cli --latency</code> - замер задержки напрямую.
+- <code>MONITOR</code> - поток команд в реальном времени (осторожно в проде - нагружает сам сервер).</p>
+<p><strong>PostgreSQL - внутренний мониторинг без внешних инструментов:</strong>
+- <code>pg_stat_activity</code> - какие запросы выполняются прямо сейчас, кем, как долго.
+- <code>pg_stat_statements</code> (расширение) - агрегированная статистика по ВСЕМ выполненным запросам за время работы - находит самые тяжёлые запросы без внешнего APM.
+- <code>pg_stat_user_tables</code> - Seq Scan vs Index Scan по каждой таблице, число "мёртвых" строк (сигнал, что пора <code>VACUUM</code>).
+- <code>pg_stat_database</code> - коммиты/роллбэки/hit ratio кэша на уровне базы целиком.</p>
+<p><strong>Q&amp;A:</strong>
+- Zabbix vs Prometheus — в чём разница подхода? → Zabbix обычно опрашивает агенты сам (push от агента или pull от сервера, гибко), Prometheus типично сам "стучится" (pull) на <code>/metrics</code>-эндпоинт приложения по расписанию.
+- Что такое alert fatigue? → слишком много алертов на несущественные вещи — люди начинают их игнорировать, и по-настоящему важный алерт теряется в шуме.</p>
+<hr>
+<h2 id="_2">Диагностика "сервер не работает" — структурный подход</h2>
+<p><strong>Порядок проверки (от внешнего к внутреннему):</strong>
+1. <strong>Сеть доступна?</strong> → <code>ping &lt;host&gt;</code>, <code>curl -I &lt;url&gt;</code> — отвечает ли сервер вообще.
+2. <strong>Сервис запущен?</strong> → <code>systemctl status &lt;service&gt;</code> — процесс жив или упал.
+3. <strong>Ресурсы не исчерпаны?</strong> → <code>top</code>/<code>htop</code> (CPU/память), <code>df -h</code> (место на диске — забитый диск роняет сервисы неочевидным образом).
+4. <strong>Что говорят логи?</strong> → <code>journalctl -u &lt;service&gt;</code> / <code>tail -f /var/log/...</code> — что произошло непосредственно ПЕРЕД сбоем.</p>
+<p>Такой порядок — от "видно ли сервер вообще" к "что конкретно внутри сломалось" — стандартная логика диагностики, которую ждут от support-инженера.</p>
+<hr>
+<blockquote>
+<p>Как остальные companion-файлы — пополняется по ходу. Уровень намеренно "базовое понимание" — именно так K8s указан почти во всех вакансиях, которые встречались (МТС, рыночный анализ Middle C#/.NET: "чаще плюс, не жёсткое требование"). Не курс по администрированию кластеров.</p>
+</blockquote>
+<hr>
+<h2 id="kubernetes">Зачем вообще нужен Kubernetes</h2>
+<p><strong>Аналогия из жизни:</strong> Kubernetes — как автоматизированный логист склада. Без него: если один грузчик (сервер) заболел, никто не заметит, что заказы (запросы) перестали обрабатываться. С K8s: система сама следит, сколько "грузчиков" реально работает, автоматически нанимает нового взамен заболевшего, и может временно нанять больше людей в пиковый сезон (авто-масштабирование).</p>
+<p><strong>Суть:</strong> K8s — оркестратор контейнеров. Он не заменяет Docker (контейнеры всё ещё Docker/containerd), а управляет ИМИ: где запустить, сколько копий держать, что делать при падении, как балансировать трафик между копиями.</p>
+<hr>
+<h2 id="_3">Базовые понятия</h2>
+<p><strong>Container (контейнер) vs виртуальная машина:</strong>
+- VM — полноценная копия ОС внутри другой ОС, тяжёлая (гигабайты), своё ядро.
+- Container — использует ЯДРО ХОСТА, изолирует только процесс/файловую систему — легче (мегабайты), быстрее стартует.</p>
+<p><strong>Pod</strong> — минимальная единица развёртывания в K8s. Обычно один под = один контейнер (иногда несколько тесно связанных). Поды — временные (эфемерные): K8s может в любой момент убить под и создать новый вместо него — поэтому нельзя хранить важные данные ВНУТРИ пода.</p>
+<p><strong>Deployment</strong> — описывает, СКОЛЬКО копий пода (реплик) должно работать одновременно и как их обновлять (rolling update — по одной копии за раз, без простоя).</p>
+<p><strong>Service</strong> — стабильный "адрес" для доступа к подам, которые постоянно пересоздаются с новыми IP. Service — как стабильный номер телефона колл-центра: конкретный сотрудник (под), который ответит, может меняться, но номер (Service) остаётся тем же.</p>
+<p><strong>ReplicaSet</strong> — следит, чтобы всегда работало ЗАДАННОЕ число подов (обычно управляется через Deployment, напрямую редко трогают).</p>
+<p><strong>Namespace</strong> — логическая "перегородка" внутри кластера — разделяет ресурсы разных команд/окружений (dev/staging/prod) в одном кластере.</p>
+<hr>
+<h2 id="-control-plane-data-plane">Архитектура кластера - Control Plane и Data Plane</h2>
+<p><strong>Аналогия из жизни:</strong> оркестр. Каждый музыкант (под с контейнером) сосредоточен только на своей партии и не видит картину целиком. Дирижёр (Control Plane) слушает весь оркестр, смотрит партитуру (желаемое состояние) и следит, чтобы всё звучало слаженно - если виолончелист сломал смычок (упал под), дирижёр обеспечивает, чтобы кто-то тут же подхватил партию (Auto-heal), а на кульминации подключает всех разом, когда нужна полная мощь (Auto-scale).</p>
+<p><strong>Кластер</strong> - объединение серверов для совместной работы. <strong>Нода (node)</strong> - один сервер внутри кластера. Ноды делятся на два типа:</p>
+<ul>
+<li><strong>Master-нода (Control Plane)</strong> - "мозг" кластера, управляет остальными нодами.</li>
+<li><strong>Worker-нода (Data Plane)</strong> - "рабочая лошадка", на ней реально крутятся контейнеры приложения.</li>
+</ul>
+<h3 id="master-">Master-нода - из чего состоит</h3>
+<ul>
+<li><strong>API Server</strong> - точка входа для ЛЮБОГО взаимодействия с кластером (включая <code>kubectl</code>) - все запросы идут через него.</li>
+<li><strong>Controller Manager</strong> - следит за состоянием кластера. Ключевая идея всего Kubernetes: есть <strong>desired state</strong> (желаемое состояние - как всё должно работать, задаётся конфигом) и <strong>current state</strong> (текущее реальное состояние). Задача Controller Manager - постоянно приводить текущее состояние к желаемому (например, было указано 3 реплики пода - одна упала - контроллер поднимает новую взамен).</li>
+<li><strong>Scheduler</strong> - решает, НА КАКУЮ ноду поставить новый под, с учётом загруженности нод и доступных ресурсов.</li>
+<li><strong>etcd</strong> - распределённое key-value хранилище, где лежит всё состояние кластера (конфиги, статусы нод и подов). При сбое именно отсюда кластер восстанавливает картину происходящего.</li>
+</ul>
+<p>Мастер-нода критична для управления кластером, поэтому в продакшне обычно держат несколько master-нод для отказоустойчивости (одна не переживёт сбоя - всегда нужен резерв).</p>
+<blockquote>
+<p>[!info]+ Терминология
+Официальная документация Kubernetes постепенно уходит от термина "master" в пользу "control plane node" - смысл тот же, но если встретишь оба термина (в старых материалах чаще "master", в новых - "control plane"), это не разные вещи.</p>
+</blockquote>
+<h3 id="worker-">Worker-нода - из чего состоит</h3>
+<ul>
+<li><strong>kubelet</strong> - агент на каждой worker-ноде, общается с master и следит, чтобы на этой конкретной ноде реально работало то, что было предписано.</li>
+<li><strong>Container runtime</strong> - непосредственно запускает/останавливает контейнеры, управляет их образами и ресурсами (containerd/CRI-O/Docker - см. выше).</li>
+<li><strong>kube-proxy</strong> - сетевая часть: коммуникация между подами и балансировка нагрузки внутри кластера.</li>
+</ul>
+<h3 id="pod-service-">Под (Pod) и Service - что нового к уже разобранному выше</h3>
+<p>Каждому поду при создании выдаётся собственный IP-адрес. Но поды эфемерны - под может пересоздаться (например, если его нода "прилегла"), и при пересоздании IP МЕНЯЕТСЯ. Именно поэтому нужен <strong>Service</strong> - он даёт группе подов ОДИН стабильный IP и сам распределяет запросы между реально живыми подами прямо сейчас (балансировка нагрузки).</p>
+<h3 id="yaml">Декларативный конфиг (YAML)</h3>
+<p>Настройка кластера идёт через запрос к API Server с файлом конфигурации, обычно в формате <strong>YAML</strong>, описанным в <strong>декларативном стиле</strong> - мы описываем не последовательность действий, а то, каким должно быть конечное состояние, а Controller Manager сам приводит систему к этому состоянию.</p>
+<p>Пример конфига для <strong>Deployment</strong> (шаблон, по которому создаются поды):</p>
+<pre><code class="language-yaml">apiVersion: apps/v1
+kind: Deployment
+spec:
+  replicas: 3
+  template:
+    spec:
+      containers:
+        - image: nginx
+</code></pre>
+<p><code>replicas: 3</code> - желаемое состояние "всегда 3 пода". Если один упадёт, Deployment-контроллер (часть Controller Manager) увидит расхождение с desired state и поднимет новый под взамен.</p>
+<hr>
+<h2 id="kubernetes-runtime">Kubernetes - альтернативы и совместимые runtime (уточнение)</h2>
+<p>Источник видео перечисляет как "альтернативы Kubernetes" сразу Docker Swarm, HashiCorp Nomad, AWS Fargate и RedHat OpenShift - два последних пункта не совсем корректно поставлены в один ряд:</p>
+<ul>
+<li><strong>Docker Swarm</strong> и <strong>HashiCorp Nomad</strong> - действительно самостоятельные оркестраторы-конкуренты Kubernetes. Корректная пара для сравнения.</li>
+<li><strong>AWS Fargate</strong> - это НЕ оркестратор, а serverless-движок для запуска контейнеров без управления серверами - работает ПОД капотом у ECS или EKS (управляемого Kubernetes от AWS), а не вместо них. Реальный аналог Kubernetes от AWS - это <strong>ECS</strong> (Elastic Container Service).</li>
+<li><strong>RedHat OpenShift</strong> - не альтернатива Kubernetes, а дистрибутив/платформа НА БАЗЕ Kubernetes (с добавленными enterprise-инструментами) - как Ubuntu не альтернатива ядру Linux, а дистрибутив на его основе.</li>
+</ul>
+<hr>
+<h2 id="k8s">Откуда взялось "k8s"</h2>
+<p><strong>k8s</strong> - численоним (numeronym): K, затем число букв между K и s в слове "kubernetes" (u-b-e-r-n-e-t-e-s - ровно 8 букв), затем s. Тот же принцип, что в "i18n" (internationalization) или "a11y" (accessibility). Условность прижилась в сообществе Kubernetes/Google с самого открытия проекта (2014) - не единоличное "изобретение" одного человека, а стандартная для инженерного сообщества практика сокращения длинных слов.</p>
+<hr>
+<h2 id="kubectl">Базовые команды kubectl</h2>
+<pre><code class="language-bash">kubectl get pods              # список подов
+kubectl get pods -o wide      # с доп. деталями (нода, IP)
+kubectl describe pod &lt;имя&gt;    # подробности + события (полезно для диагностики)
+kubectl logs &lt;имя-пода&gt;       # логи контейнера — первое, что смотришь при инциденте
+kubectl exec -it &lt;под&gt; -- bash # зайти внутрь контейнера
+kubectl get deployments
+kubectl rollout restart deployment &lt;имя&gt;  # перезапустить (rolling, без простоя)
+</code></pre>
+<hr>
+<h2 id="docker-vs-containerd-k8s-docker">Docker vs containerd — есть ли K8s = обязательно Docker?</h2>
+<p><strong>Нет, не обязательно буквально.</strong> С версии 1.24 (2022) Kubernetes убрал встроенную поддержку Docker (dockershim) — общается с контейнерами через CRI (Container Runtime Interface), и большинство кластеров сегодня используют <strong>containerd</strong> или <strong>CRI-O</strong> напрямую, без Docker Engine.</p>
+<p><strong>Важная деталь:</strong> containerd изначально был ЧАСТЬЮ Docker (Docker Engine сам внутри использует containerd) — K8s не отказался от "контейнеров", а убрал лишний промежуточный слой самого Docker Engine.</p>
+<p><strong>Практическое следствие:</strong> образы, собранные через <code>docker build</code>, всё равно работают в K8s — все следуют общему стандарту OCI (Open Container Initiative). Разработчики почти наверняка используют Docker локально для сборки, даже если прод-кластер бежит на containerd напрямую.</p>
+<p><strong>Честный ответ на собесе, если спросят "у вас же Docker раз K8s":</strong> "Docker-образы почти наверняка используются для сборки, но какой именно runtime в проде — Docker Engine или containerd напрямую — лучше уточнить, не буду предполагать."</p>
+<hr>
+<h2 id="qa">Q&amp;A</h2>
+<p><strong>Q: Чем под отличается от контейнера?</strong>
+A: Под — обёртка вокруг одного (или нескольких тесно связанных) контейнеров, это единица, которой управляет K8s. Обычно 1 под = 1 контейнер приложения.</p>
+<p><strong>Q: Что делать, если под "упал" (CrashLoopBackOff)?</strong>
+A: <code>kubectl logs &lt;под&gt;</code> — посмотреть логи ПЕРЕД падением, <code>kubectl describe pod</code> — посмотреть события (например нехватка памяти, неправильный health-check).</p>
+<p><strong>Q: Зачем нужен Service, если есть под?</strong>
+A: У подов IP-адрес меняется при каждом пересоздании — Service даёт стабильную точку входа, которая сама находит актуальные поды.</p>
+<p><strong>Q: Что такое health-check (liveness/readiness probe)?</strong>
+A: Способ K8s узнать, жив ли под и готов ли принимать трафик. Liveness — "жив ли контейнер вообще" (если нет — перезапуск). Readiness — "готов ли принимать запросы прямо сейчас" (если нет — временно убрать из Service, не перезапускать).</p>
+<hr>
+<h2 id="_4">Другие темы</h2>
+<p><em>(Пополняется по ходу — как появится следующий гэп, добавлю теорию + пример.)</em></p></article>
+    <aside class="aside">
+      <strong>В этом документе</strong>
+      <div class="toc"><div class="toc">
+<ul>
+<li><a href="#metricslogstraces">Мониторинг — три опоры (metrics/logs/traces)</a></li>
+<li><a href="#_1">Мониторинг конкретных систем</a></li>
+<li><a href="#_2">Диагностика "сервер не работает" — структурный подход</a></li>
+<li><a href="#kubernetes">Зачем вообще нужен Kubernetes</a></li>
+<li><a href="#_3">Базовые понятия</a></li>
+<li><a href="#-control-plane-data-plane">Архитектура кластера - Control Plane и Data Plane</a><ul>
+<li><a href="#master-">Master-нода - из чего состоит</a></li>
+<li><a href="#worker-">Worker-нода - из чего состоит</a></li>
+<li><a href="#pod-service-">Под (Pod) и Service - что нового к уже разобранному выше</a></li>
+<li><a href="#yaml">Декларативный конфиг (YAML)</a></li>
+</ul>
+</li>
+<li><a href="#kubernetes-runtime">Kubernetes - альтернативы и совместимые runtime (уточнение)</a></li>
+<li><a href="#k8s">Откуда взялось "k8s"</a></li>
+<li><a href="#kubectl">Базовые команды kubectl</a></li>
+<li><a href="#docker-vs-containerd-k8s-docker">Docker vs containerd — есть ли K8s = обязательно Docker?</a></li>
+<li><a href="#qa">Q&amp;A</a></li>
+<li><a href="#_4">Другие темы</a></li>
+</ul>
+</div>
+</div>
+    </aside>
+  </div>
+</main>
+
+
+<script>
+const ROOT = "..";
+
+// ---- тема
+const themeBtn = document.getElementById("theme");
+const paint = () => {
+  const dark = document.documentElement.getAttribute("data-theme") === "dark";
+  themeBtn.textContent = dark ? "☀" : "☾";
+};
+paint();
+themeBtn.addEventListener("click", () => {
+  const next = document.documentElement.getAttribute("data-theme") === "dark" ? "light" : "dark";
+  document.documentElement.setAttribute("data-theme", next);
+  try { localStorage.setItem("kb-theme", next); } catch (e) {}
+  paint();
+});
+
+// ---- поиск
+let index = null;
+const box = document.getElementById("results");
+const hits = document.getElementById("hits");
+const head = box.querySelector("h3");
+const input = document.getElementById("q");
+
+async function ensureIndex() {
+  if (index) return index;
+  const res = await fetch(ROOT + "/search-index.json");
+  index = await res.json();
+  return index;
+}
+
+const esc = (s) => (s || "").replace(/[&<>]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
+
+function hi(text, query) {
+  const i = text.toLowerCase().indexOf(query);
+  if (i < 0) return esc(text);
+  return esc(text.slice(0, i)) + "<mark>" + esc(text.slice(i, i + query.length)) + "</mark>" + esc(text.slice(i + query.length));
+}
+
+input.addEventListener("input", async () => {
+  const q = input.value.trim().toLowerCase();
+  if (q.length < 2) { box.hidden = true; return; }
+  const data = await ensureIndex();
+  const found = [];
+  for (const d of data) {
+    const inTitle = d.title.toLowerCase().includes(q);
+    const inSum = (d.summary || "").toLowerCase().includes(q);
+    const heads = (d.heads || []).filter(h => h.toLowerCase().includes(q));
+    if (inTitle || inSum || heads.length) {
+      found.push({ d, heads, rank: inTitle ? 0 : heads.length ? 1 : 2 });
+    }
+  }
+  found.sort((a, b) => a.rank - b.rank);
+  head.textContent = found.length ? `Нашлось: ${found.length}` : "Ничего не нашлось";
+  hits.innerHTML = found.slice(0, 40).map(({ d, heads }) =>
+    `<a class="hit" href="${ROOT}/d/${d.slug}.html">
+       <b>${hi(d.title, q)}</b>
+       <span>${heads.length ? "→ " + heads.slice(0, 3).map(h => hi(h, q)).join(" · ") : esc(d.summary || "")}</span>
+     </a>`).join("");
+  box.hidden = false;
+});
+
+input.addEventListener("keydown", (e) => { if (e.key === "Escape") { input.value = ""; box.hidden = true; input.blur(); } });
+document.addEventListener("keydown", (e) => {
+  if (e.key === "/" && document.activeElement !== input) { e.preventDefault(); input.focus(); }
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,278 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Переезд проектов на свой сервер - База знаний</title>
+<link rel="stylesheet" href="../kb.css">
+<script>
+  // Тему ставим до первой отрисовки, иначе на тёмной системе мигает белым.
+  try {
+    var t = localStorage.getItem("kb-theme");
+    if (!t) t = matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+    document.documentElement.setAttribute("data-theme", t);
+  } catch (e) {}
+</script>
+</head>
+<body>
+
+<header class="top">
+  <div class="top-in">
+    <a class="brand" href="../index.html">База <span>знаний</span></a>
+    <span class="grow"></span>
+    <input id="q" type="search" placeholder="Поиск по всем материалам…" autocomplete="off">
+    <button class="icon-btn" id="theme" type="button" title="Тема"></button>
+  </div>
+</header>
+
+<div id="results" hidden><div class="wrap-r"><h3></h3><div id="hits"></div></div></div>
+
+<main class="wrap">
+  <div class="doc-head">
+    <div class="crumb"><a href="../index.html#reference">Справочники</a></div>
+    <h1>Переезд проектов на свой сервер</h1>
+    <div class="meta">120 строк · источник <code>l2code/Server_Migration_Plan.md</code></div>
+  </div>
+
+  <div class="layout">
+    <article class="prose"><p><strong>Дата:</strong> 2 сентября 2026
+<strong>Повод:</strong> сейчас всё живое крутится на <code>localhost</code> и видно только с одной машины. Портфолио на GitHub Pages умеет отдавать статику, но не умеет запускать бэкенд.</p>
+<hr>
+<h2 id="_1">Что где живёт сейчас</h2>
+<table>
+<thead>
+<tr>
+<th>Проект</th>
+<th>Где</th>
+<th>Видно снаружи</th>
+<th>Чего не хватает</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Портфолио</td>
+<td>GitHub Pages</td>
+<td>✅</td>
+<td>ничего, статика ему подходит</td>
+</tr>
+<tr>
+<td>Роадмапы, страницы проектов</td>
+<td>GitHub Pages</td>
+<td>✅</td>
+<td>ничего</td>
+</tr>
+<tr>
+<td>База знаний (публичная)</td>
+<td>GitHub Pages</td>
+<td>✅</td>
+<td>ничего</td>
+</tr>
+<tr>
+<td><strong>Трекер откликов</strong></td>
+<td>localhost:8000</td>
+<td>❌</td>
+<td>нужен процесс и база</td>
+</tr>
+<tr>
+<td><strong>Разведчик вакансий</strong></td>
+<td>localhost:8100</td>
+<td>❌</td>
+<td>нужен процесс, база и браузер</td>
+</tr>
+<tr>
+<td><strong>База знаний (полная)</strong></td>
+<td>localhost:8200</td>
+<td>❌</td>
+<td>закрытый доступ</td>
+</tr>
+<tr>
+<td><strong>Телефонная галерея</strong></td>
+<td>localhost:8201</td>
+<td>❌</td>
+<td>закрытый доступ, 300 МБ медиа</td>
+</tr>
+</tbody>
+</table>
+<p>Разделение простое: <strong>статика уходит на Pages, живые сервисы просятся на сервер.</strong></p>
+<hr>
+<h2 id="_2">Что даёт переезд</h2>
+<p><strong>Работодателю можно дать ссылку.</strong> Сейчас в резюме стоят страницы со скриншотами. После переезда рядом встанет «откройте и потыкайте» - это разный вес на собеседовании по инфраструктуре.</p>
+<p><strong>Стенд перестаёт быть учебным.</strong> Kubernetes из роадмапа поднимается не ради упражнения, а под собственные сервисы, которые уже работают. На вопрос «что вы разворачивали» появляется ответ из своей практики.</p>
+<p><strong>Телефон получает доступ.</strong> База знаний и галерея открываются откуда угодно, а не только с домашней машины.</p>
+<hr>
+<h2 id="_3">Порядок переезда, привязанный к слоям роадмапа</h2>
+<p>Отдельного проекта тут нет: переезд встроен в те же слои, которые и так проходим.</p>
+<h3 id="0-1-nginx">Слой 0-1: сервер и nginx → едет статика</h3>
+<p>Первое, что ставится на сервер после Docker и nginx с сертификатом - <strong>база знаний и галерея</strong>. Это просто папки со статикой, им нужен только веб-сервер.</p>
+<pre><code>kb.домен.ru       → полная база знаний
+gallery.домен.ru  → телефонная галерея
+</code></pre>
+<p>⚠️ <strong>Обе закрываются паролем.</strong> В базе знаний лежат вилки и переписка с работодателями, в галерее - платежи и ставки. Basic-аутентификация в nginx делается одной директивой, этого достаточно:</p>
+<pre><code class="language-nginx">auth_basic &quot;Закрыто&quot;;
+auth_basic_user_file /etc/nginx/.htpasswd;
+</code></pre>
+<h3 id="2-cicd">Слой 2: CI/CD → сборка сама</h3>
+<p>Пайплайн на gitlab.com: коммит в заметки запускает <code>build.py</code>, готовый сайт уезжает на сервер. Пересобирать руками больше не нужно.</p>
+<p>Это первый по-настоящему полезный пайплайн: он решает реальную задачу, а не собирает hello-world ради галочки.</p>
+<h3 id="3">Слой 3: мониторинг → метрики своих сервисов</h3>
+<p>Prometheus и Grafana смотрят не на абстрактный тестовый сервис, а на трекер и разведчика: живы ли, сколько отвечают, сколько занимают. Дашборд с собственными сервисами показывать интереснее, чем пример из документации.</p>
+<h3 id="4-kubernetes">Слой 4: Kubernetes → трекер и разведчик</h3>
+<p>Самый ценный шаг. Оба сервиса упаковываются в образы и уезжают в k3s:</p>
+<ul>
+<li>у трекера база - PostgreSQL, значит нужен PersistentVolume, а это ровно та тема из вопросов с собеседований;</li>
+<li>у разведчика внутри браузер Playwright, значит образ тяжёлый и нужны requests/limits - вторая тема оттуда же;</li>
+<li>ingress выпускает оба наружу по своим адресам.</li>
+</ul>
+<p>После этого слоя фраза «разворачивал в Kubernetes» перестаёт быть теорией.</p>
+<hr>
+<h2 id="_4">Что переезжать не надо</h2>
+<p><strong>Разведчик вакансий - под вопросом.</strong> Ему нужен браузер с живой сессией hh, а сессия привязана к профилю на диске. На сервере это либо не заработает, либо потребует прокидывать туда куки. Разумнее оставить сбор на домашней машине, а на сервер отправить только веб-интерфейс с базой находок.</p>
+<p><strong>Медиа галереи - 300 МБ.</strong> На диске в 50 ГБ это не проблема, но при первой же выкатке через пайплайн станет ясно, что гонять их каждый раз глупо. Решение: медиа заливаются один раз, пайплайн обновляет только HTML и <code>data.json</code>.</p>
+<hr>
+<h2 id="_5">Домены</h2>
+<p>Одного домена достаточно, поддомены бесплатны:</p>
+<pre><code>арх-домен.ru            → портфолио (или остаётся на Pages)
+kb.арх-домен.ru         → база знаний
+gallery.арх-домен.ru    → галерея
+tracker.арх-домен.ru    → трекер откликов
+grafana.арх-домен.ru    → мониторинг
+</code></pre>
+<p>Сертификат один, wildcard - Let's Encrypt выдаёт его через DNS-проверку.</p>
+<hr>
+<h2 id="_6">Сколько это стоит по времени</h2>
+<p>Переезд не отдельная работа: он выполняется внутри слоёв, которые и так в плане.</p>
+<table>
+<thead>
+<tr>
+<th>Шаг</th>
+<th>Внутри какого слоя</th>
+<th>Добавляет</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Статика за nginx с паролем</td>
+<td>слой 1</td>
+<td>+30 минут</td>
+</tr>
+<tr>
+<td>Пайплайн сборки заметок</td>
+<td>слой 2</td>
+<td>+40 минут</td>
+</tr>
+<tr>
+<td>Метрики своих сервисов</td>
+<td>слой 3</td>
+<td>+30 минут</td>
+</tr>
+<tr>
+<td>Трекер в k3s</td>
+<td>слой 4</td>
+<td>+1.5 часа</td>
+</tr>
+</tbody>
+</table>
+<p>Итого около трёх часов сверх плана - и в конце все проекты живут на своём сервере, а не на localhost.</p>
+<h2 id="_7">Порядок, если коротко</h2>
+<ol>
+<li>Купить VPS и домен (день 1, см. <code>VPS_Choice.md</code>).</li>
+<li>Слой 1 - выложить базу знаний и галерею за паролем.</li>
+<li>Слой 2 - научить пайплайн пересобирать их самому.</li>
+<li>Слой 3 - завести мониторинг на собственные сервисы.</li>
+<li>Слой 4 - трекер в кластер, ingress наружу.</li>
+<li>Обновить резюме: заменить «страница со скриншотами» на живые ссылки.</li>
+</ol></article>
+    <aside class="aside">
+      <strong>В этом документе</strong>
+      <div class="toc"><div class="toc">
+<ul>
+<li><a href="#_1">Что где живёт сейчас</a></li>
+<li><a href="#_2">Что даёт переезд</a></li>
+<li><a href="#_3">Порядок переезда, привязанный к слоям роадмапа</a><ul>
+<li><a href="#0-1-nginx">Слой 0-1: сервер и nginx → едет статика</a></li>
+<li><a href="#2-cicd">Слой 2: CI/CD → сборка сама</a></li>
+<li><a href="#3">Слой 3: мониторинг → метрики своих сервисов</a></li>
+<li><a href="#4-kubernetes">Слой 4: Kubernetes → трекер и разведчик</a></li>
+</ul>
+</li>
+<li><a href="#_4">Что переезжать не надо</a></li>
+<li><a href="#_5">Домены</a></li>
+<li><a href="#_6">Сколько это стоит по времени</a></li>
+<li><a href="#_7">Порядок, если коротко</a></li>
+</ul>
+</div>
+</div>
+    </aside>
+  </div>
+</main>
+
+
+<script>
+const ROOT = "..";
+
+// ---- тема
+const themeBtn = document.getElementById("theme");
+const paint = () => {
+  const dark = document.documentElement.getAttribute("data-theme") === "dark";
+  themeBtn.textContent = dark ? "☀" : "☾";
+};
+paint();
+themeBtn.addEventListener("click", () => {
+  const next = document.documentElement.getAttribute("data-theme") === "dark" ? "light" : "dark";
+  document.documentElement.setAttribute("data-theme", next);
+  try { localStorage.setItem("kb-theme", next); } catch (e) {}
+  paint();
+});
+
+// ---- поиск
+let index = null;
+const box = document.getElementById("results");
+const hits = document.getElementById("hits");
+const head = box.querySelector("h3");
+const input = document.getElementById("q");
+
+async function ensureIndex() {
+  if (index) return index;
+  const res = await fetch(ROOT + "/search-index.json");
+  index = await res.json();
+  return index;
+}
+
+const esc = (s) => (s || "").replace(/[&<>]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
+
+function hi(text, query) {
+  const i = text.toLowerCase().indexOf(query);
+  if (i < 0) return esc(text);
+  return esc(text.slice(0, i)) + "<mark>" + esc(text.slice(i, i + query.length)) + "</mark>" + esc(text.slice(i + query.length));
+}
+
+input.addEventListener("input", async () => {
+  const q = input.value.trim().toLowerCase();
+  if (q.length < 2) { box.hidden = true; return; }
+  const data = await ensureIndex();
+  const found = [];
+  for (const d of data) {
+    const inTitle = d.title.toLowerCase().includes(q);
+    const inSum = (d.summary || "").toLowerCase().includes(q);
+    const heads = (d.heads || []).filter(h => h.toLowerCase().includes(q));
+    if (inTitle || inSum || heads.length) {
+      found.push({ d, heads, rank: inTitle ? 0 : heads.length ? 1 : 2 });
+    }
+  }
+  found.sort((a, b) => a.rank - b.rank);
+  head.textContent = found.length ? `Нашлось: ${found.length}` : "Ничего не нашлось";
+  hits.innerHTML = found.slice(0, 40).map(({ d, heads }) =>
+    `<a class="hit" href="${ROOT}/d/${d.slug}.html">
+       <b>${hi(d.title, q)}</b>
+       <span>${heads.length ? "→ " + heads.slice(0, 3).map(h => hi(h, q)).join(" · ") : esc(d.summary || "")}</span>
+     </a>`).join("");
+  box.hidden = false;
+});
+
+input.addEventListener("keydown", (e) => { if (e.key === "Escape") { input.value = ""; box.hidden = true; input.blur(); } });
+document.addEventListener("keydown", (e) => {
+  if (e.key === "/" && document.activeElement !== input) { e.preventDefault(); input.focus(); }
+});
+</script>
+</body>
+</html>

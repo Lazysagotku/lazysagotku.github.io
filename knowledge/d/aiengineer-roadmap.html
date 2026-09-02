@@ -1,0 +1,263 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>🗺️ AI Product Engineer Roadmap - База знаний</title>
+<link rel="stylesheet" href="../kb.css">
+<script>
+  // Тему ставим до первой отрисовки, иначе на тёмной системе мигает белым.
+  try {
+    var t = localStorage.getItem("kb-theme");
+    if (!t) t = matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+    document.documentElement.setAttribute("data-theme", t);
+  } catch (e) {}
+</script>
+</head>
+<body>
+
+<header class="top">
+  <div class="top-in">
+    <a class="brand" href="../index.html">База <span>знаний</span></a>
+    <span class="grow"></span>
+    <input id="q" type="search" placeholder="Поиск по всем материалам…" autocomplete="off">
+    <button class="icon-btn" id="theme" type="button" title="Тема"></button>
+  </div>
+</header>
+
+<div id="results" hidden><div class="wrap-r"><h3></h3><div id="hits"></div></div></div>
+
+<main class="wrap">
+  <div class="doc-head">
+    <div class="crumb"><a href="../index.html#roadmaps">Роадмапы</a></div>
+    <h1>🗺️ AI Product Engineer Roadmap</h1>
+    <div class="meta">115 строк · источник <code>l2code/AIEngineer_Roadmap.md</code></div>
+  </div>
+
+  <div class="layout">
+    <article class="prose"><blockquote>
+<p>💤 <strong>СПЯЩИЙ план — Tier 2, двойное условие активации: не раньше сентября 2026 И после трудоустройства.</strong> До этого — ноль обязательных часов, файл существует для просмотра "в перерывах".
+Отличие от классического ML/Data Science трека: здесь не про обучение моделей, а про встраивание готовых LLM в реальные продукты — инженерия вокруг модели, не внутри неё.
+<strong>Стратегическое преимущество:</strong> C# backend + Python + практический ежедневный опыт работы с Claude — редкое сочетание, большинство AI-инженеров не имеют production backend бэкграунда.</p>
+</blockquote>
+<hr>
+<h2 id="_1">📊 Статус</h2>
+<ul>
+<li>[ ] Фаза 1 — Фундамент LLM (концептуально, без матчасти)</li>
+<li>[ ] Фаза 2 — Работа с LLM API</li>
+<li>[ ] Фаза 3 — RAG (Retrieval Augmented Generation)</li>
+<li>[ ] Фаза 4 — Агенты и MCP</li>
+<li>[ ] Фаза 5 — Продакшен AI-инженерия</li>
+<li>[ ] Фаза 6 — Прикладной проект</li>
+</ul>
+<p><strong>Уже есть предпосылки (не с нуля):</strong> REST API — знаешь; PostgreSQL — уверенно (прямой мост к pgvector, Фаза 3); ежедневная практика работы с Claude Code — уже реальный, а не гипотетический опыт промпт-инжиниринга.</p>
+<hr>
+<h2 id="1-llm">🔵 Фаза 1 — Фундамент LLM</h2>
+<blockquote>
+<p>Цель: понимать, с чем работаешь, не как с чёрным ящиком</p>
+</blockquote>
+<h3 id="_2">Темы</h3>
+<ul>
+<li>[ ] 1.1 Как устроены токены — почему модель "не считает буквы в слове", context window как реальное ограничение</li>
+<li>[ ] 1.2 Роли в диалоге — system/user/assistant, зачем system prompt отдельно</li>
+<li>[ ] 1.3 Temperature, top-p — что реально меняют в поведении модели</li>
+<li>[ ] 1.4 Промпт-инжиниринг — структура хорошего промпта, few-shot vs zero-shot</li>
+<li>[ ] 1.5 Где модель "галлюцинирует" и почему — не баг, а свойство архитектуры (важно для честного объяснения на собесе)</li>
+</ul>
+<h3 id="_3">🎯 Итоговое задание</h3>
+<p>Написать короткий разбор (для себя, не для публикации): 5 промптов, которые ты уже интуитивно писал хорошо в работе с Claude Code — разложить, ПОЧЕМУ они сработали, в терминах фазы 1.</p>
+<hr>
+<h2 id="2-llm-api">🟢 Фаза 2 — Работа с LLM API</h2>
+<blockquote>
+<p>Цель: уметь встроить вызов модели в реальный код, не только в чат</p>
+</blockquote>
+<h3 id="_4">Темы</h3>
+<ul>
+<li>[ ] 2.1 Claude API / OpenAI API — базовый вызов, структура ответа</li>
+<li>[ ] 2.2 Streaming — <code>IAsyncEnumerable&lt;T&gt;</code> в C# SDK (прямая связь с уже пройденным Phase1 §1.8)</li>
+<li>[ ] 2.3 Tool use / function calling — как модель "вызывает" твой код</li>
+<li>[ ] 2.4 Structured outputs — заставить модель вернуть валидный JSON под твою схему</li>
+<li>[ ] 2.5 Управление стоимостью — токены на вход/выход, кэширование промптов</li>
+<li>[ ] 2.6 Обработка ошибок API — rate limits, retry-логика (прямой мост к Polly, C#-роадмап §9.9)</li>
+</ul>
+<h3 id="_5">🎯 Итоговое задание</h3>
+<p>Консольное приложение на C#, вызывающее Claude API: отправляет вопрос, стримит ответ токен-за-токеном в консоль, корректно обрабатывает CancellationToken (мост к Phase3_Advanced.md §3.4).</p>
+<hr>
+<h2 id="3-rag-retrieval-augmented-generation">🟡 Фаза 3 — RAG (Retrieval Augmented Generation)</h2>
+<blockquote>
+<p>Цель: научить модель отвечать по ТВОИМ данным, не только по тому, что она "помнит"
+<strong>Прямой мост — PostgreSQL уже уверенно.</strong></p>
+</blockquote>
+<h3 id="_6">Темы</h3>
+<ul>
+<li>[ ] 3.1 Эмбеддинги — что это такое, как текст превращается в вектор</li>
+<li>[ ] 3.2 pgvector — векторный поиск прямо в PostgreSQL, без отдельной векторной БД</li>
+<li>[ ] 3.3 Chunking-стратегии — как правильно резать документы перед индексацией</li>
+<li>[ ] 3.4 Гибридный поиск — векторный + полнотекстовый (мост к уже изученным GIN-индексам, PostgreSQL_Companion.md)</li>
+<li>[ ] 3.5 Оценка качества RAG — как понять, что поиск реально находит релевантное</li>
+</ul>
+<h3 id="_7">🎯 Итоговое задание</h3>
+<p>RAG поверх собственных заметок из Life Notes — на вопрос пользователя находит релевантные заметки через pgvector и передаёт их в промпт модели.</p>
+<hr>
+<h2 id="4-mcp">🟠 Фаза 4 — Агенты и MCP</h2>
+<blockquote>
+<p>Цель: не просто вызвать модель один раз, а построить цикл "думает → действует → проверяет"</p>
+</blockquote>
+<h3 id="_8">Темы</h3>
+<ul>
+<li>[ ] 4.1 ReAct loop — промпт → tool call → observe → repeat</li>
+<li>[ ] 4.2 Дизайн инструментов агента — что делает инструмент "хорошим" (чёткое имя, описание, схема параметров)</li>
+<li>[ ] 4.3 MCP (Model Context Protocol) — написать СВОЙ сервер, не только пользоваться готовыми (уже трогал как потребитель)</li>
+<li>[ ] 4.4 Многошаговое планирование — когда агенту нужно несколько шагов подряд</li>
+<li>[ ] 4.5 Human-in-the-loop — где агенту нужно подтверждение перед действием (тот же принцип, что "Human review" в вакансиях автоматизации, которые уже разбирали)</li>
+</ul>
+<h3 id="_9">🎯 Итоговое задание</h3>
+<p>Свой MCP-сервер (например поверх Life Notes API) + простой агент, который через ReAct loop находит и суммирует заметки по теме.</p>
+<hr>
+<h2 id="5-ai-">🔴 Фаза 5 — Продакшен AI-инженерия</h2>
+<blockquote>
+<p>Цель: то, что отличает демо от реального продукта</p>
+</blockquote>
+<h3 id="_10">Темы</h3>
+<ul>
+<li>[ ] 5.1 Evaluation — как систематически проверять качество ответов модели, не "на глаз"</li>
+<li>[ ] 5.2 Guardrails — защита от нежелательного ввода/вывода</li>
+<li>[ ] 5.3 Observability для AI — логирование промптов/ответов, трейсинг агентных цепочек</li>
+<li>[ ] 5.4 Версионирование промптов — промпт меняется так же, как код, нужен контроль версий</li>
+<li>[ ] 5.5 Задержка и UX — почему стриминг критичен для восприятия скорости</li>
+<li>[ ] 5.6 Semantic Kernel (C#) vs LangChain/LangGraph (Python) — выбор трека, оба языка уже есть, стоит попробовать оба</li>
+</ul>
+<h3 id="_11">🎯 Итоговое задание</h3>
+<p>Взять агента из Фазы 4, добавить логирование каждого шага цепочки (какой инструмент вызван, что вернул) — минимальная observability, не полноценный APM.</p>
+<hr>
+<h2 id="6">🏗️ Фаза 6 — Прикладной проект</h2>
+<blockquote>
+<p>Цель: не учебный пример, а фича, которая реально используется</p>
+</blockquote>
+<h3 id="_12">Темы</h3>
+<ul>
+<li>[ ] 6.1 AI-инсайты по заметке в Life Notes через Claude API — Life Notes уже готов как база</li>
+<li>[ ] 6.2 Собрать всё вместе — RAG (Фаза 3) + агент (Фаза 4) + observability (Фаза 5) в одной фиче</li>
+<li>[ ] 6.3 Rate limiting и retry на реальном трафике — Polly в действии, не в теории</li>
+</ul>
+<hr>
+<h2 id="_13">📚 Ресурсы</h2>
+<ul>
+<li><a href="https://docs.anthropic.com">docs.anthropic.com</a> — документация Claude API</li>
+<li><a href="https://modelcontextprotocol.io">modelcontextprotocol.io</a> — спецификация MCP</li>
+<li><code>SystemDesign_Companion.md</code>, <code>PostgreSQL_Companion.md</code> — уже написанные мосты (партиционирование, индексы, event-driven архитектура — всё переиспользуется здесь)</li>
+</ul>
+<hr>
+<p><em>Создано: 2026-08-18 | Статус: спящий, ждёт двойного триггера (сентябрь + трудоустройство)</em></p></article>
+    <aside class="aside">
+      <strong>В этом документе</strong>
+      <div class="toc"><div class="toc">
+<ul>
+<li><a href="#_1">📊 Статус</a></li>
+<li><a href="#1-llm">🔵 Фаза 1 — Фундамент LLM</a><ul>
+<li><a href="#_2">Темы</a></li>
+<li><a href="#_3">🎯 Итоговое задание</a></li>
+</ul>
+</li>
+<li><a href="#2-llm-api">🟢 Фаза 2 — Работа с LLM API</a><ul>
+<li><a href="#_4">Темы</a></li>
+<li><a href="#_5">🎯 Итоговое задание</a></li>
+</ul>
+</li>
+<li><a href="#3-rag-retrieval-augmented-generation">🟡 Фаза 3 — RAG (Retrieval Augmented Generation)</a><ul>
+<li><a href="#_6">Темы</a></li>
+<li><a href="#_7">🎯 Итоговое задание</a></li>
+</ul>
+</li>
+<li><a href="#4-mcp">🟠 Фаза 4 — Агенты и MCP</a><ul>
+<li><a href="#_8">Темы</a></li>
+<li><a href="#_9">🎯 Итоговое задание</a></li>
+</ul>
+</li>
+<li><a href="#5-ai-">🔴 Фаза 5 — Продакшен AI-инженерия</a><ul>
+<li><a href="#_10">Темы</a></li>
+<li><a href="#_11">🎯 Итоговое задание</a></li>
+</ul>
+</li>
+<li><a href="#6">🏗️ Фаза 6 — Прикладной проект</a><ul>
+<li><a href="#_12">Темы</a></li>
+</ul>
+</li>
+<li><a href="#_13">📚 Ресурсы</a></li>
+</ul>
+</div>
+</div>
+    </aside>
+  </div>
+</main>
+
+
+<script>
+const ROOT = "..";
+
+// ---- тема
+const themeBtn = document.getElementById("theme");
+const paint = () => {
+  const dark = document.documentElement.getAttribute("data-theme") === "dark";
+  themeBtn.textContent = dark ? "☀" : "☾";
+};
+paint();
+themeBtn.addEventListener("click", () => {
+  const next = document.documentElement.getAttribute("data-theme") === "dark" ? "light" : "dark";
+  document.documentElement.setAttribute("data-theme", next);
+  try { localStorage.setItem("kb-theme", next); } catch (e) {}
+  paint();
+});
+
+// ---- поиск
+let index = null;
+const box = document.getElementById("results");
+const hits = document.getElementById("hits");
+const head = box.querySelector("h3");
+const input = document.getElementById("q");
+
+async function ensureIndex() {
+  if (index) return index;
+  const res = await fetch(ROOT + "/search-index.json");
+  index = await res.json();
+  return index;
+}
+
+const esc = (s) => (s || "").replace(/[&<>]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
+
+function hi(text, query) {
+  const i = text.toLowerCase().indexOf(query);
+  if (i < 0) return esc(text);
+  return esc(text.slice(0, i)) + "<mark>" + esc(text.slice(i, i + query.length)) + "</mark>" + esc(text.slice(i + query.length));
+}
+
+input.addEventListener("input", async () => {
+  const q = input.value.trim().toLowerCase();
+  if (q.length < 2) { box.hidden = true; return; }
+  const data = await ensureIndex();
+  const found = [];
+  for (const d of data) {
+    const inTitle = d.title.toLowerCase().includes(q);
+    const inSum = (d.summary || "").toLowerCase().includes(q);
+    const heads = (d.heads || []).filter(h => h.toLowerCase().includes(q));
+    if (inTitle || inSum || heads.length) {
+      found.push({ d, heads, rank: inTitle ? 0 : heads.length ? 1 : 2 });
+    }
+  }
+  found.sort((a, b) => a.rank - b.rank);
+  head.textContent = found.length ? `Нашлось: ${found.length}` : "Ничего не нашлось";
+  hits.innerHTML = found.slice(0, 40).map(({ d, heads }) =>
+    `<a class="hit" href="${ROOT}/d/${d.slug}.html">
+       <b>${hi(d.title, q)}</b>
+       <span>${heads.length ? "→ " + heads.slice(0, 3).map(h => hi(h, q)).join(" · ") : esc(d.summary || "")}</span>
+     </a>`).join("");
+  box.hidden = false;
+});
+
+input.addEventListener("keydown", (e) => { if (e.key === "Escape") { input.value = ""; box.hidden = true; input.blur(); } });
+document.addEventListener("keydown", (e) => {
+  if (e.key === "/" && document.activeElement !== input) { e.preventDefault(); input.focus(); }
+});
+</script>
+</body>
+</html>

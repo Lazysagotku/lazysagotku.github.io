@@ -1,0 +1,223 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FastAPI — справка на 10 минут - База знаний</title>
+<link rel="stylesheet" href="../kb.css">
+<script>
+  // Тему ставим до первой отрисовки, иначе на тёмной системе мигает белым.
+  try {
+    var t = localStorage.getItem("kb-theme");
+    if (!t) t = matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+    document.documentElement.setAttribute("data-theme", t);
+  } catch (e) {}
+</script>
+</head>
+<body>
+
+<header class="top">
+  <div class="top-in">
+    <a class="brand" href="../index.html">База <span>знаний</span></a>
+    <span class="grow"></span>
+    <input id="q" type="search" placeholder="Поиск по всем материалам…" autocomplete="off">
+    <button class="icon-btn" id="theme" type="button" title="Тема"></button>
+  </div>
+</header>
+
+<div id="results" hidden><div class="wrap-r"><h3></h3><div id="hits"></div></div></div>
+
+<main class="wrap">
+  <div class="doc-head">
+    <div class="crumb"><a href="../index.html#reference">Справочники</a></div>
+    <h1>FastAPI — справка на 10 минут</h1>
+    <div class="meta">58 строк · источник <code>l2code/FastAPI_Reference_10min.md</code></div>
+  </div>
+
+  <div class="layout">
+    <article class="prose"><blockquote>
+<p>Теория, не практика. Специально мапится на то, что ты и так учишь в ASP.NET Core — почти всё узнаешь как знакомое, просто под другим именем.</p>
+</blockquote>
+<hr>
+<h2 id="_1">Что это</h2>
+<p>FastAPI — современный Python-фреймворк для API, построен на Starlette (ASGI, т.е. async-first) + Pydantic (валидация данных через типы). Появился в 2018, сейчас — стандарт для нового Python-backend наравне с Django.</p>
+<h2 id="flaskdjango">Чем отличается от того, что уже знаешь (Flask/Django)</h2>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>Flask</th>
+<th>Django</th>
+<th>FastAPI</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Async</td>
+<td>Опционально, не по умолчанию</td>
+<td>Традиционно sync (Django REST Framework — отдельно)</td>
+<td>Async <strong>по умолчанию</strong></td>
+</tr>
+<tr>
+<td>Валидация запросов</td>
+<td>Вручную</td>
+<td>Через сериализаторы DRF</td>
+<td>Автоматически, через типы Python</td>
+</tr>
+<tr>
+<td>Документация API</td>
+<td>Вручную (Flask-Swagger)</td>
+<td>Вручную</td>
+<td><strong>Автогенерация</strong> Swagger/OpenAPI из кода</td>
+</tr>
+<tr>
+<td>DI</td>
+<td>Нет встроенного</td>
+<td>Нет встроенного</td>
+<td>Встроенная система <code>Depends()</code></td>
+</tr>
+</tbody>
+</table>
+<h2 id="aspnet-core">Мапинг на ASP.NET Core — вот почему это должно быть легко</h2>
+<table>
+<thead>
+<tr>
+<th>ASP.NET Core (учишь сейчас)</th>
+<th>FastAPI (эквивалент)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>DTO класс + DataAnnotations</td>
+<td><strong>Pydantic модель</strong> — тот же класс с типами полей, та же роль (валидация + сериализация)</td>
+</tr>
+<tr>
+<td>Constructor injection (DI)</td>
+<td><strong><code>Depends()</code></strong> — та же идея, другой синтаксис</td>
+</tr>
+<tr>
+<td><code>[HttpGet("route")]</code> + маршрутизация</td>
+<td><code>@app.get("/route")</code> декоратор</td>
+</tr>
+<tr>
+<td><code>async Task&lt;IActionResult&gt;</code> в контроллере</td>
+<td><code>async def endpoint(...)</code></td>
+</tr>
+<tr>
+<td>Swagger/Swashbuckle настройка вручную</td>
+<td>Автоматически из типов, без настройки</td>
+</tr>
+<tr>
+<td>Middleware pipeline</td>
+<td><code>@app.middleware("http")</code> — та же идея</td>
+</tr>
+</tbody>
+</table>
+<h2 id="_2">Пример — сразу видно параллель</h2>
+<pre><code class="language-python">from fastapi import FastAPI, Depends
+from pydantic import BaseModel
+
+app = FastAPI()
+
+class NoteDto(BaseModel):  # ≈ твой DTO класс в C#
+    title: str
+    content: str
+
+def get_db():  # ≈ DI-провайдер зависимости
+    ...
+
+@app.post(&quot;/notes&quot;)  # ≈ [HttpPost(&quot;notes&quot;)]
+async def create_note(note: NoteDto, db=Depends(get_db)):  # ≈ async Task&lt;IActionResult&gt; CreateNote(NoteDto note, IDbContext db)
+    # note уже провалидирован Pydantic автоматически — как model binding + DataAnnotations в C#
+    return {&quot;id&quot;: 1, **note.dict()}
+</code></pre>
+<h2 id="_3">Зачем это вообще нужно знать</h2>
+<p>На рынке Python (см. анализ рынка ранее) связка <strong>Django + FastAPI + asyncio</strong> даёт максимум на собесе — Django для "тяжёлых" приложений с админкой, FastAPI для чистых API и микросервисов. Достаточно знать ЧТО это и ЧЕМ отличается — не строить на нём проект сейчас.</p>
+<hr>
+<p><strong>Итог:</strong> это не новая парадигма — это ASP.NET Core концепции (DI, DTO, middleware, автодокументация) в питоновской обёртке. Если разберёшься в ASP.NET Core (а мы туда идём), FastAPI прочитается почти без усилий, когда реально понадобится.</p></article>
+    <aside class="aside">
+      <strong>В этом документе</strong>
+      <div class="toc"><div class="toc">
+<ul>
+<li><a href="#_1">Что это</a></li>
+<li><a href="#flaskdjango">Чем отличается от того, что уже знаешь (Flask/Django)</a></li>
+<li><a href="#aspnet-core">Мапинг на ASP.NET Core — вот почему это должно быть легко</a></li>
+<li><a href="#_2">Пример — сразу видно параллель</a></li>
+<li><a href="#_3">Зачем это вообще нужно знать</a></li>
+</ul>
+</div>
+</div>
+    </aside>
+  </div>
+</main>
+
+
+<script>
+const ROOT = "..";
+
+// ---- тема
+const themeBtn = document.getElementById("theme");
+const paint = () => {
+  const dark = document.documentElement.getAttribute("data-theme") === "dark";
+  themeBtn.textContent = dark ? "☀" : "☾";
+};
+paint();
+themeBtn.addEventListener("click", () => {
+  const next = document.documentElement.getAttribute("data-theme") === "dark" ? "light" : "dark";
+  document.documentElement.setAttribute("data-theme", next);
+  try { localStorage.setItem("kb-theme", next); } catch (e) {}
+  paint();
+});
+
+// ---- поиск
+let index = null;
+const box = document.getElementById("results");
+const hits = document.getElementById("hits");
+const head = box.querySelector("h3");
+const input = document.getElementById("q");
+
+async function ensureIndex() {
+  if (index) return index;
+  const res = await fetch(ROOT + "/search-index.json");
+  index = await res.json();
+  return index;
+}
+
+const esc = (s) => (s || "").replace(/[&<>]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
+
+function hi(text, query) {
+  const i = text.toLowerCase().indexOf(query);
+  if (i < 0) return esc(text);
+  return esc(text.slice(0, i)) + "<mark>" + esc(text.slice(i, i + query.length)) + "</mark>" + esc(text.slice(i + query.length));
+}
+
+input.addEventListener("input", async () => {
+  const q = input.value.trim().toLowerCase();
+  if (q.length < 2) { box.hidden = true; return; }
+  const data = await ensureIndex();
+  const found = [];
+  for (const d of data) {
+    const inTitle = d.title.toLowerCase().includes(q);
+    const inSum = (d.summary || "").toLowerCase().includes(q);
+    const heads = (d.heads || []).filter(h => h.toLowerCase().includes(q));
+    if (inTitle || inSum || heads.length) {
+      found.push({ d, heads, rank: inTitle ? 0 : heads.length ? 1 : 2 });
+    }
+  }
+  found.sort((a, b) => a.rank - b.rank);
+  head.textContent = found.length ? `Нашлось: ${found.length}` : "Ничего не нашлось";
+  hits.innerHTML = found.slice(0, 40).map(({ d, heads }) =>
+    `<a class="hit" href="${ROOT}/d/${d.slug}.html">
+       <b>${hi(d.title, q)}</b>
+       <span>${heads.length ? "→ " + heads.slice(0, 3).map(h => hi(h, q)).join(" · ") : esc(d.summary || "")}</span>
+     </a>`).join("");
+  box.hidden = false;
+});
+
+input.addEventListener("keydown", (e) => { if (e.key === "Escape") { input.value = ""; box.hidden = true; input.blur(); } });
+document.addEventListener("keydown", (e) => {
+  if (e.key === "/" && document.activeElement !== input) { e.preventDefault(); input.focus(); }
+});
+</script>
+</body>
+</html>

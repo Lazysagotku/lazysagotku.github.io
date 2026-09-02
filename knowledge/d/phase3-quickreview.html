@@ -1,0 +1,217 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Фаза 3 — быстрый повтор - База знаний</title>
+<link rel="stylesheet" href="../kb.css">
+<script>
+  // Тему ставим до первой отрисовки, иначе на тёмной системе мигает белым.
+  try {
+    var t = localStorage.getItem("kb-theme");
+    if (!t) t = matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+    document.documentElement.setAttribute("data-theme", t);
+  } catch (e) {}
+</script>
+</head>
+<body>
+
+<header class="top">
+  <div class="top-in">
+    <a class="brand" href="../index.html">База <span>знаний</span></a>
+    <span class="grow"></span>
+    <input id="q" type="search" placeholder="Поиск по всем материалам…" autocomplete="off">
+    <button class="icon-btn" id="theme" type="button" title="Тема"></button>
+  </div>
+</header>
+
+<div id="results" hidden><div class="wrap-r"><h3></h3><div id="hits"></div></div></div>
+
+<main class="wrap">
+  <div class="doc-head">
+    <div class="crumb"><a href="../index.html#phases">Фазы C#</a></div>
+    <h1>Фаза 3 — быстрый повтор</h1>
+    <div class="meta">143 строк · источник <code>l2code/Phase3_QuickReview.md</code></div>
+  </div>
+
+  <div class="layout">
+    <article class="prose"><blockquote>
+<p>Не замена полной теории (<code>Phase3_Advanced.md</code>) — для быстрого обновления в голове. Полные примеры/мини-задания/собес-блоки — в основном файле фазы.</p>
+</blockquote>
+<hr>
+<h3 id="301-trycatchfinally">3.0.1 Исключения — try/catch/finally</h3>
+<p><strong>Аналогия:</strong> готовишь ужин (try) → вспыхнуло масло, берёшь ИМЕННО тот огнетушитель (catch по типу) → плиту выключаешь всегда, сгорело или нет (finally).</p>
+<p><strong>Суть:</strong> <code>try</code> — код, который может бросить исключение. <code>catch</code> — обработка конкретного (или любого) типа, порядок ОТ специфичного к общему. <code>finally</code> — выполняется ВСЕГДА, даже при <code>return</code> внутри try/catch. <code>throw;</code> при перевыбросе сохраняет исходный stack trace, <code>throw ex;</code> его перезаписывает — теряется, откуда ошибка пришла на самом деле.</p>
+<pre><code class="language-csharp">try { var r = 10 / int.Parse(input); }
+catch (DivideByZeroException) { /* конкретный тип первым */ }
+catch (FormatException) { /* ... */ }
+catch (Exception ex) { /* общий — последним */ }
+finally { /* всегда */ }
+</code></pre>
+<p><strong>Q&amp;A:</strong>
+- Почему нельзя ловить <code>catch (Exception ex)</code> везде? → маскирует непредвиденные ошибки, усложняет отладку.
+- throw vs throw ex? → <code>throw;</code> сохраняет stack trace, <code>throw ex;</code> его сбрасывает на текущую строку.
+- Как <code>using</code> связан с try/finally? → синтаксический сахар — компилятор вызывает <code>Dispose()</code> в <code>finally</code>. Полная механика Dispose-паттерна — Phase1 §1.8.</p>
+<hr>
+<h3 id="302-refoutin-params">3.0.2 ref/out/in, params</h3>
+<p><strong>Аналогия:</strong> ref — блокнот с записями, друг дописывает и возвращает; out — чистый блокнот, друг обязан заполнить; in — блокнот "только почитай"; params — стопка стикеров любой высоты.</p>
+<p><strong>Суть:</strong> <code>ref</code> — по ссылке, переменная должна быть проинициализирована ДО вызова, метод читает и меняет. <code>out</code> — по ссылке, без обязательной инициализации ДО, но метод ОБЯЗАН присвоить перед выходом (<code>TryParse</code>-паттерн). <code>in</code> — по ссылке, только чтение, экономит копирование больших struct. <code>params</code> — переменное число аргументов как массив. Ни один из <code>ref</code>/<code>out</code>/<code>in</code> не работает в async-методах (ошибка компиляции).</p>
+<pre><code class="language-csharp">void Increment(ref int x) =&gt; x++;
+bool TryDivide(int a, int b, out int result)
+{
+    if (b == 0) { result = 0; return false; }
+    result = a / b; return true;
+}
+</code></pre>
+<p><strong>Q&amp;A:</strong>
+- Главное отличие ref от out? → ref требует инициализации ДО вызова, out — нет, но out обязателен к присвоению ВНУТРИ метода.
+- Зачем in? → не копировать большой struct при каждом вызове, при этом запретить его менять.</p>
+<hr>
+<h3 id="31-generics">3.1 Generics</h3>
+<p><strong>Аналогия:</strong> универсальный ящик для переезда — один и тот же ящик под книги, посуду или одежду, просто каждый раз кладёшь в него что-то одно конкретное.</p>
+<p><strong>Суть:</strong> <code>T</code> — заглушка для типа, подставляется при использовании. Типобезопасность на компиляции + для value types никакого boxing. <code>where T : ...</code> — ограничивает допустимые типы (<code>class</code>, <code>struct</code>, <code>new()</code>, <code>IComparable&lt;T&gt;</code>, конкретный базовый класс). <code>IEnumerable&lt;out T&gt;</code> ковариантен (только читает T), <code>Action&lt;in T&gt;</code> контравариантен (только принимает T) — изменяемые коллекции вроде <code>List&lt;T&gt;</code> инвариантны.</p>
+<pre><code class="language-csharp">public class Repository&lt;T&gt; where T : class, new()
+{
+    private readonly List&lt;T&gt; _items = [];
+    public void Add(T item) =&gt; _items.Add(item);
+    public T CreateDefault() =&gt; new T(); // new() constraint разрешает это
+}
+</code></pre>
+<p><strong>Q&amp;A:</strong>
+- Зачем generics, если есть <code>object</code>? → без boxing, ошибка типа ловится на компиляции, не в рантайме.
+- Почему <code>List&lt;T&gt;</code> не ковариантен, а <code>IEnumerable&lt;T&gt;</code> — да? → <code>List&lt;T&gt;.Add()</code> мог бы сломать типобезопасность при ковариантности; <code>IEnumerable&lt;T&gt;</code> только читает — безопасно.</p>
+<hr>
+<h3 id="32">3.2 Делегаты и события</h3>
+<p><strong>Аналогия:</strong> делегат — розетка стандартной формы, включаешь любой прибор с подходящей вилкой. event — звонок в подъезд: жильцы подписываются (+=/-=), но звонить снаружи или стирать чужие подписки может только хозяин.</p>
+<p><strong>Суть:</strong> делегат — типобезопасная ссылка на метод (сигнатура, не реализация). <code>Action</code> — без возврата, <code>Func</code> — с возвратом (последний параметр — тип результата), <code>Predicate&lt;T&gt;</code> = <code>Func&lt;T, bool&gt;</code>. Multicast (<code>+=</code>) вызывает ВСЕ подписанные методы, но при возврате значения отдаёт результат только последнего. <code>event</code> поверх делегата ограничивает снаружи класса до <code>+=</code>/<code>-=</code> — нельзя вызвать напрямую или стереть чужие подписки через <code>=</code>.</p>
+<pre><code class="language-csharp">public event Action&lt;string&gt;? OnMessage;
+public void Log(string msg) { Console.WriteLine(msg); OnMessage?.Invoke(msg); }
+</code></pre>
+<p><strong>Q&amp;A:</strong>
+- Чем <code>event</code> отличается от публичного поля-делегата? → <code>event</code> не даёт вызвать напрямую и не даёт перезаписать <code>=</code>, только <code>+=</code>/<code>-=</code>.
+- Что вернёт multicast-делегат с несколькими подписчиками? → результат ТОЛЬКО последнего в цепочке, промежуточные теряются.</p>
+<hr>
+<h3 id="33-linq">3.3 LINQ — глубже</h3>
+<p><strong>Аналогия:</strong> список покупок на столе — пока никто не пошёл в магазин, в холодильнике ничего не меняется. Пошёл (foreach/.ToList()) — вот тогда список исполняется по актуальным данным.</p>
+<p><strong>Суть:</strong> <code>.Where()</code>/<code>.Select()</code>/<code>.OrderBy()</code>/<code>.GroupBy()</code> откладывают выполнение, <code>.ToList()</code>/<code>.Count()</code>/<code>.Sum()</code>/<code>.First(OrDefault)</code> выполняют немедленно. Для <code>IQueryable</code> (EF Core) методы строят Expression Tree через <code>IQueryProvider.CreateQuery()</code> — SQL генерируется и выполняется только при материализации, не раньше.</p>
+<pre><code class="language-csharp">var query = numbers.Where(n =&gt; n &gt; 3).OrderBy(n =&gt; n); // ничего не выполнилось
+numbers.Add(100);                                       // добавили ПОСЛЕ
+foreach (var n in query) { }                             // выполнилось здесь, 100 тоже попадёт
+</code></pre>
+<p><strong>Q&amp;A:</strong>
+- КАК IQueryable превращается в SQL? → строит дерево выражений, транслирует и выполняет только при <code>.ToList()</code>/<code>foreach</code>.
+- <code>IEnumerable</code> vs <code>IQueryable</code> — где выполняется код? → <code>IEnumerable</code> — в памяти (LINQ to Objects), <code>IQueryable</code> — транслируется в SQL и выполняется в БД.</p>
+<hr>
+<h3 id="34-asyncawait">3.4 Async/Await — под капотом</h3>
+<p><strong>Аналогия:</strong> заказ в ресторане, не готовка дома — сделал заказ (await), официант уходит обслуживать другие столики, а не стоит у плиты. ThreadPool — ограниченное число официантов на зал.</p>
+<p><strong>Суть:</strong> компилятор превращает <code>async</code>-метод в машину состояний (<code>&lt;&gt;1__state</code>, builder, awaiter-поля). <code>await</code> не блокирует поток на I/O — освобождает его в пул. <code>.Result</code>/<code>.Wait()</code> в UI/старом ASP.NET с <code>SynchronizationContext</code> → классический дедлок (поток ждёт сам себя). В ASP.NET Core дедлока нет, но <code>.Result</code> вызывает ThreadPool starvation — массовая блокировка потоков пула роняет throughput в разы при низкой CPU-загрузке. <code>ConfigureAwait(false)</code> — продолжению не обязательно возвращаться в исходный контекст. <code>CancellationToken</code> — кооперативная отмена, метод сам обязан проверять.</p>
+<pre><code class="language-csharp">async Task&lt;int&gt; SlowAsync() { await Task.Delay(1000); return 42; }
+int r = SlowAsync().Result; // дедлок в UI-потоке с SynchronizationContext
+</code></pre>
+<p><strong>Q&amp;A:</strong>
+- Из чего состоит машина состояний async-метода? → <code>&lt;&gt;1__state</code>, <code>AsyncTaskMethodBuilder</code>, awaiter-поля (по одному на <code>await</code>), временные локальные.
+- Почему <code>.Result</code> опасен в ASP.NET Core, если дедлока там нет? → ThreadPool starvation: поток блокирован, но числится занятым — throughput падает даже при низкой CPU-загрузке.
+- Что будет, если забыть <code>await</code>? → метод запущен, но не ожидается — код продолжится раньше времени, исключение из Task может потеряться.</p>
+<hr>
+<h3 id="35">3.5 Параллелизм — примитивы синхронизации</h3>
+<p><strong>Аналогия:</strong> lock — ключ от переговорки, пока один внутри, остальные ждут в коридоре. SemaphoreSlim — та же переговорка, но на несколько человек сразу (например 3), не строго одного.</p>
+<p><strong>Суть:</strong> <code>lock</code>/<code>Monitor</code> — внутрипроцессный, НЕ работает со значимыми типами и НЕ совместим с <code>await</code> внутри (ошибка компиляции). <code>Mutex</code> — межпроцессный (именованный). <code>SemaphoreSlim</code> — N потоков одновременно, async-совместим (<code>WaitAsync()</code>). <code>Interlocked</code> — атомарные операции без блокировки вообще, для простых случаев (инкремент и т.п.). <code>Channels</code> — lock-free async producer/consumer очередь, замена устаревшему <code>BlockingCollection&lt;T&gt;</code>.</p>
+<pre><code class="language-csharp">private readonly SemaphoreSlim _lock = new(1, 1);
+await _lock.WaitAsync();
+try { /* критическая секция, можно с await внутри */ }
+finally { _lock.Release(); }
+</code></pre>
+<p><strong>Q&amp;A:</strong>
+- Можно ли <code>lock</code> с <code>async</code>/<code>await</code>? → нет, ошибка КОМПИЛЯЦИИ. Решение — <code>SemaphoreSlim.WaitAsync()</code>.
+- Работает ли <code>lock</code> со значимыми типами? → нет — value type копируется, каждый поток блокировал бы свою копию.
+- Работает ли <code>lock</code> межпроцессно? → нет, только <code>Mutex</code>/<code>Semaphore</code> (именованные).</p>
+<hr>
+<p><em>Полные примеры, мини-задания и итоговое задание Фазы 3 — в <code>Phase3_Advanced.md</code>.</em></p></article>
+    <aside class="aside">
+      <strong>В этом документе</strong>
+      <div class="toc"><div class="toc">
+<ul>
+<li><a href="#301-trycatchfinally">3.0.1 Исключения — try/catch/finally</a></li>
+<li><a href="#302-refoutin-params">3.0.2 ref/out/in, params</a></li>
+<li><a href="#31-generics">3.1 Generics</a></li>
+<li><a href="#32">3.2 Делегаты и события</a></li>
+<li><a href="#33-linq">3.3 LINQ — глубже</a></li>
+<li><a href="#34-asyncawait">3.4 Async/Await — под капотом</a></li>
+<li><a href="#35">3.5 Параллелизм — примитивы синхронизации</a></li>
+</ul>
+</div>
+</div>
+    </aside>
+  </div>
+</main>
+
+
+<script>
+const ROOT = "..";
+
+// ---- тема
+const themeBtn = document.getElementById("theme");
+const paint = () => {
+  const dark = document.documentElement.getAttribute("data-theme") === "dark";
+  themeBtn.textContent = dark ? "☀" : "☾";
+};
+paint();
+themeBtn.addEventListener("click", () => {
+  const next = document.documentElement.getAttribute("data-theme") === "dark" ? "light" : "dark";
+  document.documentElement.setAttribute("data-theme", next);
+  try { localStorage.setItem("kb-theme", next); } catch (e) {}
+  paint();
+});
+
+// ---- поиск
+let index = null;
+const box = document.getElementById("results");
+const hits = document.getElementById("hits");
+const head = box.querySelector("h3");
+const input = document.getElementById("q");
+
+async function ensureIndex() {
+  if (index) return index;
+  const res = await fetch(ROOT + "/search-index.json");
+  index = await res.json();
+  return index;
+}
+
+const esc = (s) => (s || "").replace(/[&<>]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
+
+function hi(text, query) {
+  const i = text.toLowerCase().indexOf(query);
+  if (i < 0) return esc(text);
+  return esc(text.slice(0, i)) + "<mark>" + esc(text.slice(i, i + query.length)) + "</mark>" + esc(text.slice(i + query.length));
+}
+
+input.addEventListener("input", async () => {
+  const q = input.value.trim().toLowerCase();
+  if (q.length < 2) { box.hidden = true; return; }
+  const data = await ensureIndex();
+  const found = [];
+  for (const d of data) {
+    const inTitle = d.title.toLowerCase().includes(q);
+    const inSum = (d.summary || "").toLowerCase().includes(q);
+    const heads = (d.heads || []).filter(h => h.toLowerCase().includes(q));
+    if (inTitle || inSum || heads.length) {
+      found.push({ d, heads, rank: inTitle ? 0 : heads.length ? 1 : 2 });
+    }
+  }
+  found.sort((a, b) => a.rank - b.rank);
+  head.textContent = found.length ? `Нашлось: ${found.length}` : "Ничего не нашлось";
+  hits.innerHTML = found.slice(0, 40).map(({ d, heads }) =>
+    `<a class="hit" href="${ROOT}/d/${d.slug}.html">
+       <b>${hi(d.title, q)}</b>
+       <span>${heads.length ? "→ " + heads.slice(0, 3).map(h => hi(h, q)).join(" · ") : esc(d.summary || "")}</span>
+     </a>`).join("");
+  box.hidden = false;
+});
+
+input.addEventListener("keydown", (e) => { if (e.key === "Escape") { input.value = ""; box.hidden = true; input.blur(); } });
+document.addEventListener("keydown", (e) => {
+  if (e.key === "/" && document.activeElement !== input) { e.preventDefault(); input.focus(); }
+});
+</script>
+</body>
+</html>
