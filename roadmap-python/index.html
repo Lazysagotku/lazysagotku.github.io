@@ -13,7 +13,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Роадмапа Python - Иван Архипов</title>
 <meta name="robots" content="noindex">
-<meta name="description" content="Спящий трек: Python backend. Проценты поглощения по фазам.">
+<meta name="description" content="Рабочий трек: Python backend. Трекер и разведчик на FastAPI в проде, проценты поглощения по фазам.">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%23b0561f'/%3E%3Ctext x='32' y='43' font-family='Georgia,serif' font-weight='700' font-size='30' fill='white' text-anchor='middle'%3EИА%3C/text%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -98,15 +98,17 @@
     <a class="back" href="/">← Иван Архипов</a>
     <p class="epigraph">Не забывай, кто тебя отправил, и помни, что ты можешь доказать.</p>
     <h1>Роадмапа Python</h1>
-    <p class="sub">Спящий трек: язык в ежедневной работе много лет, роадмап закрывает бэкенд-паттерны и идиомы поверх живого языка. Проценты - честная самооценка поглощения.</p>
+    <p class="sub">Рабочий трек: трекер откликов и разведчик вакансий написаны на FastAPI и крутятся в проде. Роадмап закрывает бэкенд-паттерны и идиомы поверх живого языка. Проценты - честная самооценка поглощения.</p>
 
     <div class="total">
-      <div class="row"><span class="label">Общий прогресс трека</span><span class="num">26%</span></div>
-      <div class="track" style="--p:26%"><div class="fill"></div><i class="runner" aria-hidden="true">🏃</i></div>
-      <p class="note">Обновлено 30 августа 2026 · трек спит, проценты растут от реальной работы</p>
+      <div class="row"><span class="label">Общий прогресс трека</span><span class="num">34%</span></div>
+      <div class="track" style="--p:34%"><div class="fill"></div><i class="runner" aria-hidden="true">🏃</i></div>
+      <p class="note">Обновлено 11 сентября 2026 · трек разбужен, проценты растут от реальной работы</p>
     </div>
 
-    <p class="gate"><b>Условие пробуждения:</b> предложение по Python-резюме приходит раньше, чем финиширует C#-курс. База наготове: Flask/Django и pandas в реальном опыте, крэш-курс на 3 дня (FastAPI, asyncio, pytest) уже написан и ждёт.</p>
+    <p class="gate"><b>Статус «спящий» снят 11 сентября.</b> Он ставился, когда Python числился запасным треком. С сентября это язык каждый день: трекер откликов на FastAPI с PostgreSQL, разведчик вакансий на Playwright, скрипты эксплуатации. Плюс в инфраструктурных вакансиях автоматизация скриптами стоит вторым требованием после Linux.</p>
+
+    <p class="gate"><b>Формат фаз обновлён.</b> Каждая фаза теперь самодостаточна: аналогия из жизни, теория, практика на собственных проектах, блок «сломай намеренно», задание с критерием готовности, факты из практики и вопросы с готовыми ответами. Практика идёт на трекере и разведчике - учебный код выбрасывают, свой остаётся и показывается на собеседовании.</p>
   </div>
 </header>
 
@@ -127,7 +129,7 @@
       <li class="phase" style="--d:0.12s">
         <div class="head">
           <h2><span class="n">02</span>Async и конкурентность</h2>
-          <span class="status next">спит</span>
+          <span class="status next">впереди</span>
         </div>
         <div class="meter"><div class="track" style="--p:25%"><div class="fill"></div><i class="runner" aria-hidden="true">🏃</i></div><span class="pct">25%</span></div>
         <p class="topics">GIL · asyncio и event loop · threading против multiprocessing · aiohttp · Semaphore/Lock</p>
@@ -137,11 +139,11 @@
       <li class="phase" style="--d:0.19s">
         <div class="head">
           <h2><span class="n">03</span>FastAPI</h2>
-          <span class="status next">крэш-курс готов</span>
+          <span class="status active">в строю</span>
         </div>
-        <div class="meter"><div class="track" style="--p:15%"><div class="fill"></div><i class="runner" aria-hidden="true">🏃</i></div><span class="pct">15%</span></div>
+        <div class="meter"><div class="track" style="--p:45%"><div class="fill"></div><i class="runner" aria-hidden="true">🏃</i></div><span class="pct">45%</span></div>
         <p class="topics">Маршрутизация · Pydantic · Depends() · middleware · Background Tasks · JWT</p>
-        <p class="note">Реальный опыт с Flask и Django есть; трёхдневный крэш-курс по FastAPI написан и ждёт триггера. Проценты - за счёт переносимых знаний REST и DI.</p>
+        <p class="note">Трекер откликов написан на FastAPI и работает в проде: маршруты, Pydantic, Depends, Basic-аутентификация через middleware. Осталось развести схемы входа и выхода и добавить общий обработчик ошибок.</p>
       </li>
 
       <li class="phase" style="--d:0.26s">
@@ -157,7 +159,7 @@
       <li class="phase" style="--d:0.33s">
         <div class="head">
           <h2><span class="n">05</span>Тестирование</h2>
-          <span class="status next">спит</span>
+          <span class="status next">впереди</span>
         </div>
         <div class="meter"><div class="track" style="--p:5%"><div class="fill"></div><i class="runner" aria-hidden="true">🏃</i></div><span class="pct">5%</span></div>
         <p class="topics">pytest · fixtures · mocking · coverage</p>
@@ -193,7 +195,7 @@
 <footer>
   <div class="wrap">
     <span>Иван Архипов · Москва</span>
-    <span><a href="https://github.com/Lazysagotku/l2code">Курс на GitHub</a> · <a href="/">визитка</a></span>
+    <span><a href="https://github.com/Lazysagotku/l2code">Курс на GitHub</a> · <a href="/roadmap/">C#</a> · <a href="/roadmap-ai/">ИИ</a> · <a href="/roadmap-infra/">Стенд</a> · <a href="/">визитка</a></span>
   </div>
 </footer>
 
