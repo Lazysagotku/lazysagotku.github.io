@@ -28,11 +28,15 @@ All content lives in `index.html`. Facts are sourced from `career-notes/Work_Exp
 
 ## Роадмапы
 
-Страницы `roadmap*/index.html` **не редактируются руками** - они собираются из файлов фаз в `../l2code/`:
+Страницы `roadmap*/` **не редактируются руками** - они собираются из файлов фаз в `../l2code/`:
 
 ```
-python build_roadmaps.py          # все четыре
-python build_roadmaps.py infra    # одно направление
+python build_roadmaps.py          # все четыре направления
+python build_roadmaps.py infra    # одно
 ```
 
-Источник правды - markdown в l2code (`Infra_Layer*.md`, `Python_Phase*.md`, `AI_Phase*.md`, `CSharp_Roadmap_Software.md`). Чекбоксы берутся из нумерованных пунктов в блоках «Практика» и «Сломай намеренно». Прогресс живёт в localStorage браузера, кнопки «Скачать / Загрузить прогресс» переносят его между устройствами файлом.
+Два уровня на направление: `roadmap-infra/index.html` - прогрессия со стеком фаз и чекбоксами, `roadmap-infra/0/index.html` … - каждая фаза целиком с боковой навигацией по разделам.
+
+Источник правды - markdown в l2code (`Infra_Layer*.md`, `Python_Phase*.md`, `AI_Phase*.md`, `CSharp_Roadmap_Software.md`). Чекбоксы берутся из нумерованных пунктов в блоках «Практика» и «Сломай намеренно». Метаданные - в HTML-комментариях файла-оглавления: `<!-- progress: 1=90; 2=75 -->` (самооценка, стартовая отметка), `<!-- schedule: 0=чт 10.09 -->` (даты на карточках), `<!-- meta: deadline=2026-09-16; deadline_label=... -->` (отсчёт).
+
+Прогресс живёт в localStorage браузера под одним ключом на направление - главная и страницы фаз видят одно и то же. Кнопки «Скачать / Загрузить прогресс» переносят его между устройствами файлом.

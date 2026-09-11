@@ -1,0 +1,380 @@
+<!doctype html><html lang="ru"><head><meta charset="utf-8"><script>(()=>{let s=null;try{s=localStorage.getItem("theme")}catch(e){}document.documentElement.dataset.theme=s||(matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light")})();</script><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="robots" content="noindex"><title>Фаза 6. Упаковка и эксплуатация - Python Backend</title><meta name="description" content="Python Backend: фаза 6, Упаковка и эксплуатация"><link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%23a8741a'/%3E%3Ctext x='32' y='43' font-family='Georgia,serif' font-weight='700' font-size='30' fill='white' text-anchor='middle'%3EИА%3C/text%3E%3C/svg%3E"><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bitter:wght@600;700&family=Source+Sans+3:wght@400;600&family=JetBrains+Mono:wght@400;700&display=swap"><style>
+:root {
+  --ground:#e8eaee; --surface:#fff; --sunken:#f1f3f6; --ink:#1a1d24; --muted:#626b78; --faint:#8b939f;
+  --line:#d2d7de; --accent:#a8741a; --accent-soft:#f5ead6; --done:#2f6f56; --done-soft:#dfeee7; --break:#97452f;
+  --code-bg:#1a1d24; --code-ink:#e6e9ee;
+  --shadow:0 1px 2px rgba(26,29,36,.06),0 4px 12px rgba(26,29,36,.05);
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --ground:#131519; --surface:#1b1e24; --sunken:#22262d; --ink:#e6e9ee; --muted:#9aa3b0; --faint:#6d7684;
+  --line:#2e333c; --accent:#d9a440; --accent-soft:#35291453; --done:#5aab86; --done-soft:#1d3a2e5c; --break:#d0785e;
+  --code-bg:#0f1114; --code-ink:#dfe3e8; --shadow:0 1px 2px rgba(0,0,0,.3),0 4px 14px rgba(0,0,0,.25); color-scheme: dark;
+} }
+:root[data-theme="dark"] {
+  --ground:#131519; --surface:#1b1e24; --sunken:#22262d; --ink:#e6e9ee; --muted:#9aa3b0; --faint:#6d7684;
+  --line:#2e333c; --accent:#d9a440; --accent-soft:#35291453; --done:#5aab86; --done-soft:#1d3a2e5c; --break:#d0785e;
+  --code-bg:#0f1114; --code-ink:#dfe3e8; --shadow:0 1px 2px rgba(0,0,0,.3),0 4px 14px rgba(0,0,0,.25); color-scheme: dark;
+}
+* { box-sizing:border-box; }
+body { margin:0; background:var(--ground); color:var(--ink); font-family:"Source Sans 3",system-ui,sans-serif; font-size:16px; line-height:1.55; -webkit-font-smoothing:antialiased; }
+a { color:var(--accent); text-underline-offset:3px; }
+h1,h2,h3,h4 { font-family:Bitter,Georgia,serif; margin:0; text-wrap:balance; }
+p { margin:0; }
+code { font-family:"JetBrains Mono",ui-monospace,monospace; font-size:.88em; background:var(--sunken); padding:.08em .35em; border-radius:3px; }
+pre { background:var(--code-bg); color:var(--code-ink); padding:.85rem 1rem; border-radius:4px; overflow-x:auto; font-size:.85rem; line-height:1.5; margin:.7rem 0; }
+pre code { background:none; padding:0; color:inherit; font-size:inherit; }
+table { border-collapse:collapse; font-size:.92rem; margin:.7rem 0; display:block; overflow-x:auto; max-width:100%; }
+th,td { text-align:left; padding:.42rem .6rem; border-bottom:1px solid var(--line); vertical-align:top; }
+th { font-family:"JetBrains Mono",monospace; font-size:.72rem; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); font-weight:400; }
+blockquote { margin:.5rem 0; padding:.6rem .95rem; border-left:3px solid var(--accent); background:var(--accent-soft); border-radius:0 4px 4px 0; }
+blockquote p+p { margin-top:.45rem; }
+ul,ol { padding-left:1.3rem; margin:.45rem 0; }
+li+li { margin-top:.2rem; }
+hr { border:0; border-top:1px solid var(--line); margin:1.2rem 0; }
+.eyebrow { font-family:"JetBrains Mono",monospace; font-size:11px; letter-spacing:.16em; text-transform:uppercase; color:var(--muted); margin:0 0 6px; }
+.wrap { max-width:940px; margin:0 auto; padding:28px 20px 72px; display:flex; flex-direction:column; gap:26px; }
+
+.theme-switch { position:fixed; top:1rem; right:1rem; z-index:200; width:2.5rem; height:2.5rem; border-radius:50%; border:1px solid var(--line); background:var(--surface); color:var(--ink); font-size:1.05rem; cursor:pointer; display:grid; place-items:center; box-shadow:var(--shadow); }
+.theme-switch:hover { border-color:var(--accent); }
+
+/* ---------- главная ---------- */
+.masthead { display:flex; flex-wrap:wrap; gap:24px; align-items:flex-end; justify-content:space-between; padding-bottom:20px; border-bottom:2px solid var(--ink); }
+.masthead h1 { font-weight:700; font-size:clamp(30px,5vw,42px); letter-spacing:-.015em; }
+.masthead .sub { margin-top:6px; color:var(--muted); max-width:46ch; }
+.masthead .back { font-size:.9rem; text-decoration:none; color:var(--muted); }
+.countdown { font-family:"JetBrains Mono",monospace; text-align:right; line-height:1.25; }
+.countdown .num { font-size:34px; font-weight:700; color:var(--accent); font-variant-numeric:tabular-nums; }
+.countdown .cap { font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:var(--muted); }
+.summary { background:var(--surface); border:1px solid var(--line); border-radius:3px; box-shadow:var(--shadow); padding:20px 22px; display:flex; flex-direction:column; gap:16px; }
+.meters { display:flex; flex-wrap:wrap; gap:28px 40px; }
+.meter { display:flex; flex-direction:column; gap:2px; }
+.meter .val { font-family:"JetBrains Mono",monospace; font-size:26px; font-weight:700; font-variant-numeric:tabular-nums; line-height:1.1; }
+.meter .lbl { font-family:"JetBrains Mono",monospace; font-size:11px; letter-spacing:.12em; text-transform:uppercase; color:var(--muted); }
+.meter.-done .val { color:var(--done); }
+.bar { height:10px; background:var(--sunken); border:1px solid var(--line); border-radius:2px; overflow:hidden; }
+.bar>span { display:block; height:100%; width:0; background:repeating-linear-gradient(135deg,var(--accent) 0 6px,color-mix(in srgb,var(--accent) 78%,#000) 6px 12px); transition:width .55s cubic-bezier(.22,1,.36,1); }
+.bar.-full>span { background:var(--done); }
+.tools { display:flex; flex-wrap:wrap; gap:8px; }
+.tools button,.tools label { font:inherit; font-size:13px; color:var(--muted); background:none; border:1px solid var(--line); border-radius:2px; padding:5px 11px; cursor:pointer; }
+.tools button:hover,.tools label:hover { color:var(--ink); border-color:var(--faint); }
+.tools .danger { margin-left:auto; }
+.tools input[type=file] { display:none; }
+.section-label { font-family:"JetBrains Mono",monospace; font-size:11px; letter-spacing:.16em; text-transform:uppercase; color:var(--muted); display:flex; align-items:center; gap:12px; margin:0; }
+.section-label::after { content:""; flex:1; height:1px; background:var(--line); }
+.stack { display:flex; flex-direction:column; gap:10px; }
+.layer { background:var(--surface); border:1px solid var(--line); border-left:4px solid var(--line); border-radius:3px; transition:border-left-color .35s,background .35s; }
+.layer.-active { border-left-color:var(--accent); }
+.layer.-complete { border-left-color:var(--done); background:var(--sunken); }
+.layer.-skipped { opacity:.65; }
+.layer>summary { list-style:none; cursor:pointer; padding:14px 18px; display:grid; grid-template-columns:44px 1fr auto; gap:14px; align-items:center; }
+.layer>summary::-webkit-details-marker { display:none; }
+.idx { font-family:"JetBrains Mono",monospace; font-size:22px; font-weight:700; color:var(--faint); font-variant-numeric:tabular-nums; text-align:center; }
+.layer.-complete .idx { color:var(--done); }
+.layer.-active .idx { color:var(--accent); }
+.headline h2 { font-size:18px; font-weight:600; letter-spacing:-.01em; }
+.headline .meta { font-family:"JetBrains Mono",monospace; font-size:11.5px; color:var(--muted); margin-top:3px; display:flex; flex-wrap:wrap; gap:10px; align-items:center; }
+.tag { font-size:10px; letter-spacing:.1em; text-transform:uppercase; padding:2px 7px; border-radius:2px; border:1px solid currentColor; }
+.tag.-when { color:var(--accent); background:var(--accent-soft); }
+.gauge { display:flex; align-items:center; gap:10px; }
+.gauge .frac { font-family:"JetBrains Mono",monospace; font-size:12.5px; color:var(--muted); font-variant-numeric:tabular-nums; white-space:nowrap; }
+.ring { width:30px; height:30px; flex:none; transform:rotate(-90deg); }
+.ring circle { fill:none; stroke-width:4; }
+.ring .track { stroke:var(--line); }
+.ring .fill { stroke:var(--accent); stroke-linecap:round; transition:stroke-dashoffset .55s cubic-bezier(.22,1,.36,1),stroke .3s; }
+.layer.-complete .ring .fill { stroke:var(--done); }
+.body { padding:0 18px 18px 62px; display:flex; flex-direction:column; gap:14px; }
+.note { font-size:14.5px; color:var(--muted); border-left:2px solid var(--line); padding-left:12px; }
+.note p+p { margin-top:.4rem; }
+.open-phase { align-self:flex-start; font-family:"JetBrains Mono",monospace; font-size:12px; letter-spacing:.06em; text-transform:uppercase; text-decoration:none; color:var(--ink); border:1px solid var(--ink); padding:7px 12px; border-radius:2px; }
+.open-phase:hover { background:var(--ink); color:var(--surface); }
+.criterion { background:var(--sunken); border:1px dashed var(--line); border-radius:2px; padding:11px 14px; font-size:14.5px; }
+.criterion b { font-family:"JetBrains Mono",monospace; font-size:10.5px; letter-spacing:.12em; text-transform:uppercase; color:var(--muted); display:block; margin-bottom:3px; font-weight:400; }
+.criterion p+p { margin-top:.4rem; }
+.base { font-family:"JetBrains Mono",monospace; font-size:11px; color:var(--muted); }
+
+/* ---------- шаги ---------- */
+.steps { list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:1px; }
+.steps .h { font-family:"JetBrains Mono",monospace; font-size:10.5px; letter-spacing:.12em; text-transform:uppercase; color:var(--muted); padding:8px 8px 2px; }
+.step { display:flex; gap:11px; align-items:flex-start; padding:6px 8px; border-radius:2px; }
+.step:hover { background:var(--sunken); }
+.step input { position:absolute; opacity:0; width:0; height:0; }
+.box { flex:none; width:17px; height:17px; margin-top:3px; border:1.5px solid var(--faint); border-radius:2px; background:var(--surface); position:relative; transition:border-color .2s,background .2s; cursor:pointer; }
+.box::after { content:""; position:absolute; left:4.5px; top:1px; width:5px; height:9px; border:solid var(--surface); border-width:0 2px 2px 0; transform:rotate(45deg) scale(0); transform-origin:center; transition:transform .22s cubic-bezier(.34,1.56,.64,1); }
+.step.-on .box { background:var(--done); border-color:var(--done); }
+.step.-on .box::after { transform:rotate(45deg) scale(1); }
+.step .txt { font-size:15px; flex:1; cursor:pointer; }
+.step.-on .txt { color:var(--faint); text-decoration:line-through; text-decoration-thickness:1px; }
+.step.-break .txt::before { content:"сломать"; font-family:"JetBrains Mono",monospace; font-size:9.5px; letter-spacing:.1em; text-transform:uppercase; color:var(--break); border:1px solid currentColor; border-radius:2px; padding:1px 5px; margin-right:8px; vertical-align:2px; }
+.step .more { flex:none; font-family:"JetBrains Mono",monospace; font-size:11px; color:var(--muted); cursor:pointer; padding-top:4px; }
+.step-body { display:none; padding:2px 8px 10px 36px; font-size:14px; }
+.step-body.-open { display:block; }
+.step-body pre { font-size:.82rem; }
+.interlude { font-size:14.5px; padding:6px 8px; }
+.interlude h3 { font-size:15px; margin:10px 0 4px; }
+.interlude p+p { margin-top:.4rem; }
+
+/* ---------- страница фазы ---------- */
+.layout { display:grid; grid-template-columns:250px minmax(0,1fr); gap:0; min-height:100vh; }
+.side { background:var(--surface); border-right:1px solid var(--line); padding:26px 18px 40px; position:sticky; top:0; height:100vh; overflow-y:auto; font-size:14px; }
+.side .back { display:block; font-size:13px; color:var(--muted); text-decoration:none; margin-bottom:10px; }
+.side .back:hover { color:var(--ink); }
+.side h2 { font-size:16px; font-weight:700; margin-bottom:4px; }
+.side .prog { font-family:"JetBrains Mono",monospace; font-size:11.5px; color:var(--muted); margin-bottom:6px; font-variant-numeric:tabular-nums; }
+.side .bar { height:6px; margin-bottom:22px; }
+.side nav { margin-bottom:22px; }
+.side nav b { display:block; font-family:"JetBrains Mono",monospace; font-size:10.5px; letter-spacing:.12em; text-transform:uppercase; color:var(--muted); font-weight:400; margin-bottom:6px; }
+.side nav a { display:flex; gap:8px; align-items:baseline; padding:5px 8px; margin:0 -8px; border-radius:2px; color:var(--ink); text-decoration:none; }
+.side nav a:hover { background:var(--sunken); }
+.side nav a.-cur { background:var(--accent-soft); color:var(--accent); font-weight:600; }
+.side nav a.-done { color:var(--faint); }
+.side nav a .n { font-family:"JetBrains Mono",monospace; font-size:11px; color:var(--faint); width:22px; flex:none; }
+.side nav a .i { width:18px; flex:none; text-align:center; }
+.content { padding:28px clamp(20px,5vw,56px) 80px; max-width:820px; }
+.topbar { display:flex; flex-wrap:wrap; gap:8px 20px; align-items:baseline; font-family:"JetBrains Mono",monospace; font-size:12px; color:var(--muted); padding-bottom:12px; border-bottom:1px solid var(--line); margin-bottom:26px; }
+.topbar b { color:var(--ink); font-weight:600; }
+.content h1 { font-size:clamp(26px,4vw,34px); font-weight:700; letter-spacing:-.015em; margin-bottom:6px; }
+.content .lead { color:var(--muted); font-family:"JetBrains Mono",monospace; font-size:12px; margin-bottom:28px; }
+.sec { margin-top:34px; scroll-margin-top:20px; }
+.sec>h2 { font-family:"JetBrains Mono",monospace; font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:var(--muted); display:flex; align-items:center; gap:8px; margin-bottom:12px; font-weight:400; }
+.sec>h2 .i { font-size:15px; }
+.sec .text h3 { font-size:17px; margin:20px 0 6px; }
+.sec .text h4 { font-size:15.5px; margin:14px 0 4px; }
+.sec .text p+p { margin-top:.55rem; }
+.sec .text>p:first-child { margin-top:0; }
+.sec.-analogy .text { background:var(--surface); border:1px solid var(--line); border-radius:3px; padding:14px 18px; }
+.sec.-task .text { background:var(--sunken); border:1px dashed var(--line); border-radius:3px; padding:12px 16px; }
+.sec.-questions .text>p>strong { display:block; margin-top:1rem; font-family:Bitter,Georgia,serif; font-size:16px; }
+.sec .steps { background:var(--surface); border:1px solid var(--line); border-radius:3px; padding:6px; }
+.pager { display:flex; justify-content:space-between; gap:16px; margin-top:48px; padding-top:20px; border-top:1px solid var(--line); font-size:14px; }
+.pager a { text-decoration:none; color:var(--ink); }
+.pager a:hover { color:var(--accent); }
+.pager .r { text-align:right; }
+.src { font-family:"JetBrains Mono",monospace; font-size:11px; color:var(--muted); margin-top:28px; }
+@media (max-width:820px) {
+  .layout { grid-template-columns:1fr; }
+  .side { position:static; height:auto; border-right:0; border-bottom:1px solid var(--line); }
+  .side nav.-siblings { display:none; }
+  .body { padding-left:18px; }
+  .layer>summary { grid-template-columns:32px 1fr; gap:10px; }
+  .gauge { grid-column:1/-1; justify-content:flex-start; padding-left:42px; }
+  .countdown { text-align:left; }
+}
+@media (prefers-reduced-motion:reduce) { * { transition-duration:.01ms !important; } }
+</style></head><body data-phase="6">
+<div class="layout">
+  <aside class="side">
+    <a class="back" href="../">← Python Backend</a>
+    <h2>🐍 Python Backend</h2>
+    <div class="prog">пройдено <span id="pct">0%</span> · <span id="steps-done">0</span>/<span id="steps-all">0</span> шагов</div>
+    <div class="bar" data-total><span></span></div>
+    <nav><b>В этой фазе</b><a href="#analogy"><span class="i">🎭</span>Аналогия</a><a href="#theory"><span class="i">📖</span>Теория</a><a href="#practice"><span class="i">🔧</span>Практика</a><a href="#break"><span class="i">💥</span>Сломай намеренно</a><a href="#task"><span class="i">✅</span>Задание</a><a href="#life"><span class="i">🌍</span>Из жизни</a><a href="#questions"><span class="i">❓</span>Вопросы с ответами</a></nav>
+    <nav class="-siblings"><b>Фазы</b><a href="../1/" class="" data-phase="1"><span class="n">01</span>Идиомы и продвинутый Python</a><a href="../2/" class="" data-phase="2"><span class="n">02</span>Async и параллелизм</a><a href="../3/" class="" data-phase="3"><span class="n">03</span>FastAPI</a><a href="../4/" class="" data-phase="4"><span class="n">04</span>Базы данных: SQLAlchemy и Alembic</a><a href="../5/" class="" data-phase="5"><span class="n">05</span>Тестирование</a><a href="../6/" class="-cur" data-phase="6"><span class="n">06</span>Упаковка и эксплуатация</a><a href="../7/" class="" data-phase="7"><span class="n">07</span>Архитектура и продакшен-паттерны</a></nav>
+  </aside>
+  <main class="content">
+    <div class="topbar"><b>Фаза 6. Упаковка и эксплуатация</b><span><span id="cur-done">0</span> из <span id="cur-all">11</span> шагов пройдено</span></div>
+    <h1>Упаковка и эксплуатация</h1>
+    <p class="lead">4 часа</p>
+    <section class="sec -analogy" id="analogy"><h2><span class="i">🎭</span>Аналогия</h2><div class="text"><p>Разница между «работает у меня» и «работает у всех». Рецепт в голове повара против рецепта, записанного с граммовкой: второй воспроизводится на другой кухне.</p></div></section><section class="sec -theory" id="theory"><h2><span class="i">📖</span>Теория</h2><div class="text"><h3>Зависимости и окружение</h3>
+<table>
+<thead>
+<tr>
+<th>Инструмент</th>
+<th>Что делает</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>venv</code></td>
+<td>изолированное окружение, встроен</td>
+</tr>
+<tr>
+<td><code>pip-tools</code></td>
+<td><code>requirements.in</code> в закреплённый <code>requirements.txt</code></td>
+</tr>
+<tr>
+<td><code>poetry</code></td>
+<td>зависимости плюс сборка пакета</td>
+</tr>
+<tr>
+<td><code>uv</code></td>
+<td>быстрая замена pip и venv, набирает популярность</td>
+</tr>
+</tbody>
+</table>
+<p>⚠️ Незакреплённые версии - причина «вчера собиралось, сегодня нет». В <code>requirements.txt</code> версии должны быть точными.</p>
+<h3>Контейнер для Python</h3>
+<pre><code class="language-dockerfile">FROM python:3.12-slim AS builder
+WORKDIR /app
+COPY requirements.txt .
+RUN pip install --no-cache-dir --prefix=/install -r requirements.txt
+
+FROM python:3.12-slim
+WORKDIR /app
+RUN useradd -m app
+COPY --from=builder /install /usr/local
+COPY . .
+USER app
+ENV PYTHONUNBUFFERED=1 PYTHONDONTWRITEBYTECODE=1
+EXPOSE 8000
+CMD [&quot;uvicorn&quot;, &quot;app.main:app&quot;, &quot;--host&quot;, &quot;0.0.0.0&quot;, &quot;--port&quot;, &quot;8000&quot;]
+</code></pre>
+<p><strong>Что тут важно:</strong>
+- многоэтапная сборка - в итоговый образ не попадают инструменты сборки;
+- <code>PYTHONUNBUFFERED=1</code> - <strong>обязательно</strong>, иначе логи буферизуются и в <code>docker logs</code> пусто;
+- <code>USER app</code> - не root внутри контейнера;
+- <code>requirements.txt</code> копируется отдельно и раньше кода: слой с зависимостями кешируется и не пересобирается при каждом изменении кода;
+- <code>.dockerignore</code> с <code>.venv</code>, <code>__pycache__</code>, <code>.git</code>, иначе образ распухает.</p>
+<h3>Как запускают в проде</h3>
+<pre><code class="language-bash"># один процесс
+uvicorn app.main:app --host 0.0.0.0 --port 8000
+
+# несколько рабочих процессов
+gunicorn app.main:app -k uvicorn.workers.UvicornWorker -w 4 --bind 0.0.0.0:8000
+</code></pre>
+<p>Число процессов обычно <code>2 × ядра + 1</code>, но для асинхронного приложения меньше: каждый и так держит много соединений. Больше процессов означает больше соединений к базе - это надо согласовать с пулом.</p>
+<h3>Конфигурация</h3>
+<pre><code class="language-python">from pydantic_settings import BaseSettings
+
+class Settings(BaseSettings):
+    database_url: str
+    app_password: str
+    debug: bool = False
+    model_config = {&quot;env_file&quot;: &quot;.env&quot;}
+
+settings = Settings()
+</code></pre>
+<p>Мост от C#: это <code>IOptions</code>. Отсутствие обязательной переменной обнаруживается при старте, а не в момент первого обращения.</p>
+<p>⚠️ <code>.env</code> в <code>.gitignore</code>, в репозитории только <code>.env.example</code> без значений.</p>
+<h3>Логирование</h3>
+<pre><code class="language-python">import logging, sys, json
+
+class JsonFormatter(logging.Formatter):
+    def format(self, record):
+        return json.dumps({
+            &quot;ts&quot;: self.formatTime(record),
+            &quot;level&quot;: record.levelname,
+            &quot;msg&quot;: record.getMessage(),
+            &quot;logger&quot;: record.name,
+        }, ensure_ascii=False)
+
+handler = logging.StreamHandler(sys.stdout)
+handler.setFormatter(JsonFormatter())
+logging.basicConfig(level=logging.INFO, handlers=[handler])
+</code></pre>
+<p>В контейнере логи идут в stdout, а не в файл - их забирает демон Docker или сборщик логов. Структурированный формат нужен, если логи попадают в Elastic или Loki.</p></div></section><section class="sec -practice" id="practice"><h2><span class="i">🔧</span>Практика</h2><ul class="steps"><li class="step" data-step="6-practice-1"><input type="checkbox" id="s-6-practice-1"><span class="box"></span><span class="txt">Собрать многоэтапный образ трекера, посмотреть размер до и после.</span></li><li class="step" data-step="6-practice-2"><input type="checkbox" id="s-6-practice-2"><span class="box"></span><span class="txt">Добавить <code>.dockerignore</code>, пересобрать, сравнить размер.</span></li><li class="step" data-step="6-practice-3"><input type="checkbox" id="s-6-practice-3"><span class="box"></span><span class="txt"><code>docker-compose</code> с трекером и PostgreSQL, проверить, что приложение находит базу по имени сервиса.</span></li><li class="step" data-step="6-practice-4"><input type="checkbox" id="s-6-practice-4"><span class="box"></span><span class="txt">Перевести настройки на <code>pydantic-settings</code>, убрать чтение <code>.env</code> руками.</span></li><li class="step" data-step="6-practice-5"><input type="checkbox" id="s-6-practice-5"><span class="box"></span><span class="txt">Убрать <code>PYTHONUNBUFFERED</code>, посмотреть на пустой <code>docker logs</code>, вернуть.</span></li><li class="step" data-step="6-practice-6"><input type="checkbox" id="s-6-practice-6"><span class="box"></span><span class="txt">Запустить через gunicorn с четырьмя процессами, посмотреть число соединений в <code>pg_stat_activity</code>.</span></li></ul></section><section class="sec -break" id="break"><h2><span class="i">💥</span>Сломай намеренно</h2><ul class="steps"><li class="step -break" data-step="6-break-1"><input type="checkbox" id="s-6-break-1"><span class="box"></span><span class="txt"><strong>Убрать <code>PYTHONUNBUFFERED=1</code></strong> и убедиться, что логи не появляются в <code>docker logs</code> до заполнения буфера.</span></li><li class="step -break" data-step="6-break-2"><input type="checkbox" id="s-6-break-2"><span class="box"></span><span class="txt"><strong>Скопировать код до <code>requirements.txt</code></strong> в Dockerfile, поменять одну строку кода, пересобрать - увидеть, что зависимости ставятся заново.</span></li><li class="step -break" data-step="6-break-3"><input type="checkbox" id="s-6-break-3"><span class="box"></span><span class="txt"><strong>Не поставить <code>.dockerignore</code></strong> и собрать образ с <code>.venv</code> внутри - посмотреть на размер.</span></li><li class="step -break" data-step="6-break-4"><input type="checkbox" id="s-6-break-4"><span class="box"></span><span class="txt"><strong>Убрать обязательную переменную окружения</strong> и убедиться, что pydantic-settings падает на старте с понятным текстом.</span></li><li class="step -break" data-step="6-break-5"><input type="checkbox" id="s-6-break-5"><span class="box"></span><span class="txt"><strong>Поставить 16 процессов gunicorn</strong> при пуле базы на 20 и погонять нагрузку - упереться в <code>max_connections</code>.</span></li></ul></section><section class="sec -task" id="task"><h2><span class="i">✅</span>Задание</h2><div class="text"><p>Трекер собирается многоэтапным Dockerfile, образ меньше 200 МБ, запускается из <code>docker-compose</code> с базой, настройки через <code>pydantic-settings</code>, логи структурированные и видны в <code>docker logs</code>.</p>
+<p><strong>Критерий:</strong> объясняешь каждую строку Dockerfile и почему <code>requirements.txt</code> копируется раньше кода.</p></div></section><section class="sec -life" id="life"><h2><span class="i">🌍</span>Из жизни</h2><div class="text"><p><strong>Про пустые логи в контейнере.</strong> Классика первого дня с Docker: приложение работает, <code>docker logs</code> пуст. Причина - буферизация вывода Python. Одна переменная окружения, а ищут её часами.</p>
+<p><strong>Про размер образа.</strong> Наивный Dockerfile на <code>python:3.12</code> с копированием всего каталога даёт образ под гигабайт. Многоэтапная сборка на <code>slim</code> плюс <code>.dockerignore</code> дают 150-200 МБ. Разница видна на каждом деплое.</p>
+<p><strong>Про число процессов и пул базы.</strong> Четыре процесса gunicorn с пулом по 10 соединений каждый - это 40 соединений от одного приложения. Три экземпляра - 120. При <code>max_connections</code> 100 всё встаёт, и выглядит это как «база отказала».</p></div></section><section class="sec -questions" id="questions"><h2><span class="i">❓</span>Вопросы с ответами</h2><div class="text"><p><strong>Как запускаете FastAPI в проде?</strong></p>
+<blockquote>
+<p>Gunicorn с воркерами uvicorn, число процессов согласовано с пулом соединений к базе. Перед ним nginx, который терминирует TLS и раздаёт статику. Логи в stdout, забирает их сборщик.</p>
+</blockquote>
+<p><strong>Чем отличается контейнер для Python от контейнера для .NET?</strong></p>
+<blockquote>
+<p>Нет отдельного шага компиляции: собирать нечего, ставятся зависимости. Зато нужен <code>PYTHONUNBUFFERED</code>, иначе логи не видны, и многоэтапная сборка нужна, чтобы в итоговый образ не попали инструменты сборки.</p>
+</blockquote>
+<p><strong>Как передаёте настройки?</strong></p>
+<blockquote>
+<p>Через переменные окружения, читаю <code>pydantic-settings</code>. Отсутствие обязательной переменной ловится при старте, а не в момент первого обращения. Секреты в репозитории не лежат, там только <code>.env.example</code>.</p>
+</blockquote>
+<p><strong>Почему <code>requirements.txt</code> копируется отдельно?</strong></p>
+<blockquote>
+<p>Docker кеширует слои. Если сначала скопировать весь код, любое изменение в нём инвалидирует слой с установкой зависимостей, и они ставятся заново при каждой сборке.</p>
+</blockquote></div></section>
+    <p class="src">Исходник: <a href="https://github.com/Lazysagotku/l2code/blob/main/Python_Phase6_Packaging_Ops.md" target="_blank" rel="noopener">Python_Phase6_Packaging_Ops.md</a></p>
+    <nav class="pager"><a href="../5/">← 05 Тестирование</a><a class="r" href="../7/">07 Архитектура и продакшен-паттерны →</a></nav>
+  </main>
+</div><script>
+(() => {
+  const KEY = "rm-progress-python";
+  const DEADLINE = "";
+  const PHASES = {"1": {"total": 13, "baseline": 55, "status": "", "hours": 6.0}, "2": {"total": 10, "baseline": 25, "status": "", "hours": 6.0}, "3": {"total": 12, "baseline": 45, "status": "", "hours": 5.0}, "4": {"total": 12, "baseline": 40, "status": "", "hours": 5.0}, "5": {"total": 11, "baseline": 5, "status": "", "hours": 4.0}, "6": {"total": 11, "baseline": 30, "status": "", "hours": 4.0}, "7": {"total": 11, "baseline": 10, "status": "", "hours": 5.0}};
+  const load = () => { try { return JSON.parse(localStorage.getItem(KEY)) || {}; } catch (e) { return {}; } };
+  const save = (s) => { try { localStorage.setItem(KEY, JSON.stringify(s)); } catch (e) {} };
+  let state = load();
+  const C = 2 * Math.PI * 12;
+
+  function phasePct(n, done) {
+    const p = PHASES[n];
+    if (p.status === "done") return 1;
+    if (p.status === "skipped") return 0;
+    const byChecks = p.total ? done / p.total : 0;
+    return Math.max(byChecks, p.baseline / 100);
+  }
+
+  function paint() {
+    const doneBy = {};
+    document.querySelectorAll(".step[data-step]").forEach(st => {
+      const on = !!state[st.dataset.step];
+      st.classList.toggle("-on", on);
+      const box = st.querySelector("input"); if (box) box.checked = on;
+      const n = st.dataset.step.split("-")[0];
+      doneBy[n] = (doneBy[n] || 0) + (on ? 1 : 0);
+    });
+    Object.keys(PHASES).forEach(n => {
+      if (doneBy[n] === undefined) doneBy[n] = Object.keys(state).filter(k => k.startsWith(n + "-")).length;
+    });
+
+    let sumPct = 0, count = 0, stepsDone = 0, stepsAll = 0, hoursLeft = 0, closed = 0;
+    Object.keys(PHASES).forEach(n => {
+      const p = PHASES[n];
+      if (p.status === "skipped") return;
+      const pct = phasePct(n, doneBy[n]);
+      sumPct += pct; count++;
+      stepsDone += Math.min(doneBy[n], p.total); stepsAll += p.total;
+      if (pct >= 1) closed++; else hoursLeft += p.hours;
+      const card = document.querySelector('[data-phase="' + n + '"]');
+      if (card) {
+        card.classList.toggle("-complete", pct >= 1);
+        card.classList.toggle("-active", pct > 0 && pct < 1);
+        const frac = card.querySelector(".frac");
+        if (frac) frac.textContent = p.total ? (doneBy[n] + "/" + p.total) : Math.round(pct * 100) + "%";
+        const fill = card.querySelector(".ring .fill");
+        if (fill) fill.setAttribute("stroke-dashoffset", (C * (1 - pct)).toFixed(2));
+      }
+      const side = document.querySelector('.side a[data-phase="' + n + '"]');
+      if (side) side.classList.toggle("-done", pct >= 1);
+    });
+    const total = count ? sumPct / count : 0;
+    const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+    set("pct", Math.round(total * 100) + "%");
+    set("steps-done", stepsDone); set("steps-all", stepsAll);
+    set("hours-left", Math.round(hoursLeft * 10) / 10);
+    set("layers-done", closed + "/" + count);
+    document.querySelectorAll(".bar[data-total]").forEach(b => {
+      b.firstElementChild.style.width = (total * 100) + "%";
+      b.classList.toggle("-full", total >= 1);
+    });
+    const cur = document.body.dataset.phase;
+    if (cur !== undefined && PHASES[cur]) { set("cur-done", doneBy[cur]); set("cur-all", PHASES[cur].total); }
+  }
+
+  document.querySelectorAll(".step[data-step]").forEach(st => {
+    const toggle = () => { if (state[st.dataset.step]) delete state[st.dataset.step]; else state[st.dataset.step] = 1; save(state); paint(); };
+    st.querySelector(".box").addEventListener("click", toggle);
+    st.querySelector(".txt").addEventListener("click", toggle);
+    const more = st.querySelector(".more");
+    if (more) more.addEventListener("click", (e) => { e.stopPropagation(); const b = st.nextElementSibling; if (b && b.classList.contains("step-body")) b.classList.toggle("-open"); });
+  });
+
+  const $ = (id) => document.getElementById(id);
+  if ($("reset")) $("reset").addEventListener("click", () => { if (!confirm("Сбросить весь прогресс по этому роадмапу?")) return; state = {}; save(state); paint(); });
+  if ($("export")) $("export").addEventListener("click", () => {
+    const blob = new Blob([JSON.stringify({ key: KEY, at: new Date().toISOString(), state }, null, 2)], { type: "application/json" });
+    const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = KEY + ".json"; a.click(); URL.revokeObjectURL(a.href);
+  });
+  if ($("import")) $("import").addEventListener("change", (e) => {
+    const f = e.target.files[0]; if (!f) return;
+    f.text().then(t => { try { const d = JSON.parse(t); state = d.state || d; save(state); paint(); } catch (err) { alert("Файл не похож на сохранённый прогресс."); } });
+    e.target.value = "";
+  });
+  if (DEADLINE && $("days")) {
+    const today = new Date(); today.setHours(0, 0, 0, 0);
+    const left = Math.round((new Date(DEADLINE) - today) / 86400000);
+    $("days").textContent = left > 0 ? left : (left === 0 ? "сегодня" : "—");
+  }
+  paint();
+  const first = [...document.querySelectorAll(".layer[data-phase]")].find(l => !l.classList.contains("-complete") && !l.classList.contains("-skipped"));
+  if (first) first.open = true;
+})();
+</script><script src="/theme.js?v=2"></script></body></html>
