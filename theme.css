@@ -13,24 +13,24 @@
 :root[data-theme="dark"] {
   color-scheme: dark;
 
-  --bg: oklch(0.17 0.008 40);
-  --surface: oklch(0.21 0.01 40);
-  --dark: oklch(0.26 0.014 40);
-  --dark-soft: oklch(0.32 0.016 40);
-  --ink: oklch(0.93 0.006 40);
-  --muted: oklch(0.71 0.014 40);
-  --accent: oklch(0.75 0.14 52);
-  --accent-deep: oklch(0.8 0.13 58);
+  --bg: oklch(0.17 0.008 255);
+  --surface: oklch(0.21 0.01 255);
+  --dark: oklch(0.26 0.014 255);
+  --dark-soft: oklch(0.32 0.016 255);
+  --ink: oklch(0.93 0.006 255);
+  --muted: oklch(0.71 0.014 255);
+  --accent: oklch(0.76 0.13 80);
+  --accent-deep: oklch(0.80 0.12 82);
   --ok: oklch(0.74 0.13 145);
   --done: oklch(0.74 0.13 145);
-  --line: oklch(0.32 0.009 40);
+  --line: oklch(0.32 0.009 255);
 
   /* Токены страниц-проектов. Без них светлая подложка остаётся светлой,
      а текст на ней - светлым: получается белое на белом. */
-  --raised: oklch(0.235 0.011 40);
-  --on-dark: oklch(0.95 0.005 40);
-  --accent-soft: oklch(0.26 0.03 45);
-  --accent-hover: oklch(0.24 0.02 45);
+  --raised: oklch(0.235 0.011 255);
+  --on-dark: oklch(0.95 0.005 255);
+  --accent-soft: oklch(0.26 0.03 78);
+  --accent-hover: oklch(0.24 0.02 78);
   --done-soft: oklch(0.26 0.05 145);
   --skip: oklch(0.72 0.13 25);
   --skip-soft: oklch(0.28 0.05 25);
@@ -75,10 +75,10 @@
 
 /* Кнопка-призыв: в тёмной теме акцент светлее, поэтому текст на нём должен
    стать тёмным - белый по светлому янтарю читается плохо */
-:root[data-theme="dark"] .btn { color: oklch(0.18 0.01 40); }
-:root[data-theme="dark"] .btn:hover { color: oklch(0.15 0.01 40); }
+:root[data-theme="dark"] .btn { color: oklch(0.18 0.01 255); }
+:root[data-theme="dark"] .btn:hover { color: oklch(0.15 0.01 255); }
 
 /* Календарь роадмапы: дни на светлых плашках акцента тоже требуют тёмного текста */
 :root[data-theme="dark"] .cal .p1,
 :root[data-theme="dark"] .cal .p2,
-:root[data-theme="dark"] .cal .go { color: oklch(0.18 0.01 40); }
+:root[data-theme="dark"] .cal .go { color: oklch(0.18 0.01 255); }

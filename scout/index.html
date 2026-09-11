@@ -14,20 +14,20 @@
 <meta name="robots" content="noindex">
 <title>Разведчик вакансий - проект Ивана Архипова</title>
 <meta name="description" content="Инструмент, который ищет вакансии, оценивает их по профилю и объясняет оценку. Python, FastAPI, hh.ru API.">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%23b0561f'/%3E%3Ctext x='32' y='43' font-family='Georgia,serif' font-weight='700' font-size='30' fill='white' text-anchor='middle'%3EИА%3C/text%3E%3C/svg%3E">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%23a8741a'/%3E%3Ctext x='32' y='43' font-family='Georgia,serif' font-weight='700' font-size='30' fill='white' text-anchor='middle'%3EИА%3C/text%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bitter:wght@600;700;800&family=Golos+Text:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
   :root {
     --bg: oklch(1 0 0);
-    --surface: oklch(0.97 0.003 40);
-    --dark: oklch(0.23 0.012 40);
-    --ink: oklch(0.24 0.015 40);
-    --muted: oklch(0.45 0.015 40);
-    --accent: oklch(0.58 0.15 42);
-    --accent-deep: oklch(0.46 0.125 42);
-    --line: oklch(0.9 0.004 40);
+    --surface: oklch(0.97 0.003 255);
+    --dark: oklch(0.23 0.012 255);
+    --ink: oklch(0.24 0.015 255);
+    --muted: oklch(0.45 0.015 255);
+    --accent: oklch(0.58 0.12 74);
+    --accent-deep: oklch(0.47 0.10 72);
+    --line: oklch(0.9 0.004 255);
     --display: "Bitter", Georgia, serif;
     --body: "Golos Text", "Segoe UI", system-ui, sans-serif;
     --mono: ui-monospace, "Cascadia Mono", Consolas, monospace;
@@ -78,19 +78,19 @@
   .shot-open { display: block; width: 100%; padding: 0; border: 0; background: none; font: inherit; color: inherit; cursor: zoom-in; border-radius: 10px; position: relative; }
   .shot-open img { transition: opacity 0.2s var(--ease); }
   .shot-open:hover img { opacity: 0.85; }
-  .shot-open::after { content: "Открыть полностью"; position: absolute; inset-inline-end: 0.75rem; inset-block-end: 0.75rem; background: oklch(0.2 0.01 40 / 0.86); color: #fff; font-size: 0.8rem; font-weight: 500; padding: 0.25rem 0.7rem; border-radius: 999px; opacity: 0; transition: opacity 0.2s var(--ease); pointer-events: none; }
+  .shot-open::after { content: "Открыть полностью"; position: absolute; inset-inline-end: 0.75rem; inset-block-end: 0.75rem; background: oklch(0.2 0.01 255 / 0.86); color: #fff; font-size: 0.8rem; font-weight: 500; padding: 0.25rem 0.7rem; border-radius: 999px; opacity: 0; transition: opacity 0.2s var(--ease); pointer-events: none; }
   .shot-open:hover::after, .shot-open:focus-visible::after { opacity: 1; }
-  .lightbox { position: fixed; inset: 0; z-index: 100; display: grid; grid-template-rows: minmax(0, 1fr) auto; gap: 1rem; padding: clamp(1rem, 3vw, 2.5rem); background: oklch(0.16 0.008 40 / 0.95); overflow: auto; }
+  .lightbox { position: fixed; inset: 0; z-index: 100; display: grid; grid-template-rows: minmax(0, 1fr) auto; gap: 1rem; padding: clamp(1rem, 3vw, 2.5rem); background: oklch(0.16 0.008 255 / 0.95); overflow: auto; }
   .lightbox[hidden] { display: none; }
   .lightbox img { max-width: 100%; max-height: 100%; margin: auto; object-fit: contain; border-radius: 8px; background: var(--bg); box-shadow: 0 20px 60px oklch(0 0 0 / 0.5); }
-  .lightbox-cap { text-align: center; color: oklch(0.92 0.005 40); font-size: 0.95rem; max-width: 50em; margin-inline: auto; }
-  .lightbox-close { position: absolute; top: clamp(0.75rem, 2vw, 1.5rem); right: clamp(0.75rem, 2vw, 1.5rem); width: 2.75rem; height: 2.75rem; border-radius: 50%; border: 1px solid oklch(1 0 0 / 0.25); background: oklch(0.2 0.01 40 / 0.8); color: #fff; font-size: 1.5rem; line-height: 1; cursor: pointer; }
+  .lightbox-cap { text-align: center; color: oklch(0.92 0.005 255); font-size: 0.95rem; max-width: 50em; margin-inline: auto; }
+  .lightbox-close { position: absolute; top: clamp(0.75rem, 2vw, 1.5rem); right: clamp(0.75rem, 2vw, 1.5rem); width: 2.75rem; height: 2.75rem; border-radius: 50%; border: 1px solid oklch(1 0 0 / 0.25); background: oklch(0.2 0.01 255 / 0.8); color: #fff; font-size: 1.5rem; line-height: 1; cursor: pointer; }
 
-  footer { background: var(--dark); color: oklch(0.95 0.005 40); padding-block: clamp(2.25rem, 6vh, 3.5rem); }
+  footer { background: var(--dark); color: oklch(0.95 0.005 255); padding-block: clamp(2.25rem, 6vh, 3.5rem); }
   footer h2 { font-size: clamp(1.4rem, 2.8vw, 1.9rem); font-weight: 700; }
   footer .links { display: flex; flex-wrap: wrap; gap: 0.8rem 2rem; margin-top: 1.25rem; padding: 0; list-style: none; }
   footer a { color: #fff; font-weight: 600; text-decoration-color: oklch(1 0 0 / 0.4); }
-  footer .fine { margin-top: 1.75rem; font-size: 0.88rem; color: oklch(0.65 0.015 40); }
+  footer .fine { margin-top: 1.75rem; font-size: 0.88rem; color: oklch(0.65 0.015 255); }
 </style>
 <link rel="stylesheet" href="/theme.css?v=2">
 </head>

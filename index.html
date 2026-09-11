@@ -16,22 +16,22 @@
 <meta property="og:title" content="Иван Архипов - разработчик">
 <meta property="og:description" content="7+ лет в корпоративных системах. От заявки пользователя до кода в проде.">
 <meta property="og:type" content="website">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%23b0561f'/%3E%3Ctext x='32' y='43' font-family='Georgia,serif' font-weight='700' font-size='30' fill='white' text-anchor='middle'%3EИА%3C/text%3E%3C/svg%3E">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%23a8741a'/%3E%3Ctext x='32' y='43' font-family='Georgia,serif' font-weight='700' font-size='30' fill='white' text-anchor='middle'%3EИА%3C/text%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bitter:wght@600;700;800&family=Golos+Text:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
   :root {
     --bg: oklch(1 0 0);                    /* 60% - светлая база */
-    --surface: oklch(0.97 0.003 40);
-    --dark: oklch(0.23 0.012 40);          /* 30% - тёмные секции */
-    --dark-soft: oklch(0.3 0.015 40);
-    --ink: oklch(0.24 0.015 40);
-    --muted: oklch(0.45 0.015 40);
-    --accent: oklch(0.58 0.15 42);         /* 10% - янтарный акцент: кнопки, цифры, годы */
-    --accent-deep: oklch(0.46 0.125 42);   /* ссылки и мелкий акцентный текст на белом */
+    --surface: oklch(0.97 0.003 255);
+    --dark: oklch(0.23 0.012 255);          /* 30% - тёмные секции */
+    --dark-soft: oklch(0.3 0.015 255);
+    --ink: oklch(0.24 0.015 255);
+    --muted: oklch(0.45 0.015 255);
+    --accent: oklch(0.58 0.12 74);         /* 10% - янтарный акцент: кнопки, цифры, годы */
+    --accent-deep: oklch(0.47 0.10 72);   /* ссылки и мелкий акцентный текст на белом */
     --ok: oklch(0.55 0.12 145);
-    --line: oklch(0.9 0.004 40);
+    --line: oklch(0.9 0.004 255);
     --display: "Bitter", Georgia, serif;
     --body: "Golos Text", "Segoe UI", system-ui, sans-serif;
     --mono: ui-monospace, "Cascadia Mono", Consolas, monospace;
@@ -107,20 +107,20 @@
     justify-self: end;
     width: min(100%, 21rem);
     background: var(--dark);
-    color: oklch(0.93 0.005 40);
+    color: oklch(0.93 0.005 255);
     border-radius: var(--r);
     padding: 1.4rem 1.5rem 1.2rem;
     font-family: var(--mono);
     font-size: 0.92rem;
     line-height: 2.05;
-    box-shadow: 0 18px 40px -18px oklch(0.23 0.012 40 / 0.45);
+    box-shadow: 0 18px 40px -18px oklch(0.23 0.012 255 / 0.45);
   }
   .pipe .bar { display: flex; gap: 0.4rem; margin-bottom: 0.9rem; }
   .pipe .bar i { width: 0.65rem; height: 0.65rem; border-radius: 50%; background: var(--dark-soft); }
   .pipe .bar i:first-child { background: var(--accent); }
   .pipe .row { display: flex; justify-content: space-between; gap: 1rem; white-space: nowrap; }
   .pipe .ok { color: oklch(0.78 0.14 145); }
-  .pipe .note { margin-top: 0.8rem; color: oklch(0.68 0.02 40); font-family: var(--body); font-size: 0.88rem; line-height: 1.5; white-space: normal; }
+  .pipe .note { margin-top: 0.8rem; color: oklch(0.68 0.02 255); font-family: var(--body); font-size: 0.88rem; line-height: 1.5; white-space: normal; }
 
   .rise { animation: rise 0.9s var(--ease-out) both; }
   .rise:nth-child(2) { animation-delay: 0.08s; }
@@ -192,7 +192,7 @@
   /* Путь: тёмная секция */
   /* Ритм фонов: без чередования пять секций подряд сливаются в одно полотно */
   .tinted { background: var(--surface); border-block: 1px solid var(--line); }
-  .dark-band { background: var(--dark); color: oklch(0.95 0.005 40); }
+  .dark-band { background: var(--dark); color: oklch(0.95 0.005 255); }
   .dark-band .section-title { color: #fff; }
   .path { list-style: none; margin: 0; padding: 0; }
   .path li {
@@ -206,11 +206,11 @@
     font-family: var(--display);
     font-weight: 700;
     font-size: 1.15rem;
-    color: oklch(0.75 0.13 55);
+    color: oklch(0.76 0.12 80);
     line-height: 1.5;
   }
   .path h3 { font-size: 1.15rem; font-weight: 700; color: #fff; }
-  .path p { color: oklch(0.72 0.015 40); margin-top: 0.3rem; font-size: 1rem; }
+  .path p { color: oklch(0.72 0.015 255); margin-top: 0.3rem; font-size: 1rem; }
 
   /* Инструменты */
   .tools { display: grid; gap: 1.1rem; }
@@ -257,25 +257,25 @@
   .advice {
     margin-top: 2.5rem;
     background: var(--dark);
-    color: oklch(0.93 0.005 40);
+    color: oklch(0.93 0.005 255);
     border-radius: var(--r);
     padding: 1.3rem 1.5rem 1.4rem;
   }
-  .advice-tag { font-family: var(--mono); font-size: 0.85rem; color: oklch(0.75 0.13 55); }
+  .advice-tag { font-family: var(--mono); font-size: 0.85rem; color: oklch(0.76 0.12 80); }
   .advice .typed { min-height: 3em; }
   @media (prefers-reduced-motion: reduce) { .typed::after { animation: none; } }
 
   /* ---------- Футер ---------- */
-  footer { background: var(--dark); color: oklch(0.95 0.005 40); padding-block: clamp(2.75rem, 7vh, 4.5rem); }
+  footer { background: var(--dark); color: oklch(0.95 0.005 255); padding-block: clamp(2.75rem, 7vh, 4.5rem); }
   footer h2 { font-family: var(--display); font-size: clamp(1.7rem, 3.2vw, 2.3rem); font-weight: 700; margin: 0; }
-  footer .lead { margin-top: 0.7rem; color: oklch(0.72 0.015 40); max-width: 38em; }
+  footer .lead { margin-top: 0.7rem; color: oklch(0.72 0.015 255); max-width: 38em; }
   .contacts { display: flex; flex-wrap: wrap; gap: 0.8rem 2.25rem; margin: 1.75rem 0 0; padding: 0; list-style: none; align-items: center; }
   .contacts a { color: #fff; font-weight: 600; text-decoration-color: oklch(1 0 0 / 0.4); }
-  .contacts .k { color: oklch(0.62 0.015 40); margin-right: 0.4rem; }
-  footer .fine { margin-top: 2.25rem; font-size: 0.88rem; color: oklch(0.6 0.015 40); user-select: none; }
+  .contacts .k { color: oklch(0.62 0.015 255); margin-right: 0.4rem; }
+  footer .fine { margin-top: 2.25rem; font-size: 0.88rem; color: oklch(0.6 0.015 255); user-select: none; }
   .maps { display: flex; flex-wrap: wrap; gap: 0.5rem 1.5rem; margin-top: 1rem; font-size: 0.92rem; }
   .maps[hidden] { display: none; }
-  .maps a { color: oklch(0.75 0.13 55); font-weight: 600; }
+  .maps a { color: oklch(0.76 0.12 80); font-weight: 600; }
 
   /* ---------- Адаптив ---------- */
   @media (max-width: 780px) {
