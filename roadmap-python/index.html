@@ -11,83 +11,155 @@
   })();
 </script>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Роадмапа Python - Иван Архипов</title>
 <meta name="robots" content="noindex">
-<meta name="description" content="Python backend: бэкенд-паттерны и идиомы поверх живого языка. Проценты поглощения по фазам.">
+<title>Python Backend - роадмап Ивана Архипова</title>
+<meta name="description" content="Бэкенд-паттерны и идиомы поверх живого языка. Практика на трекере и разведчике - они написаны Claude и в опыт не идут, но как полигон лучше учебного проекта.">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%23b0561f'/%3E%3Ctext x='32' y='43' font-family='Georgia,serif' font-weight='700' font-size='30' fill='white' text-anchor='middle'%3EИА%3C/text%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bitter:wght@600;700;800&family=Golos+Text:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg: oklch(1 0 0);
-    --surface: oklch(0.97 0.003 40);
-    --dark: oklch(0.23 0.012 40);
-    --ink: oklch(0.24 0.015 40);
-    --muted: oklch(0.45 0.015 40);
-    --accent: oklch(0.58 0.15 42);
-    --accent-deep: oklch(0.46 0.125 42);
-    --done: oklch(0.55 0.12 145);
+    --bg: oklch(1 0 0); --surface: oklch(0.97 0.003 40); --raised: oklch(1 0 0);
+    --dark: oklch(0.23 0.012 40); --on-dark: #fff;
+    --ink: oklch(0.24 0.015 40); --muted: oklch(0.45 0.015 40);
+    --accent: oklch(0.58 0.15 42); --accent-deep: oklch(0.46 0.125 42); --accent-soft: oklch(0.96 0.02 42);
+    --done: oklch(0.55 0.12 145); --done-soft: oklch(0.94 0.05 145);
+    --skip: oklch(0.55 0.13 25); --skip-soft: oklch(0.95 0.04 25);
     --line: oklch(0.9 0.004 40);
     --display: "Bitter", Georgia, serif;
     --body: "Golos Text", "Segoe UI", system-ui, sans-serif;
-    --r: 14px;
-    --ease: cubic-bezier(0.16, 1, 0.3, 1);
+    --mono: ui-monospace, "Cascadia Mono", Consolas, monospace;
+    --r: 14px; --ease: cubic-bezier(0.16, 1, 0.3, 1);
   }
   * { box-sizing: border-box; }
-  body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--body); font-size: 1.0425rem; line-height: 1.6; -webkit-font-smoothing: antialiased; }
-  h1, h2, h3 { font-family: var(--display); text-wrap: balance; margin: 0; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--body); font-size: 1.04rem; line-height: 1.62; -webkit-font-smoothing: antialiased; }
+  h1, h2, h3, h4 { font-family: var(--display); text-wrap: balance; margin: 0; }
   p { margin: 0; text-wrap: pretty; }
   a { color: var(--accent-deep); text-underline-offset: 3px; }
   :focus-visible { outline: 3px solid var(--accent-deep); outline-offset: 3px; border-radius: 4px; }
-  .wrap { max-width: 50rem; margin-inline: auto; padding-inline: clamp(1.25rem, 5vw, 2.5rem); }
-  header { padding-block: clamp(2.5rem, 7vh, 4.5rem) 0; }
+  .wrap { max-width: 58rem; margin-inline: auto; padding-inline: clamp(1.25rem, 5vw, 3rem); }
+  code { font-family: var(--mono); font-size: 0.9em; background: var(--surface); padding: 0.1em 0.35em; border-radius: 5px; }
+  pre { background: var(--dark); color: var(--on-dark); padding: 0.9rem 1.1rem; border-radius: 10px; overflow-x: auto; font-size: 0.88rem; line-height: 1.5; margin: 0.7rem 0; }
+  pre code { background: none; padding: 0; color: inherit; font-size: inherit; }
+  table { width: 100%; border-collapse: collapse; font-size: 0.93rem; margin: 0.7rem 0; display: block; overflow-x: auto; }
+  th, td { text-align: left; padding: 0.45rem 0.6rem; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--muted); }
+  blockquote { margin: 0.6rem 0; padding: 0.6rem 1rem; border-left: 3px solid var(--accent); background: var(--accent-soft); border-radius: 0 10px 10px 0; }
+  blockquote p + p { margin-top: 0.5rem; }
+  ul, ol { padding-left: 1.3rem; margin: 0.5rem 0; }
+  li + li { margin-top: 0.25rem; }
+  hr { border: 0; border-top: 1px solid var(--line); margin: 1.2rem 0; }
+
+  header { padding-block: clamp(2.5rem, 7vh, 4rem) 1.5rem; }
   .back { font-size: 0.95rem; font-weight: 500; text-decoration: none; }
   .back:hover { text-decoration: underline; }
   .epigraph { margin-top: 0.9rem; font-family: var(--display); font-style: italic; font-size: 0.98rem; color: var(--muted); }
   h1 { font-size: clamp(2.1rem, 5.5vw, 3.2rem); font-weight: 800; letter-spacing: -0.01em; margin-top: 0.8rem; }
-  .sub { margin-top: 0.8rem; color: var(--muted); max-width: 40em; }
-  .track { position: relative; height: 8px; border-radius: 999px; background: var(--surface); border: 1px solid var(--line); }
-  .fill { height: 100%; width: var(--p); border-radius: 999px; background: linear-gradient(90deg, var(--accent), oklch(0.74 0.15 60), var(--accent)); background-size: 200% 100%; animation: load 1.1s var(--ease) var(--d, 0s) both, shimmer 2.6s linear infinite; }
-  .runner { position: absolute; left: max(var(--p), 1.4rem); top: -3px; transform: translate(-95%, -100%) scaleX(-1); font-size: 1.05rem; font-style: normal; line-height: 1; pointer-events: none; animation: run 1.1s var(--ease) var(--d, 0s) both, jog 0.5s ease-in-out infinite; }
-  @keyframes load { from { width: 0; } }
-  @keyframes run { from { left: 1.4rem; } }
-  @keyframes shimmer { from { background-position: 200% 0; } to { background-position: 0% 0; } }
-  @keyframes jog { 0%, 100% { margin-top: 0; } 50% { margin-top: -3px; } }
-  @keyframes fall { 40% { transform: translate(-95%, -55%) scaleX(-1) rotate(75deg); opacity: 1; } 100% { transform: translate(-95%, -5%) scaleX(-1) rotate(115deg); opacity: 0; } }
-  .runner.fall { animation: fall 0.9s ease-in forwards; }
-  .runner.gone { opacity: 0; animation: none; }
-  .runner.rerun { animation: run 1.1s var(--ease) both, jog 0.5s ease-in-out infinite; }
-  @media (prefers-reduced-motion: reduce) { .fill, .runner { animation: none; } }
-  .total { margin-top: 2.25rem; background: var(--dark); color: #fff; border-radius: var(--r); padding: 1.5rem 1.75rem 1.65rem; }
-  .total .row { display: flex; justify-content: space-between; align-items: baseline; gap: 1rem; }
+  .lead { margin-top: 0.8rem; color: var(--muted); max-width: 44em; font-size: 1.08rem; }
+
+  .total { margin-top: 2rem; background: var(--dark); color: var(--on-dark); border-radius: var(--r); padding: 1.4rem 1.6rem 1.5rem; }
+  .total .row { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 0.5rem 1.5rem; }
   .total .label { font-weight: 600; }
-  .total .num { font-family: var(--display); font-weight: 800; font-size: 2rem; color: oklch(0.75 0.13 55); }
-  .total .track { margin-top: 0.9rem; height: 10px; border: none; background: oklch(0.34 0.015 40); }
-  .total .note { margin-top: 0.75rem; font-size: 0.9rem; color: oklch(0.7 0.015 40); }
-  .gate { margin-top: 1.25rem; border: 1.5px solid var(--accent); border-radius: var(--r); padding: 1rem 1.4rem; font-size: 0.98rem; }
-  .gate b { color: var(--accent-deep); }
-  main { padding-block: clamp(2.5rem, 6vh, 4rem); }
-  .phases { list-style: none; margin: 0; padding: 0; display: grid; gap: 1rem; }
-  .phase { border: 1px solid var(--line); border-radius: var(--r); padding: 1.4rem 1.6rem 1.5rem; }
-  .phase.active { border-color: var(--accent); border-width: 1.5px; }
-  .phase .head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 0.4rem 1.5rem; }
-  .phase h2 { font-size: 1.25rem; font-weight: 700; }
-  .phase h2 .n { color: var(--accent-deep); margin-right: 0.5rem; }
-  .status { font-size: 0.85rem; font-weight: 600; padding: 0.2rem 0.8rem; border-radius: 999px; white-space: nowrap; }
-  .status.done { background: oklch(0.93 0.035 145); color: oklch(0.38 0.1 145); }
-  .status.active { background: oklch(0.94 0.045 55); color: var(--accent-deep); }
-  .status.next { background: var(--surface); color: var(--muted); border: 1px solid var(--line); }
-  .meter { display: flex; align-items: center; gap: 1rem; margin-top: 1.1rem; }
-  .meter .track { flex: 1; }
-  .phase[data-done] .fill { background: linear-gradient(90deg, var(--done), oklch(0.7 0.13 145), var(--done)); background-size: 200% 100%; }
-  .meter .pct { font-family: var(--display); font-weight: 700; font-size: 1.05rem; min-width: 3ch; text-align: right; }
-  .topics { margin-top: 0.8rem; font-size: 0.95rem; color: var(--muted); }
-  .note { margin-top: 0.5rem; font-size: 0.95rem; }
-  .note b { color: var(--accent-deep); }
-  .legend { margin-top: 2rem; font-size: 0.9rem; color: var(--muted); max-width: 46em; }
-  footer { border-top: 1px solid var(--line); padding-block: 1.75rem; }
+  .total .num { font-family: var(--display); font-weight: 800; font-size: 2rem; color: oklch(0.75 0.13 55); font-variant-numeric: tabular-nums; }
+  .total .track { position: relative; height: 10px; border-radius: 999px; background: oklch(0.34 0.015 40); margin-top: 0.8rem; overflow: hidden; }
+  .total .fill { height: 100%; width: 0; border-radius: 999px; background: linear-gradient(90deg, var(--accent), oklch(0.74 0.15 60)); transition: width 0.7s var(--ease); }
+  .total .fill.full { background: var(--done); }
+  .stats { display: flex; flex-wrap: wrap; gap: 0.4rem 1.6rem; margin-top: 0.8rem; font-size: 0.92rem; color: oklch(0.72 0.015 40); }
+  .stats b { color: var(--on-dark); font-variant-numeric: tabular-nums; }
+
+  .next { margin-top: 1.4rem; background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 1.1rem 1.3rem; }
+  .next h2 { font-size: 1.1rem; font-weight: 700; margin-bottom: 0.5rem; }
+  .next ol { margin: 0; padding-left: 1.2rem; }
+  .next li { font-size: 0.95rem; }
+  .next li span { color: var(--muted); font-size: 0.85rem; }
+  .next .empty { color: var(--muted); }
+
+  .tools { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 1rem; }
+  .tools button, .tools label { font: inherit; font-size: 0.85rem; padding: 0.35rem 0.9rem; border: 1px solid var(--line); border-radius: 999px; background: var(--raised); color: inherit; cursor: pointer; }
+  .tools button:hover, .tools label:hover { border-color: var(--accent); }
+  .tools .danger { margin-left: auto; opacity: 0.7; }
+  .tools .danger:hover { opacity: 1; border-color: var(--skip); color: var(--skip); }
+  .tools input[type=file] { display: none; }
+
+  main { padding-block: clamp(2rem, 5vh, 3.5rem); }
+  .section-title { font-size: clamp(1.4rem, 3vw, 1.8rem); font-weight: 700; margin-bottom: 1rem; }
+  .section-title em { font-style: normal; color: var(--accent-deep); }
+
+  details.intro { border: 1px solid var(--line); border-radius: var(--r); padding: 0.9rem 1.3rem; margin-bottom: 2rem; }
+  details.intro summary { cursor: pointer; font-family: var(--display); font-weight: 700; font-size: 1.05rem; }
+  details.intro .body { margin-top: 0.8rem; font-size: 0.97rem; }
+  details.intro .body h2 { font-size: 1.2rem; margin-top: 1.3rem; }
+  details.intro .body h3 { font-size: 1.05rem; margin-top: 1rem; }
+
+  .phase { border: 1px solid var(--line); border-left: 4px solid var(--line); border-radius: var(--r); background: var(--raised); margin-bottom: 0.9rem; transition: border-color 0.3s; }
+  .phase.active { border-left-color: var(--accent); }
+  .phase.complete { border-left-color: var(--done); background: var(--surface); }
+  .phase.status-done { border-left-color: var(--done); }
+  .phase.status-skipped { border-left-color: var(--line); opacity: 0.75; }
+  .phase > summary { list-style: none; cursor: pointer; padding: 1rem 1.3rem; display: grid; grid-template-columns: 2.6rem 1fr auto; gap: 0.9rem; align-items: center; }
+  .phase > summary::-webkit-details-marker { display: none; }
+  .phase .n { font-family: var(--display); font-weight: 800; font-size: 1.5rem; color: var(--muted); font-variant-numeric: tabular-nums; text-align: center; }
+  .phase.active .n { color: var(--accent-deep); }
+  .phase.complete .n, .phase.status-done .n { color: var(--done); }
+  .phase h2 { font-size: 1.15rem; font-weight: 700; }
+  .phase .meta { font-size: 0.85rem; color: var(--muted); margin-top: 0.15rem; display: flex; flex-wrap: wrap; gap: 0.3rem 0.8rem; }
+  .phase .tag { font-size: 0.72rem; letter-spacing: 0.06em; text-transform: uppercase; padding: 0.1rem 0.5rem; border-radius: 999px; border: 1px solid var(--accent); color: var(--accent-deep); background: var(--accent-soft); }
+  .gauge { display: flex; align-items: center; gap: 0.6rem; }
+  .gauge .frac { font-family: var(--mono); font-size: 0.82rem; color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .ring { width: 32px; height: 32px; transform: rotate(-90deg); flex: none; }
+  .ring circle { fill: none; stroke-width: 4; }
+  .ring .trk { stroke: var(--line); }
+  .ring .fil { stroke: var(--accent); stroke-linecap: round; transition: stroke-dashoffset 0.6s var(--ease); }
+  .phase.complete .ring .fil { stroke: var(--done); }
+
+  .phase .content { padding: 0 1.3rem 1.3rem; }
+  .block { margin-top: 1.1rem; }
+  .block > h3 { font-size: 0.82rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem; }
+  .block > h3 .i { font-size: 1rem; }
+  .block.analogy .text { background: var(--surface); border-radius: 10px; padding: 0.8rem 1rem; }
+  .block.theory > details > summary { cursor: pointer; color: var(--accent-deep); font-weight: 500; font-size: 0.95rem; }
+  .block.theory .text { margin-top: 0.6rem; }
+  .block .text h3 { font-size: 1.05rem; margin-top: 1.1rem; margin-bottom: 0.3rem; }
+  .block .text h4 { font-size: 0.98rem; margin-top: 0.9rem; }
+  .block .text p + p { margin-top: 0.5rem; }
+  .block .text > p:first-child { margin-top: 0; }
+
+  .steps { list-style: none; margin: 0; padding: 0; }
+  .step { border: 1px solid var(--line); border-radius: 10px; margin-bottom: 0.45rem; background: var(--raised); }
+  .step.done { background: var(--done-soft); border-color: var(--done); }
+  .step .head { display: flex; gap: 0.7rem; align-items: flex-start; padding: 0.55rem 0.75rem; cursor: pointer; }
+  .step input { position: absolute; opacity: 0; width: 0; height: 0; }
+  .box { flex: none; width: 1.1rem; height: 1.1rem; margin-top: 0.2rem; border: 1.5px solid var(--muted); border-radius: 4px; background: var(--raised); position: relative; transition: background 0.2s, border-color 0.2s; }
+  .box::after { content: ""; position: absolute; left: 0.32rem; top: 0.08rem; width: 0.3rem; height: 0.6rem; border: solid var(--on-dark); border-width: 0 2px 2px 0; transform: rotate(45deg) scale(0); transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1); }
+  .step.done .box { background: var(--done); border-color: var(--done); }
+  .step.done .box::after { transform: rotate(45deg) scale(1); }
+  .step .t { flex: 1; font-size: 0.97rem; }
+  .step.done .t { color: var(--muted); text-decoration: line-through; text-decoration-thickness: 1px; }
+  .step .more { flex: none; font-size: 0.8rem; color: var(--muted); padding-top: 0.2rem; }
+  .step .body { display: none; padding: 0 0.75rem 0.7rem 2.55rem; font-size: 0.93rem; }
+  .step.open .body { display: block; }
+  .step .body pre { font-size: 0.84rem; }
+  .brk .step .head::before { content: "сломать"; flex: none; font-family: var(--mono); font-size: 0.66rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--skip); border: 1px solid currentColor; border-radius: 4px; padding: 0.05rem 0.35rem; margin-top: 0.25rem; order: 2; }
+  .brk .step .t { order: 3; }
+  .brk .step .more { order: 4; }
+  .brk .step .box { order: 1; }
+  .interlude { font-size: 0.93rem; margin: 0.6rem 0; }
+
+  .block.task .text { background: var(--surface); border: 1px dashed var(--line); border-radius: 10px; padding: 0.8rem 1rem; font-size: 0.95rem; }
+  .block.questions .text > p > strong { display: block; margin-top: 0.9rem; font-family: var(--display); font-size: 1rem; }
+  .block.questions .text blockquote { margin-top: 0.3rem; }
+  .src { margin-top: 1rem; font-size: 0.82rem; color: var(--muted); }
+
+  footer { border-top: 1px solid var(--line); padding-block: 1.75rem; margin-top: 2rem; }
   footer .wrap { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 0.75rem 2rem; font-size: 0.92rem; color: var(--muted); }
+  @media (max-width: 600px) {
+    .phase > summary { grid-template-columns: 2rem 1fr; }
+    .gauge { grid-column: 1 / -1; padding-left: 2.9rem; }
+    .phase .content { padding-inline: 1rem; }
+    .step .body { padding-left: 1rem; }
+  }
+  @media (prefers-reduced-motion: reduce) { .total .fill, .ring .fil, .box::after { transition: none; } }
 </style>
 <link rel="stylesheet" href="/theme.css?v=2">
 </head>
@@ -97,98 +169,1185 @@
   <div class="wrap">
     <a class="back" href="/">← Иван Архипов</a>
     <p class="epigraph">Не забывай, кто тебя отправил, и помни, что ты можешь доказать.</p>
-    <h1>Роадмапа Python</h1>
-    <p class="sub">Роадмап закрывает бэкенд-паттерны и идиомы поверх живого языка. Проценты - честная самооценка поглощения: сколько темы реально сидит в голове и руках.</p>
+    <h1>Python Backend</h1>
+    <p class="lead">Бэкенд-паттерны и идиомы поверх живого языка. Практика на трекере и разведчике - они написаны Claude и в опыт не идут, но как полигон лучше учебного проекта.</p>
 
     <div class="total">
-      <div class="row"><span class="label">Общий прогресс трека</span><span class="num">26%</span></div>
-      <div class="track" style="--p:26%"><div class="fill"></div><i class="runner" aria-hidden="true">🏃</i></div>
-      <p class="note">Обновлено 11 сентября 2026 · трек разбужен требованиями рынка, проценты считаются по голове</p>
+      <div class="row"><span class="label">Пройдено</span><span class="num" id="pct">0%</span></div>
+      <div class="track"><div class="fill" id="fill"></div></div>
+      <div class="stats">
+        <span>шагов <b id="done">0</b> из <b>80</b></span>
+        <span>фаз закрыто <b id="phasesDone">0</b> из <b>7</b></span>
+        <span id="deadline" hidden>: <b id="days"></b></span>
+      </div>
     </div>
 
-    <p class="gate"><b>Статус «спящий» снят 11 сентября.</b> Причина в требованиях рынка: в инфраструктурных вакансиях автоматизация скриптами стоит вторым требованием после Linux. У Сбера прямо в описании - «навыки автоматизации на любом скриптовом языке и желание их регулярно применять».</p>
+    <div class="next">
+      <h2>Следующие шаги</h2>
+      <ol id="next"></ol>
+    </div>
 
-    <p class="gate"><b>Формат фаз обновлён.</b> Каждая фаза самодостаточна: аналогия из жизни, теория, практика, блок «сломай намеренно», задание с критерием готовности, факты из практики и вопросы с готовыми ответами. Практика идёт на трекере и разведчике - их написал Claude, и в опыт разработки это не идёт, но как полигон они лучше выдуманного учебного проекта: настоящая база, живая логика, видимые последствия ошибок.</p>
+    <div class="tools">
+      <button type="button" id="exportBtn">Скачать прогресс</button>
+      <label for="importFile">Загрузить прогресс</label>
+      <input type="file" id="importFile" accept="application/json">
+      <button type="button" id="expandAll">Раскрыть всё</button>
+      <button type="button" class="danger" id="resetBtn">Сбросить</button>
+    </div>
   </div>
 </header>
 
 <main>
   <div class="wrap">
-    <ol class="phases">
+    <details class="intro">
+      <summary>Про этот роадмап: зачем, прицел, срез, календарь</summary>
+      <div class="body"><blockquote>
+<p>Создан 18 августа 2026, переписан 11 сентября под единый формат фаз.</p>
+<p>⚠️ <strong>Статус «спящий» снят.</strong> Причина не в том, что стало больше практики,
+а в требованиях рынка: в инфраструктурных вакансиях автоматизация скриптами
+стоит вторым требованием после Linux. У Сбера прямо в описании - «навыки
+автоматизации на любом скриптовом языке и желание их регулярно применять».</p>
+</blockquote>
+<p><strong>Уровень старта.</strong> Python знаешь: pandas, Selenium, Flask и Django, threading, ООП. Роадмап калиброван под «закрыть бэкенд-паттерны и идиомы», а не учить язык с нуля.</p>
+<hr>
+<h2>⚠️ Про трекер и разведчик - читать до начала</h2>
+<p>Трекер откликов на FastAPI и разведчик вакансий на Playwright <strong>написал Claude, а не Иван</strong>. Из этого следуют два правила, и оба важные.</p>
+<p><strong>Первое: этот код не идёт в опыт.</strong> Ни в резюме, ни в ответы на собеседовании, ни в проценты прохождения фаз. Фраза «я собрал трекер на FastAPI» рассыпается от первого уточняющего вопроса про <code>Depends</code> или про то, почему сессия закрывается именно так.</p>
+<p><strong>Второе: этот код - отличный полигон.</strong> Он лучше выдуманного Task Manager по трём причинам: база настоящая с реальными данными, логика живая и уже ломалась, а ошибки в ней имеют последствия, которые видно. Учиться на нём можно и нужно.</p>
+<p><strong>Отсюда критерий закрытия любой фазы:</strong> можешь объяснить каждую строку разобранного куска и изменить её сам, без подсказки. Не «код работает», а «я понимаю, почему он работает так».</p>
+<p><strong>Честная формулировка для собеседования</strong>, если спросят про эти проекты:</p>
+<blockquote>
+<p>Трекер откликов и разведчик вакансий я собрал через Claude Code: ставил задачу, разбирал результат, правил и эксплуатирую. Сам код писал не я - это инструментальное владение ИИ, а не моя разработка. Что делаю руками: держу их живыми на сервере, разбираю падения, читаю логи, правлю конфигурацию.</p>
+</blockquote>
+<p>Этот вариант звучит не слабее выдуманного, а в вакансиях, где GigaChat и владение AI стоят в требованиях, - сильнее.</p>
+<hr>
+<h2>Как устроена каждая фаза</h2>
+<table>
+<thead>
+<tr>
+<th>Блок</th>
+<th>Что в нём</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>🎭 <strong>Аналогия</strong></td>
+<td>бытовой образ до теории</td>
+</tr>
+<tr>
+<td>📖 <strong>Теория</strong></td>
+<td>что понять, с таблицами сравнения</td>
+</tr>
+<tr>
+<td>🔧 <strong>Практика</strong></td>
+<td>на трекере и разведчике, командами</td>
+</tr>
+<tr>
+<td>💥 <strong>Сломай намеренно</strong></td>
+<td>что испортить, чтобы увидеть симптом</td>
+</tr>
+<tr>
+<td>✅ <strong>Задание</strong></td>
+<td>что предъявить</td>
+</tr>
+<tr>
+<td>🌍 <strong>Из жизни</strong></td>
+<td>случаи, цифры, чем оборачивается в проде</td>
+</tr>
+<tr>
+<td>❓ <strong>Вопросы с ответами</strong></td>
+<td>формулировки для собеседования</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2>📊 Статус</h2>
+<table>
+<thead>
+<tr>
+<th>Фаза</th>
+<th>Тема</th>
+<th>Часов</th>
+<th>Состояние</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>Идиомы и продвинутый Python</td>
+<td>6</td>
+<td>не начата</td>
+</tr>
+<tr>
+<td>2</td>
+<td>Async и параллелизм</td>
+<td>6</td>
+<td>не начата</td>
+</tr>
+<tr>
+<td>3</td>
+<td>FastAPI</td>
+<td>5</td>
+<td>частично: крэш-курс закрывает Pydantic, DI, Strategy</td>
+</tr>
+<tr>
+<td>4</td>
+<td>Базы данных: SQLAlchemy и Alembic</td>
+<td>5</td>
+<td>не начата, есть код для разбора</td>
+</tr>
+<tr>
+<td>5</td>
+<td>Тестирование</td>
+<td>4</td>
+<td>частично: крэш-курс закрывает pytest, моки, coverage</td>
+</tr>
+<tr>
+<td>6</td>
+<td>Упаковка и эксплуатация</td>
+<td>4</td>
+<td>пересекается со слоями 0-2 инфра-роадмапа</td>
+</tr>
+<tr>
+<td>7</td>
+<td>Архитектура и продакшен</td>
+<td>5</td>
+<td>не начата</td>
+</tr>
+</tbody>
+</table>
+<p>Итого 35 часов. <strong>Готовый материал:</strong> <code>Python_Backend_Crash_Course.md</code> от 22 июля закрывает часть фаз 3 и 5. Переписывать заново не надо, использовать как есть.</p>
+<hr></div>
+    </details>
 
-      <li class="phase active" style="--d:0.05s">
-        <div class="head">
-          <h2><span class="n">01</span>Идиомы и продвинутый Python</h2>
-          <span class="status next">полигон готов</span>
-        </div>
-        <div class="meter"><div class="track" style="--p:55%"><div class="fill"></div><i class="runner" aria-hidden="true">🏃</i></div><span class="pct">55%</span></div>
-        <p class="topics">Mutable/immutable · comprehensions · *args/**kwargs · генераторы · декораторы · контекстные менеджеры · dataclasses · type hints</p>
-        <p class="note">Python - рабочий инструмент годами: интеграции в проде, pandas, selenium, ООП. Честные пробелы известны поимённо: *args/**kwargs, свои декораторы - местами пишу «как на C# с другим синтаксисом».</p>
-      </li>
+    <h2 class="section-title">Фазы <em>по порядку</em></h2>
+    <div id="phases"><details class="phase" data-phase="1" data-total="13"><summary><span class="n">01</span><span><h2>Идиомы и продвинутый Python</h2><span class="meta">6 часов</span></span><span class="gauge"><span class="frac">0/13</span><svg class="ring" viewBox="0 0 32 32" aria-hidden="true"><circle class="trk" cx="16" cy="16" r="13"></circle><circle class="fil" cx="16" cy="16" r="13" stroke-dasharray="81.68" stroke-dashoffset="81.68"></circle></svg></span></summary><div class="content"><div class="block analogy"><h3><span class="i">🎭</span>Аналогия</h3><div class="text"><p>Человек, выучивший язык по словарю, говорит грамматически верно и звучит чужим. Не потому что ошибается, а потому что строит фразы по правилам родного языка. С кодом так же: цикл с индексом вместо comprehension понятен, но выдаёт человека из другой экосистемы.</p></div></div><div class="block theory"><h3><span class="i">📖</span>Теория</h3><details><summary>Развернуть теорию</summary><div class="text"><h3>Изменяемое и неизменяемое</h3>
+<table>
+<thead>
+<tr>
+<th>Неизменяемые</th>
+<th>Изменяемые</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>int</code>, <code>float</code>, <code>str</code>, <code>tuple</code>, <code>frozenset</code>, <code>bytes</code></td>
+<td><code>list</code>, <code>dict</code>, <code>set</code>, объекты классов</td>
+</tr>
+</tbody>
+</table>
+<p>Присвоение в Python копирует ссылку, а не значение. Это источник самой известной ловушки языка:</p>
+<pre><code class="language-python">def add(item, target=[]):     # ЛОВУШКА: список создаётся один раз при определении
+    target.append(item)
+    return target
 
-      <li class="phase" style="--d:0.12s">
-        <div class="head">
-          <h2><span class="n">02</span>Async и конкурентность</h2>
-          <span class="status next">впереди</span>
-        </div>
-        <div class="meter"><div class="track" style="--p:25%"><div class="fill"></div><i class="runner" aria-hidden="true">🏃</i></div><span class="pct">25%</span></div>
-        <p class="topics">GIL · asyncio и event loop · threading против multiprocessing · aiohttp · Semaphore/Lock</p>
-        <p class="note">Threading использовал в реальном сервисе (многопоточные сессии «электронного секретаря»), asyncio руками не трогал. Мост от C# async/await уже построен в основном треке.</p>
-      </li>
+add(1)   # [1]
+add(2)   # [1, 2] - тот же список
+</code></pre>
+<p>Правильно:</p>
+<pre><code class="language-python">def add(item, target=None):
+    if target is None:
+        target = []
+    target.append(item)
+    return target
+</code></pre>
+<p>⚠️ Значения по умолчанию вычисляются один раз при определении функции. Это спрашивают почти на каждом собеседовании по Python.</p>
+<p><strong>Мелкая и глубокая копия:</strong></p>
+<pre><code class="language-python">import copy
+shallow = copy.copy(data)       # вложенные объекты общие
+deep    = copy.deepcopy(data)   # всё скопировано
+</code></pre>
+<h3>Comprehensions</h3>
+<pre><code class="language-python">names = [v.name for v in finds if v.score &gt; 60]
+by_id = {v.id: v for v in finds}
+tracks = {v.track for v in finds if v.track}
+</code></pre>
+<p>Когда идиоматично: одно преобразование плюс фильтр. Когда усложняет: два вложенных <code>for</code> с условиями - там обычный цикл читается лучше.</p>
+<p><strong>Генераторное выражение вместо списка</strong> там, где список не нужен целиком:</p>
+<pre><code class="language-python">total = sum(v.score for v in finds)          # не строит промежуточный список
+first = next((v for v in finds if v.remote), None)
+</code></pre>
+<h3><code>*args</code> и <code>**kwargs</code></h3>
+<pre><code class="language-python">def score(*parts, **weights):
+    &quot;&quot;&quot;parts - позиционные, weights - именованные.&quot;&quot;&quot;
+    return sum(p * weights.get(&quot;k&quot;, 1) for p in parts)
 
-      <li class="phase" style="--d:0.19s">
-        <div class="head">
-          <h2><span class="n">03</span>FastAPI</h2>
-          <span class="status active">в строю</span>
-        </div>
-        <div class="meter"><div class="track" style="--p:45%"><div class="fill"></div><i class="runner" aria-hidden="true">🏃</i></div><span class="pct">45%</span></div>
-        <p class="topics">Маршрутизация · Pydantic · Depends() · middleware · Background Tasks · JWT</p>
-        <p class="note">Реальный опыт с Flask и Django есть, трёхдневный крэш-курс по FastAPI написан. Рядом лежит трекер откликов - он собран через Claude Code, код писал не я, и в опыт это не идёт. Зато это живой полигон: настоящая база, работающие маршруты, Pydantic и Depends перед глазами. Фаза закрыта, когда объясняю каждую строку и меняю её сам.</p>
-      </li>
+score(10, 20, k=2)
+</code></pre>
+<p>Развёртывание при вызове:</p>
+<pre><code class="language-python">args = (10, 20)
+opts = {&quot;k&quot;: 2}
+score(*args, **opts)
+</code></pre>
+<p><strong>Только именованные параметры</strong> - через <code>*</code>:</p>
+<pre><code class="language-python">def publish(text, *, dry_run=False):   # dry_run нельзя передать позиционно
+    ...
+</code></pre>
+<p>Это защищает от <code>publish("текст", True)</code>, где непонятно, что означает <code>True</code>.</p>
+<h3>Итераторы и генераторы</h3>
+<p>Мост от C#: <code>yield</code> здесь работает как <code>yield return</code> в <code>IEnumerable</code>.</p>
+<pre><code class="language-python">def read_lines(path):
+    &quot;&quot;&quot;Читает лог построчно. Файл в гигабайты не влезет в память целиком.&quot;&quot;&quot;
+    with open(path, encoding=&quot;utf-8&quot;, errors=&quot;replace&quot;) as f:
+        for line in f:
+            yield line.rstrip(&quot;\n&quot;)
+</code></pre>
+<p>Генератор считает по одному элементу за раз и не держит всё в памяти. Разница на большом файле - между работой и <code>MemoryError</code>.</p>
+<p><strong><code>itertools</code></strong> - то, что стоит знать:</p>
+<pre><code class="language-python">from itertools import islice, groupby, chain, batched
+islice(gen, 100)                    # первые 100 без материализации
+batched(items, 1000)                # пачками, Python 3.12+
+chain(list_a, list_b)               # склеить итерируемые
+</code></pre>
+<h3>Декораторы</h3>
+<p>Мост от C#: атрибуты плюс обёртки, только выполняются во время исполнения.</p>
+<pre><code class="language-python">import functools, time, logging
 
-      <li class="phase" style="--d:0.26s">
-        <div class="head">
-          <h2><span class="n">04</span>Базы данных</h2>
-          <span class="status next">частично в строю</span>
-        </div>
-        <div class="meter"><div class="track" style="--p:40%"><div class="fill"></div><i class="runner" aria-hidden="true">🏃</i></div><span class="pct">40%</span></div>
-        <p class="topics">SQLAlchemy · Alembic · async-сессии · Repository pattern</p>
-        <p class="note">Alembic и Django ORM - реальный рабочий опыт, сам PostgreSQL - 7 лет. Впереди только SQLAlchemy как таковой.</p>
-      </li>
+def timed(fn):
+    @functools.wraps(fn)              # сохраняет имя и docstring
+    def wrapper(*args, **kwargs):
+        start = time.perf_counter()
+        try:
+            return fn(*args, **kwargs)
+        finally:
+            logging.info(&quot;%s заняло %.2f с&quot;, fn.__name__, time.perf_counter() - start)
+    return wrapper
 
-      <li class="phase" style="--d:0.33s">
-        <div class="head">
-          <h2><span class="n">05</span>Тестирование</h2>
-          <span class="status next">впереди</span>
-        </div>
-        <div class="meter"><div class="track" style="--p:5%"><div class="fill"></div><i class="runner" aria-hidden="true">🏃</i></div><span class="pct">5%</span></div>
-        <p class="topics">pytest · fixtures · mocking · coverage</p>
-        <p class="note">День 3 крэш-курса написан, руки не дошли - подход AAA и мокирование переедут из C#-трека почти без перевода.</p>
-      </li>
+@timed
+def collect(query): ...
+</code></pre>
+<p>⚠️ Без <code>functools.wraps</code> у обёрнутой функции пропадают <code>__name__</code> и <code>__doc__</code>. Отладка превращается в набор функций с именем <code>wrapper</code>.</p>
+<p><strong>Параметризованный декоратор</strong> - три уровня вложенности:</p>
+<pre><code class="language-python">def retry(times=3, delay=1.0):
+    def decorator(fn):
+        @functools.wraps(fn)
+        def wrapper(*args, **kwargs):
+            for attempt in range(times):
+                try:
+                    return fn(*args, **kwargs)
+                except OSError:
+                    if attempt == times - 1:
+                        raise
+                    time.sleep(delay * (2 ** attempt))   # экспоненциальная пауза
+        return wrapper
+    return decorator
 
-      <li class="phase" style="--d:0.4s">
-        <div class="head">
-          <h2><span class="n">06</span>DevOps</h2>
-          <span class="status next">частично в строю</span>
-        </div>
-        <div class="meter"><div class="track" style="--p:30%"><div class="fill"></div><i class="runner" aria-hidden="true">🏃</i></div><span class="pct">30%</span></div>
-        <p class="topics">Docker для Python · gunicorn/uvicorn · переменные окружения · CI</p>
-        <p class="note">Docker, Jenkins и cron - реальный опыт; специфика деплоя Python-сервисов впереди.</p>
-      </li>
+@retry(times=5, delay=0.5)
+def fetch(url): ...
+</code></pre>
+<h3>Контекстные менеджеры</h3>
+<p>Мост от C#: <code>using</code> и <code>IDisposable</code>.</p>
+<pre><code class="language-python">from contextlib import contextmanager
 
-      <li class="phase" style="--d:0.47s">
-        <div class="head">
-          <h2><span class="n">07</span>Архитектура и продакшен</h2>
-          <span class="status next">горизонт</span>
-        </div>
-        <div class="meter"><div class="track" style="--p:10%"><div class="fill"></div><i class="runner" aria-hidden="true">🏃</i></div><span class="pct">10%</span></div>
-        <p class="topics">Слои и зависимости · настройки через Pydantic Settings · логирование · фоновые задачи</p>
-        <p class="note">Принципы те же, что в C#-треке - сюда они приедут уже обкатанными.</p>
-      </li>
+@contextmanager
+def timing(label):
+    start = time.perf_counter()
+    try:
+        yield
+    finally:
+        print(f&quot;{label}: {time.perf_counter() - start:.2f} с&quot;)
 
-    </ol>
+with timing(&quot;сбор вакансий&quot;):
+    collect()
+</code></pre>
+<p>Гарантия в <code>finally</code>: ресурс освободится даже при исключении. Именно поэтому файлы и соединения открывают через <code>with</code>, а не вручную.</p>
+<p><strong>Несколько сразу:</strong></p>
+<pre><code class="language-python">with open(src) as fin, open(dst, &quot;w&quot;) as fout:
+    ...
+</code></pre>
+<h3>ООП и dunder-методы</h3>
+<pre><code class="language-python">from dataclasses import dataclass, field
 
-    <p class="legend">Проценты - самооценка поглощения: 90%+ означает «объясню и напишу без подсказок», около 50% - «понимаю, но вслух пока спотыкаюсь», ниже 20% - «прочитал, руками не делал».</p>
+@dataclass(frozen=True, slots=True)
+class Find:
+    id: str
+    name: str
+    score: int = 0
+    tags: tuple[str, ...] = ()
+
+    def __str__(self) -&gt; str:
+        return f&quot;{self.name} ({self.score})&quot;
+</code></pre>
+<table>
+<thead>
+<tr>
+<th>Что даёт</th>
+<th>Как</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>__eq__</code> и <code>__hash__</code></td>
+<td><code>@dataclass</code> пишет сам, <code>frozen=True</code> делает объект хешируемым</td>
+</tr>
+<tr>
+<td><code>__repr__</code></td>
+<td>тоже пишет сам, видно в отладчике</td>
+</tr>
+<tr>
+<td>экономия памяти</td>
+<td><code>slots=True</code> убирает <code>__dict__</code> у экземпляра</td>
+</tr>
+<tr>
+<td>вычисляемое поле</td>
+<td><code>@property</code></td>
+</tr>
+<tr>
+<td>изменяемое значение по умолчанию</td>
+<td><code>field(default_factory=list)</code>, никогда <code>= []</code></td>
+</tr>
+</tbody>
+</table>
+<p><strong><code>__repr__</code> против <code>__str__</code>:</strong> первый для разработчика и отладки, второй для пользователя. Если написан только <code>__repr__</code>, <code>str()</code> возьмёт его.</p>
+<h3>Типизация</h3>
+<pre><code class="language-python">from typing import Iterable, Protocol
+
+def top(finds: Iterable[Find], limit: int = 10) -&gt; list[Find]:
+    return sorted(finds, key=lambda f: -f.score)[:limit]
+
+class Storage(Protocol):
+    &quot;&quot;&quot;Структурная типизация: подходит любой объект с такими методами.&quot;&quot;&quot;
+    def save(self, item: Find) -&gt; None: ...
+</code></pre>
+<p>С 3.10: <code>int | None</code> вместо <code>Optional[int]</code>, <code>list[str]</code> вместо <code>List[str]</code>.</p>
+<p>⚠️ Аннотации не проверяются во время выполнения. Проверку даёт mypy:</p>
+<pre><code class="language-bash">mypy scout/ --strict
+</code></pre></div></details></div><div class="block practice "><h3><span class="i">🔧</span>Практика</h3><div class="interlude"><p><strong>На разведчике:</strong></p></div><ul class="steps"><li class="step" data-step="1-practice-1"><label class="head"><input type="checkbox" id="s-1-practice-1"><span class="box"></span><span class="t">Переписать чтение находок из SQLite через генератор, чтобы не грузить всё в память.</span></label></li><li class="step" data-step="1-practice-2"><label class="head"><input type="checkbox" id="s-1-practice-2"><span class="box"></span><span class="t">Заменить словари, описывающие находку, на <code>@dataclass(frozen=True, slots=True)</code>.</span></label></li><li class="step" data-step="1-practice-3"><label class="head"><input type="checkbox" id="s-1-practice-3"><span class="box"></span><span class="t">Обернуть сбор в декоратор <code>@timed</code>, писать длительность в лог.</span></label></li><li class="step" data-step="1-practice-4"><label class="head"><input type="checkbox" id="s-1-practice-4"><span class="box"></span><span class="t">Добавить <code>@retry</code> на сетевые вызовы с экспоненциальной паузой.</span></label></li><li class="step" data-step="1-practice-5"><label class="head"><input type="checkbox" id="s-1-practice-5"><span class="box"></span><span class="t">Прогнать <code>mypy scout/</code> и починить, что найдётся.</span><span class="more">подробнее</span></label><div class="body"><p><strong>На трекере:</strong></p></div></li><li class="step" data-step="1-practice-6"><label class="head"><input type="checkbox" id="s-1-practice-6"><span class="box"></span><span class="t">Контекстный менеджер для сессии базы, если его ещё нет.</span></label></li><li class="step" data-step="1-practice-7"><label class="head"><input type="checkbox" id="s-1-practice-7"><span class="box"></span><span class="t">Аннотировать сигнатуры в <code>crud.py</code> целиком.</span></label></li></ul></div><div class="block break brk"><h3><span class="i">💥</span>Сломай намеренно</h3><ul class="steps"><li class="step" data-step="1-break-1"><label class="head"><input type="checkbox" id="s-1-break-1"><span class="box"></span><span class="t"><strong>Изменяемое значение по умолчанию.</strong> Написать функцию с <code>def add(x, target=[])</code>, вызвать трижды, посмотреть на накопление.</span></label></li><li class="step" data-step="1-break-2"><label class="head"><input type="checkbox" id="s-1-break-2"><span class="box"></span><span class="t"><strong>Убрать <code>functools.wraps</code></strong> из декоратора, посмотреть <code>fn.__name__</code> и на трассировку исключения.</span></label></li><li class="step" data-step="1-break-3"><label class="head"><input type="checkbox" id="s-1-break-3"><span class="box"></span><span class="t"><strong>Изменить <code>frozen=True</code> датакласс</strong> - получить <code>FrozenInstanceError</code>.</span></label></li><li class="step" data-step="1-break-4"><label class="head"><input type="checkbox" id="s-1-break-4"><span class="box"></span><span class="t"><strong>Положить <code>field(default=[])</code></strong> в датакласс - получить <code>ValueError</code> прямо при определении класса. Python здесь защищает, в обычных функциях не защищает.</span></label></li><li class="step" data-step="1-break-5"><label class="head"><input type="checkbox" id="s-1-break-5"><span class="box"></span><span class="t"><strong>Прочитать большой файл через <code>f.read()</code></strong> вместо построчного цикла, посмотреть на память в <code>top</code>.</span></label></li><li class="step" data-step="1-break-6"><label class="head"><input type="checkbox" id="s-1-break-6"><span class="box"></span><span class="t"><strong>Соврать в аннотации</strong> - написать <code>-&gt; int</code>, вернуть строку. Убедиться, что во время выполнения ничего не произошло, а mypy поймал.</span></label></li></ul></div><div class="block task"><h3><span class="i">✅</span>Задание</h3><div class="text"><p>Разведчик работает на датаклассах вместо словарей, читает находки генератором, сетевые вызовы обёрнуты <code>@retry</code>, <code>mypy scout/</code> проходит без ошибок. В коммите видно, что изменилось.</p>
+<p><strong>Критерий:</strong> можешь объяснить, почему <code>mypy</code> нашёл то, что нашёл, и почему генератор здесь лучше списка.</p></div></div><div class="block life"><h3><span class="i">🌍</span>Из жизни</h3><div class="text"><p><strong>Про изменяемые значения по умолчанию.</strong> Это баг, который живёт годами: функция работает правильно при каждом отдельном вызове и накапливает мусор при повторных. Ловится обычно тогда, когда кто-то замечает, что список растёт между запросами.</p>
+<p><strong>Про генераторы и память.</strong> Разбор лога на десять гигабайт через <code>read()</code> съедает десять гигабайт оперативной. На сервере с четырьмя это <code>MemoryError</code> или OOM killer. Построчный цикл занимает килобайты.</p>
+<p><strong>Про mypy на живом коде.</strong> Первый запуск <code>--strict</code> на существующем проекте даёт сотни ошибок и желание всё выключить. Рабочий путь: включить без <code>--strict</code>, починить, потом добавлять строгость по одному флагу.</p></div></div><div class="block questions"><h3><span class="i">❓</span>Вопросы с ответами</h3><div class="text"><p><strong>Чем изменяемые типы отличаются от неизменяемых и почему это важно?</strong></p>
+<blockquote>
+<p>Присвоение копирует ссылку. Изменяемый объект, переданный в функцию, меняется у всех, кто на него ссылается. Самая известная ловушка - изменяемое значение по умолчанию: оно вычисляется один раз при определении функции и живёт между вызовами. Пишу <code>None</code> и создаю внутри.</p>
+</blockquote>
+<p><strong>Что такое генератор и когда он нужен?</strong></p>
+<blockquote>
+<p>Функция с <code>yield</code>, отдающая элементы по одному без материализации. Нужен, когда данных больше, чем памяти, или когда достаточно первых нескольких элементов. В C# это тот же <code>yield return</code> у <code>IEnumerable</code>.</p>
+</blockquote>
+<p><strong>Зачем <code>functools.wraps</code>?</strong></p>
+<blockquote>
+<p>Переносит имя, docstring и аннотации с исходной функции на обёртку. Без него все декорированные функции превращаются в <code>wrapper</code>, и отладка становится мучением.</p>
+</blockquote>
+<p><strong>Что такое контекстный менеджер?</strong></p>
+<blockquote>
+<p>Объект с <code>__enter__</code> и <code>__exit__</code>, гарантирующий освобождение ресурса даже при исключении. Аналог <code>using</code> с <code>IDisposable</code> в C#. Свой пишу через <code>@contextmanager</code> и <code>try/finally</code> вокруг <code>yield</code>.</p>
+</blockquote>
+<p><strong>Чем dataclass лучше словаря?</strong></p>
+<blockquote>
+<p>Явная структура, автоматические <code>__eq__</code> и <code>__repr__</code>, проверка типов через mypy, автодополнение в редакторе. <code>frozen=True</code> делает объект неизменяемым и хешируемым, <code>slots=True</code> экономит память.</p>
+</blockquote>
+<p><strong>Аннотации типов что-то проверяют во время выполнения?</strong></p>
+<blockquote>
+<p>Нет, интерпретатор их игнорирует. Проверку даёт mypy на этапе разработки или в CI. Плюс аннотации читает FastAPI и Pydantic - там они превращаются в реальную валидацию.</p>
+</blockquote></div></div><p class="src">Исходник: <a href="https://github.com/Lazysagotku/l2code/blob/main/Python_Phase1_Idioms.md" target="_blank" rel="noopener">Python_Phase1_Idioms.md</a></p></div></details><details class="phase" data-phase="2" data-total="10"><summary><span class="n">02</span><span><h2>Async и параллелизм</h2><span class="meta">6 часов</span></span><span class="gauge"><span class="frac">0/10</span><svg class="ring" viewBox="0 0 32 32" aria-hidden="true"><circle class="trk" cx="16" cy="16" r="13"></circle><circle class="fil" cx="16" cy="16" r="13" stroke-dasharray="81.68" stroke-dashoffset="81.68"></circle></svg></span></summary><div class="content"><div class="block analogy"><h3><span class="i">🎭</span>Аналогия</h3><div class="text"><p>Одна касса в магазине. Пока кассир пробивает товар, очередь стоит - это счёт, процессор занят. Но если кассир ждёт, пока клиент найдёт карту, он успевает обслужить соседнего - это ожидание, ввод-вывод.</p>
+<p><code>asyncio</code> - один кассир, который умеет переключаться на время ожидания. <code>multiprocessing</code> - несколько касс. <code>threading</code> - один кассир с несколькими окошками, помогает только на ожидании.</p></div></div><div class="block theory"><h3><span class="i">📖</span>Теория</h3><details><summary>Развернуть теорию</summary><div class="text"><h3>GIL</h3>
+<p>Global Interpreter Lock - блокировка, из-за которой в один момент байткод Python выполняет только один поток. На вводе-выводе GIL отпускается, поэтому потоки там работают. На счёте не отпускается, поэтому не работают.</p>
+<table>
+<thead>
+<tr>
+<th>Задача</th>
+<th>Инструмент</th>
+<th>Почему</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Сетевые запросы, файлы, база</td>
+<td><code>asyncio</code></td>
+<td>сотни одновременных ожиданий на одном потоке</td>
+</tr>
+<tr>
+<td>То же, но библиотека синхронная</td>
+<td><code>threading</code></td>
+<td>GIL отпускается на вводе-выводе</td>
+</tr>
+<tr>
+<td>Вычисления, обработка данных</td>
+<td><code>multiprocessing</code></td>
+<td>отдельные процессы, каждый со своим GIL</td>
+</tr>
+<tr>
+<td>Смешанное</td>
+<td><code>asyncio</code> плюс <code>run_in_executor</code></td>
+<td>тяжёлое уходит в пул</td>
+</tr>
+</tbody>
+</table>
+<p>⚠️ В 3.13 появился экспериментальный режим без GIL (free-threaded). Упомянуть можно, полагаться пока нет.</p>
+<h3>asyncio</h3>
+<pre><code class="language-python">import asyncio, httpx
+
+async def fetch(client: httpx.AsyncClient, url: str) -&gt; dict:
+    response = await client.get(url, timeout=10)
+    response.raise_for_status()
+    return response.json()
+
+async def main(urls: list[str]) -&gt; list[dict]:
+    limit = asyncio.Semaphore(10)          # не больше 10 одновременно
+
+    async def guarded(client, url):
+        async with limit:
+            return await fetch(client, url)
+
+    async with httpx.AsyncClient() as client:
+        tasks = [guarded(client, u) for u in urls]
+        return await asyncio.gather(*tasks, return_exceptions=True)
+
+asyncio.run(main(urls))
+</code></pre>
+<p><strong>Что тут важно:</strong>
+- <code>Semaphore</code> ограничивает одновременность. Без него сто задач уйдут разом и получат отказ от сервера.
+- <code>return_exceptions=True</code> не даёт одной упавшей задаче обрушить весь <code>gather</code>.
+- Таймаут обязателен на каждом сетевом вызове.</p>
+<p><strong>Мост от C#:</strong> <code>async</code>/<code>await</code> тот же паттерн, <code>Task</code> соответствует корутине, <code>SemaphoreSlim</code> соответствует <code>asyncio.Semaphore</code>. Разница в рантайме: в C# потоки из пула, в Python один поток с циклом событий.</p>
+<h3>Главная ошибка async</h3>
+<pre><code class="language-python">async def bad():
+    time.sleep(5)          # БЛОКИРУЕТ весь цикл событий
+    requests.get(url)      # тоже блокирует
+
+async def good():
+    await asyncio.sleep(5)
+    async with httpx.AsyncClient() as c:
+        await c.get(url)
+</code></pre>
+<p>Одна синхронная блокирующая строка внутри корутины останавливает <strong>все</strong> остальные задачи. Внешне выглядит как «async не работает».</p>
+<p>Если библиотека только синхронная:</p>
+<pre><code class="language-python">result = await asyncio.to_thread(blocking_call, arg)
+</code></pre>
+<h3>Отмена и таймауты</h3>
+<pre><code class="language-python">async with asyncio.timeout(30):        # 3.11+
+    await long_operation()
+
+task = asyncio.create_task(work())
+task.cancel()
+try:
+    await task
+except asyncio.CancelledError:
+    pass
+</code></pre>
+<p>Задача, созданная через <code>create_task</code>, должна где-то ожидаться. Иначе исключение внутри неё исчезнет молча, а сборщик мусора выдаст предупреждение <code>Task exception was never retrieved</code>.</p>
+<h3>threading и multiprocessing</h3>
+<pre><code class="language-python">from concurrent.futures import ThreadPoolExecutor, ProcessPoolExecutor
+
+with ThreadPoolExecutor(max_workers=20) as pool:
+    results = list(pool.map(check_host, hosts))       # ввод-вывод
+
+with ProcessPoolExecutor() as pool:
+    results = list(pool.map(heavy_calc, chunks))      # счёт
+</code></pre>
+<p>⚠️ У процессов аргументы и результаты сериализуются через pickle. Передавать туда открытые соединения и лямбды нельзя.</p></div></details></div><div class="block practice "><h3><span class="i">🔧</span>Практика</h3><div class="interlude"><p><strong>На разведчике:</strong></p></div><ul class="steps"><li class="step" data-step="2-practice-1"><label class="head"><input type="checkbox" id="s-2-practice-1"><span class="box"></span><span class="t">Переписать разбор вакансий на <code>asyncio</code> с <code>Semaphore</code> на 5 одновременных - hh не любит частых запросов.</span></label></li><li class="step" data-step="2-practice-2"><label class="head"><input type="checkbox" id="s-2-practice-2"><span class="box"></span><span class="t">Добавить таймаут на каждый вызов и <code>return_exceptions=True</code> в <code>gather</code>.</span></label></li><li class="step" data-step="2-practice-3"><label class="head"><input type="checkbox" id="s-2-practice-3"><span class="box"></span><span class="t">Прогнать замер: сколько занимал последовательный обход и сколько занимает асинхронный. <strong>Записать цифры.</strong></span><span class="more">подробнее</span></label><div class="body"><p><strong>Отдельным скриптом:</strong></p></div></li><li class="step" data-step="2-practice-4"><label class="head"><input type="checkbox" id="s-2-practice-4"><span class="box"></span><span class="t"><code>check_hosts.py</code> из инфра-роадмапа переписать с <code>ThreadPoolExecutor</code> на <code>asyncio</code>, сравнить время и читаемость.</span></label></li></ul></div><div class="block break brk"><h3><span class="i">💥</span>Сломай намеренно</h3><ul class="steps"><li class="step" data-step="2-break-1"><label class="head"><input type="checkbox" id="s-2-break-1"><span class="box"></span><span class="t"><strong>Вставить <code>time.sleep(3)</code> в корутину</strong> и посмотреть, как встают все параллельные задачи.</span></label></li><li class="step" data-step="2-break-2"><label class="head"><input type="checkbox" id="s-2-break-2"><span class="box"></span><span class="t"><strong>Убрать <code>Semaphore</code></strong> и запустить сто запросов разом - получить отказы или бан.</span></label></li><li class="step" data-step="2-break-3"><label class="head"><input type="checkbox" id="s-2-break-3"><span class="box"></span><span class="t"><strong>Убрать таймаут</strong> и подсунуть висящий адрес - получить вечное ожидание.</span></label></li><li class="step" data-step="2-break-4"><label class="head"><input type="checkbox" id="s-2-break-4"><span class="box"></span><span class="t"><strong>Создать задачу через <code>create_task</code> и не ожидать её</strong>, кинуть внутри исключение - убедиться, что оно исчезло молча.</span></label></li><li class="step" data-step="2-break-5"><label class="head"><input type="checkbox" id="s-2-break-5"><span class="box"></span><span class="t"><strong>Отдать в <code>ProcessPoolExecutor</code> лямбду</strong> - получить ошибку сериализации.</span></label></li><li class="step" data-step="2-break-6"><label class="head"><input type="checkbox" id="s-2-break-6"><span class="box"></span><span class="t"><strong>Посчитать что-то тяжёлое в <code>ThreadPoolExecutor</code></strong> и убедиться, что времени ушло столько же, сколько последовательно. Это GIL вживую.</span></label></li></ul></div><div class="block task"><h3><span class="i">✅</span>Задание</h3><div class="text"><p>Разведчик собирает вакансии асинхронно с ограничением одновременности и таймаутами. В README проекта записан замер: было столько-то, стало столько-то, на скольких вакансиях.</p>
+<p><strong>Критерий:</strong> объясняешь, почему выбран <code>asyncio</code>, а не потоки, и что произойдёт при синхронном вызове внутри корутины.</p></div></div><div class="block life"><h3><span class="i">🌍</span>Из жизни</h3><div class="text"><p><strong>Про блокирующий вызов в корутине.</strong> Самая частая жалоба «переписали на async, быстрее не стало». Причина почти всегда одна: внутри остался синхронный <code>requests</code> или обращение к базе через обычный драйвер.</p>
+<p><strong>Про отсутствие ограничителя.</strong> Сто одновременных запросов к чужому сервису - это либо 429, либо блокировка по IP. Для hh.ru особенно: у него защита срабатывает быстро, и восстановление доступа занимает время.</p>
+<p><strong>Про GIL и собеседования.</strong> Вопрос про GIL задают почти всегда, когда в резюме есть Python. Плохой ответ - «это глобальная блокировка интерпретатора». Хороший - через практический вывод: потоки для ожидания, процессы для счёта.</p></div></div><div class="block questions"><h3><span class="i">❓</span>Вопросы с ответами</h3><div class="text"><p><strong>Что такое GIL и что он блокирует?</strong></p>
+<blockquote>
+<p>Блокировка, из-за которой байткод Python в один момент выполняет только один поток. На вводе-выводе она отпускается, поэтому потоки там помогают. На вычислениях не отпускается, поэтому там нужны процессы.</p>
+</blockquote>
+<p><strong>Когда asyncio, когда threading, когда multiprocessing?</strong></p>
+<blockquote>
+<p>Asyncio - когда много одновременных ожиданий и библиотеки асинхронные. Threading - то же, но библиотека синхронная и переписывать её нельзя. Multiprocessing - когда задача считает, а не ждёт.</p>
+</blockquote>
+<p><strong>Что произойдёт при <code>time.sleep()</code> внутри корутины?</strong></p>
+<blockquote>
+<p>Остановится весь цикл событий вместе со всеми остальными задачами. Нужен <code>await asyncio.sleep()</code>, а для синхронного кода без замены - <code>asyncio.to_thread</code>.</p>
+</blockquote>
+<p><strong>Как ограничить число одновременных запросов?</strong></p>
+<blockquote>
+<p><code>asyncio.Semaphore</code> вокруг вызова. Без него все задачи стартуют разом, и внешний сервис отвечает отказом. Это тот же принцип, что <code>SemaphoreSlim</code> в C#.</p>
+</blockquote>
+<p><strong>Что будет, если не дождаться задачу из <code>create_task</code>?</strong></p>
+<blockquote>
+<p>Исключение внутри неё исчезнет молча, а при сборке мусора появится предупреждение о непрочитанном исключении. Задачи надо собирать через <code>gather</code> или явно ожидать.</p>
+</blockquote></div></div><p class="src">Исходник: <a href="https://github.com/Lazysagotku/l2code/blob/main/Python_Phase2_Async.md" target="_blank" rel="noopener">Python_Phase2_Async.md</a></p></div></details><details class="phase" data-phase="3" data-total="12"><summary><span class="n">03</span><span><h2>FastAPI</h2><span class="meta">5 часов</span></span><span class="gauge"><span class="frac">0/12</span><svg class="ring" viewBox="0 0 32 32" aria-hidden="true"><circle class="trk" cx="16" cy="16" r="13"></circle><circle class="fil" cx="16" cy="16" r="13" stroke-dasharray="81.68" stroke-dashoffset="81.68"></circle></svg></span></summary><div class="content"><div class="block analogy"><h3><span class="i">🎭</span>Аналогия</h3><div class="text"><p>Ресепшн с анкетой. Посетитель заполняет форму, на входе её проверяют по бланку и разворачивают неправильно заполненную сразу, не пуская внутрь. Pydantic - это бланк: он описывает, что считается правильным, и проверка происходит до того, как данные дошли до логики.</p></div></div><div class="block theory"><h3><span class="i">📖</span>Теория</h3><details><summary>Развернуть теорию</summary><div class="text"><h3>Почему FastAPI</h3>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>Flask</th>
+<th>Django</th>
+<th>FastAPI</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Валидация</td>
+<td>руками</td>
+<td>формы и сериализаторы</td>
+<td>из аннотаций типов</td>
+</tr>
+<tr>
+<td>Документация</td>
+<td>подключать</td>
+<td>подключать</td>
+<td>генерируется сама</td>
+</tr>
+<tr>
+<td>Async</td>
+<td>ограниченно</td>
+<td>частично</td>
+<td>родной</td>
+</tr>
+<tr>
+<td>Размер</td>
+<td>микро</td>
+<td>всё сразу</td>
+<td>микро с батарейками</td>
+</tr>
+</tbody>
+</table>
+<p>Аннотации типов в FastAPI работают, а не украшают: из них строится валидация, документация и подсказки редактора.</p>
+<h3>Слои приложения</h3>
+<pre><code>routers/     маршруты, только приём и отдача
+schemas.py   что приходит и что уходит - Pydantic
+crud.py      работа с базой
+models.py    таблицы - SQLAlchemy
+database.py  подключение и фабрика сессий
+</code></pre>
+<p>Ровно так устроен трекер откликов. Разбирать надо именно его: код перед глазами, база с данными, и видно, что происходит при изменении.</p>
+<h3>Схемы запроса и ответа отдельно</h3>
+<pre><code class="language-python">from pydantic import BaseModel, Field, field_validator
+
+class VacancyIn(BaseModel):
+    title: str = Field(min_length=3, max_length=300)
+    salary_min: int | None = Field(default=None, ge=0)
+    priority: int = Field(default=3, ge=1, le=5)
+
+    @field_validator(&quot;title&quot;)
+    @classmethod
+    def strip_title(cls, v: str) -&gt; str:
+        return v.strip()
+
+class VacancyOut(BaseModel):
+    id: int
+    title: str
+    status: str
+    model_config = {&quot;from_attributes&quot;: True}    # читать из ORM-объекта
+</code></pre>
+<p>⚠️ Одна модель на вход и на выход - типичная ошибка. Наружу утекают внутренние поля, а внутрь можно передать <code>id</code> и <code>created_at</code>. Разделение схем закрывает это.</p>
+<h3>Зависимости</h3>
+<pre><code class="language-python">from fastapi import Depends, HTTPException
+
+def get_session():
+    session = SessionLocal()
+    try:
+        yield session
+    finally:
+        session.close()
+
+@router.get(&quot;/vacancies/{vid}&quot;, response_model=VacancyOut)
+def read(vid: int, session: Session = Depends(get_session)):
+    item = crud.get(session, vid)
+    if item is None:
+        raise HTTPException(404, &quot;Вакансия не найдена&quot;)
+    return item
+</code></pre>
+<p><code>Depends</code> - это DI-контейнер. Зависимость с <code>yield</code> работает как контекстный менеджер: код после <code>yield</code> выполняется после ответа.</p>
+<p><strong>Вложенные зависимости</strong> - так строится авторизация:</p>
+<pre><code class="language-python">def current_user(token: str = Depends(oauth2_scheme)) -&gt; User: ...
+def admin_only(user: User = Depends(current_user)) -&gt; User:
+    if not user.is_admin:
+        raise HTTPException(403, &quot;Нужны права администратора&quot;)
+    return user
+</code></pre>
+<h3>Middleware</h3>
+<pre><code class="language-python">@app.middleware(&quot;http&quot;)
+async def add_timing(request: Request, call_next):
+    start = time.perf_counter()
+    response = await call_next(request)
+    response.headers[&quot;X-Process-Time&quot;] = f&quot;{time.perf_counter() - start:.3f}&quot;
+    return response
+</code></pre>
+<p>Middleware видит все запросы. Годится для логирования, замера времени, идентификатора запроса. Аутентификацию лучше держать в зависимостях - там она привязана к конкретным маршрутам.</p>
+<p>Basic-аутентификация в трекере сделана именно middleware, потому что закрывать надо всё сразу.</p>
+<h3>Фоновые задачи</h3>
+<pre><code class="language-python">from fastapi import BackgroundTasks
+
+@router.post(&quot;/vacancies&quot;)
+def create(data: VacancyIn, tasks: BackgroundTasks, session=Depends(get_session)):
+    item = crud.create(session, data)
+    tasks.add_task(notify, item.id)      # выполнится после ответа
+    return item
+</code></pre>
+<p>⚠️ <code>BackgroundTasks</code> живёт внутри процесса. Перезапуск - задача потеряна. Для важного нужна очередь: Celery, RQ или таблица заданий в базе.</p>
+<h3>Обработка ошибок</h3>
+<pre><code class="language-python">@app.exception_handler(IntegrityError)
+async def on_conflict(request: Request, exc: IntegrityError):
+    return JSONResponse(status_code=409, content={&quot;detail&quot;: &quot;Такая запись уже есть&quot;})
+</code></pre>
+<p>Общий обработчик держит формат ошибок одинаковым по всему приложению. Без него часть ошибок отдаётся как 500 с трассировкой наружу.</p>
+<h3>Аутентификация</h3>
+<p>OAuth2 с JWT: маршрут выдаёт токен, зависимость его проверяет.</p>
+<pre><code class="language-python">from jose import jwt
+token = jwt.encode({&quot;sub&quot;: user.name, &quot;exp&quot;: expires}, SECRET, algorithm=&quot;HS256&quot;)
+</code></pre>
+<p>Что важно назвать вслух: пароли хранятся хешами через <code>passlib</code> с bcrypt, у токена всегда есть срок жизни, секрет лежит в переменных окружения.</p></div></details></div><div class="block practice "><h3><span class="i">🔧</span>Практика</h3><div class="interlude"><p><strong>На трекере:</strong></p></div><ul class="steps"><li class="step" data-step="3-practice-1"><label class="head"><input type="checkbox" id="s-3-practice-1"><span class="box"></span><span class="t">Развести схемы входа и выхода везде, где сейчас одна модель.</span></label></li><li class="step" data-step="3-practice-2"><label class="head"><input type="checkbox" id="s-3-practice-2"><span class="box"></span><span class="t">Добавить валидаторы: заголовок обрезается, приоритет от 1 до 5, зарплата неотрицательная.</span></label></li><li class="step" data-step="3-practice-3"><label class="head"><input type="checkbox" id="s-3-practice-3"><span class="box"></span><span class="t">Middleware, добавляющий <code>X-Process-Time</code> и идентификатор запроса в лог.</span></label></li><li class="step" data-step="3-practice-4"><label class="head"><input type="checkbox" id="s-3-practice-4"><span class="box"></span><span class="t">Общий обработчик <code>IntegrityError</code> с ответом 409.</span></label></li><li class="step" data-step="3-practice-5"><label class="head"><input type="checkbox" id="s-3-practice-5"><span class="box"></span><span class="t">Эндпоинт <code>/health</code>, который реально ходит в базу - он же нужен слою 2 инфра-роадмапа.</span></label></li><li class="step" data-step="3-practice-6"><label class="head"><input type="checkbox" id="s-3-practice-6"><span class="box"></span><span class="t">Посмотреть <code>/docs</code> и убедиться, что схемы читаемые.</span></label></li></ul></div><div class="block break brk"><h3><span class="i">💥</span>Сломай намеренно</h3><ul class="steps"><li class="step" data-step="3-break-1"><label class="head"><input type="checkbox" id="s-3-break-1"><span class="box"></span><span class="t"><strong>Отдать ORM-объект без <code>from_attributes</code></strong> - получить ошибку сериализации.</span></label></li><li class="step" data-step="3-break-2"><label class="head"><input type="checkbox" id="s-3-break-2"><span class="box"></span><span class="t"><strong>Использовать одну схему на вход и выход</strong> и передать в теле <code>id</code> - посмотреть, что произойдёт.</span></label></li><li class="step" data-step="3-break-3"><label class="head"><input type="checkbox" id="s-3-break-3"><span class="box"></span><span class="t"><strong>Убрать <code>finally: session.close()</code></strong> из зависимости, погонять нагрузку, посмотреть число соединений в <code>pg_stat_activity</code>.</span></label></li><li class="step" data-step="3-break-4"><label class="head"><input type="checkbox" id="s-3-break-4"><span class="box"></span><span class="t"><strong>Кинуть исключение в фоновой задаче</strong> и убедиться, что клиент об этом не узнал.</span></label></li><li class="step" data-step="3-break-5"><label class="head"><input type="checkbox" id="s-3-break-5"><span class="box"></span><span class="t"><strong>Сделать блокирующий вызов в <code>async def</code> маршруте</strong> и посмотреть, как встают параллельные запросы.</span></label></li><li class="step" data-step="3-break-6"><label class="head"><input type="checkbox" id="s-3-break-6"><span class="box"></span><span class="t"><strong>Отдать 500 без обработчика</strong> и увидеть, что уходит наружу в ответе.</span></label></li></ul></div><div class="block task"><h3><span class="i">✅</span>Задание</h3><div class="text"><p>Трекер с разделёнными схемами, валидаторами, middleware замера времени, общим обработчиком ошибок и рабочим <code>/health</code>. Документация на <code>/docs</code> читается без пояснений.</p>
+<p><strong>Критерий:</strong> объясняешь, почему схемы разделены и что делает зависимость с <code>yield</code>.</p></div></div><div class="block life"><h3><span class="i">🌍</span>Из жизни</h3><div class="text"><p><strong>Про утечку полей.</strong> Одна модель на вход и выход - причина, по которой наружу уходят внутренние поля вроде <code>reason_real</code> из трекера. Обнаруживается обычно тогда, когда кто-то посмотрел ответ API.</p>
+<p><strong>Про незакрытые сессии.</strong> Забытый <code>close()</code> в зависимости даёт медленную утечку соединений. Приложение работает часами, потом упирается в <code>max_connections</code> и перестаёт отвечать целиком.</p>
+<p><strong>Про фоновые задачи.</strong> <code>BackgroundTasks</code> часто ставят туда, где нужна очередь: отправка почты, выгрузка отчёта. При перезапуске задача исчезает без следа, и никто не узнаёт.</p></div></div><div class="block questions"><h3><span class="i">❓</span>Вопросы с ответами</h3><div class="text"><p><strong>Почему FastAPI, а не Flask?</strong></p>
+<blockquote>
+<p>Валидация и документация строятся из аннотаций типов, async родной. Flask даёт больше свободы и требует собирать это руками. У меня опыт есть с обоими, для нового API беру FastAPI.</p>
+</blockquote>
+<p><strong>Зачем разделять схемы запроса и ответа?</strong></p>
+<blockquote>
+<p>Чтобы наружу не уходили внутренние поля, а внутрь нельзя было передать то, что приложение проставляет само - идентификаторы, даты создания. Одна модель на оба направления даёт обе проблемы сразу.</p>
+</blockquote>
+<p><strong>Что делает <code>Depends</code>?</strong></p>
+<blockquote>
+<p>Это DI-контейнер: FastAPI сам вызывает зависимость и подставляет результат. Зависимость с <code>yield</code> работает как контекстный менеджер - код после <code>yield</code> выполняется после ответа, там закрывают сессию.</p>
+</blockquote>
+<p><strong>Middleware или зависимость - что выбрать?</strong></p>
+<blockquote>
+<p>Middleware, когда правило касается всех запросов: логирование, замер времени, общая аутентификация. Зависимость, когда правило привязано к конкретным маршрутам: права доступа, сессия базы.</p>
+</blockquote>
+<p><strong>Как реализована аутентификация?</strong></p>
+<blockquote>
+<p>Basic через middleware Starlette со сравнением <code>hmac.compare_digest</code>, чтобы не утекало время сравнения - разбирал на своём трекере, там она стоит, и я понимаю, зачем именно постоянное по времени сравнение. С нуля такое не писал. Для публичного API брал бы OAuth2 с JWT: пароли хешами через bcrypt, у токена срок жизни, секрет в переменных окружения.</p>
+</blockquote>
+<p>⚠️ Этот ответ можно давать <strong>только после того, как фаза пройдена</strong>. До этого на уточняющий вопрос «а почему именно middleware, а не зависимость» ответить нечем.</p></div></div><p class="src">Исходник: <a href="https://github.com/Lazysagotku/l2code/blob/main/Python_Phase3_FastAPI.md" target="_blank" rel="noopener">Python_Phase3_FastAPI.md</a></p></div></details><details class="phase" data-phase="4" data-total="12"><summary><span class="n">04</span><span><h2>Базы данных: SQLAlchemy и Alembic</h2><span class="meta">5 часов</span></span><span class="gauge"><span class="frac">0/12</span><svg class="ring" viewBox="0 0 32 32" aria-hidden="true"><circle class="trk" cx="16" cy="16" r="13"></circle><circle class="fil" cx="16" cy="16" r="13" stroke-dasharray="81.68" stroke-dashoffset="81.68"></circle></svg></span></summary><div class="content"><div class="block analogy"><h3><span class="i">🎭</span>Аналогия</h3><div class="text"><p>Переводчик между двумя языками. Приложение говорит объектами, база - таблицами и строками. ORM переводит. Проблемы начинаются там, где переводчик слишком старается: делает сто запросов вместо одного, потому что не понял, что нужно всё сразу.</p></div></div><div class="block theory"><h3><span class="i">📖</span>Теория</h3><details><summary>Развернуть теорию</summary><div class="text"><h3>Core и ORM</h3>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>Core</th>
+<th>ORM</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Что пишешь</td>
+<td>выражения близко к SQL</td>
+<td>классы и объекты</td>
+</tr>
+<tr>
+<td>Когда лучше</td>
+<td>массовые операции, аналитика</td>
+<td>обычная бизнес-логика</td>
+</tr>
+<tr>
+<td>Контроль над SQL</td>
+<td>полный</td>
+<td>через настройки загрузки</td>
+</tr>
+</tbody>
+</table>
+<p>В трекере используется ORM. Знать про Core стоит: массовая вставка и сложные отчёты пишутся там проще и работают быстрее.</p>
+<h3>Декларативные модели, стиль 2.0</h3>
+<pre><code class="language-python">from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
+
+class Base(DeclarativeBase):
+    pass
+
+class Vacancy(Base):
+    __tablename__ = &quot;vacancies&quot;
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    company_id: Mapped[int] = mapped_column(ForeignKey(&quot;companies.id&quot;, ondelete=&quot;CASCADE&quot;), index=True)
+    title: Mapped[str] = mapped_column(String(300))
+    status: Mapped[Status] = mapped_column(Enum(Status, name=&quot;vacancy_status&quot;), index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+    company: Mapped[&quot;Company&quot;] = relationship(back_populates=&quot;vacancies&quot;)
+    events: Mapped[list[&quot;Event&quot;]] = relationship(back_populates=&quot;vacancy&quot;, cascade=&quot;all, delete-orphan&quot;)
+</code></pre>
+<p><code>Mapped[...]</code> - типизация, которую понимает и mypy, и SQLAlchemy. Это стиль 2.0, старый через <code>Column(...)</code> встречается в примерах из интернета.</p>
+<h3>N+1 - главная проблема любой ORM</h3>
+<pre><code class="language-python"># ПЛОХО: один запрос за списком плюс по запросу на каждую компанию
+for v in session.scalars(select(Vacancy)):
+    print(v.company.name)
+
+# ХОРОШО: один запрос с соединением
+stmt = select(Vacancy).options(joinedload(Vacancy.company))
+for v in session.scalars(stmt).unique():
+    print(v.company.name)
+</code></pre>
+<table>
+<thead>
+<tr>
+<th>Стратегия</th>
+<th>Что делает</th>
+<th>Когда</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>lazy="select"</code></td>
+<td>грузит при обращении, по умолчанию</td>
+<td>связь нужна редко</td>
+</tr>
+<tr>
+<td><code>joinedload</code></td>
+<td>одним запросом с JOIN</td>
+<td>связь «много к одному»</td>
+</tr>
+<tr>
+<td><code>selectinload</code></td>
+<td>вторым запросом с <code>IN</code></td>
+<td>связь «один ко многим»</td>
+</tr>
+<tr>
+<td><code>raiseload</code></td>
+<td>бросает исключение при ленивой загрузке</td>
+<td>чтобы найти N+1 в тестах</td>
+</tr>
+</tbody>
+</table>
+<p>⚠️ <code>raiseload("*")</code> в тестах - способ поймать все N+1 разом, вместо того чтобы искать их по логам.</p>
+<h3>Сессия и жизненный цикл</h3>
+<pre><code class="language-python">with SessionLocal() as session:
+    with session.begin():          # commit при выходе, rollback при исключении
+        session.add(item)
+</code></pre>
+<p>Три состояния объекта: <strong>transient</strong> (создан, не в сессии), <strong>pending</strong> (добавлен, не сохранён), <strong>persistent</strong> (сохранён). После <code>commit</code> объекты по умолчанию устаревают и при следующем обращении делают новый запрос. <code>expire_on_commit=False</code> это отключает - в трекере так и сделано.</p>
+<h3>Как посмотреть настоящий SQL</h3>
+<pre><code class="language-python">engine = create_engine(url, echo=True)          # всё в лог
+
+print(stmt.compile(compile_kwargs={&quot;literal_binds&quot;: True}))   # один запрос
+</code></pre>
+<p>Это первое, что надо делать при разборе медленной страницы: увидеть, во что превратился код.</p>
+<h3>Alembic</h3>
+<pre><code class="language-bash">alembic revision --autogenerate -m &quot;добавить приоритет&quot;
+alembic upgrade head
+alembic downgrade -1
+alembic history --verbose
+</code></pre>
+<p>⚠️ <strong>Autogenerate не всесилен.</strong> Он не видит переименования (показывает как удаление плюс добавление), изменения типов в некоторых случаях, изменения в данных. Каждую сгенерированную миграцию надо читать глазами до применения.</p>
+<p><strong>Правила миграций в проде:</strong>
+1. Читать сгенерированное перед применением.
+2. Писать <code>downgrade</code>, а не оставлять <code>pass</code>.
+3. Разделять изменение схемы и перенос данных на разные миграции.
+4. Добавлять колонку с <code>NOT NULL</code> в три шага: колонка допускающая пустоту, заполнение, ограничение.
+5. Индексы на больших таблицах - <code>CREATE INDEX CONCURRENTLY</code> через <code>op.execute</code>.</p>
+<h3>Асинхронный доступ</h3>
+<pre><code class="language-python">from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
+
+engine = create_async_engine(&quot;postgresql+asyncpg://...&quot;)
+Session = async_sessionmaker(engine, expire_on_commit=False)
+
+async with Session() as session:
+    result = await session.scalars(select(Vacancy).limit(10))
+</code></pre>
+<p>⚠️ В асинхронном режиме ленивая загрузка связей не работает - обращение к незагруженной связи бросает исключение. Загрузку надо указывать явно через <code>selectinload</code>.</p></div></details></div><div class="block practice "><h3><span class="i">🔧</span>Практика</h3><div class="interlude"><p><strong>На трекере:</strong></p></div><ul class="steps"><li class="step" data-step="4-practice-1"><label class="head"><input type="checkbox" id="s-4-practice-1"><span class="box"></span><span class="t">Включить <code>echo=True</code> и посмотреть, сколько запросов делает главная страница.</span></label></li><li class="step" data-step="4-practice-2"><label class="head"><input type="checkbox" id="s-4-practice-2"><span class="box"></span><span class="t">Найти N+1 и убрать через <code>selectinload</code> на событиях и <code>joinedload</code> на компании. <strong>Записать: было столько запросов, стало столько.</strong></span></label></li><li class="step" data-step="4-practice-3"><label class="head"><input type="checkbox" id="s-4-practice-3"><span class="box"></span><span class="t">Поставить <code>raiseload("*")</code> в тестовой конфигурации.</span></label></li><li class="step" data-step="4-practice-4"><label class="head"><input type="checkbox" id="s-4-practice-4"><span class="box"></span><span class="t">Написать миграцию с осмысленным <code>downgrade</code> и прогнать её вперёд и назад.</span></label></li><li class="step" data-step="4-practice-5"><label class="head"><input type="checkbox" id="s-4-practice-5"><span class="box"></span><span class="t">Добавить колонку с <code>NOT NULL</code> в три шага на живых данных.</span></label></li><li class="step" data-step="4-practice-6"><label class="head"><input type="checkbox" id="s-4-practice-6"><span class="box"></span><span class="t">Массовую операцию (пересчёт приоритетов) переписать на Core через <code>update()</code>, сравнить время.</span></label></li></ul></div><div class="block break brk"><h3><span class="i">💥</span>Сломай намеренно</h3><ul class="steps"><li class="step" data-step="4-break-1"><label class="head"><input type="checkbox" id="s-4-break-1"><span class="box"></span><span class="t"><strong>Обратиться к связи после <code>commit</code></strong> при <code>expire_on_commit=True</code> - увидеть лишний запрос в логе.</span></label></li><li class="step" data-step="4-break-2"><label class="head"><input type="checkbox" id="s-4-break-2"><span class="box"></span><span class="t"><strong>Написать цикл с обращением к <code>v.company</code></strong> без загрузки - посчитать запросы в логе, это N+1 своими глазами.</span></label></li><li class="step" data-step="4-break-3"><label class="head"><input type="checkbox" id="s-4-break-3"><span class="box"></span><span class="t"><strong>Оставить <code>downgrade</code> пустым</strong>, применить миграцию, попробовать откатиться.</span></label></li><li class="step" data-step="4-break-4"><label class="head"><input type="checkbox" id="s-4-break-4"><span class="box"></span><span class="t"><strong>Autogenerate на переименование колонки</strong> - посмотреть, что он сгенерировал удаление плюс добавление, то есть потерю данных.</span></label></li><li class="step" data-step="4-break-5"><label class="head"><input type="checkbox" id="s-4-break-5"><span class="box"></span><span class="t"><strong>Забыть <code>await</code> перед <code>session.scalars</code></strong> в асинхронном коде - получить корутину вместо результата.</span></label></li><li class="step" data-step="4-break-6"><label class="head"><input type="checkbox" id="s-4-break-6"><span class="box"></span><span class="t"><strong>Открыть сессию и не закрыть</strong> в цикле - посмотреть рост соединений в <code>pg_stat_activity</code>.</span></label></li></ul></div><div class="block task"><h3><span class="i">✅</span>Задание</h3><div class="text"><p>Главная страница трекера делает фиксированное число запросов независимо от количества строк. В коммите записан замер до и после. Есть миграция с рабочим <code>downgrade</code>, прогнанная в обе стороны.</p>
+<p><strong>Критерий:</strong> можешь показать в логе, где был N+1, и объяснить, почему выбрана именно <code>selectinload</code>, а не <code>joinedload</code>.</p></div></div><div class="block life"><h3><span class="i">🌍</span>Из жизни</h3><div class="text"><p><strong>Про N+1 на проде.</strong> Страница со списком из двадцати элементов делает двадцать один запрос. На тестовых данных незаметно, на реальных с сетевой задержкой до базы страница открывается секундами. Это самая частая причина «сайт стал тормозить, а код не меняли» - выросло число строк.</p>
+<p><strong>Про autogenerate и переименование.</strong> Реальный сценарий потери данных: разработчик переименовал колонку, autogenerate сгенерировал <code>drop_column</code> плюс <code>add_column</code>, миграция уехала на прод, данные из колонки исчезли. Поэтому правило читать сгенерированное глазами.</p>
+<p><strong>Про пустой downgrade.</strong> Alembic вставляет <code>pass</code> в <code>downgrade</code>, если не смог придумать обратное. Обнаруживается это в момент, когда откат нужен срочно.</p></div></div><div class="block questions"><h3><span class="i">❓</span>Вопросы с ответами</h3><div class="text"><p><strong>Что такое N+1 и как его найти?</strong></p>
+<blockquote>
+<p>Один запрос за списком и по запросу на каждый элемент за связанными данными. Нахожу через <code>echo=True</code> в логе или через <code>raiseload("*")</code> в тестах, который бросает исключение на ленивой загрузке. Лечится <code>joinedload</code> для связи «много к одному» и <code>selectinload</code> для «один ко многим».</p>
+</blockquote>
+<p><strong>Чем <code>joinedload</code> отличается от <code>selectinload</code>?</strong></p>
+<blockquote>
+<p><code>joinedload</code> тянет одним запросом через JOIN, хорош для «много к одному». <code>selectinload</code> делает второй запрос с <code>IN</code>, хорош для «один ко многим» - JOIN там размножает строки основной таблицы.</p>
+</blockquote>
+<p><strong>Как делаете миграции без простоя?</strong></p>
+<blockquote>
+<p>Читаю сгенерированное перед применением. Колонку с <code>NOT NULL</code> добавляю в три шага: сначала допускающая пустоту, потом заполнение, потом ограничение. Индексы на больших таблицах - <code>CREATE INDEX CONCURRENTLY</code>. Изменение схемы и перенос данных - разные миграции.</p>
+</blockquote>
+<p><strong>Что autogenerate не увидит?</strong></p>
+<blockquote>
+<p>Переименования - он покажет их как удаление плюс добавление, то есть потерю данных. Часть изменений типов. Изменения в самих данных. Поэтому каждую миграцию читаю глазами.</p>
+</blockquote>
+<p><strong>Когда Core вместо ORM?</strong></p>
+<blockquote>
+<p>Массовые операции и аналитика. Обновление тысяч строк через ORM означает загрузить их в память и обновить по одной. Через Core это один <code>update()</code> на стороне базы.</p>
+</blockquote></div></div><p class="src">Исходник: <a href="https://github.com/Lazysagotku/l2code/blob/main/Python_Phase4_SQLAlchemy_Alembic.md" target="_blank" rel="noopener">Python_Phase4_SQLAlchemy_Alembic.md</a></p></div></details><details class="phase" data-phase="5" data-total="11"><summary><span class="n">05</span><span><h2>Тестирование</h2><span class="meta">4 часа</span></span><span class="gauge"><span class="frac">0/11</span><svg class="ring" viewBox="0 0 32 32" aria-hidden="true"><circle class="trk" cx="16" cy="16" r="13"></circle><circle class="fil" cx="16" cy="16" r="13" stroke-dasharray="81.68" stroke-dashoffset="81.68"></circle></svg></span></summary><div class="content"><div class="block analogy"><h3><span class="i">🎭</span>Аналогия</h3><div class="text"><p>Приёмо-сдаточные испытания из слоя 5 инфра-роадмапа, только автоматические. Тот же принцип: критерий формулируется до проверки, иначе проверка превращается в спор о том, работает оно или нет.</p></div></div><div class="block theory"><h3><span class="i">📖</span>Теория</h3><details><summary>Развернуть теорию</summary><div class="text"><h3>Пирамида</h3>
+<table>
+<thead>
+<tr>
+<th>Уровень</th>
+<th>Чего много</th>
+<th>Что проверяет</th>
+<th>Скорость</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Unit</td>
+<td>больше всего</td>
+<td>одна функция без внешнего мира</td>
+<td>миллисекунды</td>
+</tr>
+<tr>
+<td>Integration</td>
+<td>средне</td>
+<td>связка приложения и базы</td>
+<td>десятки миллисекунд</td>
+</tr>
+<tr>
+<td>E2E</td>
+<td>мало</td>
+<td>сценарий целиком</td>
+<td>секунды</td>
+</tr>
+</tbody>
+</table>
+<p>Перевёрнутая пирамида - когда почти всё покрыто медленными сквозными тестами - даёт набор, который никто не гоняет, потому что он идёт двадцать минут.</p>
+<h3>Фикстуры</h3>
+<pre><code class="language-python">import pytest
+from fastapi.testclient import TestClient
+
+@pytest.fixture(scope=&quot;session&quot;)
+def engine():
+    &quot;&quot;&quot;Одна база на весь прогон.&quot;&quot;&quot;
+    eng = create_engine(TEST_URL)
+    Base.metadata.create_all(eng)
+    yield eng
+    Base.metadata.drop_all(eng)
+
+@pytest.fixture
+def session(engine):
+    &quot;&quot;&quot;Каждый тест в своей транзакции с откатом - тесты не видят друг друга.&quot;&quot;&quot;
+    connection = engine.connect()
+    trans = connection.begin()
+    s = Session(bind=connection)
+    yield s
+    s.close()
+    trans.rollback()
+    connection.close()
+
+@pytest.fixture
+def client(session):
+    app.dependency_overrides[get_session] = lambda: session
+    with TestClient(app) as c:
+        yield c
+    app.dependency_overrides.clear()
+</code></pre>
+<p><strong>Транзакция с откатом</strong> - главный приём: тесты не оставляют следов и не зависят от порядка выполнения.</p>
+<p><strong><code>dependency_overrides</code></strong> - способ подменить зависимость FastAPI на тестовую. Именно так подставляется тестовая сессия.</p>
+<h3>Параметризация</h3>
+<pre><code class="language-python">@pytest.mark.parametrize(&quot;title,expected&quot;, [
+    (&quot;DevOps-инженер&quot;, 25),
+    (&quot;Инженер сопровождения&quot;, 30),
+    (&quot;Курьер&quot;, 0),
+    (&quot;Руководитель отдела&quot;, 0),
+])
+def test_prescore(title, expected):
+    assert prescore({&quot;name&quot;: title})[&quot;score&quot;] == expected
+</code></pre>
+<p>Один тест вместо четырёх, и в отчёте видно, какой именно случай упал.</p>
+<h3>Моки: что подменять, а что нет</h3>
+<table>
+<thead>
+<tr>
+<th>Подменять</th>
+<th>Не подменять</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>внешние HTTP-вызовы</td>
+<td>свою бизнес-логику</td>
+</tr>
+<tr>
+<td>отправку почты и сообщений</td>
+<td>базу в интеграционных тестах</td>
+</tr>
+<tr>
+<td>текущее время</td>
+<td>структуры данных</td>
+</tr>
+<tr>
+<td>файловую систему при необходимости</td>
+<td>ORM-модели</td>
+</tr>
+</tbody>
+</table>
+<p>⚠️ Тест, где замокано всё, проверяет моки. Такой набор остаётся зелёным при полностью сломанном приложении.</p>
+<pre><code class="language-python">def test_collect(monkeypatch):
+    monkeypatch.setattr(collector, &quot;fetch&quot;, lambda url: SAMPLE_HTML)
+    assert len(collector.parse(SAMPLE_HTML)) == 20
+</code></pre>
+<h3>Интеграционные тесты API</h3>
+<pre><code class="language-python">def test_create_and_read(client):
+    response = client.post(&quot;/vacancies&quot;, json={&quot;title&quot;: &quot;Инженер сопровождения&quot;})
+    assert response.status_code == 201
+    vid = response.json()[&quot;id&quot;]
+
+    got = client.get(f&quot;/vacancies/{vid}&quot;)
+    assert got.status_code == 200
+    assert got.json()[&quot;title&quot;] == &quot;Инженер сопровождения&quot;
+
+def test_not_found(client):
+    assert client.get(&quot;/vacancies/999999&quot;).status_code == 404
+</code></pre>
+<p>Для асинхронного приложения - <code>httpx.AsyncClient</code> с <code>ASGITransport</code> и <code>pytest-asyncio</code>.</p>
+<h3>Покрытие</h3>
+<pre><code class="language-bash">pytest --cov=app --cov-report=term-missing --cov-fail-under=70
+</code></pre>
+<p>⚠️ Покрытие показывает, какие строки выполнились, а не какие проверены. Сто процентов покрытия при пустых <code>assert</code> ничего не значат. Смысл цифры - находить непокрытые куски, а не отчитываться.</p></div></details></div><div class="block practice "><h3><span class="i">🔧</span>Практика</h3><div class="interlude"><p><strong>На трекере и разведчике:</strong></p></div><ul class="steps"><li class="step" data-step="5-practice-1"><label class="head"><input type="checkbox" id="s-5-practice-1"><span class="box"></span><span class="t">Фикстуры: база на прогон, сессия в транзакции с откатом, клиент с подменённой зависимостью.</span></label></li><li class="step" data-step="5-practice-2"><label class="head"><input type="checkbox" id="s-5-practice-2"><span class="box"></span><span class="t">Интеграционные тесты на основные маршруты трекера: создание, чтение, 404, конфликт.</span></label></li><li class="step" data-step="5-practice-3"><label class="head"><input type="checkbox" id="s-5-practice-3"><span class="box"></span><span class="t">Параметризованный тест на <code>prescore</code> разведчика - вынести туда все накопленные случаи, включая стоп-слова и вилку ниже планки.</span></label></li><li class="step" data-step="5-practice-4"><label class="head"><input type="checkbox" id="s-5-practice-4"><span class="box"></span><span class="t">Тест на <code>resume_for</code>: заголовок решает, описание не перебивает. Это был реальный баг.</span></label></li><li class="step" data-step="5-practice-5"><label class="head"><input type="checkbox" id="s-5-practice-5"><span class="box"></span><span class="t"><code>raiseload("*")</code> в тестовой конфигурации - ловить N+1 автоматически.</span></label></li><li class="step" data-step="5-practice-6"><label class="head"><input type="checkbox" id="s-5-practice-6"><span class="box"></span><span class="t"><code>pytest --cov</code> с порогом, встроить в GitHub Actions из слоя 2 инфра-роадмапа.</span></label></li></ul></div><div class="block break brk"><h3><span class="i">💥</span>Сломай намеренно</h3><ul class="steps"><li class="step" data-step="5-break-1"><label class="head"><input type="checkbox" id="s-5-break-1"><span class="box"></span><span class="t"><strong>Убрать откат транзакции</strong> из фикстуры и запустить набор дважды - получить падения на дублях.</span></label></li><li class="step" data-step="5-break-2"><label class="head"><input type="checkbox" id="s-5-break-2"><span class="box"></span><span class="t"><strong>Сделать тесты зависимыми от порядка</strong> - один создаёт данные, второй их ждёт. Запустить с <code>-p no:randomly</code> и без.</span></label></li><li class="step" data-step="5-break-3"><label class="head"><input type="checkbox" id="s-5-break-3"><span class="box"></span><span class="t"><strong>Замокать всё</strong> в одном тесте, потом сломать функцию под моком - убедиться, что тест зелёный.</span></label></li><li class="step" data-step="5-break-4"><label class="head"><input type="checkbox" id="s-5-break-4"><span class="box"></span><span class="t"><strong>Написать тест без <code>assert</code></strong> и посмотреть, что покрытие выросло, а проверок нет.</span></label></li><li class="step" data-step="5-break-5"><label class="head"><input type="checkbox" id="s-5-break-5"><span class="box"></span><span class="t"><strong>Сломать <code>prescore</code></strong> на одном случае и посмотреть, как параметризованный тест показывает именно его.</span></label></li></ul></div><div class="block task"><h3><span class="i">✅</span>Задание</h3><div class="text"><p>Трекер и разведчик покрыты тестами, набор проходит за секунды и не зависит от порядка. <code>pytest --cov</code> с порогом стоит в пайплайне и роняет сборку при падении покрытия.</p>
+<p><strong>Критерий:</strong> объясняешь, почему сессия в фикстуре откатывается, и что именно проверяет каждый интеграционный тест.</p></div></div><div class="block life"><h3><span class="i">🌍</span>Из жизни</h3><div class="text"><p><strong>Про тесты, зависящие от порядка.</strong> Набор проходит локально и падает в CI, потому что там другой порядок или параллельный запуск. Причина - общее состояние между тестами. Транзакция с откатом закрывает это целиком.</p>
+<p><strong>Про замоканные тесты.</strong> Реальный случай из практики: набор из двухсот зелёных тестов при полностью нерабочем приложении, потому что все внешние вызовы подменены, а проверяется поведение моков.</p>
+<p><strong>Про покрытие как цель.</strong> Требование «80 процентов покрытия» без требований к качеству проверок даёт тесты, которые вызывают код и ничего не утверждают. Цифра растёт, польза нет.</p></div></div><div class="block questions"><h3><span class="i">❓</span>Вопросы с ответами</h3><div class="text"><p><strong>Как устроены ваши тесты?</strong></p>
+<blockquote>
+<p>Пирамидой: много быстрых юнит-тестов, меньше интеграционных на связку с базой, единицы сквозных. Каждый тест идёт в своей транзакции с откатом, поэтому тесты не видят друг друга и не зависят от порядка.</p>
+</blockquote>
+<p><strong>Что мокаете, а что нет?</strong></p>
+<blockquote>
+<p>Мокаю внешние вызовы, отправку сообщений, время. Не мокаю свою логику и базу в интеграционных тестах. Тест, где замокано всё, проверяет моки и остаётся зелёным при сломанном приложении.</p>
+</blockquote>
+<p><strong>Как тестируете FastAPI-приложение?</strong></p>
+<blockquote>
+<p><code>TestClient</code> для синхронного, <code>httpx.AsyncClient</code> с <code>ASGITransport</code> для асинхронного. Зависимость сессии подменяю через <code>dependency_overrides</code> на тестовую, идущую в транзакции с откатом.</p>
+</blockquote>
+<p><strong>Покрытие 100 процентов - это хорошо?</strong></p>
+<blockquote>
+<p>Покрытие показывает выполненные строки, а не проверенные. Смысл цифры - находить непокрытые куски. Как цель она даёт тесты без утверждений.</p>
+</blockquote></div></div><p class="src">Исходник: <a href="https://github.com/Lazysagotku/l2code/blob/main/Python_Phase5_Testing.md" target="_blank" rel="noopener">Python_Phase5_Testing.md</a></p></div></details><details class="phase" data-phase="6" data-total="11"><summary><span class="n">06</span><span><h2>Упаковка и эксплуатация</h2><span class="meta">4 часа</span></span><span class="gauge"><span class="frac">0/11</span><svg class="ring" viewBox="0 0 32 32" aria-hidden="true"><circle class="trk" cx="16" cy="16" r="13"></circle><circle class="fil" cx="16" cy="16" r="13" stroke-dasharray="81.68" stroke-dashoffset="81.68"></circle></svg></span></summary><div class="content"><div class="block analogy"><h3><span class="i">🎭</span>Аналогия</h3><div class="text"><p>Разница между «работает у меня» и «работает у всех». Рецепт в голове повара против рецепта, записанного с граммовкой: второй воспроизводится на другой кухне.</p></div></div><div class="block theory"><h3><span class="i">📖</span>Теория</h3><details><summary>Развернуть теорию</summary><div class="text"><h3>Зависимости и окружение</h3>
+<table>
+<thead>
+<tr>
+<th>Инструмент</th>
+<th>Что делает</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>venv</code></td>
+<td>изолированное окружение, встроен</td>
+</tr>
+<tr>
+<td><code>pip-tools</code></td>
+<td><code>requirements.in</code> в закреплённый <code>requirements.txt</code></td>
+</tr>
+<tr>
+<td><code>poetry</code></td>
+<td>зависимости плюс сборка пакета</td>
+</tr>
+<tr>
+<td><code>uv</code></td>
+<td>быстрая замена pip и venv, набирает популярность</td>
+</tr>
+</tbody>
+</table>
+<p>⚠️ Незакреплённые версии - причина «вчера собиралось, сегодня нет». В <code>requirements.txt</code> версии должны быть точными.</p>
+<h3>Контейнер для Python</h3>
+<pre><code class="language-dockerfile">FROM python:3.12-slim AS builder
+WORKDIR /app
+COPY requirements.txt .
+RUN pip install --no-cache-dir --prefix=/install -r requirements.txt
+
+FROM python:3.12-slim
+WORKDIR /app
+RUN useradd -m app
+COPY --from=builder /install /usr/local
+COPY . .
+USER app
+ENV PYTHONUNBUFFERED=1 PYTHONDONTWRITEBYTECODE=1
+EXPOSE 8000
+CMD [&quot;uvicorn&quot;, &quot;app.main:app&quot;, &quot;--host&quot;, &quot;0.0.0.0&quot;, &quot;--port&quot;, &quot;8000&quot;]
+</code></pre>
+<p><strong>Что тут важно:</strong>
+- многоэтапная сборка - в итоговый образ не попадают инструменты сборки;
+- <code>PYTHONUNBUFFERED=1</code> - <strong>обязательно</strong>, иначе логи буферизуются и в <code>docker logs</code> пусто;
+- <code>USER app</code> - не root внутри контейнера;
+- <code>requirements.txt</code> копируется отдельно и раньше кода: слой с зависимостями кешируется и не пересобирается при каждом изменении кода;
+- <code>.dockerignore</code> с <code>.venv</code>, <code>__pycache__</code>, <code>.git</code>, иначе образ распухает.</p>
+<h3>Как запускают в проде</h3>
+<pre><code class="language-bash"># один процесс
+uvicorn app.main:app --host 0.0.0.0 --port 8000
+
+# несколько рабочих процессов
+gunicorn app.main:app -k uvicorn.workers.UvicornWorker -w 4 --bind 0.0.0.0:8000
+</code></pre>
+<p>Число процессов обычно <code>2 × ядра + 1</code>, но для асинхронного приложения меньше: каждый и так держит много соединений. Больше процессов означает больше соединений к базе - это надо согласовать с пулом.</p>
+<h3>Конфигурация</h3>
+<pre><code class="language-python">from pydantic_settings import BaseSettings
+
+class Settings(BaseSettings):
+    database_url: str
+    app_password: str
+    debug: bool = False
+    model_config = {&quot;env_file&quot;: &quot;.env&quot;}
+
+settings = Settings()
+</code></pre>
+<p>Мост от C#: это <code>IOptions</code>. Отсутствие обязательной переменной обнаруживается при старте, а не в момент первого обращения.</p>
+<p>⚠️ <code>.env</code> в <code>.gitignore</code>, в репозитории только <code>.env.example</code> без значений.</p>
+<h3>Логирование</h3>
+<pre><code class="language-python">import logging, sys, json
+
+class JsonFormatter(logging.Formatter):
+    def format(self, record):
+        return json.dumps({
+            &quot;ts&quot;: self.formatTime(record),
+            &quot;level&quot;: record.levelname,
+            &quot;msg&quot;: record.getMessage(),
+            &quot;logger&quot;: record.name,
+        }, ensure_ascii=False)
+
+handler = logging.StreamHandler(sys.stdout)
+handler.setFormatter(JsonFormatter())
+logging.basicConfig(level=logging.INFO, handlers=[handler])
+</code></pre>
+<p>В контейнере логи идут в stdout, а не в файл - их забирает демон Docker или сборщик логов. Структурированный формат нужен, если логи попадают в Elastic или Loki.</p></div></details></div><div class="block practice "><h3><span class="i">🔧</span>Практика</h3><ul class="steps"><li class="step" data-step="6-practice-1"><label class="head"><input type="checkbox" id="s-6-practice-1"><span class="box"></span><span class="t">Собрать многоэтапный образ трекера, посмотреть размер до и после.</span></label></li><li class="step" data-step="6-practice-2"><label class="head"><input type="checkbox" id="s-6-practice-2"><span class="box"></span><span class="t">Добавить <code>.dockerignore</code>, пересобрать, сравнить размер.</span></label></li><li class="step" data-step="6-practice-3"><label class="head"><input type="checkbox" id="s-6-practice-3"><span class="box"></span><span class="t"><code>docker-compose</code> с трекером и PostgreSQL, проверить, что приложение находит базу по имени сервиса.</span></label></li><li class="step" data-step="6-practice-4"><label class="head"><input type="checkbox" id="s-6-practice-4"><span class="box"></span><span class="t">Перевести настройки на <code>pydantic-settings</code>, убрать чтение <code>.env</code> руками.</span></label></li><li class="step" data-step="6-practice-5"><label class="head"><input type="checkbox" id="s-6-practice-5"><span class="box"></span><span class="t">Убрать <code>PYTHONUNBUFFERED</code>, посмотреть на пустой <code>docker logs</code>, вернуть.</span></label></li><li class="step" data-step="6-practice-6"><label class="head"><input type="checkbox" id="s-6-practice-6"><span class="box"></span><span class="t">Запустить через gunicorn с четырьмя процессами, посмотреть число соединений в <code>pg_stat_activity</code>.</span></label></li></ul></div><div class="block break brk"><h3><span class="i">💥</span>Сломай намеренно</h3><ul class="steps"><li class="step" data-step="6-break-1"><label class="head"><input type="checkbox" id="s-6-break-1"><span class="box"></span><span class="t"><strong>Убрать <code>PYTHONUNBUFFERED=1</code></strong> и убедиться, что логи не появляются в <code>docker logs</code> до заполнения буфера.</span></label></li><li class="step" data-step="6-break-2"><label class="head"><input type="checkbox" id="s-6-break-2"><span class="box"></span><span class="t"><strong>Скопировать код до <code>requirements.txt</code></strong> в Dockerfile, поменять одну строку кода, пересобрать - увидеть, что зависимости ставятся заново.</span></label></li><li class="step" data-step="6-break-3"><label class="head"><input type="checkbox" id="s-6-break-3"><span class="box"></span><span class="t"><strong>Не поставить <code>.dockerignore</code></strong> и собрать образ с <code>.venv</code> внутри - посмотреть на размер.</span></label></li><li class="step" data-step="6-break-4"><label class="head"><input type="checkbox" id="s-6-break-4"><span class="box"></span><span class="t"><strong>Убрать обязательную переменную окружения</strong> и убедиться, что pydantic-settings падает на старте с понятным текстом.</span></label></li><li class="step" data-step="6-break-5"><label class="head"><input type="checkbox" id="s-6-break-5"><span class="box"></span><span class="t"><strong>Поставить 16 процессов gunicorn</strong> при пуле базы на 20 и погонять нагрузку - упереться в <code>max_connections</code>.</span></label></li></ul></div><div class="block task"><h3><span class="i">✅</span>Задание</h3><div class="text"><p>Трекер собирается многоэтапным Dockerfile, образ меньше 200 МБ, запускается из <code>docker-compose</code> с базой, настройки через <code>pydantic-settings</code>, логи структурированные и видны в <code>docker logs</code>.</p>
+<p><strong>Критерий:</strong> объясняешь каждую строку Dockerfile и почему <code>requirements.txt</code> копируется раньше кода.</p></div></div><div class="block life"><h3><span class="i">🌍</span>Из жизни</h3><div class="text"><p><strong>Про пустые логи в контейнере.</strong> Классика первого дня с Docker: приложение работает, <code>docker logs</code> пуст. Причина - буферизация вывода Python. Одна переменная окружения, а ищут её часами.</p>
+<p><strong>Про размер образа.</strong> Наивный Dockerfile на <code>python:3.12</code> с копированием всего каталога даёт образ под гигабайт. Многоэтапная сборка на <code>slim</code> плюс <code>.dockerignore</code> дают 150-200 МБ. Разница видна на каждом деплое.</p>
+<p><strong>Про число процессов и пул базы.</strong> Четыре процесса gunicorn с пулом по 10 соединений каждый - это 40 соединений от одного приложения. Три экземпляра - 120. При <code>max_connections</code> 100 всё встаёт, и выглядит это как «база отказала».</p></div></div><div class="block questions"><h3><span class="i">❓</span>Вопросы с ответами</h3><div class="text"><p><strong>Как запускаете FastAPI в проде?</strong></p>
+<blockquote>
+<p>Gunicorn с воркерами uvicorn, число процессов согласовано с пулом соединений к базе. Перед ним nginx, который терминирует TLS и раздаёт статику. Логи в stdout, забирает их сборщик.</p>
+</blockquote>
+<p><strong>Чем отличается контейнер для Python от контейнера для .NET?</strong></p>
+<blockquote>
+<p>Нет отдельного шага компиляции: собирать нечего, ставятся зависимости. Зато нужен <code>PYTHONUNBUFFERED</code>, иначе логи не видны, и многоэтапная сборка нужна, чтобы в итоговый образ не попали инструменты сборки.</p>
+</blockquote>
+<p><strong>Как передаёте настройки?</strong></p>
+<blockquote>
+<p>Через переменные окружения, читаю <code>pydantic-settings</code>. Отсутствие обязательной переменной ловится при старте, а не в момент первого обращения. Секреты в репозитории не лежат, там только <code>.env.example</code>.</p>
+</blockquote>
+<p><strong>Почему <code>requirements.txt</code> копируется отдельно?</strong></p>
+<blockquote>
+<p>Docker кеширует слои. Если сначала скопировать весь код, любое изменение в нём инвалидирует слой с установкой зависимостей, и они ставятся заново при каждой сборке.</p>
+</blockquote></div></div><p class="src">Исходник: <a href="https://github.com/Lazysagotku/l2code/blob/main/Python_Phase6_Packaging_Ops.md" target="_blank" rel="noopener">Python_Phase6_Packaging_Ops.md</a></p></div></details><details class="phase" data-phase="7" data-total="11"><summary><span class="n">07</span><span><h2>Архитектура и продакшен-паттерны</h2><span class="meta">5 часов</span></span><span class="gauge"><span class="frac">0/11</span><svg class="ring" viewBox="0 0 32 32" aria-hidden="true"><circle class="trk" cx="16" cy="16" r="13"></circle><circle class="fil" cx="16" cy="16" r="13" stroke-dasharray="81.68" stroke-dashoffset="81.68"></circle></svg></span></summary><div class="content"><div class="block analogy"><h3><span class="i">🎭</span>Аналогия</h3><div class="text"><p>Планировка квартиры. Кухня отдельно от спальни не потому, что так красивее, а потому, что запахи и шум. Слои в приложении разделяют по той же причине: чтобы изменение в одном не тянуло за собой остальные.</p></div></div><div class="block theory"><h3><span class="i">📖</span>Теория</h3><details><summary>Развернуть теорию</summary><div class="text"><h3>Слои</h3>
+<pre><code>Домен          сущности и правила, ничего не знает о базе и вебе
+Приложение     сценарии: «создать вакансию», «сменить статус»
+Инфраструктура база, HTTP-клиенты, очереди
+Интерфейс      маршруты FastAPI, CLI
+</code></pre>
+<p><strong>Правило зависимостей:</strong> стрелки внутрь. Домен не импортирует SQLAlchemy. Проверяется просто - <code>grep -r "sqlalchemy" domain/</code> должен быть пуст.</p>
+<p>⚠️ Чистая архитектура в маленьком проекте даёт больше папок, чем пользы. Для трекера трёх слоёв достаточно: маршруты, сервисы, доступ к данным. Умение сказать, где она избыточна, ценится не меньше, чем умение её построить.</p>
+<h3>Repository и Unit of Work</h3>
+<pre><code class="language-python">class VacancyRepo:
+    def __init__(self, session: Session):
+        self._session = session
+
+    def get(self, vid: int) -&gt; Vacancy | None:
+        return self._session.get(Vacancy, vid)
+
+    def by_status(self, status: Status) -&gt; list[Vacancy]:
+        return list(self._session.scalars(
+            select(Vacancy).where(Vacancy.status == status)
+        ))
+</code></pre>
+<p>Repository прячет способ хранения. Unit of Work - это сессия SQLAlchemy: она уже держит транзакцию на группу изменений, отдельный класс поверх обычно не нужен.</p>
+<h3>Очереди</h3>
+<pre><code class="language-python">from celery import Celery
+
+app = Celery(&quot;tracker&quot;, broker=&quot;redis://localhost:6379/0&quot;)
+
+@app.task(bind=True, max_retries=3, autoretry_for=(OSError,), retry_backoff=True)
+def send_digest(self, user_id: int):
+    ...
+</code></pre>
+<table>
+<thead>
+<tr>
+<th>Инструмент</th>
+<th>Когда</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>BackgroundTasks</code></td>
+<td>мелочь, потеря не страшна</td>
+</tr>
+<tr>
+<td>RQ</td>
+<td>простые задачи, Redis уже есть</td>
+</tr>
+<tr>
+<td>Celery</td>
+<td>расписание, повторы, цепочки, мониторинг</td>
+</tr>
+<tr>
+<td>Таблица заданий в базе</td>
+<td>задач мало, лишний сервис не нужен</td>
+</tr>
+</tbody>
+</table>
+<p>⚠️ Задача обязана быть идемпотентной: при повторе она выполнится ещё раз. Тот же принцип, что у джоб в слое 4 инфра-роадмапа.</p>
+<h3>Кэш</h3>
+<pre><code class="language-python">import redis, json
+
+r = redis.Redis(decode_responses=True)
+
+def top_vacancies(limit: int = 20) -&gt; list[dict]:
+    key = f&quot;top:{limit}&quot;
+    if (cached := r.get(key)):
+        return json.loads(cached)
+    data = compute_top(limit)
+    r.setex(key, 300, json.dumps(data, ensure_ascii=False))
+    return data
+</code></pre>
+<p><strong>Три вопроса к любому кэшу:</strong>
+1. Сколько живёт запись.
+2. Что происходит при изменении данных - сбрасываем или ждём истечения.
+3. Что будет при недоступности Redis - приложение падает или работает медленнее.</p>
+<p>Третий вопрос забывают чаще всего. Правильный ответ: кэш - ускоритель, приложение обязано работать без него.</p>
+<p><strong>Cache stampede:</strong> запись истекла, сто запросов одновременно пошли считать заново. Лечится блокировкой на пересчёт или разбросом времени жизни.</p>
+<h3>Отказоустойчивость</h3>
+<table>
+<thead>
+<tr>
+<th>Приём</th>
+<th>Что делает</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Таймаут</td>
+<td>ограничивает ожидание внешнего вызова</td>
+</tr>
+<tr>
+<td>Повтор с ростом паузы</td>
+<td>переживает кратковременный сбой</td>
+</tr>
+<tr>
+<td>Джиттер</td>
+<td>разводит одновременные повторы</td>
+</tr>
+<tr>
+<td>Circuit breaker</td>
+<td>перестаёт звонить в мёртвый сервис</td>
+</tr>
+<tr>
+<td>Деградация</td>
+<td>отдаёт часть данных вместо ошибки</td>
+</tr>
+</tbody>
+</table>
+<p>⚠️ Повтор без ограничения одновременности превращает мелкий сбой в лавину: сервис прилёг на секунду, все клиенты ретраятся разом, он ложится совсем.</p>
+<h3>Выбор фреймворка</h3>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>Когда брать</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>FastAPI</strong></td>
+<td>новое API, async, автодокументация</td>
+</tr>
+<tr>
+<td><strong>Django</strong></td>
+<td>админка из коробки, ORM, готовая аутентификация, CMS-подобное</td>
+</tr>
+<tr>
+<td><strong>Flask</strong></td>
+<td>маленький сервис, полный контроль, готовое окружение</td>
+</tr>
+</tbody>
+</table>
+<p>У Ивана реальный опыт с Flask и Django, и это надо называть: выбор осознанный, а не единственный знакомый вариант.</p></div></details></div><div class="block practice "><h3><span class="i">🔧</span>Практика</h3><ul class="steps"><li class="step" data-step="7-practice-1"><label class="head"><input type="checkbox" id="s-7-practice-1"><span class="box"></span><span class="t">Вынести бизнес-логику трекера из маршрутов в сервисный слой, маршруты оставить тонкими.</span></label></li><li class="step" data-step="7-practice-2"><label class="head"><input type="checkbox" id="s-7-practice-2"><span class="box"></span><span class="t">Repository для вакансий и событий.</span></label></li><li class="step" data-step="7-practice-3"><label class="head"><input type="checkbox" id="s-7-practice-3"><span class="box"></span><span class="t">Проверить правило зависимостей: <code>grep -r "fastapi\|sqlalchemy" services/</code> должен быть пуст.</span></label></li><li class="step" data-step="7-practice-4"><label class="head"><input type="checkbox" id="s-7-practice-4"><span class="box"></span><span class="t">Кэш на тяжёлую выборку разведчика с временем жизни и корректной работой при выключенном Redis.</span></label></li><li class="step" data-step="7-practice-5"><label class="head"><input type="checkbox" id="s-7-practice-5"><span class="box"></span><span class="t">Обёртка <code>@retry</code> с экспоненциальной паузой и джиттером на сетевые вызовы разведчика.</span></label></li><li class="step" data-step="7-practice-6"><label class="head"><input type="checkbox" id="s-7-practice-6"><span class="box"></span><span class="t">Написать в <code>docs/ARCHITECTURE.md</code> схему слоёв трекера с обоснованием, почему выбраны три, а не четыре.</span></label></li></ul></div><div class="block break brk"><h3><span class="i">💥</span>Сломай намеренно</h3><ul class="steps"><li class="step" data-step="7-break-1"><label class="head"><input type="checkbox" id="s-7-break-1"><span class="box"></span><span class="t"><strong>Выключить Redis</strong> и проверить, что трекер работает медленнее, а не падает. Если падает - починить.</span></label></li><li class="step" data-step="7-break-2"><label class="head"><input type="checkbox" id="s-7-break-2"><span class="box"></span><span class="t"><strong>Убрать время жизни у кэша</strong> и посмотреть, как страница показывает устаревшее.</span></label></li><li class="step" data-step="7-break-3"><label class="head"><input type="checkbox" id="s-7-break-3"><span class="box"></span><span class="t"><strong>Сделать повтор без ограничения</strong> и запустить сто задач против отвечающего с ошибкой сервиса.</span></label></li><li class="step" data-step="7-break-4"><label class="head"><input type="checkbox" id="s-7-break-4"><span class="box"></span><span class="t"><strong>Импортировать SQLAlchemy в сервисный слой</strong> и убедиться, что проверка <code>grep</code> это ловит.</span></label></li><li class="step" data-step="7-break-5"><label class="head"><input type="checkbox" id="s-7-break-5"><span class="box"></span><span class="t"><strong>Сделать задачу неидемпотентной</strong> и запустить дважды - получить дубли.</span></label></li></ul></div><div class="block task"><h3><span class="i">✅</span>Задание</h3><div class="text"><p>Трекер с разделёнными слоями, тонкими маршрутами, репозиториями и кэшем, который переживает недоступность Redis. <code>docs/ARCHITECTURE.md</code> объясняет решения, включая то, где чистая архитектура была бы избыточна.</p>
+<p><strong>Критерий:</strong> можешь провести по схеме от HTTP-запроса до строки в базе и назвать, что придётся менять при замене PostgreSQL на другую базу.</p></div></div><div class="block life"><h3><span class="i">🌍</span>Из жизни</h3><div class="text"><p><strong>Про архитектуру ради архитектуры.</strong> Проект на триста строк с пятью слоями, интерфейсами на каждый репозиторий и контейнером зависимостей. Читать его дольше, чем переписать. Признак зрелости - умение назвать, где слои избыточны.</p>
+<p><strong>Про кэш, который роняет приложение.</strong> Redis лёг, а приложение перестало отвечать целиком, потому что обращение к кэшу не обёрнуто. Кэш - ускоритель, и падать вместе с ним нельзя.</p>
+<p><strong>Про лавину повторов.</strong> Известный сценарий каскадного отказа: сервис прилёг на секунду, тысяча клиентов начала ретраиться одновременно, он не встал вообще. Джиттер и ограничение одновременности стоят двух строк кода.</p></div></div><div class="block questions"><h3><span class="i">❓</span>Вопросы с ответами</h3><div class="text"><p><strong>Как организуете код в проекте?</strong></p>
+<blockquote>
+<p>Слоями: маршруты только принимают и отдают, сервисы держат логику, слой данных знает про базу. Зависимости идут внутрь: сервисы не импортируют FastAPI, домен не импортирует SQLAlchemy. В маленьком проекте трёх слоёв хватает, полная чистая архитектура там даёт больше папок, чем пользы.</p>
+</blockquote>
+<p><strong>Когда нужна очередь, а когда хватит фоновой задачи?</strong></p>
+<blockquote>
+<p><code>BackgroundTasks</code> для мелочи, потеря которой не страшна: она живёт в процессе и исчезает при перезапуске. Очередь нужна, когда задачу нельзя потерять, нужны повторы, расписание или видимость статуса.</p>
+</blockquote>
+<p><strong>Как кэшируете?</strong></p>
+<blockquote>
+<p>С явным временем жизни и сбросом при изменении данных. Главное правило - приложение обязано работать при недоступности кэша, медленнее, но работать. Плюс защита от одновременного пересчёта после истечения.</p>
+</blockquote>
+<p><strong>Как защищаетесь от отказов внешних сервисов?</strong></p>
+<blockquote>
+<p>Таймаут на каждый вызов, повтор с растущей паузой и джиттером, ограничение одновременности. Для часто отказывающего - размыкатель, чтобы не звонить в мёртвый сервис. И деградация: отдать часть данных с пометкой лучше, чем ошибку.</p>
+</blockquote>
+<p><strong>FastAPI, Django или Flask - как выбираете?</strong></p>
+<blockquote>
+<p>По задаче. FastAPI для нового API с async и автодокументацией. Django, когда нужны админка, ORM и аутентификация из коробки. Flask для маленького сервиса с полным контролем. Работал с Flask и Django на реальных задачах, поэтому выбор осознанный.</p>
+</blockquote></div></div><p class="src">Исходник: <a href="https://github.com/Lazysagotku/l2code/blob/main/Python_Phase7_Architecture.md" target="_blank" rel="noopener">Python_Phase7_Architecture.md</a></p></div></details></div>
   </div>
 </main>
 
@@ -201,24 +1360,103 @@
 
 <script>
 (() => {
-  if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-  const runners = [...document.querySelectorAll('.runner')];
-  const trip = () => {
-    const r = runners[Math.floor(Math.random() * runners.length)];
-    if (!r || r.classList.contains('fall') || r.classList.contains('gone')) return;
-    r.classList.remove('rerun');
-    r.classList.add('fall');
-    setTimeout(() => {
-      r.classList.add('gone');
-      r.classList.remove('fall');
-      setTimeout(() => {
-        r.classList.remove('gone');
-        void r.offsetWidth;
-        r.classList.add('rerun');
-      }, 3000 + Math.random() * 2000);
-    }, 900);
-  };
-  setInterval(trip, 9000 + Math.random() * 6000);
+  const KEY = "rm-progress-python";
+  const DEADLINE = "";
+  const load = () => { try { return JSON.parse(localStorage.getItem(KEY)) || {}; } catch (e) { return {}; } };
+  const save = (s) => { try { localStorage.setItem(KEY, JSON.stringify(s)); } catch (e) {} };
+  let state = load();
+
+  const phases = [...document.querySelectorAll(".phase")];
+  const allSteps = [...document.querySelectorAll(".step")];
+  const C = 2 * Math.PI * 13;
+
+  function paint() {
+    let done = 0, phasesDone = 0;
+    phases.forEach(ph => {
+      const steps = [...ph.querySelectorAll(".step")];
+      let d = 0;
+      steps.forEach(st => {
+        const on = !!state[st.dataset.step];
+        st.classList.toggle("done", on);
+        const box = st.querySelector("input"); if (box) box.checked = on;
+        if (on) d++;
+      });
+      done += d;
+      const total = steps.length;
+      const p = total ? d / total : 0;
+      if (total && p === 1) phasesDone++;
+      ph.classList.toggle("complete", total > 0 && p === 1);
+      ph.classList.toggle("active", p > 0 && p < 1);
+      ph.querySelector(".frac").textContent = d + "/" + total;
+      ph.querySelector(".ring .fil").setAttribute("stroke-dashoffset", (C * (1 - p)).toFixed(2));
+    });
+    const total = allSteps.length;
+    const pct = total ? Math.round(done / total * 100) : 0;
+    document.getElementById("pct").textContent = pct + "%";
+    document.getElementById("done").textContent = done;
+    document.getElementById("phasesDone").textContent = phasesDone;
+    const fill = document.getElementById("fill");
+    fill.style.width = pct + "%";
+    fill.classList.toggle("full", pct === 100);
+
+    const next = allSteps.filter(st => !state[st.dataset.step]).slice(0, 5);
+    const ol = document.getElementById("next");
+    ol.innerHTML = next.length
+      ? next.map(st => {
+          const ph = st.closest(".phase");
+          const t = st.querySelector(".t").textContent;
+          const name = ph.querySelector("h2").textContent;
+          return `<li>${t} <span>· ${ph.dataset.phase}. ${name}</span></li>`;
+        }).join("")
+      : '<li class="empty">Всё пройдено.</li>';
+  }
+
+  allSteps.forEach(st => {
+    const box = st.querySelector("input");
+    box.addEventListener("change", () => {
+      if (box.checked) state[st.dataset.step] = 1; else delete state[st.dataset.step];
+      save(state); paint();
+    });
+    const more = st.querySelector(".more");
+    if (more) more.addEventListener("click", (e) => { e.preventDefault(); st.classList.toggle("open"); });
+  });
+
+  document.getElementById("expandAll").addEventListener("click", () => {
+    const any = phases.some(p => !p.open);
+    phases.forEach(p => p.open = any);
+  });
+  document.getElementById("resetBtn").addEventListener("click", () => {
+    if (!confirm("Сбросить весь прогресс по этому роадмапу?")) return;
+    state = {}; save(state); paint();
+  });
+  document.getElementById("exportBtn").addEventListener("click", () => {
+    const blob = new Blob([JSON.stringify({ key: KEY, at: new Date().toISOString(), state }, null, 2)], { type: "application/json" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob); a.download = KEY + ".json"; a.click();
+    URL.revokeObjectURL(a.href);
+  });
+  document.getElementById("importFile").addEventListener("change", (e) => {
+    const f = e.target.files[0]; if (!f) return;
+    f.text().then(txt => {
+      try { const d = JSON.parse(txt); state = d.state || d; save(state); paint(); }
+      catch (err) { alert("Файл не похож на сохранённый прогресс."); }
+    });
+    e.target.value = "";
+  });
+
+  if (DEADLINE) {
+    const today = new Date(); today.setHours(0, 0, 0, 0);
+    const left = Math.round((new Date(DEADLINE) - today) / 86400000);
+    if (left >= 0) {
+      document.getElementById("days").textContent = left === 0 ? "сегодня" : left + (left === 1 ? " день" : left < 5 ? " дня" : " дней");
+      document.getElementById("deadline").hidden = false;
+    }
+  }
+
+  paint();
+  // первая незакрытая фаза раскрыта, чтобы страница открывалась на рабочем месте
+  const first = phases.find(p => !p.classList.contains("complete") && !p.classList.contains("status-done") && !p.classList.contains("status-skipped"));
+  if (first) first.open = true;
 })();
 </script>
 <script src="/theme.js?v=2"></script>

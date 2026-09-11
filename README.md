@@ -25,3 +25,14 @@ git push -u origin main
 ## Editing
 
 All content lives in `index.html`. Facts are sourced from `career-notes/Work_Experience.md` in the private workspace - keep the site consistent with it.
+
+## Роадмапы
+
+Страницы `roadmap*/index.html` **не редактируются руками** - они собираются из файлов фаз в `../l2code/`:
+
+```
+python build_roadmaps.py          # все четыре
+python build_roadmaps.py infra    # одно направление
+```
+
+Источник правды - markdown в l2code (`Infra_Layer*.md`, `Python_Phase*.md`, `AI_Phase*.md`, `CSharp_Roadmap_Software.md`). Чекбоксы берутся из нумерованных пунктов в блоках «Практика» и «Сломай намеренно». Прогресс живёт в localStorage браузера, кнопки «Скачать / Загрузить прогресс» переносят его между устройствами файлом.

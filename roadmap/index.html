@@ -11,147 +11,155 @@
   })();
 </script>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Роадмапа C# - Иван Архипов</title>
 <meta name="robots" content="noindex">
-<meta name="description" content="Публичная карта обучения Ивана Архипова: путь от .NET Framework к современному стеку с процентами поглощения материала по фазам.">
+<title>C# Backend - роадмап Ивана Архипова</title>
+<meta name="description" content="Фоновый трек с 1 сентября. Закрывает вопрос «читаете ли код разработчиков» и доводит Life Notes. Фазы 1-3 завершены, дальше по мере роста.">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%23b0561f'/%3E%3Ctext x='32' y='43' font-family='Georgia,serif' font-weight='700' font-size='30' fill='white' text-anchor='middle'%3EИА%3C/text%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bitter:wght@600;700;800&family=Golos+Text:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg: oklch(1 0 0);
-    --surface: oklch(0.97 0.003 40);
-    --dark: oklch(0.23 0.012 40);
-    --ink: oklch(0.24 0.015 40);
-    --muted: oklch(0.45 0.015 40);
-    --accent: oklch(0.58 0.15 42);
-    --accent-deep: oklch(0.46 0.125 42);
-    --done: oklch(0.55 0.12 145);
+    --bg: oklch(1 0 0); --surface: oklch(0.97 0.003 40); --raised: oklch(1 0 0);
+    --dark: oklch(0.23 0.012 40); --on-dark: #fff;
+    --ink: oklch(0.24 0.015 40); --muted: oklch(0.45 0.015 40);
+    --accent: oklch(0.58 0.15 42); --accent-deep: oklch(0.46 0.125 42); --accent-soft: oklch(0.96 0.02 42);
+    --done: oklch(0.55 0.12 145); --done-soft: oklch(0.94 0.05 145);
+    --skip: oklch(0.55 0.13 25); --skip-soft: oklch(0.95 0.04 25);
     --line: oklch(0.9 0.004 40);
     --display: "Bitter", Georgia, serif;
     --body: "Golos Text", "Segoe UI", system-ui, sans-serif;
-    --r: 14px;
-    --ease: cubic-bezier(0.16, 1, 0.3, 1);
+    --mono: ui-monospace, "Cascadia Mono", Consolas, monospace;
+    --r: 14px; --ease: cubic-bezier(0.16, 1, 0.3, 1);
   }
   * { box-sizing: border-box; }
-  body {
-    margin: 0;
-    background: var(--bg);
-    color: var(--ink);
-    font-family: var(--body);
-    font-size: 1.0425rem;
-    line-height: 1.6;
-    -webkit-font-smoothing: antialiased;
-  }
-  h1, h2, h3 { font-family: var(--display); text-wrap: balance; margin: 0; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--body); font-size: 1.04rem; line-height: 1.62; -webkit-font-smoothing: antialiased; }
+  h1, h2, h3, h4 { font-family: var(--display); text-wrap: balance; margin: 0; }
   p { margin: 0; text-wrap: pretty; }
   a { color: var(--accent-deep); text-underline-offset: 3px; }
   :focus-visible { outline: 3px solid var(--accent-deep); outline-offset: 3px; border-radius: 4px; }
-  .wrap { max-width: 50rem; margin-inline: auto; padding-inline: clamp(1.25rem, 5vw, 2.5rem); }
+  .wrap { max-width: 58rem; margin-inline: auto; padding-inline: clamp(1.25rem, 5vw, 3rem); }
+  code { font-family: var(--mono); font-size: 0.9em; background: var(--surface); padding: 0.1em 0.35em; border-radius: 5px; }
+  pre { background: var(--dark); color: var(--on-dark); padding: 0.9rem 1.1rem; border-radius: 10px; overflow-x: auto; font-size: 0.88rem; line-height: 1.5; margin: 0.7rem 0; }
+  pre code { background: none; padding: 0; color: inherit; font-size: inherit; }
+  table { width: 100%; border-collapse: collapse; font-size: 0.93rem; margin: 0.7rem 0; display: block; overflow-x: auto; }
+  th, td { text-align: left; padding: 0.45rem 0.6rem; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--muted); }
+  blockquote { margin: 0.6rem 0; padding: 0.6rem 1rem; border-left: 3px solid var(--accent); background: var(--accent-soft); border-radius: 0 10px 10px 0; }
+  blockquote p + p { margin-top: 0.5rem; }
+  ul, ol { padding-left: 1.3rem; margin: 0.5rem 0; }
+  li + li { margin-top: 0.25rem; }
+  hr { border: 0; border-top: 1px solid var(--line); margin: 1.2rem 0; }
 
-  header { padding-block: clamp(2.5rem, 7vh, 4.5rem) 0; }
+  header { padding-block: clamp(2.5rem, 7vh, 4rem) 1.5rem; }
   .back { font-size: 0.95rem; font-weight: 500; text-decoration: none; }
   .back:hover { text-decoration: underline; }
   .epigraph { margin-top: 0.9rem; font-family: var(--display); font-style: italic; font-size: 0.98rem; color: var(--muted); }
   h1 { font-size: clamp(2.1rem, 5.5vw, 3.2rem); font-weight: 800; letter-spacing: -0.01em; margin-top: 0.8rem; }
-  .sub { margin-top: 0.8rem; color: var(--muted); max-width: 40em; }
+  .lead { margin-top: 0.8rem; color: var(--muted); max-width: 44em; font-size: 1.08rem; }
 
-  /* Прогресс-бары с бегуном */
-  .track { position: relative; height: 8px; border-radius: 999px; background: var(--surface); border: 1px solid var(--line); }
-  .fill { height: 100%; width: var(--p); border-radius: 999px; background: linear-gradient(90deg, var(--accent), oklch(0.74 0.15 60), var(--accent)); background-size: 200% 100%; animation: load 1.1s var(--ease) var(--d, 0s) both, shimmer 2.6s linear infinite; }
-  .runner {
-    position: absolute;
-    left: max(var(--p), 1.4rem);
-    top: -3px;
-    transform: translate(-95%, -100%) scaleX(-1);
-    font-size: 1.05rem;
-    font-style: normal;
-    line-height: 1;
-    pointer-events: none;
-    animation: run 1.1s var(--ease) var(--d, 0s) both, jog 0.5s ease-in-out infinite;
-  }
-  @keyframes load { from { width: 0; } }
-  @keyframes run { from { left: 1.4rem; } }
-  @keyframes shimmer { from { background-position: 200% 0; } to { background-position: 0% 0; } }
-  @keyframes jog { 0%, 100% { margin-top: 0; } 50% { margin-top: -3px; } }
-  @keyframes fall { 40% { transform: translate(-95%, -55%) scaleX(-1) rotate(75deg); opacity: 1; } 100% { transform: translate(-95%, -5%) scaleX(-1) rotate(115deg); opacity: 0; } }
-  .runner.fall { animation: fall 0.9s ease-in forwards; }
-  .runner.gone { opacity: 0; animation: none; }
-  .runner.rerun { animation: run 1.1s var(--ease) both, jog 0.5s ease-in-out infinite; }
-  @media (prefers-reduced-motion: reduce) {
-    .fill, .runner { animation: none; }
-  }
-
-  /* Общий прогресс */
-  .total {
-    margin-top: 2.25rem;
-    background: var(--dark);
-    color: #fff;
-    border-radius: var(--r);
-    padding: 1.5rem 1.75rem 1.65rem;
-  }
-  .total .row { display: flex; justify-content: space-between; align-items: baseline; gap: 1rem; }
+  .total { margin-top: 2rem; background: var(--dark); color: var(--on-dark); border-radius: var(--r); padding: 1.4rem 1.6rem 1.5rem; }
+  .total .row { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 0.5rem 1.5rem; }
   .total .label { font-weight: 600; }
-  .total .num { font-family: var(--display); font-weight: 800; font-size: 2rem; color: oklch(0.75 0.13 55); }
-  .total .track { margin-top: 0.9rem; height: 10px; border: none; background: oklch(0.34 0.015 40); }
-  .total .note { margin-top: 0.75rem; font-size: 0.9rem; color: oklch(0.7 0.015 40); }
+  .total .num { font-family: var(--display); font-weight: 800; font-size: 2rem; color: oklch(0.75 0.13 55); font-variant-numeric: tabular-nums; }
+  .total .track { position: relative; height: 10px; border-radius: 999px; background: oklch(0.34 0.015 40); margin-top: 0.8rem; overflow: hidden; }
+  .total .fill { height: 100%; width: 0; border-radius: 999px; background: linear-gradient(90deg, var(--accent), oklch(0.74 0.15 60)); transition: width 0.7s var(--ease); }
+  .total .fill.full { background: var(--done); }
+  .stats { display: flex; flex-wrap: wrap; gap: 0.4rem 1.6rem; margin-top: 0.8rem; font-size: 0.92rem; color: oklch(0.72 0.015 40); }
+  .stats b { color: var(--on-dark); font-variant-numeric: tabular-nums; }
 
-  /* Веха */
-  .gate {
-    margin-top: 1.25rem;
-    border: 1.5px solid var(--accent);
-    border-radius: var(--r);
-    padding: 1rem 1.4rem;
-    font-size: 0.98rem;
-  }
-  .gate b { color: var(--accent-deep); }
+  .next { margin-top: 1.4rem; background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 1.1rem 1.3rem; }
+  .next h2 { font-size: 1.1rem; font-weight: 700; margin-bottom: 0.5rem; }
+  .next ol { margin: 0; padding-left: 1.2rem; }
+  .next li { font-size: 0.95rem; }
+  .next li span { color: var(--muted); font-size: 0.85rem; }
+  .next .empty { color: var(--muted); }
 
-  /* Календарь плана */
-  .cal-card { margin-top: 1.25rem; border: 1px solid var(--line); border-radius: var(--r); padding: 1.4rem 1.6rem 1.5rem; }
-  .cal-title { font-size: 1.15rem; font-weight: 700; margin-bottom: 1rem; }
-  .cal { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; max-width: 26rem; }
-  .cal .dow { font-size: 0.78rem; color: var(--muted); text-align: center; font-weight: 600; }
-  .cal .d { aspect-ratio: 1; display: grid; place-items: center; border-radius: 8px; font-size: 0.88rem; font-weight: 600; color: #fff; }
-  .cal .off { background: none; }
-  .cal .p1 { background: var(--accent); }
-  .cal .p2 { background: var(--accent-deep); }
-  .cal .p3 { background: oklch(0.5 0.08 270); }
-  .cal .p4 { background: var(--dark); }
-  .cal .p5 { background: oklch(0.5 0.1 145); }
-  .cal .go { background: var(--done); }
-  .cal-legend { display: flex; flex-wrap: wrap; gap: 0.5rem 1.25rem; margin-top: 1rem; font-size: 0.85rem; color: var(--muted); }
-  .cal-legend i { display: inline-block; width: 0.7rem; height: 0.7rem; border-radius: 3px; margin-right: 0.4rem; }
-  .cal-legend .p1 { background: var(--accent); } .cal-legend .p2 { background: var(--accent-deep); } .cal-legend .p3 { background: oklch(0.5 0.08 270); } .cal-legend .p4 { background: var(--dark); } .cal-legend .p5 { background: oklch(0.5 0.1 145); } .cal-legend .go { background: var(--done); }
+  .tools { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 1rem; }
+  .tools button, .tools label { font: inherit; font-size: 0.85rem; padding: 0.35rem 0.9rem; border: 1px solid var(--line); border-radius: 999px; background: var(--raised); color: inherit; cursor: pointer; }
+  .tools button:hover, .tools label:hover { border-color: var(--accent); }
+  .tools .danger { margin-left: auto; opacity: 0.7; }
+  .tools .danger:hover { opacity: 1; border-color: var(--skip); color: var(--skip); }
+  .tools input[type=file] { display: none; }
 
-  /* Фазы */
-  main { padding-block: clamp(2.5rem, 6vh, 4rem); }
-  .phases { list-style: none; margin: 0; padding: 0; display: grid; gap: 1rem; }
-  .phase {
-    border: 1px solid var(--line);
-    border-radius: var(--r);
-    padding: 1.4rem 1.6rem 1.5rem;
-  }
-  .phase.active { border-color: var(--accent); border-width: 1.5px; }
-  .phase .head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 0.4rem 1.5rem; }
-  .phase h2 { font-size: 1.25rem; font-weight: 700; }
-  .phase h2 .n { color: var(--accent-deep); margin-right: 0.5rem; }
-  .status { font-size: 0.85rem; font-weight: 600; padding: 0.2rem 0.8rem; border-radius: 999px; white-space: nowrap; }
-  .status.done { background: oklch(0.93 0.035 145); color: oklch(0.38 0.1 145); }
-  .status.active { background: oklch(0.94 0.045 55); color: var(--accent-deep); }
-  .status.next { background: var(--surface); color: var(--muted); border: 1px solid var(--line); }
-  .meter { display: flex; align-items: center; gap: 1rem; margin-top: 1.1rem; }
-  .meter .track { flex: 1; }
-  .phase[data-done] .fill { background: linear-gradient(90deg, var(--done), oklch(0.7 0.13 145), var(--done)); background-size: 200% 100%; }
-  .meter .pct { font-family: var(--display); font-weight: 700; font-size: 1.05rem; min-width: 3ch; text-align: right; }
-  .topics { margin-top: 0.8rem; font-size: 0.95rem; color: var(--muted); }
-  .note { margin-top: 0.5rem; font-size: 0.95rem; }
-  .note b { color: var(--accent-deep); }
+  main { padding-block: clamp(2rem, 5vh, 3.5rem); }
+  .section-title { font-size: clamp(1.4rem, 3vw, 1.8rem); font-weight: 700; margin-bottom: 1rem; }
+  .section-title em { font-style: normal; color: var(--accent-deep); }
 
-  .legend { margin-top: 2rem; font-size: 0.9rem; color: var(--muted); max-width: 46em; }
+  details.intro { border: 1px solid var(--line); border-radius: var(--r); padding: 0.9rem 1.3rem; margin-bottom: 2rem; }
+  details.intro summary { cursor: pointer; font-family: var(--display); font-weight: 700; font-size: 1.05rem; }
+  details.intro .body { margin-top: 0.8rem; font-size: 0.97rem; }
+  details.intro .body h2 { font-size: 1.2rem; margin-top: 1.3rem; }
+  details.intro .body h3 { font-size: 1.05rem; margin-top: 1rem; }
 
-  footer { border-top: 1px solid var(--line); padding-block: 1.75rem; }
+  .phase { border: 1px solid var(--line); border-left: 4px solid var(--line); border-radius: var(--r); background: var(--raised); margin-bottom: 0.9rem; transition: border-color 0.3s; }
+  .phase.active { border-left-color: var(--accent); }
+  .phase.complete { border-left-color: var(--done); background: var(--surface); }
+  .phase.status-done { border-left-color: var(--done); }
+  .phase.status-skipped { border-left-color: var(--line); opacity: 0.75; }
+  .phase > summary { list-style: none; cursor: pointer; padding: 1rem 1.3rem; display: grid; grid-template-columns: 2.6rem 1fr auto; gap: 0.9rem; align-items: center; }
+  .phase > summary::-webkit-details-marker { display: none; }
+  .phase .n { font-family: var(--display); font-weight: 800; font-size: 1.5rem; color: var(--muted); font-variant-numeric: tabular-nums; text-align: center; }
+  .phase.active .n { color: var(--accent-deep); }
+  .phase.complete .n, .phase.status-done .n { color: var(--done); }
+  .phase h2 { font-size: 1.15rem; font-weight: 700; }
+  .phase .meta { font-size: 0.85rem; color: var(--muted); margin-top: 0.15rem; display: flex; flex-wrap: wrap; gap: 0.3rem 0.8rem; }
+  .phase .tag { font-size: 0.72rem; letter-spacing: 0.06em; text-transform: uppercase; padding: 0.1rem 0.5rem; border-radius: 999px; border: 1px solid var(--accent); color: var(--accent-deep); background: var(--accent-soft); }
+  .gauge { display: flex; align-items: center; gap: 0.6rem; }
+  .gauge .frac { font-family: var(--mono); font-size: 0.82rem; color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .ring { width: 32px; height: 32px; transform: rotate(-90deg); flex: none; }
+  .ring circle { fill: none; stroke-width: 4; }
+  .ring .trk { stroke: var(--line); }
+  .ring .fil { stroke: var(--accent); stroke-linecap: round; transition: stroke-dashoffset 0.6s var(--ease); }
+  .phase.complete .ring .fil { stroke: var(--done); }
+
+  .phase .content { padding: 0 1.3rem 1.3rem; }
+  .block { margin-top: 1.1rem; }
+  .block > h3 { font-size: 0.82rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem; }
+  .block > h3 .i { font-size: 1rem; }
+  .block.analogy .text { background: var(--surface); border-radius: 10px; padding: 0.8rem 1rem; }
+  .block.theory > details > summary { cursor: pointer; color: var(--accent-deep); font-weight: 500; font-size: 0.95rem; }
+  .block.theory .text { margin-top: 0.6rem; }
+  .block .text h3 { font-size: 1.05rem; margin-top: 1.1rem; margin-bottom: 0.3rem; }
+  .block .text h4 { font-size: 0.98rem; margin-top: 0.9rem; }
+  .block .text p + p { margin-top: 0.5rem; }
+  .block .text > p:first-child { margin-top: 0; }
+
+  .steps { list-style: none; margin: 0; padding: 0; }
+  .step { border: 1px solid var(--line); border-radius: 10px; margin-bottom: 0.45rem; background: var(--raised); }
+  .step.done { background: var(--done-soft); border-color: var(--done); }
+  .step .head { display: flex; gap: 0.7rem; align-items: flex-start; padding: 0.55rem 0.75rem; cursor: pointer; }
+  .step input { position: absolute; opacity: 0; width: 0; height: 0; }
+  .box { flex: none; width: 1.1rem; height: 1.1rem; margin-top: 0.2rem; border: 1.5px solid var(--muted); border-radius: 4px; background: var(--raised); position: relative; transition: background 0.2s, border-color 0.2s; }
+  .box::after { content: ""; position: absolute; left: 0.32rem; top: 0.08rem; width: 0.3rem; height: 0.6rem; border: solid var(--on-dark); border-width: 0 2px 2px 0; transform: rotate(45deg) scale(0); transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1); }
+  .step.done .box { background: var(--done); border-color: var(--done); }
+  .step.done .box::after { transform: rotate(45deg) scale(1); }
+  .step .t { flex: 1; font-size: 0.97rem; }
+  .step.done .t { color: var(--muted); text-decoration: line-through; text-decoration-thickness: 1px; }
+  .step .more { flex: none; font-size: 0.8rem; color: var(--muted); padding-top: 0.2rem; }
+  .step .body { display: none; padding: 0 0.75rem 0.7rem 2.55rem; font-size: 0.93rem; }
+  .step.open .body { display: block; }
+  .step .body pre { font-size: 0.84rem; }
+  .brk .step .head::before { content: "сломать"; flex: none; font-family: var(--mono); font-size: 0.66rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--skip); border: 1px solid currentColor; border-radius: 4px; padding: 0.05rem 0.35rem; margin-top: 0.25rem; order: 2; }
+  .brk .step .t { order: 3; }
+  .brk .step .more { order: 4; }
+  .brk .step .box { order: 1; }
+  .interlude { font-size: 0.93rem; margin: 0.6rem 0; }
+
+  .block.task .text { background: var(--surface); border: 1px dashed var(--line); border-radius: 10px; padding: 0.8rem 1rem; font-size: 0.95rem; }
+  .block.questions .text > p > strong { display: block; margin-top: 0.9rem; font-family: var(--display); font-size: 1rem; }
+  .block.questions .text blockquote { margin-top: 0.3rem; }
+  .src { margin-top: 1rem; font-size: 0.82rem; color: var(--muted); }
+
+  footer { border-top: 1px solid var(--line); padding-block: 1.75rem; margin-top: 2rem; }
   footer .wrap { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 0.75rem 2rem; font-size: 0.92rem; color: var(--muted); }
+  @media (max-width: 600px) {
+    .phase > summary { grid-template-columns: 2rem 1fr; }
+    .gauge { grid-column: 1 / -1; padding-left: 2.9rem; }
+    .phase .content { padding-inline: 1rem; }
+    .step .body { padding-left: 1rem; }
+  }
+  @media (prefers-reduced-motion: reduce) { .total .fill, .ring .fil, .box::after { transition: none; } }
 </style>
 <link rel="stylesheet" href="/theme.css?v=2">
 </head>
@@ -161,140 +169,776 @@
   <div class="wrap">
     <a class="back" href="/">← Иван Архипов</a>
     <p class="epigraph">Не забывай, кто тебя отправил, и помни, что ты можешь доказать.</p>
-    <h1>Роадмапа C#</h1>
-    <p class="sub">Путь от .NET Framework к современному стеку - в открытую, с честными процентами поглощения материала: сколько темы реально сидит в голове и руках.</p>
+    <h1>C# Backend</h1>
+    <p class="lead">Фоновый трек с 1 сентября. Закрывает вопрос «читаете ли код разработчиков» и доводит Life Notes. Фазы 1-3 завершены, дальше по мере роста.</p>
 
     <div class="total">
-      <div class="row"><span class="label">Общий прогресс пути</span><span class="num">31%</span></div>
-      <div class="track" style="--p:31%"><div class="fill"></div><i class="runner" aria-hidden="true">🏃</i></div>
-      <p class="note">Обновлено 11 сентября 2026 · трек переведён в фоновый режим</p>
+      <div class="row"><span class="label">Пройдено</span><span class="num" id="pct">0%</span></div>
+      <div class="track"><div class="fill" id="fill"></div></div>
+      <div class="stats">
+        <span>шагов <b id="done">0</b> из <b>64</b></span>
+        <span>фаз закрыто <b id="phasesDone">0</b> из <b>9</b></span>
+        <span id="deadline" hidden>: <b id="days"></b></span>
+      </div>
     </div>
 
-    <p class="gate"><b>Приоритет изменён 1 сентября.</b> Активный поиск идёт по сопровождению и эксплуатации, поэтому впереди роадмап «Стенд с нуля». C# остаётся фоновым и живым по двум причинам: он закрывает вопрос «читаете ли код разработчиков», который задают на инженерных собеседованиях, и Life Notes надо довести.</p>
+    <div class="next">
+      <h2>Следующие шаги</h2>
+      <ol id="next"></ol>
+    </div>
 
-    <p class="gate"><b>Формат фаз обновлён.</b> Каждая фаза самодостаточна: аналогия, теория, практика на Life Notes, блок «сломай намеренно», задание с критерием, факты из практики и вопросы с готовыми ответами.</p>
-
-    <p class="gate"><b>Веха:</b> Life Notes готов целиком - API, авторизация, тесты, Redis, RabbitMQ, Docker. Дальше собеседования, архитектура добирается параллельно с ними.</p>
-
-    <div class="cal-card">
-      <h2 class="cal-title">Сентябрь на календаре</h2>
-      <div class="cal" role="img" aria-label="План сентября: 1-9 EF Core и JWT, 10-16 CRUD API, 17-22 юнит-тесты, 23-30 Redis, RabbitMQ и Docker, 1-3 октября подготовка, дальше собеседования">
-        <span class="dow">пн</span><span class="dow">вт</span><span class="dow">ср</span><span class="dow">чт</span><span class="dow">пт</span><span class="dow">сб</span><span class="dow">вс</span>
-        <span class="d off"></span><span class="d p1">1</span><span class="d p1">2</span><span class="d p1">3</span><span class="d p1">4</span><span class="d p1">5</span><span class="d p1">6</span>
-        <span class="d p1">7</span><span class="d p1">8</span><span class="d p1">9</span><span class="d p2">10</span><span class="d p2">11</span><span class="d p2">12</span><span class="d p2">13</span>
-        <span class="d p2">14</span><span class="d p2">15</span><span class="d p2">16</span><span class="d p3">17</span><span class="d p3">18</span><span class="d p3">19</span><span class="d p3">20</span>
-        <span class="d p3">21</span><span class="d p3">22</span><span class="d p4">23</span><span class="d p4">24</span><span class="d p4">25</span><span class="d p4">26</span><span class="d p4">27</span>
-        <span class="d p4">28</span><span class="d p4">29</span><span class="d p4">30</span><span class="d p5">1</span><span class="d p5">2</span><span class="d p5">3</span><span class="d go">4</span>
-      </div>
-      <div class="cal-legend">
-        <span><i class="p1"></i>EF Core + JWT</span>
-        <span><i class="p2"></i>CRUD API</span>
-        <span><i class="p3"></i>Unit-тесты</span>
-        <span><i class="p4"></i>Redis · RabbitMQ · Docker</span>
-        <span><i class="p5"></i>Подготовка</span>
-        <span><i class="go"></i>Дальше</span>
-      </div>
+    <div class="tools">
+      <button type="button" id="exportBtn">Скачать прогресс</button>
+      <label for="importFile">Загрузить прогресс</label>
+      <input type="file" id="importFile" accept="application/json">
+      <button type="button" id="expandAll">Раскрыть всё</button>
+      <button type="button" class="danger" id="resetBtn">Сбросить</button>
     </div>
   </div>
 </header>
 
 <main>
   <div class="wrap">
-    <ol class="phases">
+    <details class="intro">
+      <summary>Про этот роадмап: зачем, прицел, срез, календарь</summary>
+      <div class="body"><blockquote>
+<p>Создан 5 марта 2026, переписан 11 сентября под единый формат фаз.</p>
+<p>⚠️ <strong>Статус изменился 1 сентября.</strong> Приоритет перешёл на инфраструктуру и
+кибербезопасность. Этот роадмап переведён в фоновый режим: на чистые dev-вакансии
+Иван не откликается до завершения Life Notes, а отклики идут на сопровождение
+и эксплуатацию. Роадмап остаётся живым по двум причинам: C# закрывает вопрос
+«умеете ли читать код разработчиков» на инженерных собеседованиях, и Life Notes
+надо довести.</p>
+</blockquote>
+<p><strong>Уровень старта.</strong> Пишу интуитивно. <strong>Цель.</strong> Уверенный разработчик, способный защитить свой код.</p>
+<p><strong>Портфолио-проект:</strong> Life Notes (github.com/Lazysagotku/life-notes) - закрывает весь backend-стек: Web API на ASP.NET Core, EF Core, PostgreSQL.</p>
+<hr>
+<h2>Как устроена каждая фаза</h2>
+<table>
+<thead>
+<tr>
+<th>Блок</th>
+<th>Что в нём</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>🎭 <strong>Аналогия</strong></td>
+<td>бытовой образ до теории</td>
+</tr>
+<tr>
+<td>📖 <strong>Теория</strong></td>
+<td>что понять, с таблицами сравнения</td>
+</tr>
+<tr>
+<td>🔧 <strong>Практика</strong></td>
+<td>на Life Notes и Playground</td>
+</tr>
+<tr>
+<td>💥 <strong>Сломай намеренно</strong></td>
+<td>что испортить, чтобы увидеть симптом</td>
+</tr>
+<tr>
+<td>✅ <strong>Задание</strong></td>
+<td>что предъявить</td>
+</tr>
+<tr>
+<td>🌍 <strong>Из жизни</strong></td>
+<td>случаи, чем оборачивается в проде</td>
+</tr>
+<tr>
+<td>❓ <strong>Вопросы с ответами</strong></td>
+<td>формулировки для собеседования</td>
+</tr>
+</tbody>
+</table>
+<p>Завершённые фазы 1-3 даны сжато: теория написана в отдельных файлах <code>Phase1_CSharp_Fundamentals.md</code>, <code>Phase2_OOP.md</code>, <code>Phase3_Advanced.md</code>, и дублировать её здесь незачем. Полный формат - у фаз, которые впереди.</p>
+<hr>
+<h2>📊 Прогресс</h2>
+<table>
+<thead>
+<tr>
+<th>Фаза</th>
+<th>Тема</th>
+<th>Статус</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>Теоретический фундамент</td>
+<td>✅ завершена, Contact Manager сдан</td>
+</tr>
+<tr>
+<td>2</td>
+<td>ООП и архитектура мышления</td>
+<td>✅ завершена, 3 раунда ревью, DIP через <code>IContactRepository</code></td>
+</tr>
+<tr>
+<td>3</td>
+<td>Продвинутый C# и LeetCode</td>
+<td>🔸 теория написана, LeetCode 2 из 5</td>
+</tr>
+<tr>
+<td>4</td>
+<td>Desktop: WinForms и WPF</td>
+<td>⏭️ пропущена, для backend не нужна</td>
+</tr>
+<tr>
+<td>5</td>
+<td>Backend на ASP.NET Core</td>
+<td>🔸 в работе, Life Notes Web API</td>
+</tr>
+<tr>
+<td>6</td>
+<td>Базы данных и EF Core</td>
+<td>⏳ следующая</td>
+</tr>
+<tr>
+<td>7</td>
+<td>Тестирование</td>
+<td>⏳</td>
+</tr>
+<tr>
+<td>8</td>
+<td>DevOps и деплой</td>
+<td>⏳ пересекается с инфра-роадмапом</td>
+</tr>
+<tr>
+<td>9</td>
+<td>Архитектурные паттерны</td>
+<td>🔵 по мере роста</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Companion-документы</strong>, которые держать рядом: <code>Algorithms_Companion.md</code>, <code>SystemDesign_Companion.md</code>, <code>PostgreSQL_Companion.md</code>, <code>CSharp_Interview_Questions.md</code>.</p>
+<h3>Анализ рынка от 9 июля 2026</h3>
+<p>Прочёсано около десяти источников по Middle C#/.NET в Москве, включая финтех. <strong>Ориентир по зарплате: 183-260 тысяч.</strong></p>
+<p><strong>Подтвердилось:</strong> ASP.NET Core, EF Core, PostgreSQL, Redis, RabbitMQ, Docker, SOLID, юнит-тесты бьют в рынок точно. Azure и AWS в российских вакансиях почти не встречаются, план верно их не включает. Kubernetes на Middle чаще идёт как плюс.</p>
+<p><strong>Пробелы, добавленные тогда же:</strong> CQRS с MediatR, Kafka в паре с RabbitMQ, gRPC как альтернатива REST, Polly для повторов и размыкателя, GitLab CI вместо GitHub Actions - российские компании чаще на GitLab.</p>
+<h2>---</h2></div>
+    </details>
 
-      <li class="phase" data-done style="--d:0.05s">
-        <div class="head">
-          <h2><span class="n">01</span>Основы C#</h2>
-          <span class="status done">закреплено</span>
-        </div>
-        <div class="meter"><div class="track" style="--p:90%"><div class="fill"></div><i class="runner" aria-hidden="true">🏃</i></div><span class="pct">90%</span></div>
-        <p class="topics">Value/reference types · stack и heap · строки · приведение типов · nullable · коллекции · IEnumerable</p>
-        <p class="note">Теория, задачи и итоговый проект Contact Manager пройдены, сверху - быстрый повтор по конспекту. Осталось то, что дошлифуется только практикой.</p>
-      </li>
+    <h2 class="section-title">Фазы <em>по порядку</em></h2>
+    <div id="phases"><details class="phase status-done" data-phase="1" data-total="0"><summary><span class="n">01</span><span><h2>Теоретический фундамент</h2><span class="meta">завершена</span></span><span class="gauge"><span class="frac">0/0</span><svg class="ring" viewBox="0 0 32 32" aria-hidden="true"><circle class="trk" cx="16" cy="16" r="13"></circle><circle class="fil" cx="16" cy="16" r="13" stroke-dasharray="81.68" stroke-dashoffset="81.68"></circle></svg></span></summary><div class="content"><div class="block other"><div class="text"><p><strong>Что закрыто:</strong> типы значений и ссылочные типы, стек и куча, boxing, строки и их неизменяемость, массивы и коллекции, методы и перегрузки, <code>ref</code>/<code>out</code>, исключения, <code>IEnumerable</code> и <code>yield return</code>.</p>
+<p><strong>Задание сдано:</strong> Contact Manager - консольное приложение с хранением, поиском и сохранением в файл. Проверено запуском.</p>
+<p><strong>Что из этой фазы спрашивают чаще всего:</strong></p>
+<p><strong>Где живут типы значений и ссылочные?</strong></p>
+<blockquote>
+<p>Обычно говорят «значимые на стеке, ссылочные в куче», но точнее так: значение живёт там, где объявлено. Поле класса типа <code>int</code> лежит в куче вместе с объектом. На стеке оказываются локальные переменные, если компилятор не решил иначе.</p>
+</blockquote>
+<p><strong>Что такое boxing и чем он вреден?</strong></p>
+<blockquote>
+<p>Упаковка значимого типа в объект на куче. Каждая упаковка - выделение памяти и нагрузка на сборщик мусора. В цикле на миллион итераций это заметно. Обобщённые коллекции появились именно чтобы этого избежать.</p>
+</blockquote>
+<p><strong>Почему строки неизменяемые?</strong></p>
+<blockquote>
+<p>Безопасность при многопоточности, возможность кешировать хеш и интернировать литералы. Цена - каждая конкатенация создаёт новую строку, поэтому в цикле нужен <code>StringBuilder</code>.</p>
+</blockquote>
+<p><strong>Что делает <code>yield return</code>?</strong></p>
+<blockquote>
+<p>Превращает метод в ленивый итератор: компилятор строит конечный автомат, элементы считаются по одному при обходе. Прямой аналог генераторов в Python.</p>
+</blockquote></div></div><p class="src">Исходник: <a href="https://github.com/Lazysagotku/l2code/blob/main/CSharp_Roadmap_Software.md" target="_blank" rel="noopener">CSharp_Roadmap_Software.md</a></p></div></details><details class="phase status-done" data-phase="2" data-total="0"><summary><span class="n">02</span><span><h2>ООП и архитектура мышления</h2><span class="meta">завершена</span></span><span class="gauge"><span class="frac">0/0</span><svg class="ring" viewBox="0 0 32 32" aria-hidden="true"><circle class="trk" cx="16" cy="16" r="13"></circle><circle class="fil" cx="16" cy="16" r="13" stroke-dasharray="81.68" stroke-dashoffset="81.68"></circle></svg></span></summary><div class="content"><div class="block other"><div class="text"><p><strong>Что закрыто:</strong> классы и объекты, инкапсуляция, наследование, полиморфизм, абстрактные классы против интерфейсов, композиция против наследования, SOLID целиком, паттерны Repository и Strategy.</p>
+<p><strong>Задание сдано:</strong> рефакторинг Contact Manager через три раунда ревью. <code>IContactRepository</code> - реально применённый принцип инверсии зависимостей, а не строчка в конспекте.</p>
+<p><strong>Что спрашивают:</strong></p>
+<p><strong>Абстрактный класс или интерфейс?</strong></p>
+<blockquote>
+<p>Интерфейс - контракт без состояния, класс может реализовать сколько угодно. Абстрактный класс несёт общую реализацию и поля, наследование одиночное. Беру интерфейс, когда нужен контракт, абстрактный класс - когда есть общий код.</p>
+</blockquote>
+<p><strong>Расскажите про SOLID на своём примере.</strong></p>
+<blockquote>
+<p>В Contact Manager применил инверсию зависимостей: сервис работает с <code>IContactRepository</code>, а не с конкретным хранилищем. Замена файлового хранения на базу не трогает логику. Единственная ответственность - разнёс хранение, поиск и вывод по разным классам после ревью, изначально было всё в одном.</p>
+</blockquote>
+<p><strong>Композиция или наследование?</strong></p>
+<blockquote>
+<p>Композиция по умолчанию. Наследование связывает жёстко: изменение базового класса ломает потомков, и иерархия быстро становится негибкой. Наследую, когда отношение действительно «является», а не «имеет».</p>
+</blockquote></div></div><p class="src">Исходник: <a href="https://github.com/Lazysagotku/l2code/blob/main/CSharp_Roadmap_Software.md" target="_blank" rel="noopener">CSharp_Roadmap_Software.md</a></p></div></details><details class="phase" data-phase="3" data-total="6"><summary><span class="n">03</span><span><h2>Продвинутый C# и алгоритмы</h2><span class="meta">теория написана, практика идёт</span></span><span class="gauge"><span class="frac">0/6</span><svg class="ring" viewBox="0 0 32 32" aria-hidden="true"><circle class="trk" cx="16" cy="16" r="13"></circle><circle class="fil" cx="16" cy="16" r="13" stroke-dasharray="81.68" stroke-dashoffset="81.68"></circle></svg></span></summary><div class="content"><div class="block analogy"><h3><span class="i">🎭</span>Аналогия</h3><div class="text"><p>Разница между водителем, который умеет ехать, и водителем, который понимает, что делает коробка передач. Оба доедут. Второй услышит, что что-то не так, до поломки.</p></div></div><div class="block theory"><h3><span class="i">📖</span>Теория</h3><details><summary>Развернуть теорию</summary><div class="text"><p>Делегаты и события, лямбды и замыкания, LINQ с отложенным выполнением, обобщения и ограничения, <code>async</code>/<code>await</code> с <code>Task</code>, <code>CancellationToken</code>, <code>SemaphoreSlim</code> и <code>lock</code>, исключения и их иерархия, <code>ref</code>/<code>out</code>/<code>in</code>/<code>params</code>, сборщик мусора и поколения, <code>IDisposable</code> и <code>using</code>.</p>
+<p><strong>Три вещи, которые надо уметь объяснить с ходу:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Тема</th>
+<th>Суть</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Отложенное выполнение LINQ</td>
+<td>запрос не выполняется до перечисления, поэтому изменение источника между построением и обходом меняет результат</td>
+</tr>
+<tr>
+<td><code>async</code> без <code>await</code></td>
+<td>метод выполняется синхронно, а компилятор предупреждает - это признак недописанного кода</td>
+</tr>
+<tr>
+<td>Захват переменной в замыкании</td>
+<td>захватывается переменная, а не значение; в цикле до C# 5 это давало классическую ошибку</td>
+</tr>
+</tbody>
+</table></div></details></div><div class="block practice "><h3><span class="i">🔧</span>Практика</h3><ul class="steps"><li class="step" data-step="3-practice-1"><label class="head"><input type="checkbox" id="s-3-practice-1"><span class="box"></span><span class="t"><strong>LeetCode Easy: 3 задачи из 5.</strong> Чередовать C# и Python - поддержка второго языка без дополнительных часов.</span></label></li><li class="step" data-step="3-practice-2"><label class="head"><input type="checkbox" id="s-3-practice-2"><span class="box"></span><span class="t">Практика в Playground по темам, где теория есть, а кода нет: <code>CancellationToken</code> в реальной отмене, <code>SemaphoreSlim</code> на ограничении одновременности.</span></label></li></ul></div><div class="block break brk"><h3><span class="i">💥</span>Сломай намеренно</h3><ul class="steps"><li class="step" data-step="3-break-1"><label class="head"><input type="checkbox" id="s-3-break-1"><span class="box"></span><span class="t"><strong>Построить LINQ-запрос, изменить источник, потом перечислить</strong> - увидеть, что результат изменился.</span></label></li><li class="step" data-step="3-break-2"><label class="head"><input type="checkbox" id="s-3-break-2"><span class="box"></span><span class="t"><strong>Написать <code>async void</code></strong> вместо <code>async Task</code> и кинуть внутри исключение - увидеть, что перехватить его снаружи нельзя.</span></label></li><li class="step" data-step="3-break-3"><label class="head"><input type="checkbox" id="s-3-break-3"><span class="box"></span><span class="t"><strong>Забыть <code>await</code></strong> - получить предупреждение компилятора и метод, который завершился раньше работы.</span></label></li><li class="step" data-step="3-break-4"><label class="head"><input type="checkbox" id="s-3-break-4"><span class="box"></span><span class="t"><strong>Не освободить <code>IDisposable</code></strong> в цикле и посмотреть на память в профилировщике.</span></label></li></ul></div><div class="block task"><h3><span class="i">✅</span>Задание</h3><div class="text"><p>Пять задач LeetCode Easy с разбором сложности по времени и памяти. Playground-примеры на отмену и ограничение одновременности.</p></div></div><div class="block questions"><h3><span class="i">❓</span>Вопросы с ответами</h3><div class="text"><p><strong>Что такое отложенное выполнение в LINQ?</strong></p>
+<blockquote>
+<p>Запрос строится, но не выполняется, пока его не перечислят. Отсюда две вещи: можно достраивать запрос по частям, и результат зависит от состояния источника в момент обхода, а не в момент построения. <code>ToList()</code> материализует немедленно.</p>
+</blockquote>
+<p><strong>Чем <code>Task</code> отличается от потока?</strong></p>
+<blockquote>
+<p><code>Task</code> - это обещание результата, а не поток. Задачи выполняются на потоках из пула, и на ожидании поток возвращается в пул. Поэтому тысяча задач на ожидании не означает тысячу потоков.</p>
+</blockquote>
+<p><strong>Зачем <code>CancellationToken</code>?</strong></p>
+<blockquote>
+<p>Кооперативная отмена: вызывающий сообщает, что результат больше не нужен, а метод сам проверяет токен и останавливается. Насильно поток не прерывают - это оставляет ресурсы в неопределённом состоянии.</p>
+</blockquote>
+<p><strong>Как работает сборщик мусора?</strong></p>
+<blockquote>
+<p>Поколениями: новые объекты в нулевом, пережившие сборку переходят в первое и второе. Нулевое собирается часто и дёшево, второе редко и дорого. Большие объекты идут в отдельную кучу. Отсюда практический вывод: короткоживущие объекты дёшевы, а долгоживущий мусор дорог.</p>
+</blockquote></div></div><p class="src">Исходник: <a href="https://github.com/Lazysagotku/l2code/blob/main/CSharp_Roadmap_Software.md" target="_blank" rel="noopener">CSharp_Roadmap_Software.md</a></p></div></details><details class="phase status-skipped" data-phase="4" data-total="0"><summary><span class="n">04</span><span><h2>Desktop</h2><span class="meta">пропущена</span></span><span class="gauge"><span class="frac">0/0</span><svg class="ring" viewBox="0 0 32 32" aria-hidden="true"><circle class="trk" cx="16" cy="16" r="13"></circle><circle class="fil" cx="16" cy="16" r="13" stroke-dasharray="81.68" stroke-dashoffset="81.68"></circle></svg></span></summary><div class="content"><div class="block other"><div class="text"><p>WinForms и WPF не нужны для backend-вакансии. Решение принято осознанно, время ушло в фазы 5-9.</p>
+<p>Если вакансия с десктопом всё же встретится: WinForms проще и до сих пор живёт в корпоративных системах, WPF даёт разделение через MVVM и привязку данных. Опыт с внутренним ПО на C# у Ивана есть, интерфейсы там были.</p></div></div><p class="src">Исходник: <a href="https://github.com/Lazysagotku/l2code/blob/main/CSharp_Roadmap_Software.md" target="_blank" rel="noopener">CSharp_Roadmap_Software.md</a></p></div></details><details class="phase" data-phase="5" data-total="13"><summary><span class="n">05</span><span><h2>Backend на ASP.NET Core</h2><span class="meta">в работе</span></span><span class="gauge"><span class="frac">0/13</span><svg class="ring" viewBox="0 0 32 32" aria-hidden="true"><circle class="trk" cx="16" cy="16" r="13"></circle><circle class="fil" cx="16" cy="16" r="13" stroke-dasharray="81.68" stroke-dashoffset="81.68"></circle></svg></span></summary><div class="content"><div class="block analogy"><h3><span class="i">🎭</span>Аналогия</h3><div class="text"><p>Ресепшн из слоя 1 инфра-роадмапа, только изнутри. Nginx решает, кому передать запрос, а приложение решает, что с ним делать: проверить, кто пришёл, достать данные, собрать ответ. Конвейер обработки - это и есть middleware.</p></div></div><div class="block theory"><h3><span class="i">📖</span>Теория</h3><details><summary>Развернуть теорию</summary><div class="text"><h3>Конвейер запроса</h3>
+<p>Запрос проходит через цепочку middleware, каждое может обработать, изменить или прервать.</p>
+<pre><code class="language-csharp">app.UseExceptionHandler(&quot;/error&quot;);   // ловит всё, что упало ниже
+app.UseHttpsRedirection();
+app.UseAuthentication();             // кто ты
+app.UseAuthorization();              // что тебе можно
+app.MapControllers();
+</code></pre>
+<p>⚠️ <strong>Порядок критичен.</strong> Аутентификация до авторизации, обработчик ошибок первым - иначе он не поймает то, что упало выше. Это частая ошибка и частый вопрос.</p>
+<h3>Внедрение зависимостей</h3>
+<table>
+<thead>
+<tr>
+<th>Время жизни</th>
+<th>Сколько экземпляров</th>
+<th>Для чего</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Transient</code></td>
+<td>новый на каждый запрос к контейнеру</td>
+<td>лёгкие сервисы без состояния</td>
+</tr>
+<tr>
+<td><code>Scoped</code></td>
+<td>один на HTTP-запрос</td>
+<td><code>DbContext</code>, единица работы</td>
+</tr>
+<tr>
+<td><code>Singleton</code></td>
+<td>один на приложение</td>
+<td>кэш, конфигурация, клиенты HTTP</td>
+</tr>
+</tbody>
+</table>
+<p>⚠️ <strong>Captive dependency</strong> - самая коварная ошибка: <code>Scoped</code>-сервис внедрён в <code>Singleton</code> и живёт вечно вместе с ним. <code>DbContext</code> внутри синглтона означает одну сессию базы на всё приложение со всеми последствиями.</p>
+<h3>Контроллеры и модели</h3>
+<pre><code class="language-csharp">[ApiController]
+[Route(&quot;api/[controller]&quot;)]
+public class NotesController : ControllerBase
+{
+    private readonly INoteService _service;
+    public NotesController(INoteService service) =&gt; _service = service;
 
-      <li class="phase" style="--d:0.12s">
-        <div class="head">
-          <h2><span class="n">02</span>ООП</h2>
-          <span class="status active">закрепляется</span>
-        </div>
-        <div class="meter"><div class="track" style="--p:75%"><div class="fill"></div><i class="runner" aria-hidden="true">🏃</i></div><span class="pct">75%</span></div>
-        <p class="topics">Классы и объекты · наследование · интерфейсы · абстракции · SOLID · рефакторинг Contact Manager</p>
-        <p class="note">Теория пройдена целиком, 27 задач решено. Четверть удерживается повторами - SOLID окончательно осядет в реальном коде Life Notes.</p>
-      </li>
+    [HttpGet(&quot;{id:int}&quot;)]
+    [ProducesResponseType(typeof(NoteDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task&lt;ActionResult&lt;NoteDto&gt;&gt; Get(int id, CancellationToken ct)
+    {
+        var note = await _service.GetAsync(id, ct);
+        return note is null ? NotFound() : Ok(note);
+    }
+}
+</code></pre>
+<p><code>[ApiController]</code> включает автоматическую проверку модели и возврат 400 с описанием ошибок. <code>CancellationToken</code> в сигнатуре - клиент отключился, работу можно прекратить.</p>
+<p><strong>DTO отдельно от сущностей.</strong> Та же причина, что с разделением схем в FastAPI: наружу не должны утекать внутренние поля, а внутрь нельзя пускать то, что проставляет сервер.</p>
+<h3>Обработка ошибок</h3>
+<pre><code class="language-csharp">app.UseExceptionHandler(builder =&gt; builder.Run(async ctx =&gt;
+{
+    var error = ctx.Features.Get&lt;IExceptionHandlerFeature&gt;()?.Error;
+    ctx.Response.StatusCode = error switch
+    {
+        NotFoundException =&gt; StatusCodes.Status404NotFound,
+        ValidationException =&gt; StatusCodes.Status400BadRequest,
+        _ =&gt; StatusCodes.Status500InternalServerError
+    };
+    await ctx.Response.WriteAsJsonAsync(new { detail = error?.Message });
+}));
+</code></pre>
+<p><code>ProblemDetails</code> - стандартный формат ошибок по RFC 7807. Его стоит назвать: показывает, что человек читал спецификации, а не только туториалы.</p>
+<h3>Аутентификация и JWT</h3>
+<pre><code class="language-csharp">builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =&gt; options.TokenValidationParameters = new()
+    {
+        ValidateIssuer = true,
+        ValidateAudience = true,
+        ValidateLifetime = true,
+        IssuerSigningKey = new SymmetricSecurityKey(key)
+    });
+</code></pre>
+<p>Что называть вслух: пароли хранятся хешами через bcrypt или Argon2, у токена короткий срок жизни, для продления - refresh-токен, ключ подписи в переменных окружения. Разница аутентификации и авторизации: первая отвечает «кто ты», вторая «что тебе можно».</p>
+<h3>Конфигурация</h3>
+<pre><code class="language-csharp">builder.Services.Configure&lt;AppOptions&gt;(builder.Configuration.GetSection(&quot;App&quot;));
+</code></pre>
+<p>Мост к <code>pydantic-settings</code> из Python-роадмапа. Порядок источников: <code>appsettings.json</code>, затем <code>appsettings.{Environment}.json</code>, затем переменные окружения, затем аргументы командной строки. Каждый следующий перекрывает предыдущий, секреты идут через окружение.</p>
+<h3>Логирование</h3>
+<pre><code class="language-csharp">using (_logger.BeginScope(new Dictionary&lt;string, object&gt; { [&quot;NoteId&quot;] = id }))
+{
+    _logger.LogInformation(&quot;Обновление заметки&quot;);
+}
+</code></pre>
+<p>Структурированное логирование через Serilog: поля, а не склеенные строки. Область видимости добавляет контекст ко всем записям внутри.</p></div></details></div><div class="block practice "><h3><span class="i">🔧</span>Практика</h3><ul class="steps"><li class="step" data-step="5-practice-1"><label class="head"><input type="checkbox" id="s-5-practice-1"><span class="box"></span><span class="t">Довести CRUD по заметкам: контроллеры, DTO, валидация.</span></label></li><li class="step" data-step="5-practice-2"><label class="head"><input type="checkbox" id="s-5-practice-2"><span class="box"></span><span class="t">Разделить сущности и DTO везде, где сейчас отдаётся модель напрямую.</span></label></li><li class="step" data-step="5-practice-3"><label class="head"><input type="checkbox" id="s-5-practice-3"><span class="box"></span><span class="t">Глобальный обработчик ошибок с <code>ProblemDetails</code>.</span></label></li><li class="step" data-step="5-practice-4"><label class="head"><input type="checkbox" id="s-5-practice-4"><span class="box"></span><span class="t">JWT-аутентификация с регистрацией и входом.</span></label></li><li class="step" data-step="5-practice-5"><label class="head"><input type="checkbox" id="s-5-practice-5"><span class="box"></span><span class="t"><code>CancellationToken</code> во всех асинхронных методах контроллеров.</span></label></li><li class="step" data-step="5-practice-6"><label class="head"><input type="checkbox" id="s-5-practice-6"><span class="box"></span><span class="t">Swagger с описаниями и примерами.</span></label></li><li class="step" data-step="5-practice-7"><label class="head"><input type="checkbox" id="s-5-practice-7"><span class="box"></span><span class="t">Эндпоинт <code>/health</code> с проверкой базы - тот же, что нужен слою 2 инфра-роадмапа.</span></label></li></ul></div><div class="block break brk"><h3><span class="i">💥</span>Сломай намеренно</h3><ul class="steps"><li class="step" data-step="5-break-1"><label class="head"><input type="checkbox" id="s-5-break-1"><span class="box"></span><span class="t"><strong>Поставить <code>UseAuthorization()</code> перед <code>UseAuthentication()</code></strong> - получить 401 на валидном токене.</span></label></li><li class="step" data-step="5-break-2"><label class="head"><input type="checkbox" id="s-5-break-2"><span class="box"></span><span class="t"><strong>Внедрить <code>DbContext</code> как <code>Singleton</code></strong> и погонять параллельные запросы - получить ошибки одновременного доступа.</span></label></li><li class="step" data-step="5-break-3"><label class="head"><input type="checkbox" id="s-5-break-3"><span class="box"></span><span class="t"><strong>Отдать сущность вместо DTO</strong> с навигационным свойством - получить циклическую ссылку при сериализации.</span></label></li><li class="step" data-step="5-break-4"><label class="head"><input type="checkbox" id="s-5-break-4"><span class="box"></span><span class="t"><strong>Убрать <code>[ApiController]</code></strong> и отправить невалидную модель - убедиться, что 400 больше не возвращается автоматически.</span></label></li><li class="step" data-step="5-break-5"><label class="head"><input type="checkbox" id="s-5-break-5"><span class="box"></span><span class="t"><strong>Кинуть исключение без глобального обработчика</strong> в режиме Production и посмотреть, что уходит клиенту.</span></label></li><li class="step" data-step="5-break-6"><label class="head"><input type="checkbox" id="s-5-break-6"><span class="box"></span><span class="t"><strong>Игнорировать <code>CancellationToken</code></strong> в долгом методе, оборвать запрос и посмотреть, что работа продолжается.</span></label></li></ul></div><div class="block task"><h3><span class="i">✅</span>Задание</h3><div class="text"><p>Life Notes Web API с CRUD, JWT, валидацией, глобальной обработкой ошибок и Swagger. Развёрнут и доступен по ссылке.</p>
+<p><strong>Критерий:</strong> проводишь по конвейеру от запроса до ответа и объясняешь, почему middleware стоят именно в этом порядке.</p></div></div><div class="block life"><h3><span class="i">🌍</span>Из жизни</h3><div class="text"><p><strong>Про порядок middleware.</strong> Ошибка, на которую тратят часы: обработчик исключений подключён последним и не ловит ничего, потому что стоит после того, что падает. Порядок в конвейере - это порядок выполнения, а не список.</p>
+<p><strong>Про captive dependency.</strong> <code>DbContext</code> в синглтоне работает до первой параллельной нагрузки. Потом появляются ошибки одновременного доступа, которые невозможно воспроизвести на одном пользователе.</p>
+<p><strong>Про DTO.</strong> Отдача сущности EF наружу даёт две проблемы сразу: циклические ссылки в JSON и утечку полей вроде хеша пароля. Обнаруживается, когда кто-то посмотрел ответ API.</p></div></div><div class="block questions"><h3><span class="i">❓</span>Вопросы с ответами</h3><div class="text"><p><strong>Как устроен конвейер обработки запроса?</strong></p>
+<blockquote>
+<p>Цепочка middleware, каждое может обработать, изменить или прервать запрос. Порядок критичен: обработчик исключений первым, чтобы поймать всё ниже, аутентификация до авторизации. Свои middleware пишу для сквозных вещей - логирования, замера времени.</p>
+</blockquote>
+<p><strong>Какие времена жизни в DI и когда какое?</strong></p>
+<blockquote>
+<p><code>Transient</code> - новый экземпляр на каждый запрос к контейнеру, для лёгких сервисов. <code>Scoped</code> - один на HTTP-запрос, там живёт <code>DbContext</code>. <code>Singleton</code> - один на приложение, для кэша и конфигурации. Главная ловушка - <code>Scoped</code> внутри <code>Singleton</code>: он захватывается навсегда.</p>
+</blockquote>
+<p><strong>Зачем DTO, если есть сущности?</strong></p>
+<blockquote>
+<p>Чтобы наружу не уходили внутренние поля и не возникало циклических ссылок из навигационных свойств. И чтобы внутрь нельзя было передать то, что сервер проставляет сам.</p>
+</blockquote>
+<p><strong>Как реализована аутентификация?</strong></p>
+<blockquote>
+<p>JWT: маршрут выдаёт токен, middleware проверяет подпись и срок. Пароли храню хешами через bcrypt, у токена короткий срок жизни и refresh для продления, ключ подписи в переменных окружения. Аутентификация отвечает «кто ты», авторизация - «что тебе можно».</p>
+</blockquote>
+<p><strong>Что такое ProblemDetails?</strong></p>
+<blockquote>
+<p>Стандартный формат ответа об ошибке по RFC 7807: тип, заголовок, статус, подробности. Единый формат по всему API вместо самодельных структур в каждом контроллере.</p>
+</blockquote></div></div><p class="src">Исходник: <a href="https://github.com/Lazysagotku/l2code/blob/main/CSharp_Roadmap_Software.md" target="_blank" rel="noopener">CSharp_Roadmap_Software.md</a></p></div></details><details class="phase" data-phase="6" data-total="13"><summary><span class="n">06</span><span><h2>Базы данных и EF Core</h2><span class="meta"></span></span><span class="gauge"><span class="frac">0/13</span><svg class="ring" viewBox="0 0 32 32" aria-hidden="true"><circle class="trk" cx="16" cy="16" r="13"></circle><circle class="fil" cx="16" cy="16" r="13" stroke-dasharray="81.68" stroke-dashoffset="81.68"></circle></svg></span></summary><div class="content"><div class="block analogy"><h3><span class="i">🎭</span>Аналогия</h3><div class="text"><p>Та же, что в фазе 4 Python-роадмапа: переводчик между объектами и таблицами. Проблемы начинаются там, где переводчик слишком старается - делает сто запросов вместо одного.</p></div></div><div class="block theory"><h3><span class="i">📖</span>Теория</h3><details><summary>Развернуть теорию</summary><div class="text"><h3>DbContext и отслеживание</h3>
+<p><code>DbContext</code> - единица работы. Он отслеживает изменения загруженных сущностей и при <code>SaveChanges</code> формирует нужные <code>INSERT</code>, <code>UPDATE</code>, <code>DELETE</code>.</p>
+<pre><code class="language-csharp">var notes = await _db.Notes.AsNoTracking().ToListAsync(ct);   // только чтение
+</code></pre>
+<p>⚠️ <code>AsNoTracking()</code> на выборках только для чтения даёт заметный прирост: EF не строит снимки для сравнения. На списках это первое, что стоит поставить.</p>
+<h3>N+1 - та же проблема, что в SQLAlchemy</h3>
+<pre><code class="language-csharp">// ПЛОХО: запрос за списком плюс по запросу на каждого автора
+foreach (var note in await _db.Notes.ToListAsync())
+    Console.WriteLine(note.Author.Name);
 
-      <li class="phase active" style="--d:0.19s">
-        <div class="head">
-          <h2><span class="n">03</span>Продвинутый C#</h2>
-          <span class="status active">в работе</span>
-        </div>
-        <div class="meter"><div class="track" style="--p:30%"><div class="fill"></div><i class="runner" aria-hidden="true">🏃</i></div><span class="pct">30%</span></div>
-        <p class="topics">Исключения · ref/out/in · Generics · LINQ · async/await · параллелизм и примитивы синхронизации</p>
-        <p class="note">Теория написана полностью, включая <b>самую частую тему реальных собеседований</b> - lock/Mutex/Semaphore/Interlocked. Проработка задачами только началась; LINQ и async доучиваются прямо в коде следующей фазы.</p>
-      </li>
+// ХОРОШО: один запрос
+var notes = await _db.Notes.Include(n =&gt; n.Author).ToListAsync();
+</code></pre>
+<table>
+<thead>
+<tr>
+<th>Способ</th>
+<th>Что делает</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Include</code> / <code>ThenInclude</code></td>
+<td>загрузить связь сразу, JOIN</td>
+</tr>
+<tr>
+<td><code>AsSplitQuery()</code></td>
+<td>разбить на несколько запросов вместо одного тяжёлого JOIN</td>
+</tr>
+<tr>
+<td>Проекция в DTO через <code>Select</code></td>
+<td>взять только нужные колонки, самый эффективный вариант</td>
+</tr>
+<tr>
+<td>Ленивая загрузка</td>
+<td>отключена по умолчанию, включать не стоит</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Проекция лучше <code>Include</code>,</strong> когда нужны не все поля: EF сгенерирует <code>SELECT</code> только с ними.</p>
+<h3>Клиентская и серверная оценка</h3>
+<pre><code class="language-csharp">// упадёт: EF не умеет перевести MyMethod в SQL
+_db.Notes.Where(n =&gt; MyMethod(n.Title))
 
-      <li class="phase active" style="--d:0.26s">
-        <div class="head">
-          <h2><span class="n">04</span>Life Notes: EF Core + JWT</h2>
-          <span class="status active">старт 1 сентября</span>
-        </div>
-        <div class="meter"><div class="track" style="--p:10%"><div class="fill"></div><i class="runner" aria-hidden="true">🏃</i></div><span class="pct">10%</span></div>
-        <p class="topics">DbContext · миграции · Repository и Unit of Work · BCrypt · JWT-авторизация</p>
-        <p class="note">Домен, интерфейсы и docker-compose готовы. Слой данных и авторизация пишутся 1-9 сентября.</p>
-      </li>
+// сработает: переводится в SQL
+_db.Notes.Where(n =&gt; n.Title.Contains(query))
+</code></pre>
+<p>В EF Core 3.0 клиентскую оценку убрали намеренно: раньше такой код молча выкачивал всю таблицу в память и фильтровал там. Теперь он падает с понятной ошибкой. Знание этой истории показывает, что человек следил за версиями.</p>
+<h3>Миграции</h3>
+<pre><code class="language-bash">dotnet ef migrations add AddTags
+dotnet ef database update
+dotnet ef migrations script --idempotent -o migrate.sql
+</code></pre>
+<p>⚠️ Правила те же, что для Alembic в Python-роадмапе: читать сгенерированное перед применением, разделять схему и данные, колонку с <code>NOT NULL</code> добавлять в три шага. На проде обычно применяют не командой, а сгенерированным скриптом - его можно вычитать и провести через согласование.</p>
+<h3>Транзакции и параллельность</h3>
+<pre><code class="language-csharp">await using var tx = await _db.Database.BeginTransactionAsync(ct);
+try { /* ... */ await tx.CommitAsync(ct); }
+catch { await tx.RollbackAsync(ct); throw; }
+</code></pre>
+<p><strong>Оптимистичная параллельность</strong> через <code>[Timestamp]</code> или <code>IsConcurrencyToken</code>: при сохранении EF проверяет, не изменилась ли строка, и бросает <code>DbUpdateConcurrencyException</code>. Это ответ на вопрос «два пользователя редактируют одну запись».</p>
+<h3>Сырой SQL, когда ORM мешает</h3>
+<pre><code class="language-csharp">var top = await _db.Database
+    .SqlQuery&lt;TopDto&gt;($&quot;SELECT ... FROM notes WHERE created_at &gt; {from}&quot;)
+    .ToListAsync(ct);
+</code></pre>
+<p>Интерполяция в <code>SqlQuery</code> параметризуется автоматически. Склеивать строки руками нельзя - это SQL-инъекция.</p></div></details></div><div class="block practice "><h3><span class="i">🔧</span>Практика</h3><ul class="steps"><li class="step" data-step="6-practice-1"><label class="head"><input type="checkbox" id="s-6-practice-1"><span class="box"></span><span class="t">Подключить PostgreSQL через Npgsql, вынести строку подключения в конфигурацию.</span></label></li><li class="step" data-step="6-practice-2"><label class="head"><input type="checkbox" id="s-6-practice-2"><span class="box"></span><span class="t">Модели, связи, индексы под реальные запросы.</span></label></li><li class="step" data-step="6-practice-3"><label class="head"><input type="checkbox" id="s-6-practice-3"><span class="box"></span><span class="t"><code>AsNoTracking()</code> на всех выборках только для чтения.</span></label></li><li class="step" data-step="6-practice-4"><label class="head"><input type="checkbox" id="s-6-practice-4"><span class="box"></span><span class="t">Найти N+1: включить логирование SQL, посмотреть число запросов на странице списка. <strong>Записать до и после.</strong></span></label></li><li class="step" data-step="6-practice-5"><label class="head"><input type="checkbox" id="s-6-practice-5"><span class="box"></span><span class="t">Переписать список заметок на проекцию в DTO через <code>Select</code>.</span></label></li><li class="step" data-step="6-practice-6"><label class="head"><input type="checkbox" id="s-6-practice-6"><span class="box"></span><span class="t">Миграции с осмысленным откатом, скрипт для прода.</span></label></li><li class="step" data-step="6-practice-7"><label class="head"><input type="checkbox" id="s-6-practice-7"><span class="box"></span><span class="t">Оптимистичная параллельность на заметке.</span></label></li></ul></div><div class="block break brk"><h3><span class="i">💥</span>Сломай намеренно</h3><ul class="steps"><li class="step" data-step="6-break-1"><label class="head"><input type="checkbox" id="s-6-break-1"><span class="box"></span><span class="t"><strong>Цикл с обращением к навигационному свойству</strong> без <code>Include</code> - посчитать запросы в логе.</span></label></li><li class="step" data-step="6-break-2"><label class="head"><input type="checkbox" id="s-6-break-2"><span class="box"></span><span class="t"><strong>Убрать <code>AsNoTracking()</code></strong> на выборке в тысячу строк и сравнить время и память.</span></label></li><li class="step" data-step="6-break-3"><label class="head"><input type="checkbox" id="s-6-break-3"><span class="box"></span><span class="t"><strong>Вызвать свой метод внутри <code>Where</code></strong> - получить ошибку о невозможности перевода в SQL.</span></label></li><li class="step" data-step="6-break-4"><label class="head"><input type="checkbox" id="s-6-break-4"><span class="box"></span><span class="t"><strong>Изменить строку из двух сессий</strong> при включённой оптимистичной параллельности - получить исключение.</span></label></li><li class="step" data-step="6-break-5"><label class="head"><input type="checkbox" id="s-6-break-5"><span class="box"></span><span class="t"><strong><code>Include</code> на трёх уровнях вложенности</strong> - посмотреть на размер результата и на дублирование строк, потом сравнить с <code>AsSplitQuery()</code>.</span></label></li><li class="step" data-step="6-break-6"><label class="head"><input type="checkbox" id="s-6-break-6"><span class="box"></span><span class="t"><strong>Склеить SQL строкой</strong> и передать в него кавычку - увидеть инъекцию.</span></label></li></ul></div><div class="block task"><h3><span class="i">✅</span>Задание</h3><div class="text"><p>Life Notes на PostgreSQL: список заметок делает фиксированное число запросов независимо от объёма, есть миграции с откатом, оптимистичная параллельность работает.</p>
+<p><strong>Критерий:</strong> показываешь в логе, где был N+1, и объясняешь, почему выбрана проекция, а не <code>Include</code>.</p></div></div><div class="block life"><h3><span class="i">🌍</span>Из жизни</h3><div class="text"><p><strong>Про N+1 в EF.</strong> Ровно та же история, что в SQLAlchemy: страница со списком делает по запросу на элемент. На тестовых данных незаметно, на реальных страница открывается секундами.</p>
+<p><strong>Про клиентскую оценку до 3.0.</strong> Код молча выкачивал таблицу целиком и фильтровал в памяти. Работало на тысяче строк, ложилось на миллионе. Запрет в 3.0 сломал много кода и спас гораздо больше.</p>
+<p><strong>Про миграции на проде.</strong> Применять <code>dotnet ef database update</code> напрямую на прод - плохая практика: нет вычитки и согласования. Скрипт с <code>--idempotent</code> можно прочитать, приложить к RFC и провести через окно - как в слое 5 инфра-роадмапа.</p></div></div><div class="block questions"><h3><span class="i">❓</span>Вопросы с ответами</h3><div class="text"><p><strong>Что такое N+1 и как ловите?</strong></p>
+<blockquote>
+<p>Запрос за списком плюс по запросу на каждый элемент за связанными данными. Ловлю логированием SQL. Лечу <code>Include</code> или, когда нужны не все поля, проекцией в DTO через <code>Select</code> - там EF возьмёт только нужные колонки.</p>
+</blockquote>
+<p><strong>Зачем <code>AsNoTracking()</code>?</strong></p>
+<blockquote>
+<p>Отключает отслеживание изменений. На выборках только для чтения даёт заметный прирост, потому что EF не строит снимки для сравнения. Ставлю на все списки и отчёты.</p>
+</blockquote>
+<p><strong>Как делаете миграции без простоя?</strong></p>
+<blockquote>
+<p>Читаю сгенерированное перед применением. Колонку с <code>NOT NULL</code> в три шага: допускающая пустоту, заполнение, ограничение. На прод иду скриптом с <code>--idempotent</code>, а не командой - его можно вычитать и провести через согласование.</p>
+</blockquote>
+<p><strong>Как решаете конфликт одновременного редактирования?</strong></p>
+<blockquote>
+<p>Оптимистичной параллельностью: колонка версии, EF при сохранении проверяет её и бросает <code>DbUpdateConcurrencyException</code>. Дальше решение - показать пользователю расхождение или слить автоматически, зависит от задачи.</p>
+</blockquote>
+<p><strong>Когда пишете сырой SQL?</strong></p>
+<blockquote>
+<p>Когда запрос сложнее, чем разумно выразить через LINQ: тяжёлая аналитика, оконные функции, специфика PostgreSQL. Через интерполированный <code>SqlQuery</code> - он параметризуется сам. Склеивать строки нельзя, это инъекция.</p>
+</blockquote></div></div><p class="src">Исходник: <a href="https://github.com/Lazysagotku/l2code/blob/main/CSharp_Roadmap_Software.md" target="_blank" rel="noopener">CSharp_Roadmap_Software.md</a></p></div></details><details class="phase" data-phase="7" data-total="11"><summary><span class="n">07</span><span><h2>Тестирование</h2><span class="meta"></span></span><span class="gauge"><span class="frac">0/11</span><svg class="ring" viewBox="0 0 32 32" aria-hidden="true"><circle class="trk" cx="16" cy="16" r="13"></circle><circle class="fil" cx="16" cy="16" r="13" stroke-dasharray="81.68" stroke-dashoffset="81.68"></circle></svg></span></summary><div class="content"><div class="block analogy"><h3><span class="i">🎭</span>Аналогия</h3><div class="text"><p>Та же приёмка, что в слое 5 инфра-роадмапа. Критерий формулируется до проверки.</p></div></div><div class="block theory"><h3><span class="i">📖</span>Теория</h3><details><summary>Развернуть теорию</summary><div class="text"><h3>Инструменты</h3>
+<table>
+<thead>
+<tr>
+<th>Что</th>
+<th>Чем</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Фреймворк</td>
+<td>xUnit - стандарт в .NET, поддерживается лучше остальных</td>
+</tr>
+<tr>
+<td>Утверждения</td>
+<td>FluentAssertions - читаемые сообщения о падении</td>
+</tr>
+<tr>
+<td>Моки</td>
+<td>Moq или NSubstitute</td>
+</tr>
+<tr>
+<td>Интеграционные</td>
+<td><code>WebApplicationFactory</code></td>
+</tr>
+<tr>
+<td>База в тестах</td>
+<td>Testcontainers с настоящим PostgreSQL</td>
+</tr>
+</tbody>
+</table>
+<p>⚠️ <strong>In-memory провайдер EF - ловушка.</strong> Он не PostgreSQL: не проверяет ограничения, иначе ведёт себя с транзакциями, не знает про типы. Тесты зелёные, прод падает. Testcontainers поднимает настоящую базу в Docker.</p>
+<h3>Структура теста</h3>
+<pre><code class="language-csharp">[Fact]
+public async Task Get_ReturnsNotFound_WhenNoteMissing()
+{
+    // Arrange
+    var service = new Mock&lt;INoteService&gt;();
+    service.Setup(s =&gt; s.GetAsync(42, It.IsAny&lt;CancellationToken&gt;()))
+           .ReturnsAsync((NoteDto?)null);
+    var controller = new NotesController(service.Object);
 
-      <li class="phase" style="--d:0.33s">
-        <div class="head">
-          <h2><span class="n">05</span>Life Notes: CRUD API</h2>
-          <span class="status next">план: 10-16 сентября</span>
-        </div>
-        <div class="meter"><div class="track" style="--p:0%"><div class="fill"></div><i class="runner" aria-hidden="true">🏃</i></div><span class="pct">0%</span></div>
-        <p class="topics">Контроллеры · DTO и маппинг · middleware и обработка ошибок · валидация · Serilog</p>
-        <p class="note">После этой фазы проект показывает лицо: рабочий API с авторизацией и логами.</p>
-      </li>
+    // Act
+    var result = await controller.Get(42, CancellationToken.None);
 
-      <li class="phase" style="--d:0.4s">
-        <div class="head">
-          <h2><span class="n">06</span>Unit-тесты</h2>
-          <span class="status next">план: 17-22 сентября</span>
-        </div>
-        <div class="meter"><div class="track" style="--p:5%"><div class="fill"></div><i class="runner" aria-hidden="true">🏃</i></div><span class="pct">5%</span></div>
-        <p class="topics">xUnit · Moq · AAA · интеграционный тест с TestContainers</p>
-        <p class="note">Решение: тесты входят в проект до собеседований. Пока только знакомство по конспектам.</p>
-      </li>
+    // Assert
+    result.Result.Should().BeOfType&lt;NotFoundResult&gt;();
+}
+</code></pre>
+<p>Имя теста отвечает на три вопроса: что тестируем, что ожидаем, при каких условиях.</p>
+<h3>Интеграционные тесты</h3>
+<pre><code class="language-csharp">public class ApiTests : IClassFixture&lt;WebApplicationFactory&lt;Program&gt;&gt;
+{
+    private readonly HttpClient _client;
+    public ApiTests(WebApplicationFactory&lt;Program&gt; factory) =&gt;
+        _client = factory.WithWebHostBuilder(b =&gt; b.ConfigureServices(services =&gt;
+        {
+            // подменить базу на тестовую
+        })).CreateClient();
 
-      <li class="phase" style="--d:0.47s">
-        <div class="head">
-          <h2><span class="n">07</span>Redis · RabbitMQ · Docker</h2>
-          <span class="status next">план: 23-30 сентября</span>
-        </div>
-        <div class="meter"><div class="track" style="--p:15%"><div class="fill"></div><i class="runner" aria-hidden="true">🏃</i></div><span class="pct">15%</span></div>
-        <p class="topics">Кэширование и TTL · очереди и события · Transactional Outbox · multi-stage build · docker-compose</p>
-        <p class="note">Тоже до собеседований - чтобы Life Notes закрывал весь целевой стек. Теория по Docker и Kubernetes уже пройдена по конспектам, плюс реальный опыт подключения RabbitMQ/Kafka на работе.</p>
-      </li>
+    [Fact]
+    public async Task Create_And_Read()
+    {
+        var created = await _client.PostAsJsonAsync(&quot;/api/notes&quot;, new { title = &quot;Тест&quot; });
+        created.StatusCode.Should().Be(HttpStatusCode.Created);
+    }
+}
+</code></pre>
+<p><code>WebApplicationFactory</code> поднимает приложение целиком в памяти, с настоящим конвейером middleware. Аналог <code>TestClient</code> из FastAPI.</p>
+<h3>Что покрывать</h3>
+<table>
+<thead>
+<tr>
+<th>Покрывать</th>
+<th>Не покрывать</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>бизнес-логику сервисов</td>
+<td>автосвойства</td>
+</tr>
+<tr>
+<td>граничные случаи и ошибки</td>
+<td>код фреймворка</td>
+</tr>
+<tr>
+<td>контракты API</td>
+<td>тривиальные обёртки</td>
+</tr>
+<tr>
+<td>то, что уже ломалось</td>
+<td>геттеры DTO</td>
+</tr>
+</tbody>
+</table>
+<p>Правило: каждый исправленный баг получает тест, который падал бы до исправления.</p></div></details></div><div class="block practice "><h3><span class="i">🔧</span>Практика</h3><ul class="steps"><li class="step" data-step="7-practice-1"><label class="head"><input type="checkbox" id="s-7-practice-1"><span class="box"></span><span class="t">xUnit с FluentAssertions на сервисный слой.</span></label></li><li class="step" data-step="7-practice-2"><label class="head"><input type="checkbox" id="s-7-practice-2"><span class="box"></span><span class="t">Моки репозиториев через Moq, логика тестируется без базы.</span></label></li><li class="step" data-step="7-practice-3"><label class="head"><input type="checkbox" id="s-7-practice-3"><span class="box"></span><span class="t">Интеграционные тесты через <code>WebApplicationFactory</code> на основные маршруты.</span></label></li><li class="step" data-step="7-practice-4"><label class="head"><input type="checkbox" id="s-7-practice-4"><span class="box"></span><span class="t">Testcontainers с PostgreSQL для тестов, где нужна настоящая база.</span></label></li><li class="step" data-step="7-practice-5"><label class="head"><input type="checkbox" id="s-7-practice-5"><span class="box"></span><span class="t">Параметризованные тесты через <code>[Theory]</code> и <code>[InlineData]</code> на валидацию.</span></label></li><li class="step" data-step="7-practice-6"><label class="head"><input type="checkbox" id="s-7-practice-6"><span class="box"></span><span class="t">Покрытие через Coverlet с порогом в пайплайне.</span></label></li></ul></div><div class="block break brk"><h3><span class="i">💥</span>Сломай намеренно</h3><ul class="steps"><li class="step" data-step="7-break-1"><label class="head"><input type="checkbox" id="s-7-break-1"><span class="box"></span><span class="t"><strong>Написать тест на in-memory провайдере</strong>, добавить в модель ограничение уникальности - убедиться, что тест зелёный, а на PostgreSQL падает.</span></label></li><li class="step" data-step="7-break-2"><label class="head"><input type="checkbox" id="s-7-break-2"><span class="box"></span><span class="t"><strong>Замокать всё</strong> в тесте контроллера, сломать сервис - убедиться, что тест не заметил.</span></label></li><li class="step" data-step="7-break-3"><label class="head"><input type="checkbox" id="s-7-break-3"><span class="box"></span><span class="t"><strong>Тест, зависящий от порядка</strong> - один создаёт данные, второй их ждёт. Запустить в другом порядке.</span></label></li><li class="step" data-step="7-break-4"><label class="head"><input type="checkbox" id="s-7-break-4"><span class="box"></span><span class="t"><strong>Тест без утверждений</strong> - посмотреть, что покрытие выросло, а проверок нет.</span></label></li><li class="step" data-step="7-break-5"><label class="head"><input type="checkbox" id="s-7-break-5"><span class="box"></span><span class="t"><strong>Забыть <code>await</code></strong> в асинхронном тесте - увидеть, что он проходит, ничего не проверив.</span></label></li></ul></div><div class="block task"><h3><span class="i">✅</span>Задание</h3><div class="text"><p>Life Notes с юнит- и интеграционными тестами, покрытие сервисного слоя выше 70 процентов, тесты гоняются в пайплайне и роняют сборку при падении.</p>
+<p><strong>Критерий:</strong> объясняешь, почему база в интеграционных тестах настоящая, а не in-memory.</p></div></div><div class="block life"><h3><span class="i">🌍</span>Из жизни</h3><div class="text"><p><strong>Про in-memory провайдер.</strong> Классика: набор из ста зелёных тестов, а на проде падает ограничение уникальности, которого in-memory не знает. Testcontainers стоит нескольких секунд на запуск и закрывает этот класс проблем.</p>
+<p><strong>Про тест на каждый баг.</strong> Практика, которая окупается быстрее всех остальных: исправленный баг без теста возвращается. С тестом - нет.</p></div></div><div class="block questions"><h3><span class="i">❓</span>Вопросы с ответами</h3><div class="text"><p><strong>Как тестируете ASP.NET Core приложение?</strong></p>
+<blockquote>
+<p>Юнит-тесты на сервисный слой с моками репозиториев, интеграционные через <code>WebApplicationFactory</code> - он поднимает приложение целиком с настоящим конвейером. Базу в интеграционных беру настоящую через Testcontainers.</p>
+</blockquote>
+<p><strong>Почему не in-memory база?</strong></p>
+<blockquote>
+<p>Она не PostgreSQL: не проверяет ограничения, иначе работает с транзакциями, не знает про типы. Тесты зелёные, прод падает. Testcontainers поднимает настоящую базу в Docker за пару секунд.</p>
+</blockquote>
+<p><strong>Что мокаете?</strong></p>
+<blockquote>
+<p>Внешние зависимости и слой данных в юнит-тестах. Свою логику - нет. Тест, где замокано всё, проверяет моки и остаётся зелёным при сломанном приложении.</p>
+</blockquote>
+<p><strong>Какое покрытие считаете достаточным?</strong></p>
+<blockquote>
+<p>Смотрю не на цифру, а на то, что покрыто: бизнес-логика, граничные случаи, ошибки, контракты API. Автосвойства и обёртки не покрываю. И правило - каждый исправленный баг получает тест, который падал бы до исправления.</p>
+</blockquote></div></div><p class="src">Исходник: <a href="https://github.com/Lazysagotku/l2code/blob/main/CSharp_Roadmap_Software.md" target="_blank" rel="noopener">CSharp_Roadmap_Software.md</a></p></div></details><details class="phase" data-phase="8" data-total="13"><summary><span class="n">08</span><span><h2>DevOps и деплой</h2><span class="meta"></span></span><span class="gauge"><span class="frac">0/13</span><svg class="ring" viewBox="0 0 32 32" aria-hidden="true"><circle class="trk" cx="16" cy="16" r="13"></circle><circle class="fil" cx="16" cy="16" r="13" stroke-dasharray="81.68" stroke-dashoffset="81.68"></circle></svg></span></summary><div class="content"><div class="block analogy"><h3><span class="i">🎭</span>Аналогия</h3><div class="text"><p>Та же, что в фазе 6 Python-роадмапа: разница между «работает у меня» и «работает у всех».</p></div></div><div class="block theory"><h3><span class="i">📖</span>Теория</h3><details><summary>Развернуть теорию</summary><div class="text"><h3>Контейнер для .NET</h3>
+<pre><code class="language-dockerfile">FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+WORKDIR /src
+COPY *.csproj .
+RUN dotnet restore
+COPY . .
+RUN dotnet publish -c Release -o /app
 
-      <li class="phase" style="--d:0.54s">
-        <div class="head">
-          <h2><span class="n">08</span>Подготовка к собеседованиям</h2>
-          <span class="status next">прогон: 1-3 октября</span>
-        </div>
-        <div class="meter"><div class="track" style="--p:45%"><div class="fill"></div><i class="runner" aria-hidden="true">🏃</i></div><span class="pct">45%</span></div>
-        <p class="topics">SOLID вслух · SQL и индексы · System Design mini · банк реальных вопросов · мок-интервью</p>
-        <p class="note">Материалы уже собраны: банк вопросов с реальных собеседований, конспекты по SQL/System Design/сетям. Осталось главное - прогнать вслух под давлением.</p>
-      </li>
+FROM mcr.microsoft.com/dotnet/aspnet:8.0
+WORKDIR /app
+COPY --from=build /app .
+ENV ASPNETCORE_URLS=http://+:8080
+EXPOSE 8080
+ENTRYPOINT [&quot;dotnet&quot;, &quot;LifeNotes.dll&quot;]
+</code></pre>
+<p><strong>Отличие от Python:</strong> есть отдельный шаг компиляции, и в итоговый образ идёт runtime без SDK. <code>.csproj</code> копируется раньше кода по той же причине, что <code>requirements.txt</code> - кеш слоя с восстановлением пакетов.</p>
+<p><code>ASPNETCORE_URLS</code> обязателен: по умолчанию приложение слушает localhost внутри контейнера, и снаружи в него не достучаться.</p>
+<h3>Проверки состояния</h3>
+<pre><code class="language-csharp">builder.Services.AddHealthChecks()
+    .AddNpgSql(connectionString, name: &quot;postgres&quot;)
+    .AddCheck&lt;QueueHealthCheck&gt;(&quot;queue&quot;);
 
-      <li class="phase" style="--d:0.61s">
-        <div class="head">
-          <h2><span class="n">09</span>Архитектура</h2>
-          <span class="status next">параллельно с собесами</span>
-        </div>
-        <div class="meter"><div class="track" style="--p:10%"><div class="fill"></div><i class="runner" aria-hidden="true">🏃</i></div><span class="pct">10%</span></div>
-        <p class="topics">Clean Architecture · CQRS и MediatR · gRPC против REST · Polly · микросервисные паттерны</p>
-        <p class="note">Идёт фоном в октябре, параллельно с собеседованиями: обзорной теории в банке вопросов достаточно, чтобы обсуждать trade-offs, глубина придёт с практикой.</p>
-      </li>
+app.MapHealthChecks(&quot;/health/live&quot;);                      // жив ли процесс
+app.MapHealthChecks(&quot;/health/ready&quot;, new HealthCheckOptions
+{
+    Predicate = check =&gt; check.Tags.Contains(&quot;ready&quot;)      // готов ли к трафику
+});
+</code></pre>
+<p>Разделение на liveness и readiness - то же, что probes в слое 6 инфра-роадмапа: первый отвечает «перезапусти меня», второй «не давай пока трафик».</p>
+<h3>GitLab CI</h3>
+<p>Российские компании чаще на GitLab, чем на GitHub.</p>
+<pre><code class="language-yaml">stages: [test, build, deploy]
 
-    </ol>
+test:
+  stage: test
+  image: mcr.microsoft.com/dotnet/sdk:8.0
+  script:
+    - dotnet test --collect:&quot;XPlat Code Coverage&quot;
 
-    <p class="legend">Проценты - самооценка поглощения: 90%+ означает «объясню и напишу без подсказок», около 50% - «понимаю, но вслух пока спотыкаюсь», ниже 20% - «прочитал, руками не делал». Честность тут важнее красоты цифр: карта существует, чтобы видеть реальное положение.</p>
+build:
+  stage: build
+  script:
+    - docker build -t $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA .
+    - docker push $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA
+
+deploy:
+  stage: deploy
+  when: manual              # выкатка на прод по кнопке
+  script:
+    - ssh $HOST &quot;docker pull ... &amp;&amp; docker compose up -d &amp;&amp; sleep 5 &amp;&amp; curl -sf http://localhost:8080/health/ready&quot;
+</code></pre>
+<p><code>when: manual</code> - это Continuous Delivery из слоя 2 инфра-роадмапа: артефакт готов, кнопку жмёт человек.</p>
+<h3>Redis и RabbitMQ</h3>
+<p><strong>Redis</strong> - кэш и распределённая блокировка:</p>
+<pre><code class="language-csharp">builder.Services.AddStackExchangeRedisCache(o =&gt; o.Configuration = redisConn);
+</code></pre>
+<p>Те же три вопроса, что в Python-роадмапе: сколько живёт запись, что при изменении данных, что при недоступности Redis. Приложение обязано работать без него.</p>
+<p><strong>RabbitMQ</strong> - асинхронное взаимодействие через MassTransit.</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>RabbitMQ</th>
+<th>Kafka</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Модель</td>
+<td>очередь, сообщение забирается</td>
+<td>лог, сообщение остаётся</td>
+</tr>
+<tr>
+<td>Повторное чтение</td>
+<td>нет</td>
+<td>да, по смещению</td>
+</tr>
+<tr>
+<td>Порядок</td>
+<td>в пределах очереди</td>
+<td>в пределах партиции</td>
+</tr>
+<tr>
+<td>Когда</td>
+<td>задачи, команды, RPC</td>
+<td>события, поток, аналитика</td>
+</tr>
+</tbody>
+</table>
+<p>У Ивана есть реальный опыт с обоими через PIX Robotics: RabbitMQ в самом роботе, Kafka на личном кабинете с портфелями брокеров и инвесторов. Это надо называть.</p>
+<h3>Polly</h3>
+<pre><code class="language-csharp">builder.Services.AddHttpClient&lt;IExternalApi, ExternalApi&gt;()
+    .AddTransientHttpErrorPolicy(p =&gt; p.WaitAndRetryAsync(3,
+        attempt =&gt; TimeSpan.FromSeconds(Math.Pow(2, attempt))))
+    .AddTransientHttpErrorPolicy(p =&gt; p.CircuitBreakerAsync(5, TimeSpan.FromSeconds(30)));
+</code></pre>
+<p>Повтор с растущей паузой и размыкатель. Прямая связь с формулировкой «высоконагруженные системы» в вакансиях. Джиттер добавлять обязательно - иначе все клиенты повторяют синхронно.</p></div></details></div><div class="block practice "><h3><span class="i">🔧</span>Практика</h3><ul class="steps"><li class="step" data-step="8-practice-1"><label class="head"><input type="checkbox" id="s-8-practice-1"><span class="box"></span><span class="t">Многоэтапный Dockerfile для Life Notes, посмотреть размер образа.</span></label></li><li class="step" data-step="8-practice-2"><label class="head"><input type="checkbox" id="s-8-practice-2"><span class="box"></span><span class="t"><code>docker-compose</code> с приложением, PostgreSQL и Redis.</span></label></li><li class="step" data-step="8-practice-3"><label class="head"><input type="checkbox" id="s-8-practice-3"><span class="box"></span><span class="t">Health checks с разделением на liveness и readiness.</span></label></li><li class="step" data-step="8-practice-4"><label class="head"><input type="checkbox" id="s-8-practice-4"><span class="box"></span><span class="t">GitLab CI: тесты, сборка образа, ручная выкатка с проверкой после.</span></label></li><li class="step" data-step="8-practice-5"><label class="head"><input type="checkbox" id="s-8-practice-5"><span class="box"></span><span class="t">Redis-кэш на тяжёлую выборку, проверить работу при выключенном Redis.</span></label></li><li class="step" data-step="8-practice-6"><label class="head"><input type="checkbox" id="s-8-practice-6"><span class="box"></span><span class="t">Polly на внешний вызов с повторами, размыкателем и джиттером.</span></label></li><li class="step" data-step="8-practice-7"><label class="head"><input type="checkbox" id="s-8-practice-7"><span class="box"></span><span class="t">Serilog со структурированным выводом в stdout.</span></label></li></ul></div><div class="block break brk"><h3><span class="i">💥</span>Сломай намеренно</h3><ul class="steps"><li class="step" data-step="8-break-1"><label class="head"><input type="checkbox" id="s-8-break-1"><span class="box"></span><span class="t"><strong>Убрать <code>ASPNETCORE_URLS</code></strong> и попробовать достучаться в контейнер снаружи.</span></label></li><li class="step" data-step="8-break-2"><label class="head"><input type="checkbox" id="s-8-break-2"><span class="box"></span><span class="t"><strong>Скопировать код до <code>.csproj</code></strong> - посмотреть, что <code>restore</code> идёт при каждой сборке.</span></label></li><li class="step" data-step="8-break-3"><label class="head"><input type="checkbox" id="s-8-break-3"><span class="box"></span><span class="t"><strong>Выключить Redis</strong> и проверить, что приложение работает медленнее, а не падает.</span></label></li><li class="step" data-step="8-break-4"><label class="head"><input type="checkbox" id="s-8-break-4"><span class="box"></span><span class="t"><strong>Убрать джиттер</strong> из Polly и запустить двадцать параллельных вызовов против падающего сервиса.</span></label></li><li class="step" data-step="8-break-5"><label class="head"><input type="checkbox" id="s-8-break-5"><span class="box"></span><span class="t"><strong>Сделать readiness всегда успешным</strong> и выкатить неготовое приложение - посмотреть на ошибки у пользователей.</span></label></li><li class="step" data-step="8-break-6"><label class="head"><input type="checkbox" id="s-8-break-6"><span class="box"></span><span class="t"><strong>Собрать образ на SDK вместо runtime</strong> и сравнить размер.</span></label></li></ul></div><div class="block task"><h3><span class="i">✅</span>Задание</h3><div class="text"><p>Life Notes в контейнере, разворачивается из compose с базой и Redis, пайплайн в GitLab CI с ручной выкаткой и проверкой после, Polly на внешних вызовах.</p>
+<p><strong>Критерий:</strong> объясняешь каждую строку Dockerfile и разницу liveness от readiness.</p></div></div><div class="block life"><h3><span class="i">🌍</span>Из жизни</h3><div class="text"><p><strong>Про <code>ASPNETCORE_URLS</code>.</strong> Первая проблема при контейнеризации .NET: приложение внутри работает, снаружи недоступно. Причина - слушает localhost. Одна переменная.</p>
+<p><strong>Про размер образа.</strong> Сборка на SDK-образе вместо runtime даёт разницу в сотни мегабайт на каждом деплое.</p>
+<p><strong>Про RabbitMQ и Kafka в резюме.</strong> Формулировка, которая работает: «RabbitMQ подключал через PIX Robotics для отслеживания сессий, Kafka была привязана к личному кабинету с портфелями». Конкретика вместо «имею опыт».</p></div></div><div class="block questions"><h3><span class="i">❓</span>Вопросы с ответами</h3><div class="text"><p><strong>Чем контейнер для .NET отличается от Python?</strong></p>
+<blockquote>
+<p>Есть шаг компиляции, поэтому многоэтапная сборка обязательна: собираем на SDK, запускаем на runtime - разница в сотни мегабайт. И нужен <code>ASPNETCORE_URLS</code>, иначе приложение слушает localhost внутри контейнера.</p>
+</blockquote>
+<p><strong>Зачем разделять liveness и readiness?</strong></p>
+<blockquote>
+<p>Liveness отвечает «меня надо перезапустить», readiness - «мне можно давать трафик». Приложение может быть живым, но ещё не прогретым или потерявшим базу. Если не разделить, оркестратор либо будет перезапускать работающее, либо пустит трафик на неготовое.</p>
+</blockquote>
+<p><strong>Что такое Polly и зачем?</strong></p>
+<blockquote>
+<p>Библиотека политик устойчивости: повторы с растущей паузой, размыкатель, таймаут, откат. Повтор без джиттера опасен - все клиенты повторяют синхронно и добивают сервис. Размыкатель нужен, чтобы перестать звонить в мёртвый сервис.</p>
+</blockquote>
+<p><strong>RabbitMQ или Kafka?</strong></p>
+<blockquote>
+<p>RabbitMQ - очередь: сообщение забрали, его больше нет, хорош для задач и команд. Kafka - лог: сообщение остаётся, можно перечитать по смещению, хороша для событий и потоковой обработки. Работал с обоими через PIX Robotics.</p>
+</blockquote></div></div><p class="src">Исходник: <a href="https://github.com/Lazysagotku/l2code/blob/main/CSharp_Roadmap_Software.md" target="_blank" rel="noopener">CSharp_Roadmap_Software.md</a></p></div></details><details class="phase" data-phase="9" data-total="8"><summary><span class="n">09</span><span><h2>Архитектурные паттерны</h2><span class="meta"></span></span><span class="gauge"><span class="frac">0/8</span><svg class="ring" viewBox="0 0 32 32" aria-hidden="true"><circle class="trk" cx="16" cy="16" r="13"></circle><circle class="fil" cx="16" cy="16" r="13" stroke-dasharray="81.68" stroke-dashoffset="81.68"></circle></svg></span></summary><div class="content"><div class="block analogy"><h3><span class="i">🎭</span>Аналогия</h3><div class="text"><p>Планировка квартиры из фазы 7 Python-роадмапа. И та же оговорка: планировка на тридцать квадратов не требует пяти зон.</p></div></div><div class="block theory"><h3><span class="i">📖</span>Теория</h3><details><summary>Развернуть теорию</summary><div class="text"><h3>Слои</h3>
+<pre><code>Domain          сущности и правила, ни на что не ссылается
+Application     сценарии использования, интерфейсы репозиториев
+Infrastructure  EF Core, HTTP-клиенты, очереди
+API             контроллеры
+</code></pre>
+<p>Правило зависимостей: внутрь. Domain не знает про EF. Проверяется тем, что в проекте Domain нет ссылки на пакет EF Core.</p>
+<p>⚠️ Для Life Notes это избыточно. Трёх слоёв достаточно: контроллеры, сервисы, доступ к данным. Умение сказать, где чистая архитектура лишняя, ценится не меньше умения её построить.</p>
+<h3>CQRS и MediatR</h3>
+<p>Разделение чтения и записи: команды меняют состояние, запросы читают.</p>
+<pre><code class="language-csharp">public record GetNoteQuery(int Id) : IRequest&lt;NoteDto?&gt;;
+
+public class GetNoteHandler : IRequestHandler&lt;GetNoteQuery, NoteDto?&gt;
+{
+    public async Task&lt;NoteDto?&gt; Handle(GetNoteQuery request, CancellationToken ct) { ... }
+}
+</code></pre>
+<p><strong>Когда оправдано:</strong> чтение и запись сильно расходятся по нагрузке или по модели данных - например запись в нормализованную схему, чтение из витрины.</p>
+<p><strong>Когда нет:</strong> обычный CRUD. Тогда CQRS добавляет классы и косвенность без выигрыша. Это тоже надо уметь сказать.</p>
+<h3>Паттерны, которые спрашивают</h3>
+<table>
+<thead>
+<tr>
+<th>Паттерн</th>
+<th>Задача</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Repository</td>
+<td>скрыть способ хранения</td>
+</tr>
+<tr>
+<td>Unit of Work</td>
+<td>группа изменений в одной транзакции - <code>DbContext</code> уже это делает</td>
+</tr>
+<tr>
+<td>Strategy</td>
+<td>взаимозаменяемые алгоритмы</td>
+</tr>
+<tr>
+<td>Factory</td>
+<td>создание без знания конкретного класса</td>
+</tr>
+<tr>
+<td>Decorator</td>
+<td>добавить поведение, не меняя класс</td>
+</tr>
+<tr>
+<td>Mediator</td>
+<td>развязать отправителя и получателя</td>
+</tr>
+<tr>
+<td>Outbox</td>
+<td>гарантия доставки события вместе с транзакцией</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Outbox</strong> стоит знать отдельно: он решает реальную проблему - как сохранить в базу и отправить в очередь атомарно. Событие пишется в таблицу той же транзакцией, отдельный процесс его вычитывает и отправляет.</p>
+<h3>gRPC</h3>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>REST</th>
+<th>gRPC</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Формат</td>
+<td>JSON, текст</td>
+<td>protobuf, бинарь</td>
+</tr>
+<tr>
+<td>Контракт</td>
+<td>OpenAPI, необязателен</td>
+<td>.proto, обязателен</td>
+</tr>
+<tr>
+<td>Скорость</td>
+<td>обычная</td>
+<td>заметно быстрее</td>
+</tr>
+<tr>
+<td>Из браузера</td>
+<td>напрямую</td>
+<td>через прослойку</td>
+</tr>
+<tr>
+<td>Когда</td>
+<td>публичное API</td>
+<td>внутренние вызовы между сервисами</td>
+</tr>
+</tbody>
+</table>
+<h3>Микросервисы</h3>
+<p>Позиция, которую стоит занимать: <strong>монолит по умолчанию</strong>. Микросервисы решают организационную проблему - независимые команды и релизы - ценой распределённых транзакций, сетевых отказов и сложной отладки.</p>
+<p>«Начали с микросервисов на команде из трёх человек» - антипаттерн, и умение это назвать читается как опыт.</p></div></details></div><div class="block practice "><h3><span class="i">🔧</span>Практика</h3><ul class="steps"><li class="step" data-step="9-practice-1"><label class="head"><input type="checkbox" id="s-9-practice-1"><span class="box"></span><span class="t">Разделить Life Notes на слои, проверить правило зависимостей.</span></label></li><li class="step" data-step="9-practice-2"><label class="head"><input type="checkbox" id="s-9-practice-2"><span class="box"></span><span class="t">Один сценарий через MediatR - для сравнения с прямым вызовом сервиса.</span></label></li><li class="step" data-step="9-practice-3"><label class="head"><input type="checkbox" id="s-9-practice-3"><span class="box"></span><span class="t">Написать в <code>docs/ARCHITECTURE.md</code>, почему выбраны три слоя, а не четыре, и где CQRS был бы избыточен.</span></label></li><li class="step" data-step="9-practice-4"><label class="head"><input type="checkbox" id="s-9-practice-4"><span class="box"></span><span class="t">Outbox на публикацию события о создании заметки.</span></label></li><li class="step" data-step="9-practice-5"><label class="head"><input type="checkbox" id="s-9-practice-5"><span class="box"></span><span class="t">Decorator для кеширования поверх репозитория.</span></label></li></ul></div><div class="block break brk"><h3><span class="i">💥</span>Сломай намеренно</h3><ul class="steps"><li class="step" data-step="9-break-1"><label class="head"><input type="checkbox" id="s-9-break-1"><span class="box"></span><span class="t"><strong>Добавить ссылку на EF Core в Domain</strong> и убедиться, что правило зависимостей нарушено незаметно для компилятора.</span></label></li><li class="step" data-step="9-break-2"><label class="head"><input type="checkbox" id="s-9-break-2"><span class="box"></span><span class="t"><strong>Сохранить в базу и отправить в очередь двумя действиями</strong>, уронить приложение между ними - получить расхождение. Это обоснование Outbox.</span></label></li><li class="step" data-step="9-break-3"><label class="head"><input type="checkbox" id="s-9-break-3"><span class="box"></span><span class="t"><strong>Провести весь CRUD через MediatR</strong> и посчитать, сколько файлов появилось на одну операцию.</span></label></li></ul></div><div class="block task"><h3><span class="i">✅</span>Задание</h3><div class="text"><p><code>docs/ARCHITECTURE.md</code> со схемой слоёв и обоснованием решений, включая то, где паттерн был бы избыточен. Outbox работает.</p>
+<p><strong>Критерий:</strong> проводишь от HTTP-запроса до строки в базе и называешь, что придётся менять при замене PostgreSQL.</p></div></div><div class="block life"><h3><span class="i">🌍</span>Из жизни</h3><div class="text"><p><strong>Про архитектуру ради архитектуры.</strong> Проект на триста строк с пятью слоями и интерфейсом на каждый репозиторий. Признак зрелости - умение назвать, где слои избыточны.</p>
+<p><strong>Про Outbox.</strong> Сохранили в базу, отправили в очередь, между этим упали - в базе есть, в очереди нет. Расхождение обнаруживается через недели. Outbox делает это атомарным.</p></div></div><div class="block questions"><h3><span class="i">❓</span>Вопросы с ответами</h3><div class="text"><p><strong>Что такое чистая архитектура и когда она нужна?</strong></p>
+<blockquote>
+<p>Слои с зависимостями внутрь: домен ничего не знает о базе и вебе. Нужна на долгоживущих системах с меняющейся инфраструктурой. На маленьком проекте даёт больше папок, чем пользы - там хватает трёх слоёв.</p>
+</blockquote>
+<p><strong>Что такое CQRS и когда оправдан?</strong></p>
+<blockquote>
+<p>Разделение команд и запросов. Оправдан, когда чтение и запись расходятся по нагрузке или модели данных. На обычном CRUD добавляет классы без выигрыша.</p>
+</blockquote>
+<p><strong>Как гарантировать, что событие уйдёт в очередь?</strong></p>
+<blockquote>
+<p>Паттерн Outbox: событие пишется в таблицу той же транзакцией, что и данные, отдельный процесс вычитывает и отправляет. Без него сохранение и отправка - два действия, и падение между ними даёт расхождение.</p>
+</blockquote>
+<p><strong>REST или gRPC?</strong></p>
+<blockquote>
+<p>REST для публичного API и всего, что читают из браузера. gRPC для внутренних вызовов между сервисами: бинарный формат, обязательный контракт в .proto, заметно быстрее.</p>
+</blockquote>
+<p><strong>Монолит или микросервисы?</strong></p>
+<blockquote>
+<p>Монолит по умолчанию. Микросервисы решают организационную проблему - независимые команды и релизы - ценой распределённых транзакций, сетевых отказов и сложной отладки. На маленькой команде это чистые издержки.</p>
+</blockquote></div></div><p class="src">Исходник: <a href="https://github.com/Lazysagotku/l2code/blob/main/CSharp_Roadmap_Software.md" target="_blank" rel="noopener">CSharp_Roadmap_Software.md</a></p></div></details></div>
   </div>
 </main>
 
@@ -307,24 +951,103 @@
 
 <script>
 (() => {
-  if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-  const runners = [...document.querySelectorAll('.runner')];
-  const trip = () => {
-    const r = runners[Math.floor(Math.random() * runners.length)];
-    if (!r || r.classList.contains('fall') || r.classList.contains('gone')) return;
-    r.classList.remove('rerun');
-    r.classList.add('fall');
-    setTimeout(() => {
-      r.classList.add('gone');
-      r.classList.remove('fall');
-      setTimeout(() => {
-        r.classList.remove('gone');
-        void r.offsetWidth;
-        r.classList.add('rerun');
-      }, 3000 + Math.random() * 2000);
-    }, 900);
-  };
-  setInterval(trip, 9000 + Math.random() * 6000);
+  const KEY = "rm-progress-csharp";
+  const DEADLINE = "";
+  const load = () => { try { return JSON.parse(localStorage.getItem(KEY)) || {}; } catch (e) { return {}; } };
+  const save = (s) => { try { localStorage.setItem(KEY, JSON.stringify(s)); } catch (e) {} };
+  let state = load();
+
+  const phases = [...document.querySelectorAll(".phase")];
+  const allSteps = [...document.querySelectorAll(".step")];
+  const C = 2 * Math.PI * 13;
+
+  function paint() {
+    let done = 0, phasesDone = 0;
+    phases.forEach(ph => {
+      const steps = [...ph.querySelectorAll(".step")];
+      let d = 0;
+      steps.forEach(st => {
+        const on = !!state[st.dataset.step];
+        st.classList.toggle("done", on);
+        const box = st.querySelector("input"); if (box) box.checked = on;
+        if (on) d++;
+      });
+      done += d;
+      const total = steps.length;
+      const p = total ? d / total : 0;
+      if (total && p === 1) phasesDone++;
+      ph.classList.toggle("complete", total > 0 && p === 1);
+      ph.classList.toggle("active", p > 0 && p < 1);
+      ph.querySelector(".frac").textContent = d + "/" + total;
+      ph.querySelector(".ring .fil").setAttribute("stroke-dashoffset", (C * (1 - p)).toFixed(2));
+    });
+    const total = allSteps.length;
+    const pct = total ? Math.round(done / total * 100) : 0;
+    document.getElementById("pct").textContent = pct + "%";
+    document.getElementById("done").textContent = done;
+    document.getElementById("phasesDone").textContent = phasesDone;
+    const fill = document.getElementById("fill");
+    fill.style.width = pct + "%";
+    fill.classList.toggle("full", pct === 100);
+
+    const next = allSteps.filter(st => !state[st.dataset.step]).slice(0, 5);
+    const ol = document.getElementById("next");
+    ol.innerHTML = next.length
+      ? next.map(st => {
+          const ph = st.closest(".phase");
+          const t = st.querySelector(".t").textContent;
+          const name = ph.querySelector("h2").textContent;
+          return `<li>${t} <span>· ${ph.dataset.phase}. ${name}</span></li>`;
+        }).join("")
+      : '<li class="empty">Всё пройдено.</li>';
+  }
+
+  allSteps.forEach(st => {
+    const box = st.querySelector("input");
+    box.addEventListener("change", () => {
+      if (box.checked) state[st.dataset.step] = 1; else delete state[st.dataset.step];
+      save(state); paint();
+    });
+    const more = st.querySelector(".more");
+    if (more) more.addEventListener("click", (e) => { e.preventDefault(); st.classList.toggle("open"); });
+  });
+
+  document.getElementById("expandAll").addEventListener("click", () => {
+    const any = phases.some(p => !p.open);
+    phases.forEach(p => p.open = any);
+  });
+  document.getElementById("resetBtn").addEventListener("click", () => {
+    if (!confirm("Сбросить весь прогресс по этому роадмапу?")) return;
+    state = {}; save(state); paint();
+  });
+  document.getElementById("exportBtn").addEventListener("click", () => {
+    const blob = new Blob([JSON.stringify({ key: KEY, at: new Date().toISOString(), state }, null, 2)], { type: "application/json" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob); a.download = KEY + ".json"; a.click();
+    URL.revokeObjectURL(a.href);
+  });
+  document.getElementById("importFile").addEventListener("change", (e) => {
+    const f = e.target.files[0]; if (!f) return;
+    f.text().then(txt => {
+      try { const d = JSON.parse(txt); state = d.state || d; save(state); paint(); }
+      catch (err) { alert("Файл не похож на сохранённый прогресс."); }
+    });
+    e.target.value = "";
+  });
+
+  if (DEADLINE) {
+    const today = new Date(); today.setHours(0, 0, 0, 0);
+    const left = Math.round((new Date(DEADLINE) - today) / 86400000);
+    if (left >= 0) {
+      document.getElementById("days").textContent = left === 0 ? "сегодня" : left + (left === 1 ? " день" : left < 5 ? " дня" : " дней");
+      document.getElementById("deadline").hidden = false;
+    }
+  }
+
+  paint();
+  // первая незакрытая фаза раскрыта, чтобы страница открывалась на рабочем месте
+  const first = phases.find(p => !p.classList.contains("complete") && !p.classList.contains("status-done") && !p.classList.contains("status-skipped"));
+  if (first) first.open = true;
 })();
 </script>
 <script src="/theme.js?v=2"></script>
