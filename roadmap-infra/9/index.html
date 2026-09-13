@@ -144,6 +144,9 @@ hr { border:0; border-top:1px solid var(--line); margin:1.2rem 0; }
 .sec .text>p:first-child { margin-top:0; }
 .sec.-analogy .text { background:var(--surface); border:1px solid var(--line); border-radius:3px; padding:14px 18px; }
 .sec.-task .text { background:var(--sunken); border:1px dashed var(--line); border-radius:3px; padding:12px 16px; }
+/* Карта мест - конспект слоя на полстраницы: где писать, чем запустить, где смотреть. Выделена, чтобы читалась первой */
+.sec.-map .text { background:var(--sunken); border-left:3px solid var(--accent); border-radius:0 3px 3px 0; padding:14px 18px; }
+.sec.-map .text p { margin:.55em 0; }
 .sec.-questions .text>p>strong { display:block; margin-top:1rem; font-family:Bitter,Georgia,serif; font-size:16px; }
 .sec .steps { background:var(--surface); border:1px solid var(--line); border-radius:3px; padding:6px; }
 .pager { display:flex; justify-content:space-between; gap:16px; margin-top:48px; padding-top:20px; border-top:1px solid var(--line); font-size:14px; }
@@ -168,7 +171,7 @@ hr { border:0; border-top:1px solid var(--line); margin:1.2rem 0; }
     <h2>🖥 Стенд с нуля</h2>
     <div class="prog">пройдено <span id="pct">0%</span> · <span id="steps-done">0</span>/<span id="steps-all">0</span> шагов</div>
     <div class="bar" data-total><span></span></div>
-    <nav><b>В этом слое</b><a href="#analogy"><span class="i">🎭</span>Аналогия</a><a href="#theory"><span class="i">📖</span>Теория</a><a href="#practice"><span class="i">🔧</span>Практика</a><a href="#break"><span class="i">💥</span>Сломай намеренно</a><a href="#task"><span class="i">✅</span>Задание</a><a href="#questions"><span class="i">❓</span>Вопросы с ответами</a></nav>
+    <nav><b>В этом слое</b><a href="#analogy"><span class="i">🎭</span>Аналогия</a><a href="#map"><span class="i">🗺</span>Карта мест</a><a href="#theory"><span class="i">📖</span>Теория</a><a href="#practice"><span class="i">🔧</span>Практика</a><a href="#break"><span class="i">💥</span>Сломай намеренно</a><a href="#task"><span class="i">✅</span>Задание</a><a href="#questions"><span class="i">❓</span>Вопросы с ответами</a></nav>
     <nav class="-siblings"><b>Слои</b><a href="../0/" class="" data-phase="0"><span class="n">00</span>Стенд и Linux-база</a><a href="../1/" class="" data-phase="1"><span class="n">01</span>Nginx и TLS</a><a href="../2/" class="" data-phase="2"><span class="n">02</span>CI/CD</a><a href="../3/" class="" data-phase="3"><span class="n">03</span>Мониторинг с нуля</a><a href="../4/" class="" data-phase="4"><span class="n">04</span>Эксплуатация PostgreSQL</a><a href="../5/" class="" data-phase="5"><span class="n">05</span>Релизы, тестирование ППО и приёмка</a><a href="../6/" class="" data-phase="6"><span class="n">06</span>Kubernetes</a><a href="../7/" class="" data-phase="7"><span class="n">07</span>ClickHouse обзорно</a><a href="../8/" class="" data-phase="8"><span class="n">08</span>Python и автоматизация</a><a href="../9/" class="-cur" data-phase="9"><span class="n">09</span>Linux фоном</a></nav>
   </aside>
   <main class="content">
@@ -176,7 +179,18 @@ hr { border:0; border-top:1px solid var(--line); margin:1.2rem 0; }
     <h1>Linux фоном</h1>
     <p class="lead">по 20 минут в день, весь месяц · вт 15.09</p>
     <section class="sec -analogy" id="analogy"><h2><span class="i">🎭</span>Аналогия</h2><div class="text"><p>Иностранный язык. Грамматику можно выучить за неделю, беглость набирается только ежедневными двадцатью минутами. С командной строкой так же: список команд запоминается быстро, уверенность приходит от повторения.</p>
-<p>Иван прямо сказал, что Linux его раздражает. Поэтому малыми дозами и только то, что спрашивают.</p></div></section><section class="sec -theory" id="theory"><h2><span class="i">📖</span>Теория</h2><div class="text"><h3>Неделя 1. Файловая система и права</h3>
+<p>Иван прямо сказал, что Linux его раздражает. Поэтому малыми дозами и только то, что спрашивают.</p></div></section><section class="sec -map" id="map"><h2><span class="i">🗺</span>Карта мест</h2><div class="text"><p><strong>Сделать:</strong> по 20 минут в день - права и файловая система, сеть, планировщик и сигналы, logrotate и strace; в конце - разведчик как systemd-сервис с таймером.</p>
+<p><strong>Понять:</strong> в Linux всё - либо файл, либо процесс. Три темы, вокруг которых крутятся вопросы на собеседовании: права (кто что может), сигналы (как процесс умирает), порты (кто кого слушает).</p>
+<p><strong>Где писать:</strong> терминал сервера; <code>/etc/systemd/system/scout.service</code> и <code>scout.timer</code>.</p>
+<p><strong>Чем запустить:</strong> команда дня на реальной задаче; <code>sudo systemctl enable --now scout.timer</code>.</p>
+<p><strong>Где смотреть результат:</strong></p>
+<pre><code class="language-bash">ls -l файл                    # права и владелец
+ss -tlnp                      # порты
+systemctl list-timers         # когда таймер сработает в следующий раз
+journalctl -u scout -n 30     # что сделал последний запуск
+strace -p PID                 # что процесс делает прямо сейчас
+</code></pre>
+<p><strong>Как понять, что получилось:</strong> воспроизвёл «сломай намеренно» дня и объяснил текст ошибки своими словами; разведчик собирает вакансии по таймеру без твоего участия, и это видно в <code>journalctl</code>.</p></div></section><section class="sec -theory" id="theory"><h2><span class="i">📖</span>Теория</h2><div class="text"><h3>Неделя 1. Файловая система и права</h3>
 <pre><code class="language-bash">ls -l                      # -rw-r--r-- 1 ivan devs
 chmod 600 ~/.ssh/id_ed25519
 chown ivan:devs file.txt

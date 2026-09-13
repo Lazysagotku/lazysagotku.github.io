@@ -144,6 +144,9 @@ hr { border:0; border-top:1px solid var(--line); margin:1.2rem 0; }
 .sec .text>p:first-child { margin-top:0; }
 .sec.-analogy .text { background:var(--surface); border:1px solid var(--line); border-radius:3px; padding:14px 18px; }
 .sec.-task .text { background:var(--sunken); border:1px dashed var(--line); border-radius:3px; padding:12px 16px; }
+/* Карта мест - конспект слоя на полстраницы: где писать, чем запустить, где смотреть. Выделена, чтобы читалась первой */
+.sec.-map .text { background:var(--sunken); border-left:3px solid var(--accent); border-radius:0 3px 3px 0; padding:14px 18px; }
+.sec.-map .text p { margin:.55em 0; }
 .sec.-questions .text>p>strong { display:block; margin-top:1rem; font-family:Bitter,Georgia,serif; font-size:16px; }
 .sec .steps { background:var(--surface); border:1px solid var(--line); border-radius:3px; padding:6px; }
 .pager { display:flex; justify-content:space-between; gap:16px; margin-top:48px; padding-top:20px; border-top:1px solid var(--line); font-size:14px; }
@@ -168,14 +171,26 @@ hr { border:0; border-top:1px solid var(--line); margin:1.2rem 0; }
     <h2>🖥 Стенд с нуля</h2>
     <div class="prog">пройдено <span id="pct">0%</span> · <span id="steps-done">0</span>/<span id="steps-all">0</span> шагов</div>
     <div class="bar" data-total><span></span></div>
-    <nav><b>В этом слое</b><a href="#analogy"><span class="i">🎭</span>Аналогия</a><a href="#theory"><span class="i">📖</span>Теория</a><a href="#practice"><span class="i">🔧</span>Практика</a><a href="#break"><span class="i">💥</span>Сломай намеренно</a><a href="#task"><span class="i">✅</span>Задание</a><a href="#life"><span class="i">🌍</span>Из жизни</a><a href="#questions"><span class="i">❓</span>Вопросы с ответами</a></nav>
+    <nav><b>В этом слое</b><a href="#analogy"><span class="i">🎭</span>Аналогия</a><a href="#map"><span class="i">🗺</span>Карта мест</a><a href="#theory"><span class="i">📖</span>Теория</a><a href="#practice"><span class="i">🔧</span>Практика</a><a href="#break"><span class="i">💥</span>Сломай намеренно</a><a href="#task"><span class="i">✅</span>Задание</a><a href="#life"><span class="i">🌍</span>Из жизни</a><a href="#questions"><span class="i">❓</span>Вопросы с ответами</a></nav>
     <nav class="-siblings"><b>Слои</b><a href="../0/" class="-cur" data-phase="0"><span class="n">00</span>Стенд и Linux-база</a><a href="../1/" class="" data-phase="1"><span class="n">01</span>Nginx и TLS</a><a href="../2/" class="" data-phase="2"><span class="n">02</span>CI/CD</a><a href="../3/" class="" data-phase="3"><span class="n">03</span>Мониторинг с нуля</a><a href="../4/" class="" data-phase="4"><span class="n">04</span>Эксплуатация PostgreSQL</a><a href="../5/" class="" data-phase="5"><span class="n">05</span>Релизы, тестирование ППО и приёмка</a><a href="../6/" class="" data-phase="6"><span class="n">06</span>Kubernetes</a><a href="../7/" class="" data-phase="7"><span class="n">07</span>ClickHouse обзорно</a><a href="../8/" class="" data-phase="8"><span class="n">08</span>Python и автоматизация</a><a href="../9/" class="" data-phase="9"><span class="n">09</span>Linux фоном</a></nav>
   </aside>
   <main class="content">
     <div class="topbar"><b>Слой 0. Стенд и Linux-база</b><span><span id="cur-done">0</span> из <span id="cur-all">10</span> шагов пройдено</span></div>
     <h1>Стенд и Linux-база</h1>
     <p class="lead">день 1, 2 часа · чт 10.09</p>
-    <section class="sec -analogy" id="analogy"><h2><span class="i">🎭</span>Аналогия</h2><div class="text"><p>Пустая квартира после ремонта: стены есть, розетки есть, мебели нет. Прежде чем завозить технику, нужно поставить дверь с замком и понять, где щиток.</p></div></section><section class="sec -theory" id="theory"><h2><span class="i">📖</span>Теория</h2><div class="text"><h3>Про площадку - решено 01.09</h3>
+    <section class="sec -analogy" id="analogy"><h2><span class="i">🎭</span>Аналогия</h2><div class="text"><p>Пустая квартира после ремонта: стены есть, розетки есть, мебели нет. Прежде чем завозить технику, нужно поставить дверь с замком и понять, где щиток.</p></div></section><section class="sec -map" id="map"><h2><span class="i">🗺</span>Карта мест</h2><div class="text"><p><strong>Сделать:</strong> закрыть вход root-ом и по паролю, включить файрвол, поставить Docker, оформить трекер как systemd-сервис.</p>
+<p><strong>Понять:</strong> сервер - это процессы под управлением systemd. Всё, что ты делаешь, - либо команда в терминале (выполнилась сразу), либо файл конфига в <code>/etc</code> (это appsettings.json сервера: поменял, перезапустил сервис, заработало иначе). Результат виден только через три вещи: статус сервиса, его логи, открытые порты.</p>
+<p><strong>Где писать:</strong> команды - терминал под <code>ivan</code>; конфиги - <code>/etc/ssh/sshd_config.d/*.conf</code>, <code>/etc/systemd/system/*.service</code>; файрвол - командами <code>ufw</code>. Удобнее всего из VS Code: Remote-SSH → <code>ivan@сервер</code> → открыть <code>/etc</code>. Слева файлы, внизу терминал - как проект на C#.</p>
+<p><strong>Чем запустить:</strong> <code>sudo systemctl reload ssh</code>, <code>sudo systemctl daemon-reload &amp;&amp; sudo systemctl enable --now имя</code>, <code>sudo ufw enable</code>. Это «пересобрать и перезапустить».</p>
+<p><strong>Где смотреть результат:</strong></p>
+<pre><code class="language-bash">sudo sshd -T | grep -iE &quot;permitrootlogin|passwordauthentication&quot;   # что реально действует в SSH
+sudo ufw status verbose        # что открыто снаружи
+systemctl status имя           # жив ли сервис: active (running)
+journalctl -u имя -n 30        # его последние 30 строк логов - Console.WriteLine сервера
+ss -tlnp                       # кто на каких портах слушает
+docker ps                      # какие контейнеры живы
+</code></pre>
+<p><strong>Как понять, что получилось:</strong> <code>ssh root@сервер</code> с компа отвечает <code>Permission denied (publickey)</code>; <code>docker run hello-world</code> печатает приветствие; <code>systemctl status tracker</code> зелёный, а <code>curl localhost:8000/health</code> отвечает.</p></div></section><section class="sec -theory" id="theory"><h2><span class="i">📖</span>Теория</h2><div class="text"><h3>Про площадку - решено 01.09</h3>
 <p>Берём <strong>облачный VPS</strong>. Разница с домашней машиной принципиальная: домашний стенд видит только сам Иван, а VPS с белым IP можно показать работающим - дать ссылку на собственный трекер за nginx с настоящим сертификатом, на Grafana с живыми метриками. На собеседовании «вот, откройте» работает совсем не так, как «у меня локально поднято».</p>
 <p>⚠️ Облако здесь - <strong>инструмент</strong>. Поднимать своё облако на OpenStack или Proxmox не надо: это отдельная профессия, и ни в одной из разобранных вакансий её не спрашивали.</p>
 <h3>💳 Что купить - сверено 11.09.2026</h3>

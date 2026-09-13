@@ -144,6 +144,9 @@ hr { border:0; border-top:1px solid var(--line); margin:1.2rem 0; }
 .sec .text>p:first-child { margin-top:0; }
 .sec.-analogy .text { background:var(--surface); border:1px solid var(--line); border-radius:3px; padding:14px 18px; }
 .sec.-task .text { background:var(--sunken); border:1px dashed var(--line); border-radius:3px; padding:12px 16px; }
+/* Карта мест - конспект слоя на полстраницы: где писать, чем запустить, где смотреть. Выделена, чтобы читалась первой */
+.sec.-map .text { background:var(--sunken); border-left:3px solid var(--accent); border-radius:0 3px 3px 0; padding:14px 18px; }
+.sec.-map .text p { margin:.55em 0; }
 .sec.-questions .text>p>strong { display:block; margin-top:1rem; font-family:Bitter,Georgia,serif; font-size:16px; }
 .sec .steps { background:var(--surface); border:1px solid var(--line); border-radius:3px; padding:6px; }
 .pager { display:flex; justify-content:space-between; gap:16px; margin-top:48px; padding-top:20px; border-top:1px solid var(--line); font-size:14px; }
@@ -267,6 +270,10 @@ hr { border:0; border-top:1px solid var(--line); margin:1.2rem 0; }
 <td>бытовой образ до всякой теории</td>
 </tr>
 <tr>
+<td>🗺 <strong>Карта мест</strong></td>
+<td>коротко: что сделать, что понять, где писать, чем запустить, где смотреть результат. Это конспект слоя на полстраницы - сначала он, потом всё остальное</td>
+</tr>
+<tr>
 <td>📖 <strong>Теория</strong></td>
 <td>развёрнуто, с таблицами сравнения</td>
 </tr>
@@ -292,7 +299,7 @@ hr { border:0; border-top:1px solid var(--line); margin:1.2rem 0; }
 </tr>
 </tbody>
 </table>
-<p>Блок «сломай намеренно» - главный. Разница между «читал» и «помню, как это выглядит» слышна в первые двадцать секунд ответа на собеседовании.</p>
+<p>Блок «карта мест» появился 13.09 по просьбе Ивана: в C#-фазах было понятно, где код, чем запустить и где увидеть результат, а на сервере эти три места не подписаны. Карта их подписывает. Блок «сломай намеренно» - главный. Разница между «читал» и «помню, как это выглядит» слышна в первые двадцать секунд ответа на собеседовании.</p>
 <h2>⚠️ Важное уточнение прицела</h2>
 <p>Я прошёлся по реальным банкам вопросов. Собеседование <strong>DevOps-инженера</strong> в Сбере в 2026 включает: eBPF для мониторинга трафика, cgroups v1 против v2, seccomp-профили, Crossplane, написание кастомного контроллера на Go, Supply Chain Security с подписыванием образов. Статистика оттуда же: оффер получает один из двенадцати.</p>
 <p><strong>Мы туда не целимся.</strong> Наша цель - роли сопровождения и эксплуатации, где Kubernetes нужен на уровне «читаю манифесты, деплою, разбираю инцидент». Это принципиально другой объём: недели, а не годы.</p>

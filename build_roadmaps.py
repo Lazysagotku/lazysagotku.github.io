@@ -92,12 +92,12 @@ SIBLINGS = {
 
 # ---------------------------------------------------------------- разбор
 
-SECTION_KINDS = {"🎭": "analogy", "📖": "theory", "🔧": "practice", "💥": "break",
+SECTION_KINDS = {"🎭": "analogy", "🗺": "map", "📖": "theory", "🔧": "practice", "💥": "break",
                  "✅": "task", "🌍": "life", "❓": "questions"}
-SECTION_TITLES = {"analogy": "Аналогия", "theory": "Теория", "practice": "Практика",
+SECTION_TITLES = {"analogy": "Аналогия", "map": "Карта мест", "theory": "Теория", "practice": "Практика",
                   "break": "Сломай намеренно", "task": "Задание", "life": "Из жизни",
                   "questions": "Вопросы с ответами"}
-ICONS = {"analogy": "🎭", "theory": "📖", "practice": "🔧", "break": "💥",
+ICONS = {"analogy": "🎭", "map": "🗺", "theory": "📖", "practice": "🔧", "break": "💥",
          "task": "✅", "life": "🌍", "questions": "❓", "other": "▪"}
 
 HEAD_RE = re.compile(r"^# (\S+) (?:Слой|Фаза) (\d+)\. (.+?)(?: \((.+)\))?\s*$")
@@ -455,6 +455,9 @@ hr { border:0; border-top:1px solid var(--line); margin:1.2rem 0; }
 .sec .text>p:first-child { margin-top:0; }
 .sec.-analogy .text { background:var(--surface); border:1px solid var(--line); border-radius:3px; padding:14px 18px; }
 .sec.-task .text { background:var(--sunken); border:1px dashed var(--line); border-radius:3px; padding:12px 16px; }
+/* Карта мест - конспект слоя на полстраницы: где писать, чем запустить, где смотреть. Выделена, чтобы читалась первой */
+.sec.-map .text { background:var(--sunken); border-left:3px solid var(--accent); border-radius:0 3px 3px 0; padding:14px 18px; }
+.sec.-map .text p { margin:.55em 0; }
 .sec.-questions .text>p>strong { display:block; margin-top:1rem; font-family:Bitter,Georgia,serif; font-size:16px; }
 .sec .steps { background:var(--surface); border:1px solid var(--line); border-radius:3px; padding:6px; }
 .pager { display:flex; justify-content:space-between; gap:16px; margin-top:48px; padding-top:20px; border-top:1px solid var(--line); font-size:14px; }

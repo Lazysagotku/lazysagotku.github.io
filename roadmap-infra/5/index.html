@@ -144,6 +144,9 @@ hr { border:0; border-top:1px solid var(--line); margin:1.2rem 0; }
 .sec .text>p:first-child { margin-top:0; }
 .sec.-analogy .text { background:var(--surface); border:1px solid var(--line); border-radius:3px; padding:14px 18px; }
 .sec.-task .text { background:var(--sunken); border:1px dashed var(--line); border-radius:3px; padding:12px 16px; }
+/* Карта мест - конспект слоя на полстраницы: где писать, чем запустить, где смотреть. Выделена, чтобы читалась первой */
+.sec.-map .text { background:var(--sunken); border-left:3px solid var(--accent); border-radius:0 3px 3px 0; padding:14px 18px; }
+.sec.-map .text p { margin:.55em 0; }
 .sec.-questions .text>p>strong { display:block; margin-top:1rem; font-family:Bitter,Georgia,serif; font-size:16px; }
 .sec .steps { background:var(--surface); border:1px solid var(--line); border-radius:3px; padding:6px; }
 .pager { display:flex; justify-content:space-between; gap:16px; margin-top:48px; padding-top:20px; border-top:1px solid var(--line); font-size:14px; }
@@ -168,7 +171,7 @@ hr { border:0; border-top:1px solid var(--line); margin:1.2rem 0; }
     <h2>🖥 Стенд с нуля</h2>
     <div class="prog">пройдено <span id="pct">0%</span> · <span id="steps-done">0</span>/<span id="steps-all">0</span> шагов</div>
     <div class="bar" data-total><span></span></div>
-    <nav><b>В этом слое</b><a href="#analogy"><span class="i">🎭</span>Аналогия</a><a href="#theory"><span class="i">📖</span>Теория</a><a href="#practice"><span class="i">🔧</span>Практика</a><a href="#break"><span class="i">💥</span>Сломай намеренно</a><a href="#task"><span class="i">✅</span>Задание</a><a href="#life"><span class="i">🌍</span>Из жизни</a><a href="#questions"><span class="i">❓</span>Вопросы с ответами</a></nav>
+    <nav><b>В этом слое</b><a href="#analogy"><span class="i">🎭</span>Аналогия</a><a href="#map"><span class="i">🗺</span>Карта мест</a><a href="#theory"><span class="i">📖</span>Теория</a><a href="#practice"><span class="i">🔧</span>Практика</a><a href="#break"><span class="i">💥</span>Сломай намеренно</a><a href="#task"><span class="i">✅</span>Задание</a><a href="#life"><span class="i">🌍</span>Из жизни</a><a href="#questions"><span class="i">❓</span>Вопросы с ответами</a></nav>
     <nav class="-siblings"><b>Слои</b><a href="../0/" class="" data-phase="0"><span class="n">00</span>Стенд и Linux-база</a><a href="../1/" class="" data-phase="1"><span class="n">01</span>Nginx и TLS</a><a href="../2/" class="" data-phase="2"><span class="n">02</span>CI/CD</a><a href="../3/" class="" data-phase="3"><span class="n">03</span>Мониторинг с нуля</a><a href="../4/" class="" data-phase="4"><span class="n">04</span>Эксплуатация PostgreSQL</a><a href="../5/" class="-cur" data-phase="5"><span class="n">05</span>Релизы, тестирование ППО и приёмка</a><a href="../6/" class="" data-phase="6"><span class="n">06</span>Kubernetes</a><a href="../7/" class="" data-phase="7"><span class="n">07</span>ClickHouse обзорно</a><a href="../8/" class="" data-phase="8"><span class="n">08</span>Python и автоматизация</a><a href="../9/" class="" data-phase="9"><span class="n">09</span>Linux фоном</a></nav>
   </aside>
   <main class="content">
@@ -176,7 +179,12 @@ hr { border:0; border-top:1px solid var(--line); margin:1.2rem 0; }
     <h1>Релизы, тестирование ППО и приёмка</h1>
     <p class="lead">дни 14-15, 4 часа · вт 15.09</p>
     <section class="sec -analogy" id="analogy"><h2><span class="i">🎭</span>Аналогия</h2><div class="text"><p>Приёмка квартиры у застройщика. Дом построен, ключи готовы, но пока не прошёл обход с листом замечаний - подписывать акт нельзя. Проверяют не то, красиво ли, а то, работает ли каждая розетка и не течёт ли стояк. Список проверок составлен заранее, иначе на месте вспомнишь половину.</p>
-<p><strong>Вторая аналогия, для управления изменениями.</strong> Ремонт в подъезде жилого дома. Сам ремонт может занять час, но делать его в восемь утра в будний день нельзя - все идут на работу. Поэтому есть согласованное окно, объявление за неделю и запасной план, если что-то пойдёт не так.</p></div></section><section class="sec -theory" id="theory"><h2><span class="i">📖</span>Теория</h2><div class="text"><h3>Словарь, который надо знать наизусть</h3>
+<p><strong>Вторая аналогия, для управления изменениями.</strong> Ремонт в подъезде жилого дома. Сам ремонт может занять час, но делать его в восемь утра в будний день нельзя - все идут на работу. Поэтому есть согласованное окно, объявление за неделю и запасной план, если что-то пойдёт не так.</p></div></section><section class="sec -map" id="map"><h2><span class="i">🗺</span>Карта мест</h2><div class="text"><p><strong>Сделать:</strong> четыре документа к трекеру - эксплуатационные требования, ПМИ, runbook, RFC на изменение - и провести ПСИ собственной выкатки по своей же ПМИ.</p>
+<p><strong>Понять:</strong> новых технологий здесь нет. Результат слоя - процедура, по которой другой человек проведёт релиз и восстановит сервис без тебя. Словарь (ППО, ПСИ, ПМИ, RFC, RTO, RPO, SLA/SLO) надо знать наизусть - в банке спрашивают словами, а не командами.</p>
+<p><strong>Где писать:</strong> папка <code>docs/</code> в репо трекера: <code>OPERATIONS.md</code>, <code>TEST_PLAN.md</code>, <code>RUNBOOK.md</code>, <code>RFC-001.md</code>. Обычный markdown.</p>
+<p><strong>Чем запустить:</strong> руками. Провести релиз строго по ПМИ, шаг за шагом, заполняя протокол; потом «сломать намеренно» и восстановить строго по runbook.</p>
+<p><strong>Где смотреть результат:</strong> заполненный протокол ПСИ с листом замечаний (минимум два найдётся); runbook, по которому ты сам поднял сервис после поломки, ни разу не открыв другой источник.</p>
+<p><strong>Как понять, что получилось:</strong> через неделю ты (или коллега) выкатываешь релиз по документам, не задавая ни одного вопроса, и все цифры в OPERATIONS.md (где логи, за сколько поднимается, что в бэкапе) совпадают с реальностью.</p></div></section><section class="sec -theory" id="theory"><h2><span class="i">📖</span>Теория</h2><div class="text"><h3>Словарь, который надо знать наизусть</h3>
 <table>
 <thead>
 <tr>
