@@ -147,6 +147,26 @@ hr { border:0; border-top:1px solid var(--line); margin:1.2rem 0; }
 /* Карта мест - конспект слоя на полстраницы: где писать, чем запустить, где смотреть. Выделена, чтобы читалась первой */
 .sec.-map .text { background:var(--sunken); border-left:3px solid var(--accent); border-radius:0 3px 3px 0; padding:14px 18px; }
 .sec.-map .text p { margin:.55em 0; }
+/* «О чём:» - строка-резюме под заголовком темы, как в курсах Stepik */
+blockquote.about { border-left:3px solid var(--accent); background:var(--sunken); margin:.4em 0 1em; padding:8px 14px; border-radius:0 3px 3px 0; }
+blockquote.about p { margin:0; }
+/* Проверь себя */
+.quiz .q { background:var(--surface); border:1px solid var(--line); border-radius:3px; padding:14px 18px; margin-bottom:12px; }
+.quiz .qt { margin:0 0 8px; font-weight:600; }
+.quiz .opt { display:flex; gap:10px; align-items:flex-start; padding:6px 8px; border-radius:3px; cursor:pointer; }
+.quiz .opt:hover { background:var(--sunken); }
+.quiz .q.-done .opt { cursor:default; }
+.quiz .opt.-right { background:color-mix(in oklab, #2f8f4e 14%, transparent); }
+.quiz .opt.-wrong { background:color-mix(in oklab, #c0392b 14%, transparent); }
+.quiz .why { display:none; margin-top:8px; padding:8px 12px; border-left:3px solid var(--accent); color:var(--muted); font-size:14px; }
+.quiz .why.-open { display:block; }
+.quiz-score { font-family:"JetBrains Mono",monospace; font-size:12px; color:var(--muted); }
+/* Домашнее задание */
+.hw { margin-top:16px; border-top:1px dashed var(--line); padding-top:12px; }
+.hw-l { display:block; font-size:13px; color:var(--muted); margin-bottom:6px; }
+.hw-text { width:100%; box-sizing:border-box; font:inherit; font-size:14px; padding:8px 10px; border:1px solid var(--line); border-radius:3px; background:var(--surface); color:inherit; resize:vertical; }
+.hw-done { display:inline-flex; gap:8px; align-items:center; margin-top:8px; cursor:pointer; }
+.hw.-done { border-top-color:var(--accent); }
 .sec.-questions .text>p>strong { display:block; margin-top:1rem; font-family:Bitter,Georgia,serif; font-size:16px; }
 .sec .steps { background:var(--surface); border:1px solid var(--line); border-radius:3px; padding:6px; }
 .pager { display:flex; justify-content:space-between; gap:16px; margin-top:48px; padding-top:20px; border-top:1px solid var(--line); font-size:14px; }
@@ -171,7 +191,7 @@ hr { border:0; border-top:1px solid var(--line); margin:1.2rem 0; }
     <h2>🖥 Стенд с нуля</h2>
     <div class="prog">пройдено <span id="pct">0%</span> · <span id="steps-done">0</span>/<span id="steps-all">0</span> шагов</div>
     <div class="bar" data-total><span></span></div>
-    <nav><b>В этом слое</b><a href="#analogy"><span class="i">🎭</span>Аналогия</a><a href="#map"><span class="i">🗺</span>Карта мест</a><a href="#theory"><span class="i">📖</span>Теория</a><a href="#practice"><span class="i">🔧</span>Практика</a><a href="#break"><span class="i">💥</span>Сломай намеренно</a><a href="#task"><span class="i">✅</span>Задание</a><a href="#life"><span class="i">🌍</span>Из жизни</a><a href="#questions"><span class="i">❓</span>Вопросы с ответами</a></nav>
+    <nav><b>В этом слое</b><a href="#analogy"><span class="i">🎭</span>Аналогия</a><a href="#map"><span class="i">🗺</span>Карта мест</a><a href="#theory"><span class="i">📖</span>Теория</a><a href="#practice"><span class="i">🔧</span>Практика</a><a href="#break"><span class="i">💥</span>Сломай намеренно</a><a href="#quiz"><span class="i">🧪</span>Проверь себя</a><a href="#task"><span class="i">✅</span>Задание</a><a href="#life"><span class="i">🌍</span>Из жизни</a><a href="#questions"><span class="i">❓</span>Вопросы с ответами</a></nav>
     <nav class="-siblings"><b>Слои</b><a href="../0/" class="-cur" data-phase="0"><span class="n">00</span>Стенд и Linux-база</a><a href="../1/" class="" data-phase="1"><span class="n">01</span>Nginx и TLS</a><a href="../2/" class="" data-phase="2"><span class="n">02</span>CI/CD</a><a href="../3/" class="" data-phase="3"><span class="n">03</span>Мониторинг с нуля</a><a href="../4/" class="" data-phase="4"><span class="n">04</span>Эксплуатация PostgreSQL</a><a href="../5/" class="" data-phase="5"><span class="n">05</span>Релизы, тестирование ППО и приёмка</a><a href="../6/" class="" data-phase="6"><span class="n">06</span>Kubernetes</a><a href="../7/" class="" data-phase="7"><span class="n">07</span>ClickHouse обзорно</a><a href="../8/" class="" data-phase="8"><span class="n">08</span>Python и автоматизация</a><a href="../9/" class="" data-phase="9"><span class="n">09</span>Linux фоном</a></nav>
   </aside>
   <main class="content">
@@ -242,17 +262,32 @@ docker ps                      # какие контейнеры живы
 <p>Образ: <strong>Ubuntu 24.04 LTS</strong>. Стабильно, документации больше всех, совпадает с тем, что стоит в большинстве компаний.</p>
 <p><strong>Пошаговая инструкция по покупке</strong> - в разделе 🔧 Практика ниже.</p>
 <h3>SSH: почему ключ вместо пароля</h3>
+<blockquote class="about">
+<p><b>О чём:</b> пароль подбирают, ключ - нет; приватная половина живёт только на твоём компе, сервер знает лишь публичную.</p>
+</blockquote>
 <p>Пароль подбирают перебором. Ключ - пара из двух файлов: приватный остаётся у тебя, публичный кладётся на сервер. Сервер задаёт задачу, которую можно решить только приватным ключом, и подбор здесь бесполезен.</p>
 <p>Открытый в интернет сервер получает <strong>тысячи попыток входа в сутки</strong> с первого же часа жизни. Это не преувеличение - в <code>/var/log/auth.log</code> это видно глазами.</p>
 <h3>sudo: почему не работать под root</h3>
+<blockquote class="about">
+<p><b>О чём:</b> под root одна опечатка стоит сервера, и в логах нет виноватого; sudo даёт права на одну команду и оставляет след.</p>
+</blockquote>
 <p>Под root любая опечатка выполняется без вопросов. <code>rm -rf /</code> не переспросит. Плюс в логах не видно, кто именно сделал: root - это все сразу.</p>
 <p><code>sudo</code> даёт разовое повышение и оставляет запись в <code>/var/log/auth.log</code> с именем пользователя.</p>
 <h3>ufw: политика «всё закрыто»</h3>
+<blockquote class="about">
+<p><b>О чём:</b> снаружи закрыто всё, кроме того, что разрешил явно; порядок «сначала 22, потом enable» - вопрос выживания.</p>
+</blockquote>
 <p>Правильный подход - запретить всё входящее и открыть точечно то, что нужно. Обратный порядок («открыто всё, закрываем опасное») ошибочен: перечислить всё опасное заранее невозможно.</p>
 <h3>systemd: что это и зачем</h3>
+<blockquote class="about">
+<p><b>О чём:</b> менеджер сервисов: поднимает после перезагрузки, перезапускает после падения, собирает логи в journal.</p>
+</blockquote>
 <p>Система инициализации. Отвечает на четыре вопроса: что запускать при загрузке, в каком порядке, что делать при падении, куда писать логи.</p>
 <p><strong>Аналогия для systemd.</strong> Завхоз здания: следит, чтобы нужное было включено, включает при старте, перезапускает то, что вырубилось.</p>
 <h3>Docker: контейнер против виртуальной машины</h3>
+<blockquote class="about">
+<p><b>О чём:</b> контейнер - изолированный процесс с чужими библиотеками на общем ядре; поднимается за секунду, а не за минуту.</p>
+</blockquote>
 <table>
 <thead>
 <tr>
@@ -534,15 +569,21 @@ journalctl -u hello -n 20                     # та же причина сло�
 </code></pre></li><li class="step -break" data-step="0-break-6"><input type="checkbox" id="s-0-break-6"><span class="box"></span><span class="txt">Убить процесс сервиса и увидеть, как systemd его поднимает</span><span class="more">подробнее</span></li><li class="step-body"><pre><code class="language-bash">systemctl show hello -p MainPID     # PID процесса
 sudo kill &lt;PID&gt;                     # SIGTERM
 sleep 6 &amp;&amp; systemctl status hello   # через RestartSec=5 - снова running, с новым PID
-</code></pre></li></ul></section><section class="sec -task" id="task"><h2><span class="i">✅</span>Задание</h2><div class="text"><ul>
-<li>Сервер, куда пускают только по ключу, root по SSH закрыт: <code>ssh root@сервер</code> отвечает <code>Permission denied</code>.</li>
-<li><code>ufw status verbose</code> показывает <code>deny incoming</code> и три открытых порта.</li>
-<li><code>docker compose up -d</code> поднимает PostgreSQL из своего файла, <code>docker compose ps</code> показывает его живым.</li>
-<li>Сервис <code>hello</code> работает под systemd с автозапуском, переживает <code>reboot</code> и <code>kill</code>.</li>
-<li>Можешь за тридцать секунд сказать про незнакомый сервер, здоров он или нет.</li>
-<li>В тетради: каждая команда слоя одной строкой - что делает.</li>
-</ul>
-<p><strong>Критерий готовности:</strong> объясняешь каждую строку unit-файла <code>hello</code> и знаешь, что делать при каждой из трёх веток диагностики.</p></div></section><section class="sec -life" id="life"><h2><span class="i">🌍</span>Из жизни</h2><div class="text"><p><strong>Про тысячи попыток входа.</strong> Свежий сервер с белым IP начинают перебирать в течение часа после появления в сети. Ботнеты сканируют весь диапазон IPv4 непрерывно. Отсюда правило: отключать вход по паролю сразу, не «когда-нибудь потом».</p>
+</code></pre></li></ul></section><section class="sec -quiz" id="quiz"><h2><span class="i">🧪</span>Проверь себя</h2><div class="quiz"><div class="q" data-q="0-1"><p class="qt">1. Команда <code>sudo echo "text" &gt; /etc/systemd/system/x.service</code> ответила «Permission denied». Почему?</p><label class="opt" data-ok="0"><input type="radio" name="q-0-1"><span>sudo не умеет работать с systemd</span></label><label class="opt" data-ok="1"><input type="radio" name="q-0-1"><span>sudo относится только к echo, а стрелку <code>&gt;</code> выполняет оболочка без прав root</span></label><label class="opt" data-ok="0"><input type="radio" name="q-0-1"><span>файл уже существует и защищён</span></label><label class="opt" data-ok="0"><input type="radio" name="q-0-1"><span>echo не умеет писать в файлы</span></label><div class="why">Почему: перенаправление делает твоя оболочка от имени ivan. Писать в системную папку - <code>sudo tee</code> или <code>sudo nano</code>.</div></div><div class="q" data-q="0-2"><p class="qt">2. <code>free -h</code> показывает <code>free</code> почти ноль. Это утечка памяти?</p><label class="opt" data-ok="0"><input type="radio" name="q-0-2"><span>да, надо срочно перезапускать сервисы</span></label><label class="opt" data-ok="0"><input type="radio" name="q-0-2"><span>да, если это длится больше часа</span></label><label class="opt" data-ok="1"><input type="radio" name="q-0-2"><span>нет, смотреть надо на <code>available</code>: Linux забирает свободную память под кэш файлов</span></label><label class="opt" data-ok="0"><input type="radio" name="q-0-2"><span>нет, <code>free</code> показывает только своп</span></label><div class="why">Почему: кэш отдаётся приложениям по первому требованию. Тревога - когда мал <code>available</code>.</div></div><div class="q" data-q="0-3"><p class="qt">3. Load average высокий, а CPU почти простаивает. Куда смотреть?</p><label class="opt" data-ok="0"><input type="radio" name="q-0-3"><span>в память - это OOM</span></label><label class="opt" data-ok="1"><input type="radio" name="q-0-3"><span>в диск - процессы в состоянии D ждут ввод-вывод и тоже считаются в load</span></label><label class="opt" data-ok="0"><input type="radio" name="q-0-3"><span>в сеть - это DDoS</span></label><label class="opt" data-ok="0"><input type="radio" name="q-0-3"><span>никуда, это норма для VPS</span></label><div class="why">Почему: в Linux load считает и ждущих диск. <code>top</code> покажет высокий <code>wa</code>, <code>ps</code> - процессы в <code>D</code>.</div></div><div class="q" data-q="0-4"><p class="qt">4. Диск заполнен, <code>du</code> не видит больших файлов. Что случилось?</p><label class="opt" data-ok="0"><input type="radio" name="q-0-4"><span><code>du</code> сломан, нужен <code>df</code></span></label><label class="opt" data-ok="1"><input type="radio" name="q-0-4"><span>файл удалён, но процесс держит его открытым - место не освободилось</span></label><label class="opt" data-ok="0"><input type="radio" name="q-0-4"><span>заполнены иноды, а не место</span></label><label class="opt" data-ok="0"><input type="radio" name="q-0-4"><span>это резерв под root в 5%</span></label><div class="why">Почему: <code>lsof | grep deleted</code> покажет процесс. Перезапустить его или обнулить через <code>/proc/&lt;PID&gt;/fd/&lt;N&gt;</code>.</div></div><div class="q" data-q="0-5"><p class="qt">5. Сервис упал, а systemd его не поднял. Какой строки скорее всего не хватает в unit-файле?</p><label class="opt" data-ok="0"><input type="radio" name="q-0-5"><span><code>After=network.target</code></span></label><label class="opt" data-ok="0"><input type="radio" name="q-0-5"><span><code>WantedBy=multi-user.target</code></span></label><label class="opt" data-ok="1"><input type="radio" name="q-0-5"><span><code>Restart=always</code></span></label><label class="opt" data-ok="0"><input type="radio" name="q-0-5"><span><code>Type=simple</code></span></label><div class="why">Почему: без <code>Restart</code> systemd только запускает и наблюдает. <code>WantedBy</code> отвечает за автозапуск при загрузке, не за перезапуск.</div></div><p class="quiz-score" data-total="5">верно <b>0</b> из 5</p></div></section><section class="sec -task" id="task"><h2><span class="i">✅</span>Задание</h2><div class="text"><p><strong>Задание</strong>
+1. Закрой вход root-ом и по паролю, проверь из третьего окна: <code>ssh root@сервер</code> → <code>Permission denied</code>.
+2. Включи файрвол так, чтобы снаружи отвечали только 22, 80 и 443.
+3. Подними PostgreSQL через свой <code>compose.yml</code>, зайди в него через <code>psql</code> и спроси версию.
+4. Оформи <code>hello</code> как systemd-сервис, перезагрузи сервер, убедись, что он поднялся сам.
+5. Пройди все шесть «сломай намеренно» и для каждого запиши одну строку: как выглядела поломка и чем починил.</p>
+<p><strong>Что должно получиться</strong>
+- <code>sudo sshd -T | grep -iE "permitrootlogin|passwordauthentication"</code> показывает оба <code>no</code>.
+- <code>sudo ufw status verbose</code> показывает <code>deny (incoming)</code> и три ALLOW.
+- <code>docker compose ps</code> показывает <code>db</code> со статусом running.
+- <code>systemctl status hello</code> после <code>reboot</code> - <code>active (running)</code>, <code>curl localhost:8000</code> отвечает.
+- В тетради: каждая команда слоя одной строкой - что делает, и шесть строк по поломкам.</p>
+<p><strong>Как сдать</strong>
+В поле ниже напиши своими словами, что попробовал, что сработало с первого раза, где застрял и как выбрался. Оценивается факт выполнения, а не красота.</p>
+<p><strong>Критерий готовности:</strong> объясняешь каждую строку unit-файла <code>hello</code> и за тридцать секунд говоришь про незнакомый сервер, здоров он или нет.</p><div class="hw" data-hw="0"><label class="hw-l">Что получилось - своими словами: что попробовал, что сработало, где застрял</label><textarea class="hw-text" rows="5" placeholder="Свободный ответ. Хранится в этом браузере, как и прогресс."></textarea><label class="hw-done"><input type="checkbox"> Сдано</label></div></div></section><section class="sec -life" id="life"><h2><span class="i">🌍</span>Из жизни</h2><div class="text"><p><strong>Про тысячи попыток входа.</strong> Свежий сервер с белым IP начинают перебирать в течение часа после появления в сети. Ботнеты сканируют весь диапазон IPv4 непрерывно. Отсюда правило: отключать вход по паролю сразу, не «когда-нибудь потом».</p>
 <p><strong>Про место на диске.</strong> По опыту Ивана самая частая причина «всё встало» - именно диск, забитый логами. Поэтому в его мониторинге всегда стоял отдельный алерт на заполнение. Это готовый ответ на «что мониторите в первую очередь».</p>
 <p><strong>Про <code>docker</code> в группе пользователя.</strong> Добавление в группу <code>docker</code> фактически равно правам root: через контейнер с примонтированным <code>/</code> можно сделать что угодно с хозяином. На собеседовании по безопасности это спрашивают, и правильный ответ - «знаю, на проде так не делают, там sudo с конкретными правилами».</p>
 <p><strong>Про steal time.</strong> На дешёвых VPS <code>st</code> в <code>top</code> показывает, сколько времени у тебя отобрал гипервизор ради соседей. Устойчивые 10-20 процентов означают перепроданный хост. Это причина, по которой замеры производительности на дешёвом VPS плавают.</p></div></section><section class="sec -questions" id="questions"><h2><span class="i">❓</span>Вопросы с ответами</h2><div class="text"><p><strong>Что смотришь первым делом на незнакомом сервере?</strong></p>
@@ -669,6 +710,37 @@ sleep 6 &amp;&amp; systemctl status hello   # через RestartSec=5 - снов
     const left = Math.round((new Date(DEADLINE) - today) / 86400000);
     $("days").textContent = left > 0 ? left : (left === 0 ? "сегодня" : "—");
   }
+  // Проверь себя: выбрал вариант - увидел, прав или нет, и почему. Хранится как q:<фаза>-<номер>.
+  document.querySelectorAll(".quiz .q").forEach(q => {
+    const id = "q:" + q.dataset.q;
+    const opts = [...q.querySelectorAll(".opt")];
+    const show = (picked) => {
+      opts.forEach(o => { o.classList.toggle("-right", o.dataset.ok === "1"); o.classList.toggle("-wrong", o === picked && o.dataset.ok !== "1"); });
+      const why = q.querySelector(".why"); if (why) why.classList.add("-open");
+      q.classList.add("-done");
+    };
+    opts.forEach((o, i) => o.querySelector("input").addEventListener("change", () => {
+      state[id] = { pick: i, ok: o.dataset.ok === "1" ? 1 : 0 }; save(state); show(o); score();
+    }));
+    const saved = state[id];
+    if (saved && opts[saved.pick]) { opts[saved.pick].querySelector("input").checked = true; show(opts[saved.pick]); }
+  });
+  function score() {
+    document.querySelectorAll(".quiz-score").forEach(sc => {
+      const quiz = sc.closest(".quiz");
+      const ok = [...quiz.querySelectorAll(".q")].filter(q => (state["q:" + q.dataset.q] || {}).ok).length;
+      sc.querySelector("b").textContent = ok;
+    });
+  }
+  score();
+  // Домашнее задание: свободный ответ и отметка «сдано». Хранится как hw:<фаза>.
+  document.querySelectorAll(".hw").forEach(hw => {
+    const id = "hw:" + hw.dataset.hw, ta = hw.querySelector(".hw-text"), done = hw.querySelector(".hw-done input");
+    const saved = state[id] || {};
+    ta.value = saved.text || ""; done.checked = !!saved.done; hw.classList.toggle("-done", !!saved.done);
+    const put = () => { state[id] = { text: ta.value, done: done.checked ? 1 : 0 }; save(state); hw.classList.toggle("-done", done.checked); };
+    ta.addEventListener("input", put); done.addEventListener("change", put);
+  });
   paint();
   const first = [...document.querySelectorAll(".layer[data-phase]")].find(l => !l.classList.contains("-complete") && !l.classList.contains("-skipped"));
   if (first) first.open = true;

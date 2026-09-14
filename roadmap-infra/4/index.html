@@ -147,6 +147,26 @@ hr { border:0; border-top:1px solid var(--line); margin:1.2rem 0; }
 /* Карта мест - конспект слоя на полстраницы: где писать, чем запустить, где смотреть. Выделена, чтобы читалась первой */
 .sec.-map .text { background:var(--sunken); border-left:3px solid var(--accent); border-radius:0 3px 3px 0; padding:14px 18px; }
 .sec.-map .text p { margin:.55em 0; }
+/* «О чём:» - строка-резюме под заголовком темы, как в курсах Stepik */
+blockquote.about { border-left:3px solid var(--accent); background:var(--sunken); margin:.4em 0 1em; padding:8px 14px; border-radius:0 3px 3px 0; }
+blockquote.about p { margin:0; }
+/* Проверь себя */
+.quiz .q { background:var(--surface); border:1px solid var(--line); border-radius:3px; padding:14px 18px; margin-bottom:12px; }
+.quiz .qt { margin:0 0 8px; font-weight:600; }
+.quiz .opt { display:flex; gap:10px; align-items:flex-start; padding:6px 8px; border-radius:3px; cursor:pointer; }
+.quiz .opt:hover { background:var(--sunken); }
+.quiz .q.-done .opt { cursor:default; }
+.quiz .opt.-right { background:color-mix(in oklab, #2f8f4e 14%, transparent); }
+.quiz .opt.-wrong { background:color-mix(in oklab, #c0392b 14%, transparent); }
+.quiz .why { display:none; margin-top:8px; padding:8px 12px; border-left:3px solid var(--accent); color:var(--muted); font-size:14px; }
+.quiz .why.-open { display:block; }
+.quiz-score { font-family:"JetBrains Mono",monospace; font-size:12px; color:var(--muted); }
+/* Домашнее задание */
+.hw { margin-top:16px; border-top:1px dashed var(--line); padding-top:12px; }
+.hw-l { display:block; font-size:13px; color:var(--muted); margin-bottom:6px; }
+.hw-text { width:100%; box-sizing:border-box; font:inherit; font-size:14px; padding:8px 10px; border:1px solid var(--line); border-radius:3px; background:var(--surface); color:inherit; resize:vertical; }
+.hw-done { display:inline-flex; gap:8px; align-items:center; margin-top:8px; cursor:pointer; }
+.hw.-done { border-top-color:var(--accent); }
 .sec.-questions .text>p>strong { display:block; margin-top:1rem; font-family:Bitter,Georgia,serif; font-size:16px; }
 .sec .steps { background:var(--surface); border:1px solid var(--line); border-radius:3px; padding:6px; }
 .pager { display:flex; justify-content:space-between; gap:16px; margin-top:48px; padding-top:20px; border-top:1px solid var(--line); font-size:14px; }
@@ -657,7 +677,7 @@ UPDATE vacancies SET priority = priority WHERE id = 1;
 <li>Запрос-алерт «джоба не отработала за сутки», выведенный в Grafana.</li>
 <li>Можешь вслух разобрать план <code>EXPLAIN ANALYZE</code> по шагам.</li>
 </ul>
-<p><strong>Критерий готовности:</strong> показываешь замер «было-стало» по своему запросу и объясняешь, что именно изменилось в плане и почему.</p></div></section><section class="sec -life" id="life"><h2><span class="i">🌍</span>Из жизни</h2><div class="text"><p><strong>Опыт Ивана.</strong> Хранимые процедуры на PostgreSQL и MS SQL, включая замену громоздких легаси-процедур на компактные и быстрые. Легаси-процедуры в TimeReport считались долго - переписал компактнее и с правильными индексами. Это готовая история для вопроса про оптимизацию, и она своя.</p>
+<p><strong>Критерий готовности:</strong> показываешь замер «было-стало» по своему запросу и объясняешь, что именно изменилось в плане и почему.</p><div class="hw" data-hw="4"><label class="hw-l">Что получилось - своими словами: что попробовал, что сработало, где застрял</label><textarea class="hw-text" rows="5" placeholder="Свободный ответ. Хранится в этом браузере, как и прогресс."></textarea><label class="hw-done"><input type="checkbox"> Сдано</label></div></div></section><section class="sec -life" id="life"><h2><span class="i">🌍</span>Из жизни</h2><div class="text"><p><strong>Опыт Ивана.</strong> Хранимые процедуры на PostgreSQL и MS SQL, включая замену громоздких легаси-процедур на компактные и быстрые. Легаси-процедуры в TimeReport считались долго - переписал компактнее и с правильными индексами. Это готовая история для вопроса про оптимизацию, и она своя.</p>
 <p><strong>Про <code>idle in transaction</code> в проде.</strong> Типичный сценарий: приложение открыло транзакцию, ушло за данными во внешний сервис, сервис не отвечает, таймаута нет. Транзакция висит час. За этот час autovacuum не убирает мёртвые строки по всей базе, таблицы пухнут, запросы замедляются. Внешне выглядит как «база вдруг стала тормозить без причины».</p>
 <p><strong>Про миграции в банке.</strong> Причина, по которой <code>ALTER TABLE</code> катят ночью, не в самом <code>ALTER</code> - он часто мгновенный. Причина в очереди блокировок: он встаёт за любым долгим запросом и держит за собой всех остальных. Днём под нагрузкой это означает остановку сервиса на время самого долгого запроса.</p>
 <p><strong>Про джобы, которые «не запустились».</strong> Мониторинг обычно ловит упавшие задания и не ловит незапустившиеся: нет запуска - нет ошибки - нет алерта. Обнаруживается через день, когда кто-то замечает вчерашние цифры. Поэтому проверка «была ли успешная отработка за последние N часов» важнее проверки на ошибку.</p>
@@ -793,6 +813,37 @@ UPDATE vacancies SET priority = priority WHERE id = 1;
     const left = Math.round((new Date(DEADLINE) - today) / 86400000);
     $("days").textContent = left > 0 ? left : (left === 0 ? "сегодня" : "—");
   }
+  // Проверь себя: выбрал вариант - увидел, прав или нет, и почему. Хранится как q:<фаза>-<номер>.
+  document.querySelectorAll(".quiz .q").forEach(q => {
+    const id = "q:" + q.dataset.q;
+    const opts = [...q.querySelectorAll(".opt")];
+    const show = (picked) => {
+      opts.forEach(o => { o.classList.toggle("-right", o.dataset.ok === "1"); o.classList.toggle("-wrong", o === picked && o.dataset.ok !== "1"); });
+      const why = q.querySelector(".why"); if (why) why.classList.add("-open");
+      q.classList.add("-done");
+    };
+    opts.forEach((o, i) => o.querySelector("input").addEventListener("change", () => {
+      state[id] = { pick: i, ok: o.dataset.ok === "1" ? 1 : 0 }; save(state); show(o); score();
+    }));
+    const saved = state[id];
+    if (saved && opts[saved.pick]) { opts[saved.pick].querySelector("input").checked = true; show(opts[saved.pick]); }
+  });
+  function score() {
+    document.querySelectorAll(".quiz-score").forEach(sc => {
+      const quiz = sc.closest(".quiz");
+      const ok = [...quiz.querySelectorAll(".q")].filter(q => (state["q:" + q.dataset.q] || {}).ok).length;
+      sc.querySelector("b").textContent = ok;
+    });
+  }
+  score();
+  // Домашнее задание: свободный ответ и отметка «сдано». Хранится как hw:<фаза>.
+  document.querySelectorAll(".hw").forEach(hw => {
+    const id = "hw:" + hw.dataset.hw, ta = hw.querySelector(".hw-text"), done = hw.querySelector(".hw-done input");
+    const saved = state[id] || {};
+    ta.value = saved.text || ""; done.checked = !!saved.done; hw.classList.toggle("-done", !!saved.done);
+    const put = () => { state[id] = { text: ta.value, done: done.checked ? 1 : 0 }; save(state); hw.classList.toggle("-done", done.checked); };
+    ta.addEventListener("input", put); done.addEventListener("change", put);
+  });
   paint();
   const first = [...document.querySelectorAll(".layer[data-phase]")].find(l => !l.classList.contains("-complete") && !l.classList.contains("-skipped"));
   if (first) first.open = true;

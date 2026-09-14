@@ -147,6 +147,26 @@ hr { border:0; border-top:1px solid var(--line); margin:1.2rem 0; }
 /* Карта мест - конспект слоя на полстраницы: где писать, чем запустить, где смотреть. Выделена, чтобы читалась первой */
 .sec.-map .text { background:var(--sunken); border-left:3px solid var(--accent); border-radius:0 3px 3px 0; padding:14px 18px; }
 .sec.-map .text p { margin:.55em 0; }
+/* «О чём:» - строка-резюме под заголовком темы, как в курсах Stepik */
+blockquote.about { border-left:3px solid var(--accent); background:var(--sunken); margin:.4em 0 1em; padding:8px 14px; border-radius:0 3px 3px 0; }
+blockquote.about p { margin:0; }
+/* Проверь себя */
+.quiz .q { background:var(--surface); border:1px solid var(--line); border-radius:3px; padding:14px 18px; margin-bottom:12px; }
+.quiz .qt { margin:0 0 8px; font-weight:600; }
+.quiz .opt { display:flex; gap:10px; align-items:flex-start; padding:6px 8px; border-radius:3px; cursor:pointer; }
+.quiz .opt:hover { background:var(--sunken); }
+.quiz .q.-done .opt { cursor:default; }
+.quiz .opt.-right { background:color-mix(in oklab, #2f8f4e 14%, transparent); }
+.quiz .opt.-wrong { background:color-mix(in oklab, #c0392b 14%, transparent); }
+.quiz .why { display:none; margin-top:8px; padding:8px 12px; border-left:3px solid var(--accent); color:var(--muted); font-size:14px; }
+.quiz .why.-open { display:block; }
+.quiz-score { font-family:"JetBrains Mono",monospace; font-size:12px; color:var(--muted); }
+/* Домашнее задание */
+.hw { margin-top:16px; border-top:1px dashed var(--line); padding-top:12px; }
+.hw-l { display:block; font-size:13px; color:var(--muted); margin-bottom:6px; }
+.hw-text { width:100%; box-sizing:border-box; font:inherit; font-size:14px; padding:8px 10px; border:1px solid var(--line); border-radius:3px; background:var(--surface); color:inherit; resize:vertical; }
+.hw-done { display:inline-flex; gap:8px; align-items:center; margin-top:8px; cursor:pointer; }
+.hw.-done { border-top-color:var(--accent); }
 .sec.-questions .text>p>strong { display:block; margin-top:1rem; font-family:Bitter,Georgia,serif; font-size:16px; }
 .sec .steps { background:var(--surface); border:1px solid var(--line); border-radius:3px; padding:6px; }
 .pager { display:flex; justify-content:space-between; gap:16px; margin-top:48px; padding-top:20px; border-top:1px solid var(--line); font-size:14px; }
@@ -171,7 +191,7 @@ hr { border:0; border-top:1px solid var(--line); margin:1.2rem 0; }
     <h2>🖥 Стенд с нуля</h2>
     <div class="prog">пройдено <span id="pct">0%</span> · <span id="steps-done">0</span>/<span id="steps-all">0</span> шагов</div>
     <div class="bar" data-total><span></span></div>
-    <nav><b>В этом слое</b><a href="#analogy"><span class="i">🎭</span>Аналогия</a><a href="#map"><span class="i">🗺</span>Карта мест</a><a href="#theory"><span class="i">📖</span>Теория</a><a href="#practice"><span class="i">🔧</span>Практика</a><a href="#break"><span class="i">💥</span>Сломай намеренно</a><a href="#task"><span class="i">✅</span>Задание</a><a href="#life"><span class="i">🌍</span>Из жизни</a><a href="#questions"><span class="i">❓</span>Вопросы с ответами</a></nav>
+    <nav><b>В этом слое</b><a href="#analogy"><span class="i">🎭</span>Аналогия</a><a href="#map"><span class="i">🗺</span>Карта мест</a><a href="#theory"><span class="i">📖</span>Теория</a><a href="#practice"><span class="i">🔧</span>Практика</a><a href="#break"><span class="i">💥</span>Сломай намеренно</a><a href="#quiz"><span class="i">🧪</span>Проверь себя</a><a href="#task"><span class="i">✅</span>Задание</a><a href="#life"><span class="i">🌍</span>Из жизни</a><a href="#questions"><span class="i">❓</span>Вопросы с ответами</a></nav>
     <nav class="-siblings"><b>Слои</b><a href="../0/" class="" data-phase="0"><span class="n">00</span>Стенд и Linux-база</a><a href="../1/" class="-cur" data-phase="1"><span class="n">01</span>Nginx и TLS</a><a href="../2/" class="" data-phase="2"><span class="n">02</span>CI/CD</a><a href="../3/" class="" data-phase="3"><span class="n">03</span>Мониторинг с нуля</a><a href="../4/" class="" data-phase="4"><span class="n">04</span>Эксплуатация PostgreSQL</a><a href="../5/" class="" data-phase="5"><span class="n">05</span>Релизы, тестирование ППО и приёмка</a><a href="../6/" class="" data-phase="6"><span class="n">06</span>Kubernetes</a><a href="../7/" class="" data-phase="7"><span class="n">07</span>ClickHouse обзорно</a><a href="../8/" class="" data-phase="8"><span class="n">08</span>Python и автоматизация</a><a href="../9/" class="" data-phase="9"><span class="n">09</span>Linux фоном</a></nav>
   </aside>
   <main class="content">
@@ -190,6 +210,9 @@ systemctl status nginx
 sudo certbot certificates        # срок действия сертификата
 </code></pre>
 <p><strong>Как понять, что получилось:</strong> в браузере замок без предупреждений; остановил <code>hello</code> - nginx отдаёт 502, а в error.log написано, почему; <code>curl</code> по http уходит на https.</p></div></section><section class="sec -theory" id="theory"><h2><span class="i">📖</span>Теория</h2><div class="text"><h3>Forward против reverse</h3>
+<blockquote class="about">
+<p><b>О чём:</b> forward proxy прячет клиента, reverse proxy прячет серверы; nginx перед приложением - второе.</p>
+</blockquote>
 <table>
 <thead>
 <tr>
@@ -230,6 +253,9 @@ sudo certbot certificates        # срок действия сертифика�
 - ограничение скорости и защита от медленных клиентов;
 - единая точка логирования всех запросов.</p>
 <h3>Иерархия конфига</h3>
+<blockquote class="about">
+<p><b>О чём:</b> http → server → location: настройка наследуется вниз и переопределяется на месте.</p>
+</blockquote>
 <pre><code class="language-nginx">http {                      # общие настройки
     upstream tracker {      # группа бэкендов
         server 127.0.0.1:8000;
@@ -254,6 +280,9 @@ sudo certbot certificates        # срок действия сертифика�
 </ol>
 <p>Ключевое: регулярки проверяются <strong>после</strong> префиксов, но при совпадении побеждают их.</p>
 <h3>Заголовки - почему это отдельный вопрос</h3>
+<blockquote class="about">
+<p><b>О чём:</b> за прокси приложение видит адрес nginx, а не клиента; X-Real-IP и X-Forwarded-For это чинят.</p>
+</blockquote>
 <p>Без <code>proxy_set_header</code> приложение видит IP прокси вместо IP клиента. Все логи заполняются адресом <code>127.0.0.1</code>, блокировки по IP не работают, геолокация врёт.</p>
 <table>
 <thead>
@@ -283,10 +312,16 @@ sudo certbot certificates        # срок действия сертифика�
 </table>
 <p>⚠️ <code>X-Forwarded-For</code> подделывается клиентом. Доверять ему можно только для прокси из своего контура - директива <code>set_real_ip_from</code>.</p>
 <h3>TLS и certbot</h3>
+<blockquote class="about">
+<p><b>О чём:</b> сертификат выдаётся на имя, живёт 90 дней, продлевается сам; TLS заканчивается на nginx.</p>
+</blockquote>
 <p><strong>Аналогия.</strong> Нотариально заверенный паспорт. Ключ доказывает, что домен твой, а подпись центра сертификации - что паспорт настоящий.</p>
 <p>Сертификат Let's Encrypt живёт 90 дней, продление автоматическое за 30 дней до конца.</p>
 <p><strong>Как проходит проверка владения (HTTP-01):</strong> certbot кладёт файл в <code>/.well-known/acme-challenge/</code>, центр сертификации ходит за ним по 80 порту. Отсюда правило: <strong>80 порт нельзя закрывать целиком</strong>, иначе продление отвалится. Редирект на https не мешает, полное закрытие мешает.</p>
 <h3>Балансировка</h3>
+<blockquote class="about">
+<p><b>О чём:</b> upstream с несколькими серверами и проверка живости - как nginx выводит упавший из ротации.</p>
+</blockquote>
 <table>
 <thead>
 <tr>
@@ -321,6 +356,9 @@ sudo certbot certificates        # срок действия сертифика�
 <p><strong>Пассивные проверки</strong> есть в бесплатной версии: <code>max_fails=3 fail_timeout=30s</code>. Три неудачи подряд - бэкенд выводится из ротации на 30 секунд.</p>
 <p>⚠️ Активные health checks есть только в коммерческом Nginx Plus. Знание границы - хороший ответ.</p>
 <h3>Коды ответа - разбор по причинам</h3>
+<blockquote class="about">
+<p><b>О чём:</b> 502 - за nginx никого, 504 - есть, но молчит, 499 - клиент не дождался; по коду видно слой проблемы.</p>
+</blockquote>
 <p><strong>502 Bad Gateway.</strong> Nginx достучался до бэкенда и получил мусор либо не достучался вовсе.
 Проверять: жив ли сервис, слушает ли порт, отвечает ли <code>curl localhost</code>, что в <code>error.log</code>.
 Типичные причины: приложение упало; слушает не на том адресе; опечатка в порту <code>proxy_pass</code>.</p>
@@ -426,14 +464,20 @@ curl -I https://104-171-139-80.sslip.io           # 502 Bad Gateway
 sudo tail -3 /var/log/nginx/hello_error.log       # connect() failed (111: Connection refused) while connecting to upstream
 sudo systemctl start hello
 </code></pre>
-<p>Запомни эту строку в error.log: 502 всегда означает «nginx жив, за ним никого нет».</p></li><li class="step -break" data-step="1-break-2"><input type="checkbox" id="s-1-break-2"><span class="box"></span><span class="txt"><strong>Получить 504.</strong> В конфиге сайта поставить <code>proxy_read_timeout 2s;</code>, применить. Сервис <code>hello</code> не умеет спать, поэтому сымитируй медленный бэкенд: <code>sudo systemctl stop hello</code>, потом в отдельном окне <code>python3 -c "import socket,time; s=socket.socket(); s.bind(('127.0.0.1',8000)); s.listen(1); c,_=s.accept(); time.sleep(10)"</code> - сервер принимает соединение и молчит. <code>curl -I https://...</code> через две секунды даст 504 Gateway Time-out. Вернуть таймаут, запустить <code>hello</code>.</span></li><li class="step -break" data-step="1-break-3"><input type="checkbox" id="s-1-break-3"><span class="box"></span><span class="txt"><strong>Убрать строку <code>X-Real-IP</code></strong>, применить, и посмотреть в <code>journalctl -u hello -n 3</code>: сервис видит <code>127.0.0.1</code> вместо твоего адреса. Вернуть.</span></li><li class="step -break" data-step="1-break-4"><input type="checkbox" id="s-1-break-4"><span class="box"></span><span class="txt"><strong>Сломать конфиг</strong> убрать точку с запятой в любой строке, <code>sudo nginx -t</code> - текст ошибки с номером строки. Заметь: сайт при этом продолжает работать на старом конфиге. Вернуть.</span></li><li class="step -break" data-step="1-break-5"><input type="checkbox" id="s-1-break-5"><span class="box"></span><span class="txt"><strong>Закрыть 443 в файрволе</strong> <code>sudo ufw deny 443/tcp</code>, <code>curl -I https://...</code> с компа висит и падает по таймауту, а <code>curl -I http://...</code> отвечает 301. Так выглядит «сертификат в порядке, а сайт недоступен» - проблема не в nginx. <code>sudo ufw allow 443/tcp</code>.</span></li><li class="step -break" data-step="1-break-6"><input type="checkbox" id="s-1-break-6"><span class="box"></span><span class="txt"><strong>Уронить nginx целиком</strong> <code>sudo systemctl stop nginx</code>, <code>curl -I http://...</code> - Connection refused, без кода ответа вообще. Разница между «refused» (никто не слушает) и 502 (слушает nginx, а за ним пусто) - вопрос на любом собеседовании по эксплуатации.</span></li></ul></section><section class="sec -task" id="task"><h2><span class="i">✅</span>Задание</h2><div class="text"><ul>
-<li><code>hello</code> открывается по https с замком без предупреждений, http уводит редиректом.</li>
-<li>В логах nginx формат <code>detailed</code> с <code>rt</code> и <code>urt</code>, четыре однострочника прогнаны на своих логах.</li>
-<li>В логах <code>hello</code> виден реальный IP клиента.</li>
-<li>Можешь на память написать разбор 502 по шагам и объяснить разницу между 502, 504 и Connection refused.</li>
-<li>В тетради: каждая строка конфига одной фразой - что делает.</li>
-</ul>
-<p><strong>Критерий готовности:</strong> объясняешь каждую строку своего конфига и знаешь, чем 502 отличается от 504 на уровне причины.</p></div></section><section class="sec -life" id="life"><h2><span class="i">🌍</span>Из жизни</h2><div class="text"><p><strong>Про закрытый 80 порт.</strong> Классическая история: команда закрывает 80 «для безопасности», через три месяца сертификат истекает, сайт падает. Причину ищут часами, потому что связь между закрытым портом и сертификатом неочевидна.</p>
+<p>Запомни эту строку в error.log: 502 всегда означает «nginx жив, за ним никого нет».</p></li><li class="step -break" data-step="1-break-2"><input type="checkbox" id="s-1-break-2"><span class="box"></span><span class="txt"><strong>Получить 504.</strong> В конфиге сайта поставить <code>proxy_read_timeout 2s;</code>, применить. Сервис <code>hello</code> не умеет спать, поэтому сымитируй медленный бэкенд: <code>sudo systemctl stop hello</code>, потом в отдельном окне <code>python3 -c "import socket,time; s=socket.socket(); s.bind(('127.0.0.1',8000)); s.listen(1); c,_=s.accept(); time.sleep(10)"</code> - сервер принимает соединение и молчит. <code>curl -I https://...</code> через две секунды даст 504 Gateway Time-out. Вернуть таймаут, запустить <code>hello</code>.</span></li><li class="step -break" data-step="1-break-3"><input type="checkbox" id="s-1-break-3"><span class="box"></span><span class="txt"><strong>Убрать строку <code>X-Real-IP</code></strong>, применить, и посмотреть в <code>journalctl -u hello -n 3</code>: сервис видит <code>127.0.0.1</code> вместо твоего адреса. Вернуть.</span></li><li class="step -break" data-step="1-break-4"><input type="checkbox" id="s-1-break-4"><span class="box"></span><span class="txt"><strong>Сломать конфиг</strong> убрать точку с запятой в любой строке, <code>sudo nginx -t</code> - текст ошибки с номером строки. Заметь: сайт при этом продолжает работать на старом конфиге. Вернуть.</span></li><li class="step -break" data-step="1-break-5"><input type="checkbox" id="s-1-break-5"><span class="box"></span><span class="txt"><strong>Закрыть 443 в файрволе</strong> <code>sudo ufw deny 443/tcp</code>, <code>curl -I https://...</code> с компа висит и падает по таймауту, а <code>curl -I http://...</code> отвечает 301. Так выглядит «сертификат в порядке, а сайт недоступен» - проблема не в nginx. <code>sudo ufw allow 443/tcp</code>.</span></li><li class="step -break" data-step="1-break-6"><input type="checkbox" id="s-1-break-6"><span class="box"></span><span class="txt"><strong>Уронить nginx целиком</strong> <code>sudo systemctl stop nginx</code>, <code>curl -I http://...</code> - Connection refused, без кода ответа вообще. Разница между «refused» (никто не слушает) и 502 (слушает nginx, а за ним пусто) - вопрос на любом собеседовании по эксплуатации.</span></li></ul></section><section class="sec -quiz" id="quiz"><h2><span class="i">🧪</span>Проверь себя</h2><div class="quiz"><div class="q" data-q="1-1"><p class="qt">1. <code>curl -I https://сайт</code> отвечает 502. Что это значит?</p><label class="opt" data-ok="0"><input type="radio" name="q-1-1"><span>сертификат просрочен</span></label><label class="opt" data-ok="0"><input type="radio" name="q-1-1"><span>nginx не запущен</span></label><label class="opt" data-ok="1"><input type="radio" name="q-1-1"><span>nginx жив, а приложение за ним не отвечает на соединение</span></label><label class="opt" data-ok="0"><input type="radio" name="q-1-1"><span>клиент закрыл соединение</span></label><div class="why">Почему: 502 Bad Gateway - nginx не смог соединиться с upstream. В error.log будет <code>connect() failed ... upstream</code>.</div></div><div class="q" data-q="1-2"><p class="qt">2. Чем 504 отличается от 502?</p><label class="opt" data-ok="1"><input type="radio" name="q-1-2"><span>при 504 приложение соединение приняло, но не ответило за <code>proxy_read_timeout</code></span></label><label class="opt" data-ok="0"><input type="radio" name="q-1-2"><span>504 - это ошибка сертификата</span></label><label class="opt" data-ok="0"><input type="radio" name="q-1-2"><span>ничем, оба про недоступный бэкенд</span></label><label class="opt" data-ok="0"><input type="radio" name="q-1-2"><span>504 возвращает клиент, 502 - сервер</span></label><div class="why">Почему: 502 - за nginx никого, 504 - есть, но молчит. Лечится по-разному: перезапуск против поиска медленного запроса.</div></div><div class="q" data-q="1-3"><p class="qt">3. Почему <code>nginx -t</code> надо делать перед <code>reload</code>, если reload и так не применит битый конфиг?</p><label class="opt" data-ok="0"><input type="radio" name="q-1-3"><span>потому что reload применяет всё без проверки</span></label><label class="opt" data-ok="1"><input type="radio" name="q-1-3"><span>чтобы прочитать ошибку с номером строки сразу, а не искать её в error.log после</span></label><label class="opt" data-ok="0"><input type="radio" name="q-1-3"><span>потому что без -t reload зависает</span></label><label class="opt" data-ok="0"><input type="radio" name="q-1-3"><span>это требование certbot</span></label><div class="why">Почему: reload при ошибке откажет и оставит старый конфиг. <code>-t</code> показывает, что именно не так, и делает это до того, как ты что-то тронул.</div></div><div class="q" data-q="1-4"><p class="qt">4. Приложение за nginx пишет в логи адрес 127.0.0.1 у всех клиентов. Что не так?</p><label class="opt" data-ok="0"><input type="radio" name="q-1-4"><span>приложение слушает не тот порт</span></label><label class="opt" data-ok="1"><input type="radio" name="q-1-4"><span>в location нет <code>proxy_set_header X-Real-IP $remote_addr</code></span></label><label class="opt" data-ok="0"><input type="radio" name="q-1-4"><span>nginx не может определить адрес клиента через TLS</span></label><label class="opt" data-ok="0"><input type="radio" name="q-1-4"><span>так и должно быть за прокси</span></label><div class="why">Почему: для приложения клиентом является nginx. Настоящий адрес передаётся заголовком, его надо добавить руками.</div></div><div class="q" data-q="1-5"><p class="qt">5. В логах много 499. Что происходит?</p><label class="opt" data-ok="0"><input type="radio" name="q-1-5"><span>nginx не может отдать статику</span></label><label class="opt" data-ok="0"><input type="radio" name="q-1-5"><span>сертификат не доверен клиентам</span></label><label class="opt" data-ok="1"><input type="radio" name="q-1-5"><span>клиенты закрывают соединение, не дождавшись ответа - сайт медленный</span></label><label class="opt" data-ok="0"><input type="radio" name="q-1-5"><span>превышен <code>client_max_body_size</code></span></label><div class="why">Почему: 499 придумал nginx для «клиент ушёл раньше ответа». Это 504 глазами пользователя: смотреть <code>urt</code> в логах.</div></div><p class="quiz-score" data-total="5">верно <b>0</b> из 5</p></div></section><section class="sec -task" id="task"><h2><span class="i">✅</span>Задание</h2><div class="text"><p><strong>Задание</strong>
+1. Поставь nginx перед <code>hello</code>, выключи дефолтный сайт, проверь ответ через <code>curl localhost</code>.
+2. Дай серверу имя через sslip.io, выпусти сертификат certbot, проверь редирект с http.
+3. Включи формат логов <code>detailed</code>, сделай 50 запросов и прогони четыре однострочника.
+4. Пройди шесть «сломай намеренно», для каждого запиши код или текст ошибки и где он был виден.</p>
+<p><strong>Что должно получиться</strong>
+- <code>curl -I http://имя</code> → 301, <code>curl -I https://имя</code> → 200, в браузере замок.
+- <code>sudo certbot renew --dry-run</code> проходит без ошибок.
+- В <code>hello_access.log</code> строки с <code>rt=</code> и <code>urt=</code>.
+- В <code>journalctl -u hello</code> виден твой настоящий IP, а не 127.0.0.1.
+- В тетради: каждая строка конфига одной фразой, плюс таблица «код - что значит - где смотреть» для 502, 504, 499, Connection refused.</p>
+<p><strong>Как сдать</strong>
+В поле ниже - что попробовал, что сработало, где застрял. Отдельно напиши, чем 502 отличается от 504 своими словами, без подглядывания.</p>
+<p><strong>Критерий готовности:</strong> объясняешь каждую строку своего конфига и знаешь, чем 502 отличается от 504 на уровне причины.</p><div class="hw" data-hw="1"><label class="hw-l">Что получилось - своими словами: что попробовал, что сработало, где застрял</label><textarea class="hw-text" rows="5" placeholder="Свободный ответ. Хранится в этом браузере, как и прогресс."></textarea><label class="hw-done"><input type="checkbox"> Сдано</label></div></div></section><section class="sec -life" id="life"><h2><span class="i">🌍</span>Из жизни</h2><div class="text"><p><strong>Про закрытый 80 порт.</strong> Классическая история: команда закрывает 80 «для безопасности», через три месяца сертификат истекает, сайт падает. Причину ищут часами, потому что связь между закрытым портом и сертификатом неочевидна.</p>
 <p><strong>Про <code>reload</code> вместо <code>restart</code>.</strong> На проде под трафиком <code>restart</code> рвёт все активные соединения. Пользователи видят обрыв загрузки. <code>reload</code> поднимает новые воркеры с новым конфигом и даёт старым доработать текущие запросы. Разница слышна на собеседовании сразу.</p>
 <p><strong>Про повышение таймаута.</strong> Самое частое «лечение» 504 - поднять <code>proxy_read_timeout</code> до 300 секунд. Симптом уходит, а очередь растёт: медленный запрос теперь держит соединение впятеро дольше, и при нагрузке всё встаёт целиком. Правильный ответ на собеседовании - «сначала нахожу, что медленно, таймаут поднимаю осознанно».</p></div></section><section class="sec -questions" id="questions"><h2><span class="i">❓</span>Вопросы с ответами</h2><div class="text"><p><strong>Чем forward отличается от reverse?</strong></p>
 <blockquote>
@@ -559,6 +603,37 @@ sudo systemctl start hello
     const left = Math.round((new Date(DEADLINE) - today) / 86400000);
     $("days").textContent = left > 0 ? left : (left === 0 ? "сегодня" : "—");
   }
+  // Проверь себя: выбрал вариант - увидел, прав или нет, и почему. Хранится как q:<фаза>-<номер>.
+  document.querySelectorAll(".quiz .q").forEach(q => {
+    const id = "q:" + q.dataset.q;
+    const opts = [...q.querySelectorAll(".opt")];
+    const show = (picked) => {
+      opts.forEach(o => { o.classList.toggle("-right", o.dataset.ok === "1"); o.classList.toggle("-wrong", o === picked && o.dataset.ok !== "1"); });
+      const why = q.querySelector(".why"); if (why) why.classList.add("-open");
+      q.classList.add("-done");
+    };
+    opts.forEach((o, i) => o.querySelector("input").addEventListener("change", () => {
+      state[id] = { pick: i, ok: o.dataset.ok === "1" ? 1 : 0 }; save(state); show(o); score();
+    }));
+    const saved = state[id];
+    if (saved && opts[saved.pick]) { opts[saved.pick].querySelector("input").checked = true; show(opts[saved.pick]); }
+  });
+  function score() {
+    document.querySelectorAll(".quiz-score").forEach(sc => {
+      const quiz = sc.closest(".quiz");
+      const ok = [...quiz.querySelectorAll(".q")].filter(q => (state["q:" + q.dataset.q] || {}).ok).length;
+      sc.querySelector("b").textContent = ok;
+    });
+  }
+  score();
+  // Домашнее задание: свободный ответ и отметка «сдано». Хранится как hw:<фаза>.
+  document.querySelectorAll(".hw").forEach(hw => {
+    const id = "hw:" + hw.dataset.hw, ta = hw.querySelector(".hw-text"), done = hw.querySelector(".hw-done input");
+    const saved = state[id] || {};
+    ta.value = saved.text || ""; done.checked = !!saved.done; hw.classList.toggle("-done", !!saved.done);
+    const put = () => { state[id] = { text: ta.value, done: done.checked ? 1 : 0 }; save(state); hw.classList.toggle("-done", done.checked); };
+    ta.addEventListener("input", put); done.addEventListener("change", put);
+  });
   paint();
   const first = [...document.querySelectorAll(".layer[data-phase]")].find(l => !l.classList.contains("-complete") && !l.classList.contains("-skipped"));
   if (first) first.open = true;

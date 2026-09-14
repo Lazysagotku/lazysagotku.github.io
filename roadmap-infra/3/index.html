@@ -147,6 +147,26 @@ hr { border:0; border-top:1px solid var(--line); margin:1.2rem 0; }
 /* Карта мест - конспект слоя на полстраницы: где писать, чем запустить, где смотреть. Выделена, чтобы читалась первой */
 .sec.-map .text { background:var(--sunken); border-left:3px solid var(--accent); border-radius:0 3px 3px 0; padding:14px 18px; }
 .sec.-map .text p { margin:.55em 0; }
+/* «О чём:» - строка-резюме под заголовком темы, как в курсах Stepik */
+blockquote.about { border-left:3px solid var(--accent); background:var(--sunken); margin:.4em 0 1em; padding:8px 14px; border-radius:0 3px 3px 0; }
+blockquote.about p { margin:0; }
+/* Проверь себя */
+.quiz .q { background:var(--surface); border:1px solid var(--line); border-radius:3px; padding:14px 18px; margin-bottom:12px; }
+.quiz .qt { margin:0 0 8px; font-weight:600; }
+.quiz .opt { display:flex; gap:10px; align-items:flex-start; padding:6px 8px; border-radius:3px; cursor:pointer; }
+.quiz .opt:hover { background:var(--sunken); }
+.quiz .q.-done .opt { cursor:default; }
+.quiz .opt.-right { background:color-mix(in oklab, #2f8f4e 14%, transparent); }
+.quiz .opt.-wrong { background:color-mix(in oklab, #c0392b 14%, transparent); }
+.quiz .why { display:none; margin-top:8px; padding:8px 12px; border-left:3px solid var(--accent); color:var(--muted); font-size:14px; }
+.quiz .why.-open { display:block; }
+.quiz-score { font-family:"JetBrains Mono",monospace; font-size:12px; color:var(--muted); }
+/* Домашнее задание */
+.hw { margin-top:16px; border-top:1px dashed var(--line); padding-top:12px; }
+.hw-l { display:block; font-size:13px; color:var(--muted); margin-bottom:6px; }
+.hw-text { width:100%; box-sizing:border-box; font:inherit; font-size:14px; padding:8px 10px; border:1px solid var(--line); border-radius:3px; background:var(--surface); color:inherit; resize:vertical; }
+.hw-done { display:inline-flex; gap:8px; align-items:center; margin-top:8px; cursor:pointer; }
+.hw.-done { border-top-color:var(--accent); }
 .sec.-questions .text>p>strong { display:block; margin-top:1rem; font-family:Bitter,Georgia,serif; font-size:16px; }
 .sec .steps { background:var(--surface); border:1px solid var(--line); border-radius:3px; padding:6px; }
 .pager { display:flex; justify-content:space-between; gap:16px; margin-top:48px; padding-top:20px; border-top:1px solid var(--line); font-size:14px; }
@@ -435,7 +455,7 @@ rm /tmp/big
 <li>Скриншот пришедшего в Telegram уведомления - его показывают на собеседовании.</li>
 <li>Метрики трекера отдаются на <code>/metrics</code> и собираются.</li>
 </ul>
-<p><strong>Критерий готовности:</strong> объясняешь каждую строку <code>prometheus.yml</code> и <code>alerts.yml</code>, и можешь на месте написать PromQL для загрузки процессора и для доли ошибок.</p></div></section><section class="sec -other" id="s6"><h2><span class="i">▪</span>Твоя миграция Zabbix → Grafana - вспомнить с нуля</h2><div class="text"><p>Это твой реальный опыт, и на собеседовании он весит больше стенда. Задача раздела - восстановить его в голове до уровня «рассказываю по шагам», потому что спросят именно шаги.</p>
+<p><strong>Критерий готовности:</strong> объясняешь каждую строку <code>prometheus.yml</code> и <code>alerts.yml</code>, и можешь на месте написать PromQL для загрузки процессора и для доли ошибок.</p><div class="hw" data-hw="3"><label class="hw-l">Что получилось - своими словами: что попробовал, что сработало, где застрял</label><textarea class="hw-text" rows="5" placeholder="Свободный ответ. Хранится в этом браузере, как и прогресс."></textarea><label class="hw-done"><input type="checkbox"> Сдано</label></div></div></section><section class="sec -other" id="s6"><h2><span class="i">▪</span>Твоя миграция Zabbix → Grafana - вспомнить с нуля</h2><div class="text"><p>Это твой реальный опыт, и на собеседовании он весит больше стенда. Задача раздела - восстановить его в голове до уровня «рассказываю по шагам», потому что спросят именно шаги.</p>
 <h3>Словарь соответствий - что чем стало</h3>
 <table>
 <thead>
@@ -629,6 +649,37 @@ rm /tmp/big
     const left = Math.round((new Date(DEADLINE) - today) / 86400000);
     $("days").textContent = left > 0 ? left : (left === 0 ? "сегодня" : "—");
   }
+  // Проверь себя: выбрал вариант - увидел, прав или нет, и почему. Хранится как q:<фаза>-<номер>.
+  document.querySelectorAll(".quiz .q").forEach(q => {
+    const id = "q:" + q.dataset.q;
+    const opts = [...q.querySelectorAll(".opt")];
+    const show = (picked) => {
+      opts.forEach(o => { o.classList.toggle("-right", o.dataset.ok === "1"); o.classList.toggle("-wrong", o === picked && o.dataset.ok !== "1"); });
+      const why = q.querySelector(".why"); if (why) why.classList.add("-open");
+      q.classList.add("-done");
+    };
+    opts.forEach((o, i) => o.querySelector("input").addEventListener("change", () => {
+      state[id] = { pick: i, ok: o.dataset.ok === "1" ? 1 : 0 }; save(state); show(o); score();
+    }));
+    const saved = state[id];
+    if (saved && opts[saved.pick]) { opts[saved.pick].querySelector("input").checked = true; show(opts[saved.pick]); }
+  });
+  function score() {
+    document.querySelectorAll(".quiz-score").forEach(sc => {
+      const quiz = sc.closest(".quiz");
+      const ok = [...quiz.querySelectorAll(".q")].filter(q => (state["q:" + q.dataset.q] || {}).ok).length;
+      sc.querySelector("b").textContent = ok;
+    });
+  }
+  score();
+  // Домашнее задание: свободный ответ и отметка «сдано». Хранится как hw:<фаза>.
+  document.querySelectorAll(".hw").forEach(hw => {
+    const id = "hw:" + hw.dataset.hw, ta = hw.querySelector(".hw-text"), done = hw.querySelector(".hw-done input");
+    const saved = state[id] || {};
+    ta.value = saved.text || ""; done.checked = !!saved.done; hw.classList.toggle("-done", !!saved.done);
+    const put = () => { state[id] = { text: ta.value, done: done.checked ? 1 : 0 }; save(state); hw.classList.toggle("-done", done.checked); };
+    ta.addEventListener("input", put); done.addEventListener("change", put);
+  });
   paint();
   const first = [...document.querySelectorAll(".layer[data-phase]")].find(l => !l.classList.contains("-complete") && !l.classList.contains("-skipped"));
   if (first) first.open = true;

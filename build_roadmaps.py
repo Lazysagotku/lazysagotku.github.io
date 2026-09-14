@@ -93,11 +93,11 @@ SIBLINGS = {
 # ---------------------------------------------------------------- разбор
 
 SECTION_KINDS = {"🎭": "analogy", "🗺": "map", "📖": "theory", "🔧": "practice", "💥": "break",
-                 "✅": "task", "🌍": "life", "❓": "questions"}
+                 "🧪": "quiz", "✅": "task", "🌍": "life", "❓": "questions"}
 SECTION_TITLES = {"analogy": "Аналогия", "map": "Карта мест", "theory": "Теория", "practice": "Практика",
-                  "break": "Сломай намеренно", "task": "Задание", "life": "Из жизни",
+                  "break": "Сломай намеренно", "quiz": "Проверь себя", "task": "Задание", "life": "Из жизни",
                   "questions": "Вопросы с ответами"}
-ICONS = {"analogy": "🎭", "map": "🗺", "theory": "📖", "practice": "🔧", "break": "💥",
+ICONS = {"analogy": "🎭", "map": "🗺", "quiz": "🧪", "theory": "📖", "practice": "🔧", "break": "💥",
          "task": "✅", "life": "🌍", "questions": "❓", "other": "▪"}
 
 HEAD_RE = re.compile(r"^# (\S+) (?:Слой|Фаза) (\d+)\. (.+?)(?: \((.+)\))?\s*$")
@@ -229,6 +229,52 @@ def _parse_steps(kind: str, phase_n: int, body: list[str]) -> Section:
     return sec
 
 
+QUIZ_Q_RE = re.compile(r"^\*\*(\d+)\.\s*(.+?)\*\*\s*$")
+QUIZ_OPT_RE = re.compile(r"^-\s*\[( |x|X)\]\s*(.+?)\s*$")
+
+
+def quiz_html(phase_n: int, body: list[str]) -> str:
+    """Самопроверка в духе Stepik: один вопрос - один верный вариант - пояснение.
+
+    Ответ не показывается заранее: выбрал - увидел, прав или нет, и почему.
+    Результат хранится в том же localStorage, что и шаги.
+    """
+    questions: list[dict] = []
+    cur = None
+    for line in body:
+        m = QUIZ_Q_RE.match(line.strip())
+        if m:
+            cur = {"n": int(m.group(1)), "text": m.group(2), "opts": [], "why": ""}
+            questions.append(cur)
+            continue
+        if cur is None:
+            continue
+        m = QUIZ_OPT_RE.match(line.strip())
+        if m:
+            cur["opts"].append((m.group(2), m.group(1).lower() == "x"))
+            continue
+        if line.strip().startswith(">"):
+            cur["why"] += (" " if cur["why"] else "") + line.strip().lstrip(">").strip()
+    out = ['<div class="quiz">']
+    for q in questions:
+        qid = f"{phase_n}-{q['n']}"
+        opts = "".join(
+            f'<label class="opt" data-ok="{1 if ok else 0}"><input type="radio" name="q-{qid}"><span>{md_inline(text)}</span></label>'
+            for text, ok in q["opts"])
+        why = f'<div class="why">{md_inline(q["why"])}</div>' if q["why"] else ""
+        out.append(f'<div class="q" data-q="{qid}"><p class="qt">{q["n"]}. {md_inline(q["text"])}</p>{opts}{why}</div>')
+    out.append(f'<p class="quiz-score" data-total="{len(questions)}">верно <b>0</b> из {len(questions)}</p></div>')
+    return "".join(out)
+
+
+def homework_html(phase_n: int, inner_html: str) -> str:
+    """Домашнее задание: текст задания плюс поле «что получилось» и отметка «сдано»."""
+    return (inner_html +
+            f'<div class="hw" data-hw="{phase_n}"><label class="hw-l">Что получилось - своими словами: что попробовал, что сработало, где застрял</label>'
+            f'<textarea class="hw-text" rows="5" placeholder="Свободный ответ. Хранится в этом браузере, как и прогресс."></textarea>'
+            f'<label class="hw-done"><input type="checkbox"> Сдано</label></div>')
+
+
 def parse_phase(text: str, source: str) -> Phase | None:
     lines = text.split("\n")
     m = HEAD_RE.match(lines[0])
@@ -247,10 +293,16 @@ def parse_phase(text: str, source: str) -> Phase | None:
         kind = _kind_of(head) if head else "other"
         if kind in ("practice", "break"):
             sections.append(_parse_steps(kind, n, body))
+        elif kind == "quiz":
+            sec = Section(kind=kind, title=SECTION_TITLES[kind])
+            sec.html = quiz_html(n, body)
+            sections.append(sec)
         else:
             clean = re.sub(r"^\S+\s+", "", head) if head else ""
             sec = Section(kind=kind, title=SECTION_TITLES.get(kind, clean) if kind != "other" else clean)
-            sec.html = md("\n".join(body))
+            sec.html = md("\n".join(body)).replace("<blockquote>\n<p>О чём:", '<blockquote class="about">\n<p><b>О чём:</b>')
+            if kind == "task":
+                sec.html = homework_html(n, sec.html)
             sections.append(sec)
     return Phase(n=n, emoji=emoji, title=title, note=note, source=source, sections=sections)
 
@@ -458,6 +510,26 @@ hr { border:0; border-top:1px solid var(--line); margin:1.2rem 0; }
 /* Карта мест - конспект слоя на полстраницы: где писать, чем запустить, где смотреть. Выделена, чтобы читалась первой */
 .sec.-map .text { background:var(--sunken); border-left:3px solid var(--accent); border-radius:0 3px 3px 0; padding:14px 18px; }
 .sec.-map .text p { margin:.55em 0; }
+/* «О чём:» - строка-резюме под заголовком темы, как в курсах Stepik */
+blockquote.about { border-left:3px solid var(--accent); background:var(--sunken); margin:.4em 0 1em; padding:8px 14px; border-radius:0 3px 3px 0; }
+blockquote.about p { margin:0; }
+/* Проверь себя */
+.quiz .q { background:var(--surface); border:1px solid var(--line); border-radius:3px; padding:14px 18px; margin-bottom:12px; }
+.quiz .qt { margin:0 0 8px; font-weight:600; }
+.quiz .opt { display:flex; gap:10px; align-items:flex-start; padding:6px 8px; border-radius:3px; cursor:pointer; }
+.quiz .opt:hover { background:var(--sunken); }
+.quiz .q.-done .opt { cursor:default; }
+.quiz .opt.-right { background:color-mix(in oklab, #2f8f4e 14%, transparent); }
+.quiz .opt.-wrong { background:color-mix(in oklab, #c0392b 14%, transparent); }
+.quiz .why { display:none; margin-top:8px; padding:8px 12px; border-left:3px solid var(--accent); color:var(--muted); font-size:14px; }
+.quiz .why.-open { display:block; }
+.quiz-score { font-family:"JetBrains Mono",monospace; font-size:12px; color:var(--muted); }
+/* Домашнее задание */
+.hw { margin-top:16px; border-top:1px dashed var(--line); padding-top:12px; }
+.hw-l { display:block; font-size:13px; color:var(--muted); margin-bottom:6px; }
+.hw-text { width:100%; box-sizing:border-box; font:inherit; font-size:14px; padding:8px 10px; border:1px solid var(--line); border-radius:3px; background:var(--surface); color:inherit; resize:vertical; }
+.hw-done { display:inline-flex; gap:8px; align-items:center; margin-top:8px; cursor:pointer; }
+.hw.-done { border-top-color:var(--accent); }
 .sec.-questions .text>p>strong { display:block; margin-top:1rem; font-family:Bitter,Georgia,serif; font-size:16px; }
 .sec .steps { background:var(--surface); border:1px solid var(--line); border-radius:3px; padding:6px; }
 .pager { display:flex; justify-content:space-between; gap:16px; margin-top:48px; padding-top:20px; border-top:1px solid var(--line); font-size:14px; }
@@ -567,6 +639,37 @@ JS = r"""
     const left = Math.round((new Date(DEADLINE) - today) / 86400000);
     $("days").textContent = left > 0 ? left : (left === 0 ? "сегодня" : "—");
   }
+  // Проверь себя: выбрал вариант - увидел, прав или нет, и почему. Хранится как q:<фаза>-<номер>.
+  document.querySelectorAll(".quiz .q").forEach(q => {
+    const id = "q:" + q.dataset.q;
+    const opts = [...q.querySelectorAll(".opt")];
+    const show = (picked) => {
+      opts.forEach(o => { o.classList.toggle("-right", o.dataset.ok === "1"); o.classList.toggle("-wrong", o === picked && o.dataset.ok !== "1"); });
+      const why = q.querySelector(".why"); if (why) why.classList.add("-open");
+      q.classList.add("-done");
+    };
+    opts.forEach((o, i) => o.querySelector("input").addEventListener("change", () => {
+      state[id] = { pick: i, ok: o.dataset.ok === "1" ? 1 : 0 }; save(state); show(o); score();
+    }));
+    const saved = state[id];
+    if (saved && opts[saved.pick]) { opts[saved.pick].querySelector("input").checked = true; show(opts[saved.pick]); }
+  });
+  function score() {
+    document.querySelectorAll(".quiz-score").forEach(sc => {
+      const quiz = sc.closest(".quiz");
+      const ok = [...quiz.querySelectorAll(".q")].filter(q => (state["q:" + q.dataset.q] || {}).ok).length;
+      sc.querySelector("b").textContent = ok;
+    });
+  }
+  score();
+  // Домашнее задание: свободный ответ и отметка «сдано». Хранится как hw:<фаза>.
+  document.querySelectorAll(".hw").forEach(hw => {
+    const id = "hw:" + hw.dataset.hw, ta = hw.querySelector(".hw-text"), done = hw.querySelector(".hw-done input");
+    const saved = state[id] || {};
+    ta.value = saved.text || ""; done.checked = !!saved.done; hw.classList.toggle("-done", !!saved.done);
+    const put = () => { state[id] = { text: ta.value, done: done.checked ? 1 : 0 }; save(state); hw.classList.toggle("-done", done.checked); };
+    ta.addEventListener("input", put); done.addEventListener("change", put);
+  });
   paint();
   const first = [...document.querySelectorAll(".layer[data-phase]")].find(l => !l.classList.contains("-complete") && !l.classList.contains("-skipped"));
   if (first) first.open = true;
@@ -705,7 +808,8 @@ def render_phase_page(track: Track, phases: list[Phase], p: Phase, meta: dict) -
         icon = ICONS.get(sec.kind, "▪")
         title = html.escape(sec.title) if sec.title else "Раздел"
         toc.append(f'<a href="#{sid}"><span class="i">{icon}</span>{title}</a>')
-        inner = steps_html(sec, with_bodies=True) if sec.kind in ("practice", "break") else f'<div class="text">{sec.html}</div>'
+        inner = (steps_html(sec, with_bodies=True) if sec.kind in ("practice", "break")
+                 else sec.html if sec.kind == "quiz" else f'<div class="text">{sec.html}</div>')
         secs.append(f'<section class="sec -{sec.kind}" id="{sid}"><h2><span class="i">{icon}</span>{title}</h2>{inner}</section>')
 
     sib = [f'<a href="../{q.n}/" class="{"-cur" if q.n == p.n else ""}" data-phase="{q.n}"><span class="n">{q.n:02d}</span>{html.escape(q.title)}</a>'
