@@ -175,10 +175,10 @@ hr { border:0; border-top:1px solid var(--line); margin:1.2rem 0; }
     <nav class="-siblings"><b>Слои</b><a href="../0/" class="-cur" data-phase="0"><span class="n">00</span>Стенд и Linux-база</a><a href="../1/" class="" data-phase="1"><span class="n">01</span>Nginx и TLS</a><a href="../2/" class="" data-phase="2"><span class="n">02</span>CI/CD</a><a href="../3/" class="" data-phase="3"><span class="n">03</span>Мониторинг с нуля</a><a href="../4/" class="" data-phase="4"><span class="n">04</span>Эксплуатация PostgreSQL</a><a href="../5/" class="" data-phase="5"><span class="n">05</span>Релизы, тестирование ППО и приёмка</a><a href="../6/" class="" data-phase="6"><span class="n">06</span>Kubernetes</a><a href="../7/" class="" data-phase="7"><span class="n">07</span>ClickHouse обзорно</a><a href="../8/" class="" data-phase="8"><span class="n">08</span>Python и автоматизация</a><a href="../9/" class="" data-phase="9"><span class="n">09</span>Linux фоном</a></nav>
   </aside>
   <main class="content">
-    <div class="topbar"><b>Слой 0. Стенд и Linux-база</b><span><span id="cur-done">0</span> из <span id="cur-all">10</span> шагов пройдено</span></div>
+    <div class="topbar"><b>Слой 0. Стенд и Linux-база</b><span><span id="cur-done">0</span> из <span id="cur-all">6</span> шагов пройдено</span></div>
     <h1>Стенд и Linux-база</h1>
     <p class="lead">день 1, 2 часа · чт 10.09</p>
-    <section class="sec -analogy" id="analogy"><h2><span class="i">🎭</span>Аналогия</h2><div class="text"><p>Пустая квартира после ремонта: стены есть, розетки есть, мебели нет. Прежде чем завозить технику, нужно поставить дверь с замком и понять, где щиток.</p></div></section><section class="sec -map" id="map"><h2><span class="i">🗺</span>Карта мест</h2><div class="text"><p><strong>Сделать:</strong> закрыть вход root-ом и по паролю, включить файрвол, поставить Docker, оформить трекер как systemd-сервис.</p>
+    <section class="sec -analogy" id="analogy"><h2><span class="i">🎭</span>Аналогия</h2><div class="text"><p>Пустая квартира после ремонта: стены есть, розетки есть, мебели нет. Прежде чем завозить технику, нужно поставить дверь с замком и понять, где щиток.</p></div></section><section class="sec -map" id="map"><h2><span class="i">🗺</span>Карта мест</h2><div class="text"><p><strong>Сделать:</strong> закрыть вход root-ом и по паролю, включить файрвол, поставить Docker и поднять PostgreSQL через compose, оформить тестовый сервис <code>hello</code> под systemd. Трекер приедет в слое 2.</p>
 <p><strong>Понять:</strong> сервер - это процессы под управлением systemd. Всё, что ты делаешь, - либо команда в терминале (выполнилась сразу), либо файл конфига в <code>/etc</code> (это appsettings.json сервера: поменял, перезапустил сервис, заработало иначе). Результат виден только через три вещи: статус сервиса, его логи, открытые порты.</p>
 <p><strong>Где писать:</strong> команды - терминал под <code>ivan</code>; конфиги - <code>/etc/ssh/sshd_config.d/*.conf</code>, <code>/etc/systemd/system/*.service</code>; файрвол - командами <code>ufw</code>. Удобнее всего из VS Code: Remote-SSH → <code>ivan@сервер</code> → открыть <code>/etc</code>. Слева файлы, внизу терминал - как проект на C#.</p>
 <p><strong>Чем запустить:</strong> <code>sudo systemctl reload ssh</code>, <code>sudo systemctl daemon-reload &amp;&amp; sudo systemctl enable --now имя</code>, <code>sudo ufw enable</code>. Это «пересобрать и перезапустить».</p>
@@ -190,7 +190,7 @@ journalctl -u имя -n 30        # его последние 30 строк ло
 ss -tlnp                       # кто на каких портах слушает
 docker ps                      # какие контейнеры живы
 </code></pre>
-<p><strong>Как понять, что получилось:</strong> <code>ssh root@сервер</code> с компа отвечает <code>Permission denied (publickey)</code>; <code>docker run hello-world</code> печатает приветствие; <code>systemctl status tracker</code> зелёный, а <code>curl localhost:8000/health</code> отвечает.</p></div></section><section class="sec -theory" id="theory"><h2><span class="i">📖</span>Теория</h2><div class="text"><h3>Про площадку - решено 01.09</h3>
+<p><strong>Как понять, что получилось:</strong> <code>ssh root@сервер</code> с компа отвечает <code>Permission denied (publickey)</code>; <code>docker compose ps</code> показывает PostgreSQL живым; <code>systemctl status hello</code> зелёный, а <code>curl localhost:8000</code> отвечает «стенд живой».</p></div></section><section class="sec -theory" id="theory"><h2><span class="i">📖</span>Теория</h2><div class="text"><h3>Про площадку - решено 01.09</h3>
 <p>Берём <strong>облачный VPS</strong>. Разница с домашней машиной принципиальная: домашний стенд видит только сам Иван, а VPS с белым IP можно показать работающим - дать ссылку на собственный трекер за nginx с настоящим сертификатом, на Grafana с живыми метриками. На собеседовании «вот, откройте» работает совсем не так, как «у меня локально поднято».</p>
 <p>⚠️ Облако здесь - <strong>инструмент</strong>. Поднимать своё облако на OpenStack или Proxmox не надо: это отдельная профессия, и ни в одной из разобранных вакансий её не спрашивали.</p>
 <h3>💳 Что купить - сверено 11.09.2026</h3>
@@ -290,53 +290,145 @@ docker ps                      # какие контейнеры живы
 </tbody>
 </table>
 <p>Три элемента: <strong>образ</strong> (шаблон, только чтение), <strong>контейнер</strong> (запущенный экземпляр образа), <strong>реестр</strong> (хранилище образов).</p>
-<p>⚠️ Ключевая мысль для собеседования: контейнер использует ядро хозяина. Отсюда следует, что Linux-контейнер не запустится на Windows без прослойки, и что уязвимость в ядре пробивает изоляцию всех контейнеров сразу.</p></div></section><section class="sec -practice" id="practice"><h2><span class="i">🔧</span>Практика</h2><ul class="steps"><li class="step" data-step="0-practice-1"><input type="checkbox" id="s-0-practice-1"><span class="box"></span><span class="txt">Создать пользователя и закрыть root</span><span class="more">подробнее</span></li><li class="step-body"><pre><code class="language-bash">adduser ivan
-usermod -aG sudo ivan
+<p>⚠️ Ключевая мысль для собеседования: контейнер использует ядро хозяина. Отсюда следует, что Linux-контейнер не запустится на Windows без прослойки, и что уязвимость в ядре пробивает изоляцию всех контейнеров сразу.</p></div></section><section class="sec -practice" id="practice"><h2><span class="i">🔧</span>Практика</h2><ul class="steps"><li class="interlude"><p><strong>Как читать этот раздел.</strong> Каждый шаг устроен одинаково: что делаем и зачем → команды, у каждой в комментарии что она делает → что должно показаться на экране. В тетрадь пишется левая колонка: команда и одна фраза, что она делает. Весь слой - около двух часов за один-два вечера; ритм «по 20 минут в день» относится к слою 9, здесь его нет.</p></li><li class="interlude"><h3>0. Как вообще создать файл на сервере</h3>
+<p>Три способа, от простого к удобному. Первый нужен всегда, третий - для длинных файлов.</p>
+<p><strong>Редактор nano</strong> - открыть файл, вставить текст, сохранить:</p>
+<pre><code class="language-bash">sudo nano /etc/systemd/system/hello.service   # sudo - файл в системной папке, писать туда может только root
+# вставить текст правой кнопкой мыши или Shift+Insert
+# Ctrl+O, Enter - сохранить; Ctrl+X - выйти
+cat /etc/systemd/system/hello.service         # cat - показать содержимое, проверить, что записалось
 </code></pre>
-<p>В <code>/etc/ssh/sshd_config</code>:</p>
+<p><strong>tee с heredoc</strong> - когда текст уже есть в буфере и хочется одной командой:</p>
+<pre><code class="language-bash">sudo tee /etc/systemd/system/hello.service &gt; /dev/null &lt;&lt;'EOF'
+текст файла
+EOF
+</code></pre>
+<p><code>tee</code> читает то, что ему подали на вход, и пишет в файл; <code>&lt;&lt;'EOF'</code> означает «всё до строки EOF - это вход»; <code>&gt; /dev/null</code> глушит эхо на экран.</p>
+<p><strong>VS Code через Remote-SSH</strong> - для файлов длиннее десяти строк. Подключиться к <code>ivan@сервер</code>, открыть папку <code>/etc/systemd/system</code>, править как обычный проект. Сохранение файла в системной папке попросит пароль sudo - это нормально.</p>
+<p>⚠️ <strong>Ловушка, в которую попадают все:</strong></p>
+<pre><code class="language-bash">sudo echo &quot;текст&quot; &gt; /etc/systemd/system/hello.service     # НЕ РАБОТАЕТ
+</code></pre>
+<p><code>sudo</code> относится только к <code>echo</code>. Стрелку <code>&gt;</code> выполняет твоя оболочка, уже без sudo, от имени <code>ivan</code> - и получает «Permission denied». А если путь относительный, как <code>&gt; hello.service</code>, файл молча создаётся в текущей папке (обычно в домашней <code>~</code>), и в <code>/etc/systemd/system</code> его, конечно, нет. Правило: писать в системные папки только через <code>sudo nano</code> или <code>sudo tee</code>. Пути в командах писать полные, от корня <code>/</code>.</p>
+<p>Проверить, где ты и что где лежит:</p>
+<pre><code class="language-bash">pwd                          # в какой папке я сейчас
+ls -l /etc/systemd/system/   # что лежит в папке, с правами и владельцем
+ls -l ~                      # домашняя папка - сюда падают файлы без полного пути
+</code></pre></li><li class="interlude"><h3>1. Пользователь и закрытие root</h3>
+<p><strong>Что делаем.</strong> Работать под root нельзя: одна опечатка в <code>rm</code> - и сервера нет, и в логах не видно, кто это сделал. Заводим обычного пользователя с правом временно становиться root через <code>sudo</code>, а вход root-ом снаружи закрываем.</p>
+<pre><code class="language-bash">sudo adduser ivan              # создать пользователя с домашней папкой и паролем (adduser задаёт вопросы, useradd - нет)
+sudo usermod -aG sudo ivan     # добавить (-a) в группу (-G) sudo - право выполнять команды от root
+groups ivan                    # проверить: в списке должно быть sudo
+</code></pre>
+<p>Дальше запрещаем вход root-ом и вход по паролю. В Ubuntu 24.04 главный конфиг <code>/etc/ssh/sshd_config</code> перекрывается файлами из папки <code>sshd_config.d/</code>, поэтому свои настройки кладём отдельным файлом - главный не трогаем, обновления его не затрут:</p>
+<pre><code class="language-bash">sudo nano /etc/ssh/sshd_config.d/10-hardening.conf
+</code></pre>
+<p>Содержимое:</p>
 <pre><code>PermitRootLogin no
 PasswordAuthentication no
 </code></pre>
-<pre><code class="language-bash">systemctl reload sshd
+<p>Применить и проверить:</p>
+<pre><code class="language-bash">sudo sshd -t                                   # проверка синтаксиса: молчит - значит ок
+sudo systemctl reload ssh                      # перечитать конфиг без обрыва текущих сессий
+sudo sshd -T | grep -iE &quot;permitrootlogin|passwordauthentication&quot;   # -T печатает, что реально действует
 </code></pre>
-<p>⚠️ Порядок важен: <strong>сначала проверь вход по ключу из второго окна</strong>, потом отключай пароль. Иначе останешься снаружи.</p></li><li class="step" data-step="0-practice-2"><input type="checkbox" id="s-0-practice-2"><span class="box"></span><span class="txt">Ключ</span><span class="more">подробнее</span></li><li class="step-body"><pre><code class="language-bash"># на своей машине
-ssh-keygen -t ed25519 -C &quot;ivan@stand&quot;
-ssh-copy-id ivan@&lt;IP&gt;
+<p>Ожидаешь: <code>permitrootlogin no</code> и <code>passwordauthentication no</code>. Если пароль остался <code>yes</code> - его перебивает другой файл в той же папке, посмотри <code>ls /etc/ssh/sshd_config.d/</code> и загляни в <code>50-cloud-init.conf</code>.</p>
+<p>⚠️ <strong>Порядок важен:</strong> держи второе окно с открытой сессией, пока не убедился, что новое окно под <code>ivan</code> заходит по ключу. Иначе останешься снаружи.</p>
+<p>Проверка снаружи, с компа: <code>ssh root@сервер</code> → <code>Permission denied (publickey)</code>. Это и есть результат.</p></li><li class="interlude"><h3>2. Ключ</h3>
+<p><strong>Что делаем.</strong> Пароль можно подобрать, ключ - нет. Пара ключей: приватный остаётся на компе, публичный кладётся на сервер в <code>~/.ssh/authorized_keys</code>. При входе сервер проверяет, что у тебя есть приватная половина.</p>
+<pre><code class="language-bash"># на своём компе
+ssh-keygen -t ed25519 -C &quot;ivan@stand&quot;   # создать пару; -t ed25519 - современный алгоритм, -C - подпись, чтобы отличать ключи
+ssh-copy-id ivan@сервер                 # положить публичный ключ на сервер (спросит пароль ivan в последний раз)
 
-# на сервере проверить права
-chmod 700 ~/.ssh
-chmod 600 ~/.ssh/authorized_keys
-</code></pre></li><li class="step" data-step="0-practice-3"><input type="checkbox" id="s-0-practice-3"><span class="box"></span><span class="txt">Файрвол</span><span class="more">подробнее</span></li><li class="step-body"><pre><code class="language-bash">ufw default deny incoming
-ufw default allow outgoing
-ufw allow 22/tcp
-ufw allow 80/tcp
-ufw allow 443/tcp
-ufw enable
-ufw status verbose
-</code></pre></li><li class="step" data-step="0-practice-4"><input type="checkbox" id="s-0-practice-4"><span class="box"></span><span class="txt">Docker</span><span class="more">подробнее</span></li><li class="step-body"><pre><code class="language-bash">curl -fsSL https://get.docker.com | sh
-usermod -aG docker ivan       # чтобы не писать sudo каждый раз
-docker run hello-world
-docker compose version
-</code></pre></li><li class="step" data-step="0-practice-5"><input type="checkbox" id="s-0-practice-5"><span class="box"></span><span class="txt"><strong>Свой systemd-unit для трекера.</strong> Файл <code>/etc/systemd/system/tracker.service</code></span><span class="more">подробнее</span></li><li class="step-body"><pre><code class="language-ini">[Unit]
-Description=Трекер откликов
-After=network.target postgresql.service
+# на сервере
+ls -l ~/.ssh/                           # должен быть authorized_keys
+chmod 700 ~/.ssh                        # папка: доступ только владельцу - иначе sshd откажется читать ключ
+chmod 600 ~/.ssh/authorized_keys        # файл: читать и писать только владельцу
+</code></pre>
+<p><code>chmod 700</code> и <code>600</code> - права в восьмеричной записи: 7 = читать+писать+выполнять, 6 = читать+писать, 0 = ничего. Три цифры - владелец, группа, остальные. sshd специально отказывается работать с «слишком открытыми» ключами.</p></li><li class="interlude"><h3>3. Файрвол</h3>
+<p><strong>Что делаем.</strong> По умолчанию сервер отвечает на всё, что слушает. Файрвол переворачивает логику: снаружи закрыто всё, кроме явно разрешённого. <code>ufw</code> - обёртка над iptables с человеческими командами.</p>
+<pre><code class="language-bash">sudo ufw default deny incoming    # входящие: запрещено всё
+sudo ufw default allow outgoing   # исходящие: разрешено всё - серверу надо ходить за обновлениями
+sudo ufw allow 22/tcp             # SSH - СНАЧАЛА, иначе следующей командой отрежешь себя
+sudo ufw allow 80/tcp             # HTTP - для nginx в слое 1
+sudo ufw allow 443/tcp            # HTTPS
+sudo ufw enable                   # включить; спросит подтверждение
+sudo ufw status verbose           # результат: Default: deny (incoming), три строки ALLOW
+</code></pre>
+<p>Проверка снаружи, с компа: <code>ssh ivan@сервер</code> заходит; <code>curl -m 5 http://сервер:8000</code> висит и отваливается по таймауту - порт 8000 закрыт, так и задумано.</p></li><li class="interlude"><h3>4. Docker</h3>
+<p><strong>Что это здесь.</strong> Docker запускает программу в контейнере - изолированной коробке со своими библиотеками. Три слова, которые надо различать:
+- <strong>образ</strong> (image) - шаблон, скачивается с реестра, у него есть тег-версия: <code>postgres:16</code>, <code>nginx:1.27</code>. Управление версиями - это выбор тега; <code>latest</code> в проде не используют, потому что завтра он другой.
+- <strong>контейнер</strong> - запущенный экземпляр образа. Один образ - сколько угодно контейнеров.
+- <strong>compose</strong> - файл <code>compose.yml</code>, где описано несколько контейнеров разом: какие образы, какие порты, какие папки примонтировать. Одна команда поднимает всё. В слое 2 так поедут трекер и PostgreSQL.</p>
+<p>Установка:</p>
+<pre><code class="language-bash">curl -fsSL https://get.docker.com | sudo sh   # официальный скрипт установки
+sudo usermod -aG docker ivan                  # группа docker = право управлять контейнерами без sudo
+</code></pre>
+<p>⚠️ Членство в группе применяется при входе. После <code>usermod</code> выйди (<code>exit</code>) и зайди заново, потом проверь: <code>groups</code> - в списке должен появиться <code>docker</code>. Хочешь без перезахода - <code>newgrp docker</code> откроет новую оболочку с группой уже внутри. Пока группы нет, <code>docker ps</code> ответит «permission denied» - это не поломка.</p>
+<p>Первый запуск и «окно результата»:</p>
+<pre><code class="language-bash">docker run hello-world     # скачать крошечный образ и запустить: напечатает Hello from Docker!
+docker ps                  # что работает сейчас (пусто - hello-world уже завершился)
+docker ps -a               # включая завершённые
+docker images              # какие образы скачаны и каких версий
+</code></pre>
+<p>Compose руками - первый свой файл. Создай папку и файл:</p>
+<pre><code class="language-bash">mkdir -p ~/stand/db &amp;&amp; cd ~/stand/db
+nano compose.yml
+</code></pre>
+<p>Содержимое:</p>
+<pre><code class="language-yaml">services:
+  db:
+    image: postgres:16            # образ и версия - здесь управляют версиями
+    environment:
+      POSTGRES_PASSWORD: stand    # пароль суперпользователя базы
+    ports:
+      - &quot;127.0.0.1:5432:5432&quot;     # снаружи не видно, только с самого сервера
+    volumes:
+      - pgdata:/var/lib/postgresql/data   # данные живут вне контейнера, иначе пропадут при пересоздании
+volumes:
+  pgdata:
+</code></pre>
+<p>Запуск и проверка:</p>
+<pre><code class="language-bash">docker compose up -d           # -d - в фоне; скачает postgres:16 и запустит
+docker compose ps              # состояние контейнеров этого файла
+docker compose logs -f db      # логи базы вживую; Ctrl+C - выйти из просмотра, база продолжит работать
+ss -tlnp | grep 5432           # порт слушается на 127.0.0.1
+docker compose exec db psql -U postgres -c &quot;select version();&quot;   # зайти внутрь и спросить базу
+docker compose down            # остановить и удалить контейнеры; данные в pgdata останутся
+</code></pre>
+<p>Это и есть «как заполнять докер»: файл описывает, что поднять; команды поднимают и показывают.</p></li><li class="interlude"><h3>5. Свой systemd-сервис</h3>
+<p><strong>Что делаем.</strong> Всё, что должно работать само - подниматься после перезагрузки, перезапускаться после падения, писать логи в одно место, - оформляется как сервис systemd. Трекера на сервере ещё нет, он приедет в слое 2 через CI/CD, поэтому тренируемся на крошечном сервисе: встроенный веб-сервер Python, который отдаёт содержимое папки.</p>
+<pre><code class="language-bash">sudo mkdir -p /opt/hello                                 # /opt - место для своих программ
+echo &quot;стенд живой&quot; | sudo tee /opt/hello/index.html      # файл, который будет отдавать сервер
+sudo chown -R ivan:ivan /opt/hello                       # владелец - ivan, сервис будет работать от него
+</code></pre>
+<p>Unit-файл - описание сервиса для systemd:</p>
+<pre><code class="language-bash">sudo nano /etc/systemd/system/hello.service
+</code></pre>
+<pre><code class="language-ini">[Unit]
+Description=Тестовый веб-сервер стенда
+After=network.target                 # стартовать после того, как поднялась сеть
 
 [Service]
-Type=simple
-User=ivan
-WorkingDirectory=/opt/tracker
-ExecStart=/opt/tracker/.venv/bin/uvicorn app.main:app --host 127.0.0.1 --port 8000
-Restart=always
-RestartSec=5
+Type=simple                          # процесс живёт, пока живёт сервис
+User=ivan                            # от кого запускать - не от root
+WorkingDirectory=/opt/hello          # в какой папке
+ExecStart=/usr/bin/python3 -m http.server 8000 --bind 127.0.0.1   # что запускать; путь полный
+Restart=always                       # упал - поднять
+RestartSec=5                         # через пять секунд
 
 [Install]
-WantedBy=multi-user.target
+WantedBy=multi-user.target           # включать при обычной загрузке системы
 </code></pre>
-<pre><code class="language-bash">systemctl daemon-reload
-systemctl enable --now tracker
-systemctl status tracker
-journalctl -u tracker -f
-</code></pre></li><li class="interlude"><h3>Диагностика: три команды за тридцать секунд</h3>
+<p>Запуск и «окно результата»:</p>
+<pre><code class="language-bash">sudo systemctl daemon-reload         # systemd перечитывает unit-файлы - после любой правки
+sudo systemctl enable --now hello    # enable - автозапуск при загрузке, --now - и запустить сейчас
+systemctl status hello               # active (running) зелёным, ниже - последние строки лога
+journalctl -u hello -n 20            # логи сервиса: каждый запрос будет тут
+ss -tlnp | grep 8000                 # порт слушается python3
+curl localhost:8000                  # ответ: «стенд живой»
+</code></pre>
+<p>Перезагрузи сервер (<code>sudo reboot</code>), зайди, <code>systemctl status hello</code> - снова running. Это и значит «переживает reboot».</p>
+<p>Когда в слое 2 приедет трекер, его unit будет отличаться двумя строками: <code>WorkingDirectory=/opt/tracker</code> и <code>ExecStart=/opt/tracker/.venv/bin/uvicorn app.main:app --host 127.0.0.1 --port 8000</code>. Всё остальное - то же самое.</p></li><li class="interlude"><h3>Диагностика: три команды за тридцать секунд</h3>
 <pre><code class="language-bash">uptime          # сколько работает и три числа load average
 free -h         # память и своп
 df -h           # место на дисках
@@ -412,31 +504,45 @@ journalctl --disk-usage
 tail -f /var/log/nginx/error.log
 grep -n &quot;ERROR&quot; app.log | head -1              # ПЕРВАЯ ошибка
 </code></pre>
-<p><strong>Метод.</strong> Сначала сузить окно по времени, потом искать по тексту. На файле в гигабайты обратный порядок займёт минуты. И смотреть <strong>первую</strong> ошибку: она обычно причина, последующие - следствия.</p></li></ul></section><section class="sec -break" id="break"><h2><span class="i">💥</span>Сломай намеренно</h2><ul class="steps"><li class="step -break" data-step="0-break-1"><input type="checkbox" id="s-0-break-1"><span class="box"></span><span class="txt">Забить диск и увидеть последствия</span><span class="more">подробнее</span></li><li class="step-body"><pre><code class="language-bash">fallocate -l 5G /tmp/big
-df -h                     # смотреть, что стало
-systemctl status tracker  # как ведёт себя приложение
-rm /tmp/big
-</code></pre></li><li class="step -break" data-step="0-break-2"><input type="checkbox" id="s-0-break-2"><span class="box"></span><span class="txt"><strong>Удалённый, но открытый файл</strong> - классика, которую спрашивают</span><span class="more">подробнее</span></li><li class="step-body"><pre><code class="language-bash">tail -f /var/log/app.log &amp;
-rm /var/log/app.log
-df -h                     # место занято
-du -sh /var/log           # а файлов нет
-lsof | grep deleted       # вот он
-kill %1                   # место вернулось
+<p><strong>Метод.</strong> Сначала сузить окно по времени, потом искать по тексту. На файле в гигабайты обратный порядок займёт минуты. И смотреть <strong>первую</strong> ошибку: она обычно причина, последующие - следствия.</p></li></ul></section><section class="sec -break" id="break"><h2><span class="i">💥</span>Сломай намеренно</h2><ul class="steps"><li class="interlude"><p><strong>Предпосылки:</strong> сервис <code>hello</code> из шага 5 работает, файрвол включён, ты под <code>ivan</code> с двумя открытыми окнами. Каждый пункт - сломать, посмотреть, как это выглядит в «окне результата», починить.</p></li><li class="step -break" data-step="0-break-1"><input type="checkbox" id="s-0-break-1"><span class="box"></span><span class="txt">Забить диск и увидеть последствия</span><span class="more">подробнее</span></li><li class="step-body"><pre><code class="language-bash">fallocate -l 5G /tmp/big        # мгновенно создать файл на 5 ГБ - диск заполнится
+df -h                           # смотреть колонку Use%: сколько осталось
+sudo journalctl -u hello -n 5   # журнал ещё пишется? при 100% - начнёт терять записи
+rm /tmp/big                     # починить
+df -h                           # место вернулось
+</code></pre></li><li class="step -break" data-step="0-break-2"><input type="checkbox" id="s-0-break-2"><span class="box"></span><span class="txt"><strong>Удалённый, но открытый файл</strong> - классика, которую спрашивают</span><span class="more">подробнее</span></li><li class="step-body"><pre><code class="language-bash">fallocate -l 1G /tmp/app.log    # «лог», который кто-то держит открытым
+tail -f /tmp/app.log &amp;          # процесс держит файл открытым, &amp; - в фоне
+rm /tmp/app.log                 # удалить файл
+df -h /tmp                      # место всё ещё занято
+ls /tmp                         # а файла нет
+sudo lsof | grep deleted        # вот кто его держит: tail
+kill %1                         # убить фоновую задачу - место вернулось
 </code></pre>
-<p><strong>Почему так.</strong> Запись в каталоге исчезла, но процесс держит дескриптор. Место освободится, когда процесс умрёт. Лечение: перезапустить процесс или обнулить через <code>: &gt; /proc/&lt;PID&gt;/fd/&lt;N&gt;</code>.</p></li><li class="step -break" data-step="0-break-3"><input type="checkbox" id="s-0-break-3"><span class="box"></span><span class="txt">Убить приложение по памяти</span><span class="more">подробнее</span></li><li class="step-body"><pre><code class="language-bash"># в python-консоли на стенде
-python3 -c &quot;a = bytearray(8 * 1024**3)&quot;
-dmesg -T | grep -i &quot;killed process&quot;
-</code></pre></li><li class="step -break" data-step="0-break-4"><input type="checkbox" id="s-0-break-4"><span class="box"></span><span class="txt">Остановить сервис и посмотреть, как выглядит упавший</span><span class="more">подробнее</span></li><li class="step-body"><pre><code class="language-bash">systemctl stop tracker
-systemctl status tracker      # запомнить вид вывода
-systemctl list-units --failed
-systemctl start tracker
-</code></pre></li><li class="step -break" data-step="0-break-5"><input type="checkbox" id="s-0-break-5"><span class="box"></span><span class="txt"><strong>Сломать unit-файл</strong> - убрать <code>ExecStart</code>, сделать <code>daemon-reload</code>, увидеть ошибку в <code>journalctl</code>.</span></li></ul></section><section class="sec -task" id="task"><h2><span class="i">✅</span>Задание</h2><div class="text"><ul>
-<li>Сервер, куда пускают только по ключу, root по SSH закрыт.</li>
+<p><strong>Почему так.</strong> Запись в каталоге исчезла, но процесс держит дескриптор, и данные на диске живут, пока он открыт. Лечение в проде: перезапустить процесс или обнулить файл через <code>: &gt; /proc/&lt;PID&gt;/fd/&lt;N&gt;</code>.</p></li><li class="step -break" data-step="0-break-3"><input type="checkbox" id="s-0-break-3"><span class="box"></span><span class="txt">Убить процесс по памяти</span><span class="more">подробнее</span></li><li class="step-body"><pre><code class="language-bash">python3 -c &quot;a = bytearray(8 * 1024**3)&quot;   # попросить 8 ГБ на сервере с 4 - ядро убьёт процесс
+sudo dmesg -T | grep -i &quot;killed process&quot;   # запись OOM killer с именем жертвы
+</code></pre>
+<p>Так выглядит смерть от памяти: в логах приложения пусто, процесс не падал - его застрелило ядро.</p></li><li class="step -break" data-step="0-break-4"><input type="checkbox" id="s-0-break-4"><span class="box"></span><span class="txt">Остановить сервис и посмотреть, как выглядит упавший</span><span class="more">подробнее</span></li><li class="step-body"><pre><code class="language-bash">sudo systemctl stop hello
+systemctl status hello            # inactive (dead) - запомнить вид
+curl localhost:8000               # Connection refused - так выглядит «сервис недоступен» снаружи
+systemctl list-units --failed     # список упавших; остановленный руками сюда не попадает
+sudo systemctl start hello
+</code></pre></li><li class="step -break" data-step="0-break-5"><input type="checkbox" id="s-0-break-5"><span class="box"></span><span class="txt">Сломать unit-файл</span><span class="more">подробнее</span></li><li class="step-body"><pre><code class="language-bash">sudo nano /etc/systemd/system/hello.service   # убрать строку ExecStart, сохранить
+sudo systemctl daemon-reload
+sudo systemctl restart hello
+systemctl status hello                        # failed, и внизу написано, чего не хватает
+journalctl -u hello -n 20                     # та же причина словами
+# вернуть строку, daemon-reload, restart - снова running
+</code></pre></li><li class="step -break" data-step="0-break-6"><input type="checkbox" id="s-0-break-6"><span class="box"></span><span class="txt">Убить процесс сервиса и увидеть, как systemd его поднимает</span><span class="more">подробнее</span></li><li class="step-body"><pre><code class="language-bash">systemctl show hello -p MainPID     # PID процесса
+sudo kill &lt;PID&gt;                     # SIGTERM
+sleep 6 &amp;&amp; systemctl status hello   # через RestartSec=5 - снова running, с новым PID
+</code></pre></li></ul></section><section class="sec -task" id="task"><h2><span class="i">✅</span>Задание</h2><div class="text"><ul>
+<li>Сервер, куда пускают только по ключу, root по SSH закрыт: <code>ssh root@сервер</code> отвечает <code>Permission denied</code>.</li>
 <li><code>ufw status verbose</code> показывает <code>deny incoming</code> и три открытых порта.</li>
-<li>Трекер работает как systemd-сервис с автозапуском, переживает <code>reboot</code>.</li>
+<li><code>docker compose up -d</code> поднимает PostgreSQL из своего файла, <code>docker compose ps</code> показывает его живым.</li>
+<li>Сервис <code>hello</code> работает под systemd с автозапуском, переживает <code>reboot</code> и <code>kill</code>.</li>
 <li>Можешь за тридцать секунд сказать про незнакомый сервер, здоров он или нет.</li>
+<li>В тетради: каждая команда слоя одной строкой - что делает.</li>
 </ul>
-<p><strong>Критерий готовности:</strong> объясняешь каждую строку своего unit-файла и знаешь, что делать при каждой из трёх веток диагностики.</p></div></section><section class="sec -life" id="life"><h2><span class="i">🌍</span>Из жизни</h2><div class="text"><p><strong>Про тысячи попыток входа.</strong> Свежий сервер с белым IP начинают перебирать в течение часа после появления в сети. Ботнеты сканируют весь диапазон IPv4 непрерывно. Отсюда правило: отключать вход по паролю сразу, не «когда-нибудь потом».</p>
+<p><strong>Критерий готовности:</strong> объясняешь каждую строку unit-файла <code>hello</code> и знаешь, что делать при каждой из трёх веток диагностики.</p></div></section><section class="sec -life" id="life"><h2><span class="i">🌍</span>Из жизни</h2><div class="text"><p><strong>Про тысячи попыток входа.</strong> Свежий сервер с белым IP начинают перебирать в течение часа после появления в сети. Ботнеты сканируют весь диапазон IPv4 непрерывно. Отсюда правило: отключать вход по паролю сразу, не «когда-нибудь потом».</p>
 <p><strong>Про место на диске.</strong> По опыту Ивана самая частая причина «всё встало» - именно диск, забитый логами. Поэтому в его мониторинге всегда стоял отдельный алерт на заполнение. Это готовый ответ на «что мониторите в первую очередь».</p>
 <p><strong>Про <code>docker</code> в группе пользователя.</strong> Добавление в группу <code>docker</code> фактически равно правам root: через контейнер с примонтированным <code>/</code> можно сделать что угодно с хозяином. На собеседовании по безопасности это спрашивают, и правильный ответ - «знаю, на проде так не делают, там sudo с конкретными правилами».</p>
 <p><strong>Про steal time.</strong> На дешёвых VPS <code>st</code> в <code>top</code> показывает, сколько времени у тебя отобрал гипервизор ради соседей. Устойчивые 10-20 процентов означают перепроданный хост. Это причина, по которой замеры производительности на дешёвом VPS плавают.</p></div></section><section class="sec -questions" id="questions"><h2><span class="i">❓</span>Вопросы с ответами</h2><div class="text"><p><strong>Что смотришь первым делом на незнакомом сервере?</strong></p>
@@ -478,7 +584,7 @@ systemctl start tracker
 (() => {
   const KEY = "rm-progress-infra";
   const DEADLINE = "2026-09-16";
-  const PHASES = {"0": {"total": 10, "baseline": 0, "status": "", "hours": 2.0}, "1": {"total": 11, "baseline": 0, "status": "", "hours": 3.0}, "2": {"total": 8, "baseline": 0, "status": "", "hours": 4.0}, "3": {"total": 12, "baseline": 0, "status": "", "hours": 5.0}, "4": {"total": 12, "baseline": 0, "status": "", "hours": 5.0}, "5": {"total": 11, "baseline": 0, "status": "", "hours": 4.0}, "6": {"total": 15, "baseline": 0, "status": "", "hours": 10.0}, "7": {"total": 5, "baseline": 0, "status": "", "hours": 2.0}, "8": {"total": 10, "baseline": 0, "status": "", "hours": 6.0}, "9": {"total": 9, "baseline": 0, "status": "", "hours": 0.0}};
+  const PHASES = {"0": {"total": 6, "baseline": 0, "status": "", "hours": 2.0}, "1": {"total": 11, "baseline": 0, "status": "", "hours": 3.0}, "2": {"total": 8, "baseline": 0, "status": "", "hours": 4.0}, "3": {"total": 12, "baseline": 0, "status": "", "hours": 5.0}, "4": {"total": 12, "baseline": 0, "status": "", "hours": 5.0}, "5": {"total": 11, "baseline": 0, "status": "", "hours": 4.0}, "6": {"total": 15, "baseline": 0, "status": "", "hours": 10.0}, "7": {"total": 5, "baseline": 0, "status": "", "hours": 2.0}, "8": {"total": 10, "baseline": 0, "status": "", "hours": 6.0}, "9": {"total": 9, "baseline": 0, "status": "", "hours": 0.0}};
   const load = () => { try { return JSON.parse(localStorage.getItem(KEY)) || {}; } catch (e) { return {}; } };
   const save = (s) => { try { localStorage.setItem(KEY, JSON.stringify(s)); } catch (e) {} };
   let state = load();
