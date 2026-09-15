@@ -1,0 +1,696 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Language Market Benchmark - C#, Python, Go, Java, TypeScript, Rust - База знаний</title>
+<link rel="stylesheet" href="../kb.css">
+<script>
+  // Тему ставим до первой отрисовки, иначе на тёмной системе мигает белым.
+  try {
+    var t = localStorage.getItem("kb-theme");
+    if (!t) t = matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+    document.documentElement.setAttribute("data-theme", t);
+  } catch (e) {}
+</script>
+</head>
+<body>
+
+<header class="top">
+  <div class="top-in">
+    <a class="brand" href="../index.html">База <span>знаний</span></a>
+    <span class="grow"></span>
+    <input id="q" type="search" placeholder="Поиск по всем материалам…" autocomplete="off">
+    <button class="icon-btn" id="theme" type="button" title="Тема"></button>
+  </div>
+</header>
+
+<div id="results" hidden><div class="wrap-r"><h3></h3><div id="hits"></div></div></div>
+
+<main class="wrap">
+  <div class="doc-head">
+    <div class="crumb"><a href="../index.html#reference">Справочники</a></div>
+    <h1>Language Market Benchmark - C#, Python, Go, Java, TypeScript, Rust</h1>
+    <div class="meta">323 строк · источник <code>l2code/LANGUAGE_MARKET_BENCHMARK.md</code></div>
+  </div>
+
+  <div class="layout">
+    <article class="prose"><blockquote>
+<p>Заказано 15.09.2026 по итогам независимого review (уточнение к <code>OPEN_LOOPS.md</code> №3).
+<strong>Явное условие заказчика:</strong> C#/.NET не убирается из роадмапа и не маркируется
+заброшенным. Иван подтвердил, что язык ему нравится и он считает его сильным
+инструментом, но решение должно приниматься по данным рынка, а не по симпатии.
+Стратегическая рамка задачи: инфраструктура/эксплуатация остаётся текущим основным
+треком; C#/.NET сохраняется как стратегический backend-актив; горизонт расширен
+до международного remote и релокации (в первую очередь Германия) - выбор языка
+нельзя оптимизировать только под российский рынок.</p>
+</blockquote>
+<h2 id="_1">Как читать этот документ</h2>
+<p>Три рынка (A - Россия, B - global/international remote, C - relocation/Германия+ЕС),
+шесть языков, набор критериев по каждому. Числа - из открытых источников на
+сентябрь 2026, с датой и ссылкой у каждого блока. Там, где источники расходятся
+или число примерное - явно написано «диапазон» и «оценка», а не выдуман один
+точный факт.</p>
+<p><strong>Честное ограничение исследования.</strong> Прямой доступ к hh.ru API и к hh.ru через
+поисковый веб-инструмент из этой сессии заблокирован их собственной защитой от VPN
+(та же проблема, с которой Иван сталкивался при попытках автоматизировать
+Разведчика). LinkedIn/Indeed/Glassdoor не отдают агрегированную статистику по
+запросу без учётной записи и API-ключа, которых у меня нет. Поэтому данные по
+рынку A и по глобальному remote-рынку взяты из вторичных источников - обзоров
+Хабр Карьеры, агрегаторов зарплат (enigmai.ru, checkroi.ru), профильных
+рекрутинговых блогов и открытых отчётов (JetBrains, GitHub Octoverse, Stack
+Overflow). Это не первичные данные, и там, где агрегаторы противоречат друг другу,
+это указано.</p>
+<hr>
+<h2 id="_2">Гипотеза, которую проверяем</h2>
+<blockquote>
+<p>«Go может быть мостом между infrastructure/cloud/distributed systems и backend,
+а C# может оставаться сильным enterprise/backend активом.»</p>
+</blockquote>
+<p>Короткий ответ по итогам исследования - <strong>гипотеза подтверждается данными, с одной
+поправкой</strong>: Go даёт синергию с уже идущим инфраструктурным треком гораздо
+дешевле по времени, чем любой другой новый язык в списке, потому что весь
+инструментарий cloud-native (Docker, Kubernetes, Terraform, Prometheus) написан на
+Go и Иван и так его изучает как пользователь. C# остаётся сильным и стабильным
+enterprise-активом, но не показывает признаков нового взрывного роста ни на одном
+из трёх рынков - его роль не «расти», а «не терять». Подробный разбор - в разделах
+ниже и в итоговом скоркарде.</p>
+<hr>
+<h2 id="a-">Рынок A - Россия</h2>
+<h3 id="_3">Общий фон</h3>
+<p>Медианная зарплата разработчика в России - 182-183 тыс. ₽ (Хабр Карьера, данные за
+2025 год)<sup id="fnref:1"><a class="footnote-ref" href="#fn:1">1</a></sup>. Вилка для специалиста 1-3 года по hh.ru - 129-280 тыс. ₽<sup id="fnref2:1"><a class="footnote-ref" href="#fn:1">1</a></sup>.
+Архитекторы ПО - топ по доходу: 420-508 тыс. ₽ в зависимости от города<sup id="fnref3:1"><a class="footnote-ref" href="#fn:1">1</a></sup>. Рынок
+вакансий по hh.ru в 2026 году активно анализировался в открытых постах на Хабре
+(десятки тысяч вакансий за раз), но сам hh.ru прикрыл открытый API примерно в
+апреле 2026<sup id="fnref:2"><a class="footnote-ref" href="#fn:2">2</a></sup> - актуальных сплошных выгрузок за лето-осень 2026 в открытом
+доступе нет, только выборочные обзоры отдельных языков.</p>
+<h3 id="_4">По языкам</h3>
+<table>
+<thead>
+<tr>
+<th>Язык</th>
+<th>Медианная зарплата (₽/мес)</th>
+<th>Динамика</th>
+<th>Заметки</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Go</strong></td>
+<td>~260 000 (апрель 2026)<sup id="fnref:3"><a class="footnote-ref" href="#fn:3">3</a></sup></td>
+<td>растёт, инфраструктурные позиции с Platform Engineering - от 700 000<sup id="fnref:4"><a class="footnote-ref" href="#fn:4">4</a></sup></td>
+<td>дефицит кадров, зарплата в топе рынка</td>
+</tr>
+<tr>
+<td><strong>Rust</strong></td>
+<td>вакансий немного, в Москве верхняя планка до 906 000<sup id="fnref:5"><a class="footnote-ref" href="#fn:5">5</a></sup></td>
+<td>нишевый, растущий</td>
+<td>100+ активных вакансий на джоб-бордах<sup id="fnref2:5"><a class="footnote-ref" href="#fn:5">5</a></sup>; в Яндексе Rust часто идёт вторым языком к Go на highload<sup id="fnref3:5"><a class="footnote-ref" href="#fn:5">5</a></sup></td>
+</tr>
+<tr>
+<td><strong>TypeScript/JS</strong></td>
+<td>241 000 (H2 2025, +11% к H1)<sup id="fnref2:3"><a class="footnote-ref" href="#fn:3">3</a></sup></td>
+<td>растёт быстрее рынка</td>
+<td>Middle+ вакансии без TS «практически исчезли»<sup id="fnref:6"><a class="footnote-ref" href="#fn:6">6</a></sup></td>
+</tr>
+<tr>
+<td><strong>Python</strong></td>
+<td>229 000 (H2 2025, +8%)<sup id="fnref3:3"><a class="footnote-ref" href="#fn:3">3</a></sup></td>
+<td>растёт</td>
+<td>один источник ставит Python лишь на 18-е место по числу вакансий несмотря на популярность языка<sup id="fnref2:2"><a class="footnote-ref" href="#fn:2">2</a></sup> - вероятно эффект узкой методологии подсчёта одного конкретного обзора, не подтверждён вторым источником, поэтому не считаю это установленным фактом</td>
+</tr>
+<tr>
+<td><strong>C#</strong></td>
+<td>210 000-220 000, около среднего по рынку<sup id="fnref4:3"><a class="footnote-ref" href="#fn:3">3</a></sup></td>
+<td><strong>не изменилась</strong> в 2026 (в отличие от роста у Go/TS/Python)<sup id="fnref5:3"><a class="footnote-ref" href="#fn:3">3</a></sup></td>
+<td>стабильный, не растущий сегмент</td>
+</tr>
+<tr>
+<td><strong>Java</strong></td>
+<td>210 000-220 000, около среднего по рынку<sup id="fnref6:3"><a class="footnote-ref" href="#fn:3">3</a></sup></td>
+<td>стабильная</td>
+<td>тот же enterprise-сегмент, что C#</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Вывод по рынку A:</strong> Go - единственный язык из списка с явной положительной
+динамикой зарплаты и структурным дефицитом кадров в России прямо сейчас. C# и Java
+- стабильное плато, не падение, но и не рост. TypeScript обязателен для
+фронтенд/фуллстек-сегмента, но это не профиль Ивана (эксплуатация/backend). Rust -
+реальный, но узкий рынок, почти весь в Москве и в нескольких компаниях уровня
+Яндекса.</p>
+<hr>
+<h2 id="b-global-international-remote">Рынок B - Global / international remote</h2>
+<h3 id="_5">Источники по языкам в целом</h3>
+<p>GitHub Octoverse 2025<sup id="fnref:7"><a class="footnote-ref" href="#fn:7">7</a></sup>: в августе 2025 TypeScript впервые обогнал Python и
+JavaScript по числу активных контрибьюторов на GitHub (2,64 млн, +66,6% год к
+году) - самый резкий сдвиг за десятилетие, связанный с тем, что типизация лучше
+работает с AI-агентами и Copilot, и с тем, что TypeScript стал дефолтом в
+scaffolding крупных фреймворков. Python остаётся лидером именно в AI/data
+science. <strong>C# на 5-м месте по абсолютному приросту контрибьюторов год к году
+(+136 735, +22,2%)</strong> - это сильный, растущий сигнал не про хайп, а про реальное
+расширение аудитории.</p>
+<p>JetBrains State of Developer Ecosystem 2025<sup id="fnref:8"><a class="footnote-ref" href="#fn:8">8</a></sup> (24 534 разработчика,
+апрель-июнь 2025): наивысший «growth potential» (Language Promise Index) - у
+TypeScript, Rust и Go. JavaScript, PHP и SQL - «плато зрелости». Языки, которые
+разработчики больше всего хотят выучить: Go (11%), Rust (10%), Python (7%),
+Kotlin (6%), TypeScript (6%) - <strong>C# и Java в этом списке желаний не попали в
+топ-5</strong>, что говорит не о падении, а об отсутствии «хайпа» вокруг них - предсказуемо
+для зрелых enterprise-языков.</p>
+<p>Stack Overflow Developer Survey 2025<sup id="fnref:9"><a class="footnote-ref" href="#fn:9">9</a></sup>: JavaScript - самая используемая
+технология (66%), Rust восьмой год подряд - «most admired» язык.</p>
+<h3 id="remote-usd">Зарплаты (США/международный remote, USD/год)</h3>
+<table>
+<thead>
+<tr>
+<th>Язык</th>
+<th>Диапазон</th>
+<th>Источник</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Go</strong></td>
+<td>среднее $172 000; senior в SF/NY $200 000-230 000<sup id="fnref:10"><a class="footnote-ref" href="#fn:10">10</a></sup></td>
+<td>явная зарплатная премия из-за дефицита talent pool</td>
+</tr>
+<tr>
+<td><strong>C#/.NET</strong></td>
+<td>mid $103 800-130 900; remote mid $106 700-134 500; senior $123 100-154 900<sup id="fnref3:11"><a class="footnote-ref" href="#fn:11">11</a></sup></td>
+<td>рост 3,2% год к году - стабильный, не взрывной</td>
+</tr>
+<tr>
+<td><strong>Rust</strong></td>
+<td>оценки сильно расходятся: $70 900 (среднее по ZipRecruiter) против диапазона $80 000-130 000 и «remote $90 000-250 000+» у других источников<sup id="fnref:12"><a class="footnote-ref" href="#fn:12">12</a></sup></td>
+<td>разброс отражает узкую нишу - мало вакансий, большой разброс по грейду и индустрии (blockchain/embedded тянут медиану вверх у одних агрегаторов и вниз у других)</td>
+</tr>
+<tr>
+<td><strong>Python, Java, TypeScript</strong></td>
+<td>отдельных агрегированных цифр по 2026 в собранных источниках нет; по общему рыночному контексту - в середине диапазона между C# и Go, без явного выброса в любую сторону</td>
+<td>нужно уточнение при следующем обновлении</td>
+</tr>
+</tbody>
+</table>
+<h3 id="remote-">Remote-специфика</h3>
+<p>Компьютерные/IT-вакансии - самая быстрорастущая категория remote-постингов,
+удвоение quarter-over-quarter по одному источнику<sup id="fnref:11"><a class="footnote-ref" href="#fn:11">11</a></sup>. Общий вывод из нескольких
+источников: «skill matters more than location now, but competition is global
+too»<sup id="fnref2:11"><a class="footnote-ref" href="#fn:11">11</a></sup> - то есть remote снимает географический барьер, но конкуренция за эти
+позиции идёт с разработчиками из низкозатратных регионов по всему миру, не только
+внутри России.</p>
+<p><strong>Вывод по рынку B:</strong> Go имеет лучшую комбинацию «зарплата + дефицит + растущий
+спрос» из всех шести языков. TypeScript - структурный лидер по объёму рынка и
+единственный язык с прямой связкой к AI-tooling экосистеме (агенты лучше работают
+с типизированным кодом). C# - крепкий средний сегмент со стабильным ростом числа
+разработчиков, но не входит в языки с «growth potential» или «desire to learn» по
+опросам - это рынок для тех, кто уже внутри, не точка входа для хайпа. Rust -
+реальный, но статистически шумный и объективно маленький рынок.</p>
+<hr>
+<h2 id="c-relocation">Рынок C - Relocation / Германия и ЕС</h2>
+<h3 id="_6">Ключевой вывод, который меняет рамку вопроса</h3>
+<p>Немецкая система разрешений на работу для IT (EU Blue Card) устроена <strong>по
+профессии (код ISCO-08), не по языку программирования</strong><sup id="fnref:13"><a class="footnote-ref" href="#fn:13">13</a></sup>. Список профессий с
+пониженным порогом Blue Card на 2026 год включает: 2511 системные аналитики, 2512
+разработчики ПО, 2513 веб/мультимедиа-разработчики, 2514
+программисты-прикладники, 2519 IT-специалисты прочие, 2521 проектировщики баз
+данных, <strong>2522 системные администраторы, 2523 специалисты по компьютерным
+сетям</strong><sup id="fnref2:13"><a class="footnote-ref" href="#fn:13">13</a></sup>. Стандартный порог зарплаты для Blue Card в 2026 - €50 700/год, для
+профессий из списка дефицитных - ниже, <strong>€45 934,20/год</strong><sup id="fnref3:13"><a class="footnote-ref" href="#fn:13">13</a></sup>.</p>
+<p><strong>Это прямо касается текущего направления Ивана</strong> - роли «инженер сопровождения» и
+«системный администратор» с кодами 2522/2523 попадают в льготный список наравне с
+разработчиками. Для IT-специалистов диплом не обязателен при 3+ годах
+подтверждённого опыта за последние 7 лет<sup id="fnref4:13"><a class="footnote-ref" href="#fn:13">13</a></sup><sup id="fnref:14"><a class="footnote-ref" href="#fn:14">14</a></sup> - у Ивана это условие уже
+выполнено семью годами в поддержке.</p>
+<p><strong>Практический вывод:</strong> язык программирования вторичен для самого факта
+релокации в Германию по этому пути - первичен код профессии и опыт. Язык
+программирования становится значим на следующем шаге - какие конкретно вакансии
+внутри «Software Developer»/«System Administrator» реально доступны и какая у них
+зарплата.</p>
+<h3 id="_7">Зарплаты и рынок труда в Германии</h3>
+<p>Средняя зарплата разработчика ПО в Германии - €53 988/год (2026)<sup id="fnref:15"><a class="footnote-ref" href="#fn:15">15</a></sup>. Junior -
+примерно €41 000-55 000<sup id="fnref2:15"><a class="footnote-ref" href="#fn:15">15</a></sup>. По регионам: Штутгарт €51 300-70 700, Берлин
+€46 900-65 500<sup id="fnref3:15"><a class="footnote-ref" href="#fn:15">15</a></sup>. <strong>Важное наблюдение:</strong> порог Blue Card по дефицитным
+профессиям (€45 934) ниже среднего junior-диапазона в Берлине - то есть попадание
+под льготный порог реалистично уже на входном уровне, если удастся получить
+job offer.</p>
+<p>Германия официально признаёт нехватку кадров в IT/STEM как один из главных
+дефицитных секторов (163+ профессий в списке бутылочных горлышек на 2025-2026,
+включая IT/инженерные)<sup id="fnref5:13"><a class="footnote-ref" href="#fn:13">13</a></sup>. Спрос устойчивый, международный найм в IT - обычная
+практика (пример из источника: в берлинском офисе 40 человек штат из СНГ стал
+нормой, работодатели помогают с документами и переездом)<sup id="fnref:16"><a class="footnote-ref" href="#fn:16">16</a></sup>.</p>
+<p>Требования к языку: английский на уровне B1+ обычно достаточен для самой работы,
+немецкий не обязателен, но B1 немецкого сокращает путь к ПМЖ через Blue Card до
+21 месяца против 27-33 без него<sup id="fnref2:14"><a class="footnote-ref" href="#fn:14">14</a></sup><sup id="fnref2:16"><a class="footnote-ref" href="#fn:16">16</a></sup>.</p>
+<h3 id="_8">Языковой профиль спроса в Германии</h3>
+<p>Прямых языковых срезов (сколько именно вакансий на C# vs Go vs Python в Германии)
+в собранных источниках нет - это требует отдельного прохода по немецким job-бордам
+(StepStone, Indeed.de) в следующей итерации. Косвенно: C# и Java исторически сильны
+в немецком enterprise/финтех/автопроме (SAP-экосистема, банки, страховые), Python
+- в data/ML, Go - в cloud-native/инфраструктурных ролях у более молодых
+технологических компаний и части enterprise, переезжающего в облако.</p>
+<p><strong>Вывод по рынку C:</strong> relocation-потенциал для текущего профиля Ивана (эксплуатация
++ инфраструктура) уже сейчас выше, чем можно было бы предположить по одному
+только языку программирования - профессия «системный администратор» /
+«инженер эксплуатации» официально льготная. Освоение Go или укрепление C#
+расширяет спектр доступных ролей внутри этого льготного коридора, но не является
+условием самой релокации.</p>
+<hr>
+<h2 id="_9">Связки язык + инфраструктура</h2>
+<p>Оценка синергии с текущим треком Ивана (эксплуатация, Linux, Kubernetes,
+PostgreSQL, мониторинг) - качественная, 1-5, не из внешнего источника, а
+сопоставление рыночных данных выше с содержанием <code>Roadmap_Infra_Sept2026.md</code>.</p>
+<table>
+<thead>
+<tr>
+<th>Связка</th>
+<th>Синергия с текущим треком</th>
+<th>Обоснование</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Go + Kubernetes/cloud</strong></td>
+<td>5/5</td>
+<td>Kubernetes, Docker, Terraform, Prometheus написаны на Go<sup id="fnref2:10"><a class="footnote-ref" href="#fn:10">10</a></sup> - Иван уже читает манифесты и логи этих систем; переход от «пользователя» к «читающему исходники» инструментов, которые и так изучает, минимален по дополнительным усилиям</td>
+</tr>
+<tr>
+<td><strong>Python + automation/DevOps</strong></td>
+<td>5/5</td>
+<td>уже сильная сторона Ивана (7 лет продакшн-Python), прямое попадание в «слой 8» роадмапа (Python и автоматизация), не требует новых усилий на язык - только на паттерны</td>
+</tr>
+<tr>
+<td><strong>C# + PostgreSQL + Kubernetes</strong></td>
+<td>3/5</td>
+<td>PostgreSQL - сильная сторона независимо от языка; C# в Kubernetes работает (ASP.NET Core контейнеризуется штатно), но это не типичная связка на рынке - большинство cloud-native тулинга и примеров - Go/Python, C# в этой нише скорее «тоже можно», чем «для этого создан»</td>
+</tr>
+<tr>
+<td><strong>C# + Infrastructure (широко)</strong></td>
+<td>3/5</td>
+<td>сильный enterprise-бэкенд язык, но роль в эксплуатации/DevOps для него нетипична на рынке - используется реже, чем Python/Go в этой роли</td>
+</tr>
+<tr>
+<td><strong>Java + Infrastructure</strong></td>
+<td>2/5</td>
+<td>тяжеловесная экосистема (Spring Boot, JVM-тюнинг) не даёт прямой связки с текущим Linux/Kubernetes треком сильнее, чем C#, при этом нет уже накопленного опыта, как с C#</td>
+</tr>
+<tr>
+<td><strong>Python + Infrastructure</strong></td>
+<td>5/5</td>
+<td>уже сильная сторона + прямое использование в скриптах эксплуатации, мониторинге, автоматизации - без этого пункта роадмап «Стенд с нуля» не работал бы</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="scorecard">Многокритериальный scorecard</h2>
+<p>Шкала 1-5 по каждому критерию, отдельно не «средний балл» - критерии сознательно
+не сведены в один рейтинг одним числом, чтобы не терять из виду то, ради чего это
+исследование заказано (не «язык №1» по одной метрике).</p>
+<p><strong>Обозначения:</strong> 🟢 сильная сторона · 🟡 средне/нейтрально · 🔴 слабая сторона ·
+<code>?</code> данных недостаточно, оценка экспертная, не из первичного источника</p>
+<table>
+<thead>
+<tr>
+<th>Критерий</th>
+<th>C#</th>
+<th>Python</th>
+<th>Go</th>
+<th>Java</th>
+<th>TypeScript</th>
+<th>Rust</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Объём вакансий (РФ)</td>
+<td>🟡 средний</td>
+<td>🟢 большой</td>
+<td>🟡 средний, растёт</td>
+<td>🟡 средний</td>
+<td>🟢 большой</td>
+<td>🔴 малый</td>
+</tr>
+<tr>
+<td>Динамика (РФ)</td>
+<td>🔴 стагнация</td>
+<td>🟢 рост</td>
+<td>🟢 сильный рост</td>
+<td>🟡 стагнация</td>
+<td>🟢 рост</td>
+<td>🟡 рост с малой базы</td>
+</tr>
+<tr>
+<td>Зарплата (РФ)</td>
+<td>🟡 средняя</td>
+<td>🟡 средняя</td>
+<td>🟢 выше средней</td>
+<td>🟡 средняя</td>
+<td>🟡 средняя</td>
+<td>🟢 высокая в топе, <code>?</code> медиана</td>
+</tr>
+<tr>
+<td>Junior/Middle/Senior баланс</td>
+<td>🟢 широкий вход</td>
+<td>🟢 широкий вход</td>
+<td>🔴 мало junior-позиций</td>
+<td>🟢 широкий вход</td>
+<td>🟢 широкий вход</td>
+<td>🔴 почти нет junior</td>
+</tr>
+<tr>
+<td>Доля remote</td>
+<td>🟡 средняя</td>
+<td>🟢 высокая</td>
+<td>🟡 средняя</td>
+<td>🟡 средняя</td>
+<td>🟢 высокая</td>
+<td>🟡 средняя, часто contract</td>
+</tr>
+<tr>
+<td>International demand</td>
+<td>🟢 стабильный (+22% контрибьюторов)</td>
+<td>🟢 очень высокий (AI/data)</td>
+<td>🟢 высокий, дефицит кадров</td>
+<td>🟡 стабильный, зрелый</td>
+<td>🟢 самый быстрорастущий</td>
+<td>🟡 нишевый, но «most admired»</td>
+</tr>
+<tr>
+<td>Relocation potential</td>
+<td>🟡 сильно зависит от роли, не языка</td>
+<td>🟡 то же</td>
+<td>🟡 то же</td>
+<td>🟡 то же</td>
+<td>🟡 то же</td>
+<td>🟡 то же</td>
+</tr>
+<tr>
+<td>Enterprise adoption</td>
+<td>🟢 очень высокий</td>
+<td>🟢 высокий</td>
+<td>🟡 растущий</td>
+<td>🟢 очень высокий</td>
+<td>🟢 высокий (фронт/фуллстек)</td>
+<td>🔴 нишевый</td>
+</tr>
+<tr>
+<td>Cloud/infra relevance</td>
+<td>🟡 возможно, не типично</td>
+<td>🟢 высокая</td>
+<td>🟢 нативная (K8s/Docker/Terraform)</td>
+<td>🟡 возможно, не типично</td>
+<td>🔴 не про backend/infra</td>
+<td>🟡 растёт (WASM, embedded)</td>
+</tr>
+<tr>
+<td>AI relevance</td>
+<td>🔴 слабая</td>
+<td>🟢 доминирующая</td>
+<td>🔴 слабая</td>
+<td>🔴 слабая</td>
+<td>🟢 сильная (typed-agent friendly)</td>
+<td>🔴 слабая</td>
+</tr>
+<tr>
+<td>Ecosystem maturity</td>
+<td>🟢 очень зрелая</td>
+<td>🟢 очень зрелая</td>
+<td>🟡 зрелая, моложе</td>
+<td>🟢 очень зрелая</td>
+<td>🟢 зрелая</td>
+<td>🟡 зрелая для системного, молодая для web</td>
+</tr>
+<tr>
+<td>Порог входа (ниже = легче)</td>
+<td>🟡 средний</td>
+<td>🟢 низкий</td>
+<td>🟢 низкий (простой синтаксис)</td>
+<td>🟡 средний</td>
+<td>🟡 средний (если знаешь C#/Java - легко)</td>
+<td>🔴 высокий (borrow checker)</td>
+</tr>
+<tr>
+<td>Совместимость с опытом Ивана</td>
+<td>🟢 уже есть 7 лет</td>
+<td>🟢 уже уверенно, продакшн</td>
+<td>🟢 естественное продолжение Linux/K8s трека</td>
+<td>🟡 концептуально близко к C#, но с нуля</td>
+<td>🟡 синтаксически легко, домен не его</td>
+<td>🔴 с нуля, сложный</td>
+</tr>
+<tr>
+<td>Оценка времени до employable <strong>для Ивана</strong> (не с нуля вообще)</td>
+<td>🟢 2-3 мес (закрыть разрыв в ASP.NET Core/EF Core)</td>
+<td>🟢 1-2 мес (закрыть разрыв в FastAPI/async на продакшн-уровне)</td>
+<td>🟡 2-4 мес (язык простой, но веб/API-паттерны с нуля)</td>
+<td>🔴 4-6 мес (весь стек Spring Boot с нуля)</td>
+<td>🟡 3-5 мес (язык простой, экосистема Node/Nest с нуля)</td>
+<td>🔴 6-12+ мес (высокий порог, для не-системного backend не оптимален)</td>
+</tr>
+<tr>
+<td>Перспектива на 2-3 года</td>
+<td>🟡 стабильный, не растущий</td>
+<td>🟢 сильная, тянет AI</td>
+<td>🟢 сильная, дефицит сохранится</td>
+<td>🟡 стабильный, не растущий</td>
+<td>🟢 сильная, тянет frontend+AI-tooling</td>
+<td>🟡 растущая, но медленно и с узкой базы</td>
+</tr>
+<tr>
+<td>Какие роли открывает</td>
+<td>Enterprise backend, финтех, банки, legacy-модернизация</td>
+<td>Backend, automation/DevOps, data/AI, ML-инженерия</td>
+<td>SRE/Platform Engineering, cloud-инфраструктура, backend высоконагруженных систем</td>
+<td>Enterprise backend (банки, крупный бизнес), Android</td>
+<td>Frontend, fullstack, backend-for-frontend (Node/Nest)</td>
+<td>Системное ПО, embedded, часть highload-backend (Яндекс-тип)</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="_10">Итоговые рейтинги</h2>
+<h3 id="1">1. Локальный рейтинг (Россия)</h3>
+<ol>
+<li><strong>Python</strong> - самый широкий и растущий рынок, уже сильная сторона Ивана.</li>
+<li><strong>Go</strong> - лучшая зарплатная динамика, структурный дефицит кадров.</li>
+<li><strong>TypeScript</strong> - большой и растущий рынок, но не про профиль Ивана (фронтенд/фуллстек).</li>
+<li><strong>C# / Java</strong> - стабильное плато, без роста и без падения.</li>
+<li><strong>Rust</strong> - реальный, но маленький и сконцентрированный рынок.</li>
+</ol>
+<h3 id="2-global">2. Global рейтинг</h3>
+<ol>
+<li><strong>TypeScript</strong> - структурный лидер по объёму и росту, усиленный AI-tooling трендом.</li>
+<li><strong>Python</strong> - доминирует в AI/data, широкий рынок.</li>
+<li><strong>Go</strong> - лучшая зарплатная премия за счёт дефицита, сильный рост.</li>
+<li><strong>C#</strong> - стабильный крупный рынок с реальным ростом числа разработчиков (+22% YoY по Octoverse), но не «горячий».</li>
+<li><strong>Java</strong> - зрелый, стабильный, без явного отличия от C# по динамике.</li>
+<li><strong>Rust</strong> - «most admired», но объективно маленький рынок вакансий.</li>
+</ol>
+<h3 id="3-relocation">3. Relocation рейтинг (Германия/ЕС)</h3>
+<p>Профессия важнее языка (см. раздел про рынок C). При равной профессии
+(«разработчик» / «системный администратор» - оба льготные):
+1. <strong>Python</strong> и <strong>Go</strong> - лучше всего ложатся на профиль «инфраструктура/эксплуатация», который у Ивана уже льготный по коду занятия.
+2. <strong>C#/Java</strong> - доступны через классический enterprise/финтех-найм в Германии, требуют отдельного изучения немецких вакансий по стеку (не сделано в этой итерации - см. ограничения).
+3. <strong>TypeScript</strong> - доступен через fullstack-роли, не основной профиль Ивана.
+4. <strong>Rust</strong> - самый узкий канал, скорее исключение, чем стратегия.</p>
+<h3 id="4-cnet">4. Рейтинг персонально для Ивана (с учётом накопленного C#/.NET и текущего инфраструктурного трека)</h3>
+<p>Это единственный рейтинг, где «дешевизна перехода» и «синергия с уже идущим
+треком» весят так же много, как абстрактный размер рынка:</p>
+<ol>
+<li><strong>Python</strong> - уже есть, уже растёт, прямая синергия с текущим треком. Поддерживать активно, это не новая инвестиция.</li>
+<li><strong>Go</strong> - лучшее соотношение «новое усилие / отдача»: рынок растёт, зарплата выше средней, а изучение почти бесплатно поверх уже идущего Kubernetes/Docker/Linux трека. <strong>Главная рекомендация этого исследования.</strong></li>
+<li><strong>C#/.NET</strong> - не расти вширь, но <strong>не бросать</strong>: 7 лет опыта - невозобновляемый актив, рынок стабилен, а не падает, и остаётся резервным enterprise-треком, если инфраструктурная стратегия не сработает или если появится конкретная сильная вакансия. Именно это и просил зафиксировать Иван.</li>
+<li><strong>TypeScript</strong> - низкий приоритет сейчас: нет синергии с профилем эксплуатации, но и не вреден - минимальное знакомство не помешает при fullstack-задачах на портфолио.</li>
+<li><strong>Java</strong> - не изучать: та же ниша, что C#, без синергии с текущим треком, дублирует уже занятую нишу без нового рынка взамен.</li>
+<li><strong>Rust</strong> - не изучать сейчас: слишком высокий порог входа при слишком узком рынке относительно других приоритетов.</li>
+</ol>
+<h2 id="5-7">5-7. Языки: изучать / поддерживать / не трогать</h2>
+<ul>
+<li><strong>Изучать (новая инвестиция времени):</strong> <strong>Go</strong>. Единственный язык, который проходит тест «дешёвая синергия + растущий рынок + прямое усиление relocation-профиля».</li>
+<li><strong>Поддерживать (не терять, не наращивать активно):</strong> <strong>C#/.NET</strong>, <strong>Python</strong>. Python - потому что уже используется каждый день (скрипты, Скаут, Трекер) и растёт сам по себе без выделенного времени. C# - потому что это стратегический актив, который Иван прямо просил не терять; поддержание = периодическая практика и держать язык «в тонусе», не полноценный второй трек обучения.</li>
+<li><strong>Не трогать сейчас (сознательно, не по незнанию):</strong> <strong>Java</strong> (дублирует нишу C# без нового рынка), <strong>Rust</strong> (высокий порог, узкий рынок, нет срочности), <strong>TypeScript</strong> (нет синергии с текущим профилем; если понадобится для конкретного fullstack-проекта - изучать точечно под задачу, не как отдельный трек).</li>
+</ul>
+<h2 id="8-scorecard-3-6">8. Scorecard для обновления раз в 3-6 месяцев</h2>
+<p>Обновлять этот блок при следующей сверке (рекомендуемая дата: <strong>март 2026</strong> →
+март следующего года от даты создания, то есть <strong>~март 2027</strong>, либо раньше, если
+рынок труда резко изменится). Что проверять заново при обновлении:</p>
+<ul>
+<li>[ ] Медианные зарплаты по языкам в РФ (Хабр Карьера, enigmai.ru - выходят каждые полгода)</li>
+<li>[ ] GitHub Octoverse (выходит ежегодно, октябрь)</li>
+<li>[ ] JetBrains State of Developer Ecosystem (выходит ежегодно, октябрь)</li>
+<li>[ ] Stack Overflow Developer Survey (выходит ежегодно, май)</li>
+<li>[ ] Порог зарплаты EU Blue Card и список дефицитных профессий на новый год (обновляется ежегодно, январь)</li>
+<li>[ ] Прогресс Ивана по Go, если решит начать (сверить фактическое время до employable-уровня с прогнозом 2-4 месяца из этого документа)</li>
+<li>[ ] Не изменилось ли решение Ивана по релокации (страна, срочность)</li>
+</ul>
+<hr>
+<h2 id="_11">Источники</h2>
+<hr>
+<p><em>Создан 15.09.2026. Следующая плановая сверка - см. чеклист выше. Стратегическая
+выжимка - в <code>SESSION_CONTEXT.md</code>. Статус C#-трека в памяти обновлён отдельно
+(<code>project_csharp_learning.md</code>, <code>user_ivan.md</code>) по итогам этого документа.</em></p>
+<div class="footnote">
+<hr>
+<ol>
+<li id="fn:1">
+<p><a href="https://habr.com/ru/companies/habr_career/articles/1075936/">Сколько зарабатывают разработчики в 2026 году</a>, Хабр Карьера&#160;<a class="footnote-backref" href="#fnref:1" title="Jump back to footnote 1 in the text">&#8617;</a><a class="footnote-backref" href="#fnref2:1" title="Jump back to footnote 1 in the text">&#8617;</a><a class="footnote-backref" href="#fnref3:1" title="Jump back to footnote 1 in the text">&#8617;</a></p>
+</li>
+<li id="fn:2">
+<p><a href="https://habr.com/ru/articles/1069376/">Более 100 000 вакансий: полный анализ IT-рынка России в 2026</a>, Хабр&#160;<a class="footnote-backref" href="#fnref:2" title="Jump back to footnote 2 in the text">&#8617;</a><a class="footnote-backref" href="#fnref2:2" title="Jump back to footnote 2 in the text">&#8617;</a></p>
+</li>
+<li id="fn:3">
+<p><a href="https://habr.com/ru/specials/1060148/">Зарплаты IT-специалистов в первой половине 2026</a>, Хабр&#160;<a class="footnote-backref" href="#fnref:3" title="Jump back to footnote 3 in the text">&#8617;</a><a class="footnote-backref" href="#fnref2:3" title="Jump back to footnote 3 in the text">&#8617;</a><a class="footnote-backref" href="#fnref3:3" title="Jump back to footnote 3 in the text">&#8617;</a><a class="footnote-backref" href="#fnref4:3" title="Jump back to footnote 3 in the text">&#8617;</a><a class="footnote-backref" href="#fnref5:3" title="Jump back to footnote 3 in the text">&#8617;</a><a class="footnote-backref" href="#fnref6:3" title="Jump back to footnote 3 in the text">&#8617;</a></p>
+</li>
+<li id="fn:4">
+<p><a href="https://enigmai.ru/salary/golang/go-salary-market/">Зарплата Go разработчика в 2026: детальный обзор рынка</a>, enigmai.ru&#160;<a class="footnote-backref" href="#fnref:4" title="Jump back to footnote 4 in the text">&#8617;</a></p>
+</li>
+<li id="fn:5">
+<p>агрегированные данные по вакансиям Rust в Москве - JobFilter, JobRabota, Telegram-канал rust_jobs_feed (2026)&#160;<a class="footnote-backref" href="#fnref:5" title="Jump back to footnote 5 in the text">&#8617;</a><a class="footnote-backref" href="#fnref2:5" title="Jump back to footnote 5 in the text">&#8617;</a><a class="footnote-backref" href="#fnref3:5" title="Jump back to footnote 5 in the text">&#8617;</a></p>
+</li>
+<li id="fn:6">
+<p><a href="https://enigmai.ru/salary/frontend/frontend-salary-2026/">Зарплата Frontend-разработчика в 2026</a>, enigmai.ru&#160;<a class="footnote-backref" href="#fnref:6" title="Jump back to footnote 6 in the text">&#8617;</a></p>
+</li>
+<li id="fn:7">
+<p><a href="https://github.blog/news-insights/octoverse/octoverse-a-new-developer-joins-github-every-second-as-ai-leads-typescript-to-1/">Octoverse: A new developer joins GitHub every second as AI leads TypeScript to #1</a>, GitHub Blog, октябрь 2025&#160;<a class="footnote-backref" href="#fnref:7" title="Jump back to footnote 7 in the text">&#8617;</a></p>
+</li>
+<li id="fn:8">
+<p><a href="https://blog.jetbrains.com/research/2025/10/state-of-developer-ecosystem-2025/">The State of Developer Ecosystem 2025</a>, JetBrains, октябрь 2025&#160;<a class="footnote-backref" href="#fnref:8" title="Jump back to footnote 8 in the text">&#8617;</a></p>
+</li>
+<li id="fn:9">
+<p>Stack Overflow Developer Survey 2025 (через вторичные обзоры - techrecruiting.io, electroiq.com)&#160;<a class="footnote-backref" href="#fnref:9" title="Jump back to footnote 9 in the text">&#8617;</a></p>
+</li>
+<li id="fn:10">
+<p>агрегированные обзоры рынка Go 2026 - LangPop, BridgeView IT (через вторичные обзоры)&#160;<a class="footnote-backref" href="#fnref:10" title="Jump back to footnote 10 in the text">&#8617;</a><a class="footnote-backref" href="#fnref2:10" title="Jump back to footnote 10 in the text">&#8617;</a></p>
+</li>
+<li id="fn:11">
+<p><a href="https://motionrecruitment.com/it-salary/dotnet">2026 .NET and Dotnet Developer Salary Guide</a>, Motion Recruitment; <a href="https://www.index.dev/blog/europe-tech-job-market-trends-statistics">Europe's Tech Job Market 2026</a>, index.dev&#160;<a class="footnote-backref" href="#fnref:11" title="Jump back to footnote 11 in the text">&#8617;</a><a class="footnote-backref" href="#fnref2:11" title="Jump back to footnote 11 in the text">&#8617;</a><a class="footnote-backref" href="#fnref3:11" title="Jump back to footnote 11 in the text">&#8617;</a></p>
+</li>
+<li id="fn:12">
+<p>агрегированные обзоры Rust-зарплат - ZipRecruiter, remotestack.in (2026)&#160;<a class="footnote-backref" href="#fnref:12" title="Jump back to footnote 12 in the text">&#8617;</a></p>
+</li>
+<li id="fn:13">
+<p><a href="https://www.jobbatical.com/blog/germany-shortage-occupations-bottleneck-professions-eu-blue-card">Shortage Occupations 2026: EU Blue Card Guide</a>; <a href="https://workdaten.eu/en/resources/shortage-occupations-2026-eu-blue-card/">EU Blue Card shortage occupations 2026</a>, WorkDaten&#160;<a class="footnote-backref" href="#fnref:13" title="Jump back to footnote 13 in the text">&#8617;</a><a class="footnote-backref" href="#fnref2:13" title="Jump back to footnote 13 in the text">&#8617;</a><a class="footnote-backref" href="#fnref3:13" title="Jump back to footnote 13 in the text">&#8617;</a><a class="footnote-backref" href="#fnref4:13" title="Jump back to footnote 13 in the text">&#8617;</a><a class="footnote-backref" href="#fnref5:13" title="Jump back to footnote 13 in the text">&#8617;</a></p>
+</li>
+<li id="fn:14">
+<p><a href="https://www.transparent-hiring.com/ru/blog/blue-card-germany-guide/">Голубая карта Германии 2026</a>, Transparent Hiring&#160;<a class="footnote-backref" href="#fnref:14" title="Jump back to footnote 14 in the text">&#8617;</a><a class="footnote-backref" href="#fnref2:14" title="Jump back to footnote 14 in the text">&#8617;</a></p>
+</li>
+<li id="fn:15">
+<p><a href="https://www.payscale.com/research/DE/Job=Software_Developer/Salary">Software Developer Salary in Germany 2026</a>, PayScale; StepStone (через вторичный обзор)&#160;<a class="footnote-backref" href="#fnref:15" title="Jump back to footnote 15 in the text">&#8617;</a><a class="footnote-backref" href="#fnref2:15" title="Jump back to footnote 15 in the text">&#8617;</a><a class="footnote-backref" href="#fnref3:15" title="Jump back to footnote 15 in the text">&#8617;</a></p>
+</li>
+<li id="fn:16">
+<p><a href="https://bluecardagency.com/kak-ajtishniku-pereehat-v-germaniyu-v-2025-godu-sekrety-uspeshnoj-relokaczii-dlya-it-speczialistov/">Как айтишнику переехать в Германию в 2025</a>, BlueCardAgency&#160;<a class="footnote-backref" href="#fnref:16" title="Jump back to footnote 16 in the text">&#8617;</a><a class="footnote-backref" href="#fnref2:16" title="Jump back to footnote 16 in the text">&#8617;</a></p>
+</li>
+</ol>
+</div></article>
+    <aside class="aside">
+      <strong>В этом документе</strong>
+      <div class="toc"><div class="toc">
+<ul>
+<li><a href="#_1">Как читать этот документ</a></li>
+<li><a href="#_2">Гипотеза, которую проверяем</a></li>
+<li><a href="#a-">Рынок A - Россия</a><ul>
+<li><a href="#_3">Общий фон</a></li>
+<li><a href="#_4">По языкам</a></li>
+</ul>
+</li>
+<li><a href="#b-global-international-remote">Рынок B - Global / international remote</a><ul>
+<li><a href="#_5">Источники по языкам в целом</a></li>
+<li><a href="#remote-usd">Зарплаты (США/международный remote, USD/год)</a></li>
+<li><a href="#remote-">Remote-специфика</a></li>
+</ul>
+</li>
+<li><a href="#c-relocation">Рынок C - Relocation / Германия и ЕС</a><ul>
+<li><a href="#_6">Ключевой вывод, который меняет рамку вопроса</a></li>
+<li><a href="#_7">Зарплаты и рынок труда в Германии</a></li>
+<li><a href="#_8">Языковой профиль спроса в Германии</a></li>
+</ul>
+</li>
+<li><a href="#_9">Связки язык + инфраструктура</a></li>
+<li><a href="#scorecard">Многокритериальный scorecard</a></li>
+<li><a href="#_10">Итоговые рейтинги</a><ul>
+<li><a href="#1">1. Локальный рейтинг (Россия)</a></li>
+<li><a href="#2-global">2. Global рейтинг</a></li>
+<li><a href="#3-relocation">3. Relocation рейтинг (Германия/ЕС)</a></li>
+<li><a href="#4-cnet">4. Рейтинг персонально для Ивана (с учётом накопленного C#/.NET и текущего инфраструктурного трека)</a></li>
+</ul>
+</li>
+<li><a href="#5-7">5-7. Языки: изучать / поддерживать / не трогать</a></li>
+<li><a href="#8-scorecard-3-6">8. Scorecard для обновления раз в 3-6 месяцев</a></li>
+<li><a href="#_11">Источники</a></li>
+</ul>
+</div>
+</div>
+    </aside>
+  </div>
+</main>
+
+
+<script>
+const ROOT = "..";
+
+// ---- тема
+const themeBtn = document.getElementById("theme");
+const paint = () => {
+  const dark = document.documentElement.getAttribute("data-theme") === "dark";
+  themeBtn.textContent = dark ? "☀" : "☾";
+};
+paint();
+themeBtn.addEventListener("click", () => {
+  const next = document.documentElement.getAttribute("data-theme") === "dark" ? "light" : "dark";
+  document.documentElement.setAttribute("data-theme", next);
+  try { localStorage.setItem("kb-theme", next); } catch (e) {}
+  paint();
+});
+
+// ---- поиск
+let index = null;
+const box = document.getElementById("results");
+const hits = document.getElementById("hits");
+const head = box.querySelector("h3");
+const input = document.getElementById("q");
+
+async function ensureIndex() {
+  if (index) return index;
+  const res = await fetch(ROOT + "/search-index.json");
+  index = await res.json();
+  return index;
+}
+
+const esc = (s) => (s || "").replace(/[&<>]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
+
+function hi(text, query) {
+  const i = text.toLowerCase().indexOf(query);
+  if (i < 0) return esc(text);
+  return esc(text.slice(0, i)) + "<mark>" + esc(text.slice(i, i + query.length)) + "</mark>" + esc(text.slice(i + query.length));
+}
+
+input.addEventListener("input", async () => {
+  const q = input.value.trim().toLowerCase();
+  if (q.length < 2) { box.hidden = true; return; }
+  const data = await ensureIndex();
+  const found = [];
+  for (const d of data) {
+    const inTitle = d.title.toLowerCase().includes(q);
+    const inSum = (d.summary || "").toLowerCase().includes(q);
+    const heads = (d.heads || []).filter(h => h.toLowerCase().includes(q));
+    if (inTitle || inSum || heads.length) {
+      found.push({ d, heads, rank: inTitle ? 0 : heads.length ? 1 : 2 });
+    }
+  }
+  found.sort((a, b) => a.rank - b.rank);
+  head.textContent = found.length ? `Нашлось: ${found.length}` : "Ничего не нашлось";
+  hits.innerHTML = found.slice(0, 40).map(({ d, heads }) =>
+    `<a class="hit" href="${ROOT}/d/${d.slug}.html">
+       <b>${hi(d.title, q)}</b>
+       <span>${heads.length ? "→ " + heads.slice(0, 3).map(h => hi(h, q)).join(" · ") : esc(d.summary || "")}</span>
+     </a>`).join("");
+  box.hidden = false;
+});
+
+input.addEventListener("keydown", (e) => { if (e.key === "Escape") { input.value = ""; box.hidden = true; input.blur(); } });
+document.addEventListener("keydown", (e) => {
+  if (e.key === "/" && document.activeElement !== input) { e.preventDefault(); input.focus(); }
+});
+</script>
+</body>
+</html>
