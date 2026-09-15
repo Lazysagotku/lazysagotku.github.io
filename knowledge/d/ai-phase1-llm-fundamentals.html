@@ -1,0 +1,336 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>🔵 Фаза 1. Фундамент LLM (4 часа) - База знаний</title>
+<link rel="stylesheet" href="../kb.css">
+<script>
+  // Тему ставим до первой отрисовки, иначе на тёмной системе мигает белым.
+  try {
+    var t = localStorage.getItem("kb-theme");
+    if (!t) t = matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+    document.documentElement.setAttribute("data-theme", t);
+  } catch (e) {}
+</script>
+</head>
+<body>
+
+<header class="top">
+  <div class="top-in">
+    <a class="brand" href="../index.html">База <span>знаний</span></a>
+    <span class="grow"></span>
+    <input id="q" type="search" placeholder="Поиск по всем материалам…" autocomplete="off">
+    <button class="icon-btn" id="theme" type="button" title="Тема"></button>
+  </div>
+</header>
+
+<div id="results" hidden><div class="wrap-r"><h3></h3><div id="hits"></div></div></div>
+
+<main class="wrap">
+  <div class="doc-head">
+    <div class="crumb"><a href="../index.html#reference">Справочники</a></div>
+    <h1>🔵 Фаза 1. Фундамент LLM (4 часа)</h1>
+    <div class="meta">133 строк · источник <code>l2code/AI_Phase1_LLM_Fundamentals.md</code></div>
+  </div>
+
+  <div class="layout">
+    <article class="prose"><blockquote>
+<p>📖 Фаза роадмапа <strong>«AI Product Engineer»</strong>. Оглавление и статус - в <code>AIEngineer_Roadmap.md</code>.
+Каждая фаза самодостаточна: 🎭 аналогия → 📖 теория → 🔧 практика → 💥 сломай намеренно → ✅ задание → 🌍 из жизни → ❓ вопросы с ответами.</p>
+<p>Цель: понимать, с чем работаешь, и уметь объяснить это словами, которые слышат на собеседовании.</p>
+</blockquote>
+<h2 id="_1">🎭 Аналогия</h2>
+<p>Очень начитанный собеседник, который отвечает уверенно всегда - и когда знает, и когда не знает. Он не врёт намеренно: он достраивает правдоподобное продолжение фразы. Вся работа с моделью строится вокруг этого свойства.</p>
+<p><strong>Вторая аналогия, для контекстного окна.</strong> Стол переговоров определённого размера. На него помещается ограниченное число бумаг. Кладёшь новую - самую старую приходится убрать, и модель про неё больше не помнит.</p>
+<h2 id="_2">📖 Теория</h2>
+<h3 id="_3">Токены</h3>
+<p>Модель работает не с буквами и не со словами, а с токенами - кусками текста. Английское слово обычно один токен, русское часто три-четыре, потому что кириллица в словаре представлена хуже.</p>
+<p>Практические следствия, которые надо называть:</p>
+<table>
+<thead>
+<tr>
+<th>Следствие</th>
+<th>Почему</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Модель плохо считает буквы в слове</td>
+<td>она видит токены, а не символы</td>
+</tr>
+<tr>
+<td>Русский текст дороже английского</td>
+<td>больше токенов на тот же смысл</td>
+</tr>
+<tr>
+<td>Длинный документ упирается в лимит</td>
+<td>контекстное окно измеряется в токенах</td>
+</tr>
+<tr>
+<td>JSON дороже простого текста</td>
+<td>скобки и кавычки тоже токены</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Контекстное окно</strong> - максимум токенов на вход и выход вместе. Всё, что не помещается, надо резать, суммировать или искать. Отсюда растёт RAG в фазе 3.</p>
+<h3 id="_4">Роли в диалоге</h3>
+<table>
+<thead>
+<tr>
+<th>Роль</th>
+<th>Что несёт</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>system</code></td>
+<td>правила, тон, ограничения, формат ответа</td>
+</tr>
+<tr>
+<td><code>user</code></td>
+<td>запрос</td>
+</tr>
+<tr>
+<td><code>assistant</code></td>
+<td>предыдущие ответы модели, из них строится история</td>
+</tr>
+</tbody>
+</table>
+<p>Системное сообщение отделено, потому что имеет больший вес и обычно не меняется между запросами. Туда идут правила, а не данные.</p>
+<h3 id="_5">Параметры генерации</h3>
+<table>
+<thead>
+<tr>
+<th>Параметр</th>
+<th>Что делает</th>
+<th>Когда крутить</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>temperature</code></td>
+<td>разброс: 0 почти детерминированно, 1 разнообразно</td>
+<td>извлечение данных - 0, генерация текста - 0.7</td>
+</tr>
+<tr>
+<td><code>top_p</code></td>
+<td>отсекает хвост маловероятных вариантов</td>
+<td>обычно оставляют по умолчанию</td>
+</tr>
+<tr>
+<td><code>max_tokens</code></td>
+<td>потолок длины ответа</td>
+<td>защита от бесконечной генерации и от счёта</td>
+</tr>
+<tr>
+<td><code>stop</code></td>
+<td>последовательности, на которых остановиться</td>
+<td>структурированный вывод</td>
+</tr>
+</tbody>
+</table>
+<p>⚠️ Крутить <code>temperature</code> и <code>top_p</code> одновременно смысла мало - они делают похожее. Меняют обычно один.</p>
+<h3 id="_6">Галлюцинации</h3>
+<p>Модель предсказывает правдоподобное продолжение. Когда фактов нет, правдоподобное продолжение всё равно существует - и выглядит как уверенный ответ.</p>
+<p><strong>Это свойство архитектуры, а не баг.</strong> Честное объяснение на собеседовании звучит сильнее, чем обещание «мы настроили, и она не врёт».</p>
+<p>Что реально снижает:</p>
+<table>
+<thead>
+<tr>
+<th>Приём</th>
+<th>Как работает</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Дать факты в промпт</td>
+<td>модели нечего достраивать, ответ есть в контексте</td>
+</tr>
+<tr>
+<td>Разрешить сказать «не знаю»</td>
+<td>явно в системном сообщении</td>
+</tr>
+<tr>
+<td>Требовать цитату из источника</td>
+<td>ответ без цитаты отбраковывается</td>
+</tr>
+<tr>
+<td>Проверять вывод кодом</td>
+<td>схема, справочник, повторный запрос</td>
+</tr>
+<tr>
+<td>Снизить температуру</td>
+<td>меньше разброса</td>
+</tr>
+</tbody>
+</table>
+<h3 id="-">Промпт-инжиниринг</h3>
+<p>Структура рабочего промпта:</p>
+<pre><code>Роль и задача       кто ты и что делаешь
+Контекст            данные, с которыми работать
+Правила             что обязательно, что запрещено
+Формат ответа       структура, желательно с примером
+Примеры             один-два, если формат нетривиальный
+</code></pre>
+<table>
+<thead>
+<tr>
+<th>Подход</th>
+<th>Когда</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Zero-shot</strong></td>
+<td>задача простая и однозначная</td>
+</tr>
+<tr>
+<td><strong>Few-shot</strong></td>
+<td>нужен конкретный формат или стиль</td>
+</tr>
+<tr>
+<td><strong>Chain of thought</strong></td>
+<td>нужны рассуждения, «разбери по шагам»</td>
+</tr>
+</tbody>
+</table>
+<p>⚠️ Отрицания работают хуже утверждений. «Отвечай только по данным из контекста» работает лучше, чем «не выдумывай».</p>
+<h2 id="_7">🔧 Практика</h2>
+<ol>
+<li><strong>Разобрать пять собственных промптов</strong> из работы с Claude Code, которые сработали хорошо. Для каждого написать, почему: какая структура, что в системном сообщении, был ли пример. Это и есть перевод интуиции в термины.</li>
+<li>Посчитать токены на реальном тексте вакансии через <code>tiktoken</code> или счётчик Anthropic. Сравнить русский и английский варианты одного описания.</li>
+<li>Взять промпт разведчика, который готовит разбор вакансии, и переписать по структуре из пяти блоков. Сравнить результат.</li>
+<li>Прогнать один и тот же запрос при <code>temperature</code> 0 и 1 по три раза, посмотреть на разброс.</li>
+</ol>
+<h2 id="_8">💥 Сломай намеренно</h2>
+<ol>
+<li><strong>Попросить посчитать буквы в слове</strong> и получить неверный ответ. Понять, почему.</li>
+<li><strong>Задать вопрос о несуществующем</strong> - например о вымышленной библиотеке - и посмотреть на уверенный выдуманный ответ.</li>
+<li><strong>Убрать «отвечай только по контексту»</strong> из системного сообщения и посмотреть, как модель начинает достраивать.</li>
+<li><strong>Написать правило через отрицание</strong> («не пиши списками») и посмотреть, как оно работает хуже утверждения («пиши сплошным текстом»).</li>
+<li><strong>Переполнить контекст</strong> длинным документом и посмотреть на ошибку или на потерю начала диалога.</li>
+</ol>
+<h2 id="_9">✅ Задание</h2>
+<p>Документ на две страницы: разбор пяти собственных промптов в терминах фазы. Не для публикации, для себя - чтобы на вопрос «как вы работаете с моделями» отвечать конкретно.</p>
+<p><strong>Критерий:</strong> можешь объяснить галлюцинации через устройство модели и назвать три приёма, которые их снижают.</p>
+<h2 id="_10">🌍 Из жизни</h2>
+<p><strong>Про честность на собеседовании.</strong> Кандидат, который говорит «мы настроили промпт, и модель не галлюцинирует», выглядит слабее того, кто объясняет механизм и называет приёмы снижения. Второй показывает понимание, первый - надежду.</p>
+<p><strong>Про русский язык и стоимость.</strong> Одно и то же описание вакансии на русском занимает в два-три раза больше токенов, чем на английском. При обработке тысяч вакансий это прямые деньги.</p>
+<p><strong>Про свой опыт.</strong> Формулировка, которая работает: «работаю с ИИ-инструментами как с рабочим окружением, а не как с чатом для вопросов. Своя конфигурация Claude Code, MCP-серверы к базам и сервисам, автоматизация рутины через агентов».</p>
+<h2 id="_11">❓ Вопросы с ответами</h2>
+<p><strong>Что такое токен и почему это важно?</strong></p>
+<blockquote>
+<p>Кусок текста, которым оперирует модель. Английское слово обычно один токен, русское три-четыре. Отсюда три практических следствия: модель плохо считает буквы, русский текст дороже, а длинный документ упирается в контекстное окно.</p>
+</blockquote>
+<p><strong>Почему модель галлюцинирует?</strong></p>
+<blockquote>
+<p>Она предсказывает правдоподобное продолжение. Когда фактов нет, правдоподобное продолжение всё равно существует и выглядит уверенно. Это свойство архитектуры. Снижаю тем, что даю факты в контекст, явно разрешаю ответить «не знаю», требую цитату из источника и проверяю вывод кодом.</p>
+</blockquote>
+<p><strong>Зачем системное сообщение отдельно от пользовательского?</strong></p>
+<blockquote>
+<p>В нём правила, тон и формат - то, что не меняется между запросами и имеет больший вес. Данные идут в пользовательское. Смешивать их - способ получить промпт, который правится в двух местах.</p>
+</blockquote>
+<p><strong>Что меняет temperature?</strong></p>
+<blockquote>
+<p>Разброс ответов. Ноль даёт почти детерминированный результат, единица - разнообразный. Для извлечения данных беру ноль, для генерации текста около 0.7. Одновременно с <code>top_p</code> не кручу, они делают похожее.</p>
+</blockquote>
+<p><strong>Как вы пишете промпты?</strong></p>
+<blockquote>
+<p>По структуре: роль и задача, контекст, правила, формат ответа, при необходимости пример. Правила формулирую утверждениями, а не отрицаниями - отрицания работают хуже. Если формат нетривиальный, даю один-два примера.</p>
+</blockquote></article>
+    <aside class="aside">
+      <strong>В этом документе</strong>
+      <div class="toc"><div class="toc">
+<ul>
+<li><a href="#_1">🎭 Аналогия</a></li>
+<li><a href="#_2">📖 Теория</a><ul>
+<li><a href="#_3">Токены</a></li>
+<li><a href="#_4">Роли в диалоге</a></li>
+<li><a href="#_5">Параметры генерации</a></li>
+<li><a href="#_6">Галлюцинации</a></li>
+<li><a href="#-">Промпт-инжиниринг</a></li>
+</ul>
+</li>
+<li><a href="#_7">🔧 Практика</a></li>
+<li><a href="#_8">💥 Сломай намеренно</a></li>
+<li><a href="#_9">✅ Задание</a></li>
+<li><a href="#_10">🌍 Из жизни</a></li>
+<li><a href="#_11">❓ Вопросы с ответами</a></li>
+</ul>
+</div>
+</div>
+    </aside>
+  </div>
+</main>
+
+
+<script>
+const ROOT = "..";
+
+// ---- тема
+const themeBtn = document.getElementById("theme");
+const paint = () => {
+  const dark = document.documentElement.getAttribute("data-theme") === "dark";
+  themeBtn.textContent = dark ? "☀" : "☾";
+};
+paint();
+themeBtn.addEventListener("click", () => {
+  const next = document.documentElement.getAttribute("data-theme") === "dark" ? "light" : "dark";
+  document.documentElement.setAttribute("data-theme", next);
+  try { localStorage.setItem("kb-theme", next); } catch (e) {}
+  paint();
+});
+
+// ---- поиск
+let index = null;
+const box = document.getElementById("results");
+const hits = document.getElementById("hits");
+const head = box.querySelector("h3");
+const input = document.getElementById("q");
+
+async function ensureIndex() {
+  if (index) return index;
+  const res = await fetch(ROOT + "/search-index.json");
+  index = await res.json();
+  return index;
+}
+
+const esc = (s) => (s || "").replace(/[&<>]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
+
+function hi(text, query) {
+  const i = text.toLowerCase().indexOf(query);
+  if (i < 0) return esc(text);
+  return esc(text.slice(0, i)) + "<mark>" + esc(text.slice(i, i + query.length)) + "</mark>" + esc(text.slice(i + query.length));
+}
+
+input.addEventListener("input", async () => {
+  const q = input.value.trim().toLowerCase();
+  if (q.length < 2) { box.hidden = true; return; }
+  const data = await ensureIndex();
+  const found = [];
+  for (const d of data) {
+    const inTitle = d.title.toLowerCase().includes(q);
+    const inSum = (d.summary || "").toLowerCase().includes(q);
+    const heads = (d.heads || []).filter(h => h.toLowerCase().includes(q));
+    if (inTitle || inSum || heads.length) {
+      found.push({ d, heads, rank: inTitle ? 0 : heads.length ? 1 : 2 });
+    }
+  }
+  found.sort((a, b) => a.rank - b.rank);
+  head.textContent = found.length ? `Нашлось: ${found.length}` : "Ничего не нашлось";
+  hits.innerHTML = found.slice(0, 40).map(({ d, heads }) =>
+    `<a class="hit" href="${ROOT}/d/${d.slug}.html">
+       <b>${hi(d.title, q)}</b>
+       <span>${heads.length ? "→ " + heads.slice(0, 3).map(h => hi(h, q)).join(" · ") : esc(d.summary || "")}</span>
+     </a>`).join("");
+  box.hidden = false;
+});
+
+input.addEventListener("keydown", (e) => { if (e.key === "Escape") { input.value = ""; box.hidden = true; input.blur(); } });
+document.addEventListener("keydown", (e) => {
+  if (e.key === "/" && document.activeElement !== input) { e.preventDefault(); input.focus(); }
+});
+</script>
+</body>
+</html>

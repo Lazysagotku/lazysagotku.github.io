@@ -1,0 +1,330 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>🟢 Фаза 2. Работа с LLM API (6 часов) - База знаний</title>
+<link rel="stylesheet" href="../kb.css">
+<script>
+  // Тему ставим до первой отрисовки, иначе на тёмной системе мигает белым.
+  try {
+    var t = localStorage.getItem("kb-theme");
+    if (!t) t = matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+    document.documentElement.setAttribute("data-theme", t);
+  } catch (e) {}
+</script>
+</head>
+<body>
+
+<header class="top">
+  <div class="top-in">
+    <a class="brand" href="../index.html">База <span>знаний</span></a>
+    <span class="grow"></span>
+    <input id="q" type="search" placeholder="Поиск по всем материалам…" autocomplete="off">
+    <button class="icon-btn" id="theme" type="button" title="Тема"></button>
+  </div>
+</header>
+
+<div id="results" hidden><div class="wrap-r"><h3></h3><div id="hits"></div></div></div>
+
+<main class="wrap">
+  <div class="doc-head">
+    <div class="crumb"><a href="../index.html#reference">Справочники</a></div>
+    <h1>🟢 Фаза 2. Работа с LLM API (6 часов)</h1>
+    <div class="meta">184 строк · источник <code>l2code/AI_Phase2_LLM_API.md</code></div>
+  </div>
+
+  <div class="layout">
+    <article class="prose"><blockquote>
+<p>📖 Фаза роадмапа <strong>«AI Product Engineer»</strong>. Оглавление и статус - в <code>AIEngineer_Roadmap.md</code>.
+Каждая фаза самодостаточна: 🎭 аналогия → 📖 теория → 🔧 практика → 💥 сломай намеренно → ✅ задание → 🌍 из жизни → ❓ вопросы с ответами.</p>
+<p>Цель: встроить вызов модели в код, а не только в чат. Частично пройдено практикой на разведчике.</p>
+</blockquote>
+<h2 id="_1">🎭 Аналогия</h2>
+<p>Разница между разговором с консультантом и встроенным в кассу сканером. Консультант отвечает человеку, сканер отдаёт структурированные данные программе. Второму нужны схема ответа, обработка сбоев и учёт стоимости.</p>
+<h2 id="_2">📖 Теория</h2>
+<h3 id="_3">Базовый вызов</h3>
+<pre><code class="language-python">import anthropic
+
+client = anthropic.Anthropic()   # ключ из ANTHROPIC_API_KEY
+
+response = client.messages.create(
+    model=&quot;claude-sonnet-5&quot;,
+    max_tokens=1024,
+    system=&quot;Ты разбираешь вакансии. Отвечай только по тексту вакансии.&quot;,
+    messages=[{&quot;role&quot;: &quot;user&quot;, &quot;content&quot;: text}],
+)
+print(response.content[0].text)
+print(response.usage.input_tokens, response.usage.output_tokens)
+</code></pre>
+<p>⚠️ <code>usage</code> в ответе - это счёт. Логировать его надо с первого дня, иначе расход обнаруживается по выписке.</p>
+<h3 id="_4">Потоковая выдача</h3>
+<pre><code class="language-python">with client.messages.stream(model=&quot;claude-sonnet-5&quot;, max_tokens=1024,
+                            messages=[{&quot;role&quot;: &quot;user&quot;, &quot;content&quot;: text}]) as stream:
+    for chunk in stream.text_stream:
+        print(chunk, end=&quot;&quot;, flush=True)
+</code></pre>
+<p>Стриминг не ускоряет генерацию. Он меняет <strong>восприятие</strong>: первые слова появляются через секунду вместо тридцати. Для интерфейса это разница между «работает» и «завис».</p>
+<p>Мост от C#: <code>IAsyncEnumerable&lt;T&gt;</code> - тот же паттерн потребления по частям.</p>
+<h3 id="_5">Структурированный вывод</h3>
+<p>Самая полезная часть для эксплуатации: получить от модели данные, а не текст.</p>
+<pre><code class="language-python">from pydantic import BaseModel
+
+class VacancyBrief(BaseModel):
+    track: str
+    salary_min: int | None
+    blockers: list[str]
+    score: int
+
+schema = VacancyBrief.model_json_schema()
+</code></pre>
+<p>Два способа добиться схемы:
+1. <strong>Tool use</strong> - описать инструмент со схемой параметров, модель «вызывает» его, и параметры приходят валидными.
+2. <strong>Промпт плюс валидация</strong> - попросить JSON, распарсить, при ошибке отправить обратно с текстом ошибки.</p>
+<p>⚠️ Первый способ надёжнее. Второй нужен, когда провайдер не поддерживает инструменты.</p>
+<p><strong>Всегда валидировать через Pydantic</strong>, даже при использовании инструментов. Схема на стороне модели - подсказка, а не гарантия.</p>
+<h3 id="tool-use">Tool use</h3>
+<pre><code class="language-python">tools = [{
+    &quot;name&quot;: &quot;save_brief&quot;,
+    &quot;description&quot;: &quot;Сохраняет разбор вакансии в трекер&quot;,
+    &quot;input_schema&quot;: {
+        &quot;type&quot;: &quot;object&quot;,
+        &quot;properties&quot;: {
+            &quot;track&quot;: {&quot;type&quot;: &quot;string&quot;, &quot;enum&quot;: [&quot;dev&quot;, &quot;ai&quot;, &quot;support&quot;]},
+            &quot;score&quot;: {&quot;type&quot;: &quot;integer&quot;, &quot;minimum&quot;: 0, &quot;maximum&quot;: 100},
+            &quot;blockers&quot;: {&quot;type&quot;: &quot;array&quot;, &quot;items&quot;: {&quot;type&quot;: &quot;string&quot;}},
+        },
+        &quot;required&quot;: [&quot;track&quot;, &quot;score&quot;],
+    },
+}]
+</code></pre>
+<p><strong>Что делает инструмент хорошим:</strong>
+- имя глаголом, понятное без документации;
+- описание объясняет <strong>когда</strong> его вызывать, а не только что он делает;
+- схема с ограничениями: <code>enum</code>, <code>minimum</code>, <code>required</code>;
+- мало параметров - три-четыре, дальше модель начинает путаться.</p>
+<h3 id="_6">Стоимость</h3>
+<table>
+<thead>
+<tr>
+<th>Приём</th>
+<th>Экономия</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Кэширование префикса промпта</td>
+<td>до 90% на повторяющемся контексте</td>
+</tr>
+<tr>
+<td>Модель поменьше на простых задачах</td>
+<td>кратно</td>
+</tr>
+<tr>
+<td><code>max_tokens</code> по факту</td>
+<td>не платить за лишнее</td>
+</tr>
+<tr>
+<td>Пакетная обработка</td>
+<td>скидка у большинства провайдеров</td>
+</tr>
+<tr>
+<td>Убрать лишнее из контекста</td>
+<td>прямо пропорционально</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Кэширование префикса</strong> - главный приём, когда системное сообщение и справочные данные одинаковы во всех запросах. Разведчик разбирает сотни вакансий с одним и тем же системным промптом - это ровно тот случай.</p>
+<h3 id="_7">Ошибки и повторы</h3>
+<table>
+<thead>
+<tr>
+<th>Код</th>
+<th>Что означает</th>
+<th>Что делать</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>429</td>
+<td>превышен лимит частоты</td>
+<td>повтор с растущей паузой, читать <code>retry-after</code></td>
+</tr>
+<tr>
+<td>529</td>
+<td>перегрузка сервиса</td>
+<td>повтор с паузой</td>
+</tr>
+<tr>
+<td>400</td>
+<td>плохой запрос</td>
+<td>не повторять, чинить</td>
+</tr>
+<tr>
+<td>401</td>
+<td>ключ</td>
+<td>не повторять</td>
+</tr>
+<tr>
+<td>500</td>
+<td>сбой на стороне провайдера</td>
+<td>повтор ограниченное число раз</td>
+</tr>
+</tbody>
+</table>
+<pre><code class="language-python">import time, random
+
+def call_with_retry(fn, times=5):
+    for attempt in range(times):
+        try:
+            return fn()
+        except anthropic.RateLimitError:
+            if attempt == times - 1:
+                raise
+            pause = (2 ** attempt) + random.random()   # джиттер
+            time.sleep(pause)
+</code></pre>
+<p>⚠️ Джиттер обязателен. Без него все клиенты повторяют одновременно и добивают сервис, который только начал восстанавливаться.</p>
+<h2 id="_8">🔧 Практика</h2>
+<p><strong>На разведчике:</strong>
+1. Вынести разбор вакансии в вызов API со структурированным ответом через tool use.
+2. Валидировать ответ через Pydantic-модель, при ошибке - повтор с текстом ошибки.
+3. Логировать <code>usage</code> каждого вызова в таблицу: модель, токены, оценка стоимости.
+4. Включить кэширование префикса на системном сообщении, замерить разницу в токенах. <strong>Записать цифры.</strong>
+5. Обёртка повторов с экспоненциальной паузой и джиттером на 429 и 529.
+6. Посчитать реальную стоимость разбора ста вакансий.</p>
+<p><strong>Отдельно:</strong>
+7. Консольный инструмент, который стримит ответ и корректно отменяется по Ctrl+C.</p>
+<h2 id="_9">💥 Сломай намеренно</h2>
+<ol>
+<li><strong>Попросить JSON промптом без валидации</strong> и подсунуть вакансию с кавычками внутри - получить сломанный разбор.</li>
+<li><strong>Убрать <code>max_tokens</code></strong> или поставить огромный - посмотреть на счёт за один длинный ответ.</li>
+<li><strong>Сделать повторы без джиттера</strong> и запустить двадцать параллельных вызовов - получить лавину 429.</li>
+<li><strong>Повторять при 400</strong> - убедиться, что это бесконечный цикл на неисправимой ошибке.</li>
+<li><strong>Описать инструмент с восемью параметрами</strong> и посмотреть, как модель начинает их путать.</li>
+<li><strong>Выключить кэширование префикса</strong> и сравнить токены на ста однотипных запросах.</li>
+</ol>
+<h2 id="_10">✅ Задание</h2>
+<p>Разведчик разбирает вакансии через API со структурированным выводом, валидацией, повторами и логом расхода. В README записана стоимость разбора ста вакансий и экономия от кэширования.</p>
+<p><strong>Критерий:</strong> называешь цифру стоимости и объясняешь, из чего она складывается.</p>
+<h2 id="_11">🌍 Из жизни</h2>
+<p><strong>Про неучтённый расход.</strong> Типичная история: прототип запустили в цикл по большому набору данных, забыли лимит, счёт обнаружили через неделю. Логирование <code>usage</code> с первого дня закрывает это.</p>
+<p><strong>Про JSON промптом.</strong> Модель почти всегда возвращает валидный JSON и иногда добавляет пояснение до или после. Парсер падает раз в сто вызовов, и это ловится в проде, а не в тестах. Tool use убирает класс проблемы целиком.</p>
+<p><strong>Про кэширование префикса.</strong> На однотипной обработке, где системное сообщение занимает больше входа, экономия достигает разов. Для разведчика с сотнями вакансий и одним промптом это прямая экономия.</p>
+<h2 id="_12">❓ Вопросы с ответами</h2>
+<p><strong>Как получить от модели структурированный ответ?</strong></p>
+<blockquote>
+<p>Через tool use: описываю инструмент со схемой параметров, модель его вызывает, параметры приходят по схеме. Дополнительно валидирую через Pydantic - схема на стороне модели это подсказка, а не гарантия. Промпт с просьбой вернуть JSON работает хуже: модель иногда добавляет пояснение вокруг.</p>
+</blockquote>
+<p><strong>Зачем стриминг, если он не ускоряет?</strong></p>
+<blockquote>
+<p>Он меняет восприятие. Первые слова появляются через секунду вместо тридцати, и интерфейс выглядит работающим, а не зависшим. На скорость генерации не влияет.</p>
+</blockquote>
+<p><strong>Как контролируете стоимость?</strong></p>
+<blockquote>
+<p>Логирую <code>usage</code> каждого вызова с первого дня. Кэширую префикс промпта там, где системное сообщение одинаковое - на однотипной обработке это даёт разы. Простые задачи отдаю модели поменьше, <code>max_tokens</code> ставлю по факту.</p>
+</blockquote>
+<p><strong>Как обрабатываете ошибки API?</strong></p>
+<blockquote>
+<p>Развожу повторяемые и неповторяемые. 429 и 529 - повтор с экспоненциальной паузой и джиттером, читаю <code>retry-after</code>. 400 и 401 не повторяю, там надо чинить. Джиттер обязателен: без него все клиенты повторяют синхронно и добивают сервис.</p>
+</blockquote>
+<p><strong>Что делает инструмент хорошим для модели?</strong></p>
+<blockquote>
+<p>Имя глаголом, описание отвечает на вопрос «когда его вызывать», схема с ограничениями через <code>enum</code> и границы, и мало параметров. С восьмью параметрами модель начинает их путать.</p>
+</blockquote></article>
+    <aside class="aside">
+      <strong>В этом документе</strong>
+      <div class="toc"><div class="toc">
+<ul>
+<li><a href="#_1">🎭 Аналогия</a></li>
+<li><a href="#_2">📖 Теория</a><ul>
+<li><a href="#_3">Базовый вызов</a></li>
+<li><a href="#_4">Потоковая выдача</a></li>
+<li><a href="#_5">Структурированный вывод</a></li>
+<li><a href="#tool-use">Tool use</a></li>
+<li><a href="#_6">Стоимость</a></li>
+<li><a href="#_7">Ошибки и повторы</a></li>
+</ul>
+</li>
+<li><a href="#_8">🔧 Практика</a></li>
+<li><a href="#_9">💥 Сломай намеренно</a></li>
+<li><a href="#_10">✅ Задание</a></li>
+<li><a href="#_11">🌍 Из жизни</a></li>
+<li><a href="#_12">❓ Вопросы с ответами</a></li>
+</ul>
+</div>
+</div>
+    </aside>
+  </div>
+</main>
+
+
+<script>
+const ROOT = "..";
+
+// ---- тема
+const themeBtn = document.getElementById("theme");
+const paint = () => {
+  const dark = document.documentElement.getAttribute("data-theme") === "dark";
+  themeBtn.textContent = dark ? "☀" : "☾";
+};
+paint();
+themeBtn.addEventListener("click", () => {
+  const next = document.documentElement.getAttribute("data-theme") === "dark" ? "light" : "dark";
+  document.documentElement.setAttribute("data-theme", next);
+  try { localStorage.setItem("kb-theme", next); } catch (e) {}
+  paint();
+});
+
+// ---- поиск
+let index = null;
+const box = document.getElementById("results");
+const hits = document.getElementById("hits");
+const head = box.querySelector("h3");
+const input = document.getElementById("q");
+
+async function ensureIndex() {
+  if (index) return index;
+  const res = await fetch(ROOT + "/search-index.json");
+  index = await res.json();
+  return index;
+}
+
+const esc = (s) => (s || "").replace(/[&<>]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
+
+function hi(text, query) {
+  const i = text.toLowerCase().indexOf(query);
+  if (i < 0) return esc(text);
+  return esc(text.slice(0, i)) + "<mark>" + esc(text.slice(i, i + query.length)) + "</mark>" + esc(text.slice(i + query.length));
+}
+
+input.addEventListener("input", async () => {
+  const q = input.value.trim().toLowerCase();
+  if (q.length < 2) { box.hidden = true; return; }
+  const data = await ensureIndex();
+  const found = [];
+  for (const d of data) {
+    const inTitle = d.title.toLowerCase().includes(q);
+    const inSum = (d.summary || "").toLowerCase().includes(q);
+    const heads = (d.heads || []).filter(h => h.toLowerCase().includes(q));
+    if (inTitle || inSum || heads.length) {
+      found.push({ d, heads, rank: inTitle ? 0 : heads.length ? 1 : 2 });
+    }
+  }
+  found.sort((a, b) => a.rank - b.rank);
+  head.textContent = found.length ? `Нашлось: ${found.length}` : "Ничего не нашлось";
+  hits.innerHTML = found.slice(0, 40).map(({ d, heads }) =>
+    `<a class="hit" href="${ROOT}/d/${d.slug}.html">
+       <b>${hi(d.title, q)}</b>
+       <span>${heads.length ? "→ " + heads.slice(0, 3).map(h => hi(h, q)).join(" · ") : esc(d.summary || "")}</span>
+     </a>`).join("");
+  box.hidden = false;
+});
+
+input.addEventListener("keydown", (e) => { if (e.key === "Escape") { input.value = ""; box.hidden = true; input.blur(); } });
+document.addEventListener("keydown", (e) => {
+  if (e.key === "/" && document.activeElement !== input) { e.preventDefault(); input.focus(); }
+});
+</script>
+</body>
+</html>

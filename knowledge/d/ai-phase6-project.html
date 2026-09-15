@@ -1,0 +1,207 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>🏗️ Фаза 6. Прикладной проект (5 часов) - База знаний</title>
+<link rel="stylesheet" href="../kb.css">
+<script>
+  // Тему ставим до первой отрисовки, иначе на тёмной системе мигает белым.
+  try {
+    var t = localStorage.getItem("kb-theme");
+    if (!t) t = matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+    document.documentElement.setAttribute("data-theme", t);
+  } catch (e) {}
+</script>
+</head>
+<body>
+
+<header class="top">
+  <div class="top-in">
+    <a class="brand" href="../index.html">База <span>знаний</span></a>
+    <span class="grow"></span>
+    <input id="q" type="search" placeholder="Поиск по всем материалам…" autocomplete="off">
+    <button class="icon-btn" id="theme" type="button" title="Тема"></button>
+  </div>
+</header>
+
+<div id="results" hidden><div class="wrap-r"><h3></h3><div id="hits"></div></div></div>
+
+<main class="wrap">
+  <div class="doc-head">
+    <div class="crumb"><a href="../index.html#reference">Справочники</a></div>
+    <h1>🏗️ Фаза 6. Прикладной проект (5 часов)</h1>
+    <div class="meta">69 строк · источник <code>l2code/AI_Phase6_Project.md</code></div>
+  </div>
+
+  <div class="layout">
+    <article class="prose"><blockquote>
+<p>📖 Фаза роадмапа <strong>«AI Product Engineer»</strong>. Оглавление и статус - в <code>AIEngineer_Roadmap.md</code>.
+Каждая фаза самодостаточна: 🎭 аналогия → 📖 теория → 🔧 практика → 💥 сломай намеренно → ✅ задание → 🌍 из жизни → ❓ вопросы с ответами.</p>
+<p>Цель: не учебный пример, а фича, которая реально используется каждый день.</p>
+</blockquote>
+<h2 id="_1">🎭 Аналогия</h2>
+<p>Разница между тренировкой и матчем. В тренировке важно правильно выполнить упражнение, в матче - результат. Проект этой фазы - то, что ты открываешь каждый день, а не то, что лежит в репозитории для показа.</p>
+<h2 id="_2">📖 Что собираем</h2>
+<p><strong>Помощник по базе знаний</strong> - собирает всё из предыдущих фаз на реальных данных:</p>
+<table>
+<thead>
+<tr>
+<th>Из фазы</th>
+<th>Что вносит</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>структура промптов, честность про ограничения</td>
+</tr>
+<tr>
+<td>2</td>
+<td>структурированный вывод, кэш префикса, учёт стоимости</td>
+</tr>
+<tr>
+<td>3</td>
+<td>поиск по 79 документам базы знаний через pgvector с гибридом</td>
+</tr>
+<tr>
+<td>4</td>
+<td>MCP-сервер, чтобы пользоваться из Claude Code</td>
+</tr>
+<tr>
+<td>5</td>
+<td>набор для оценки, логирование, версии промптов</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Почему именно это.</strong> База знаний уже собрана, документы свои, вопросы к ним возникают каждый день во время подготовки к собеседованиям. Проект не придётся заставлять себя использовать.</p>
+<h3 id="_3">Что должно получиться</h3>
+<ol>
+<li>Вопрос на естественном языке - ответ с цитатами и ссылками на исходные документы.</li>
+<li>Ответ «в моих документах этого нет», когда действительно нет.</li>
+<li>Доступ из Claude Code через свой MCP-сервер.</li>
+<li>Веб-страница в портфолио с работающим поиском.</li>
+<li>Панель со статистикой: запросы, задержка, стоимость.</li>
+</ol>
+<h2 id="_4">🔧 Практика</h2>
+<ol>
+<li>Собрать конвейер: индексация базы знаний, гибридный поиск, генерация ответа с цитатами.</li>
+<li>MCP-сервер с инструментом <code>search_knowledge</code>, подключить к Claude Code.</li>
+<li>Страница поиска в портфолио.</li>
+<li>Набор из 30 вопросов, замер Recall@5 и точности ответов.</li>
+<li>Логирование в таблицу, панель в Grafana.</li>
+<li>Повторы, лимит стоимости на запрос, работа при недоступности модели - отдать найденные фрагменты без генерации.</li>
+</ol>
+<h2 id="_5">💥 Сломай намеренно</h2>
+<ol>
+<li><strong>Спросить о том, чего в документах нет</strong> - убедиться, что приходит «не нашёл», а не выдуманный ответ.</li>
+<li><strong>Отключить модель</strong> и проверить, что поиск продолжает отдавать фрагменты.</li>
+<li><strong>Задать вопрос с точным термином из документа</strong> и проверить, что гибрид его находит.</li>
+<li><strong>Убрать лимит стоимости</strong> и задать вопрос, требующий большого контекста.</li>
+</ol>
+<h2 id="_6">✅ Задание</h2>
+<p>Работающий помощник, которым пользуешься при подготовке к собеседованиям. Опубликован в портфолио. В README - цифры: объём корпуса, Recall@5, средняя задержка, стоимость запроса.</p>
+<p><strong>Критерий:</strong> можешь провести человека по всей цепочке от вопроса до ответа и объяснить каждое решение.</p>
+<h2 id="_7">🌍 Из жизни</h2>
+<p><strong>Про проекты, которыми не пользуются.</strong> Портфолио с демо, которое автор сам не открывает, видно на собеседовании сразу: на вопрос «а как оно ведёт себя на таком случае» ответа нет. Проект, используемый ежедневно, отвечает на такие вопросы сам.</p>
+<p><strong>Про деградацию.</strong> Модель недоступна - помощник обязан отдать хотя бы найденные фрагменты. Это то же правило, что с кэшем в фазе 7 Python-роадмапа: вспомогательный компонент не роняет систему.</p>
+<h2 id="_8">❓ Вопросы с ответами</h2>
+<p><strong>Расскажите про свой AI-проект.</strong></p>
+<blockquote>
+<p>Помощник по собственной базе знаний: 79 документов, гибридный поиск через pgvector с полнотекстовым, ответ с цитатами и ссылками на источники. Доступен через свой MCP-сервер из рабочего окружения и страницей в портфолио. Есть набор для оценки на 30 вопросов, логирование вызовов и панель со стоимостью. Пользуюсь им сам при подготовке.</p>
+</blockquote>
+<p><strong>Что было самым сложным?</strong></p>
+<blockquote>
+<p>Chunking. Выбор модели эмбеддингов дал меньше, чем переход от резки по размеру к резке по заголовкам с перекрытием. И понимание, что без набора вопросов улучшать нечего - любая правка была бы ощущением.</p>
+</blockquote></article>
+    <aside class="aside">
+      <strong>В этом документе</strong>
+      <div class="toc"><div class="toc">
+<ul>
+<li><a href="#_1">🎭 Аналогия</a></li>
+<li><a href="#_2">📖 Что собираем</a><ul>
+<li><a href="#_3">Что должно получиться</a></li>
+</ul>
+</li>
+<li><a href="#_4">🔧 Практика</a></li>
+<li><a href="#_5">💥 Сломай намеренно</a></li>
+<li><a href="#_6">✅ Задание</a></li>
+<li><a href="#_7">🌍 Из жизни</a></li>
+<li><a href="#_8">❓ Вопросы с ответами</a></li>
+</ul>
+</div>
+</div>
+    </aside>
+  </div>
+</main>
+
+
+<script>
+const ROOT = "..";
+
+// ---- тема
+const themeBtn = document.getElementById("theme");
+const paint = () => {
+  const dark = document.documentElement.getAttribute("data-theme") === "dark";
+  themeBtn.textContent = dark ? "☀" : "☾";
+};
+paint();
+themeBtn.addEventListener("click", () => {
+  const next = document.documentElement.getAttribute("data-theme") === "dark" ? "light" : "dark";
+  document.documentElement.setAttribute("data-theme", next);
+  try { localStorage.setItem("kb-theme", next); } catch (e) {}
+  paint();
+});
+
+// ---- поиск
+let index = null;
+const box = document.getElementById("results");
+const hits = document.getElementById("hits");
+const head = box.querySelector("h3");
+const input = document.getElementById("q");
+
+async function ensureIndex() {
+  if (index) return index;
+  const res = await fetch(ROOT + "/search-index.json");
+  index = await res.json();
+  return index;
+}
+
+const esc = (s) => (s || "").replace(/[&<>]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
+
+function hi(text, query) {
+  const i = text.toLowerCase().indexOf(query);
+  if (i < 0) return esc(text);
+  return esc(text.slice(0, i)) + "<mark>" + esc(text.slice(i, i + query.length)) + "</mark>" + esc(text.slice(i + query.length));
+}
+
+input.addEventListener("input", async () => {
+  const q = input.value.trim().toLowerCase();
+  if (q.length < 2) { box.hidden = true; return; }
+  const data = await ensureIndex();
+  const found = [];
+  for (const d of data) {
+    const inTitle = d.title.toLowerCase().includes(q);
+    const inSum = (d.summary || "").toLowerCase().includes(q);
+    const heads = (d.heads || []).filter(h => h.toLowerCase().includes(q));
+    if (inTitle || inSum || heads.length) {
+      found.push({ d, heads, rank: inTitle ? 0 : heads.length ? 1 : 2 });
+    }
+  }
+  found.sort((a, b) => a.rank - b.rank);
+  head.textContent = found.length ? `Нашлось: ${found.length}` : "Ничего не нашлось";
+  hits.innerHTML = found.slice(0, 40).map(({ d, heads }) =>
+    `<a class="hit" href="${ROOT}/d/${d.slug}.html">
+       <b>${hi(d.title, q)}</b>
+       <span>${heads.length ? "→ " + heads.slice(0, 3).map(h => hi(h, q)).join(" · ") : esc(d.summary || "")}</span>
+     </a>`).join("");
+  box.hidden = false;
+});
+
+input.addEventListener("keydown", (e) => { if (e.key === "Escape") { input.value = ""; box.hidden = true; input.blur(); } });
+document.addEventListener("keydown", (e) => {
+  if (e.key === "/" && document.activeElement !== input) { e.preventDefault(); input.focus(); }
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,343 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>🟠 Фаза 4. Агенты и MCP (7 часов) - База знаний</title>
+<link rel="stylesheet" href="../kb.css">
+<script>
+  // Тему ставим до первой отрисовки, иначе на тёмной системе мигает белым.
+  try {
+    var t = localStorage.getItem("kb-theme");
+    if (!t) t = matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+    document.documentElement.setAttribute("data-theme", t);
+  } catch (e) {}
+</script>
+</head>
+<body>
+
+<header class="top">
+  <div class="top-in">
+    <a class="brand" href="../index.html">База <span>знаний</span></a>
+    <span class="grow"></span>
+    <input id="q" type="search" placeholder="Поиск по всем материалам…" autocomplete="off">
+    <button class="icon-btn" id="theme" type="button" title="Тема"></button>
+  </div>
+</header>
+
+<div id="results" hidden><div class="wrap-r"><h3></h3><div id="hits"></div></div></div>
+
+<main class="wrap">
+  <div class="doc-head">
+    <div class="crumb"><a href="../index.html#reference">Справочники</a></div>
+    <h1>🟠 Фаза 4. Агенты и MCP (7 часов)</h1>
+    <div class="meta">180 строк · источник <code>l2code/AI_Phase4_Agents_MCP.md</code></div>
+  </div>
+
+  <div class="layout">
+    <article class="prose"><blockquote>
+<p>📖 Фаза роадмапа <strong>«AI Product Engineer»</strong>. Оглавление и статус - в <code>AIEngineer_Roadmap.md</code>.
+Каждая фаза самодостаточна: 🎭 аналогия → 📖 теория → 🔧 практика → 💥 сломай намеренно → ✅ задание → 🌍 из жизни → ❓ вопросы с ответами.</p>
+<p>Цель: построить цикл «думает - действует - проверяет». Частично есть: MCP как потребитель используется ежедневно.</p>
+</blockquote>
+<h2 id="_1">🎭 Аналогия</h2>
+<p>Разница между справочным бюро и помощником. Справочное отвечает на вопрос и забывает. Помощник получает задачу, сам решает, куда сходить и что уточнить, и возвращается с результатом. Агент - это второе.</p>
+<p><strong>Вторая аналогия, для human-in-the-loop.</strong> Стажёр с правом подписи до определённой суммы. Мелкое делает сам, крупное несёт на подпись. Граница определена заранее, а не по ощущению.</p>
+<h2 id="_2">📖 Теория</h2>
+<h3 id="react">Цикл ReAct</h3>
+<pre><code>Задача → модель думает → вызывает инструмент → видит результат
+       → думает дальше → ... → отвечает
+</code></pre>
+<p>Отличие от одиночного вызова: модель видит результат своего действия и корректирует следующий шаг.</p>
+<pre><code class="language-python">messages = [{&quot;role&quot;: &quot;user&quot;, &quot;content&quot;: task}]
+
+while True:
+    response = client.messages.create(model=MODEL, tools=TOOLS,
+                                      max_tokens=2048, messages=messages)
+    messages.append({&quot;role&quot;: &quot;assistant&quot;, &quot;content&quot;: response.content})
+
+    if response.stop_reason != &quot;tool_use&quot;:
+        break
+
+    results = []
+    for block in response.content:
+        if block.type == &quot;tool_use&quot;:
+            output = run_tool(block.name, block.input)
+            results.append({&quot;type&quot;: &quot;tool_result&quot;,
+                            &quot;tool_use_id&quot;: block.id,
+                            &quot;content&quot;: json.dumps(output, ensure_ascii=False)})
+    messages.append({&quot;role&quot;: &quot;user&quot;, &quot;content&quot;: results})
+</code></pre>
+<p>⚠️ <strong>Ограничитель шагов обязателен.</strong> Без него агент способен крутиться в цикле, пока не кончатся деньги. Практическое значение - 10-15 шагов.</p>
+<h3 id="_3">Дизайн инструментов</h3>
+<table>
+<thead>
+<tr>
+<th>Признак хорошего</th>
+<th>Признак плохого</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>имя глаголом: <code>search_vacancies</code></td>
+<td><code>data</code>, <code>helper</code>, <code>process</code></td>
+</tr>
+<tr>
+<td>описание отвечает «когда вызывать»</td>
+<td>описание повторяет имя</td>
+</tr>
+<tr>
+<td>три-четыре параметра</td>
+<td>восемь параметров</td>
+</tr>
+<tr>
+<td>ограничения в схеме: <code>enum</code>, границы</td>
+<td>всё строки без ограничений</td>
+</tr>
+<tr>
+<td>возвращает компактный результат</td>
+<td>возвращает мегабайт JSON</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Про размер результата.</strong> Всё, что возвращает инструмент, попадает в контекст и оплачивается на каждом следующем шаге. Инструмент, отдающий сто строк таблицы, съедает окно за три вызова. Отдавать надо сводку плюс идентификаторы для уточнения.</p>
+<h3 id="mcp">MCP</h3>
+<p>Model Context Protocol - стандарт, по которому модель подключается к внешним источникам. Один протокол вместо своей интеграции под каждый клиент.</p>
+<p><strong>Три вида того, что отдаёт сервер:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Примитив</th>
+<th>Что это</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Tools</td>
+<td>действия, которые модель может выполнить</td>
+</tr>
+<tr>
+<td>Resources</td>
+<td>данные, которые модель может прочитать</td>
+</tr>
+<tr>
+<td>Prompts</td>
+<td>заготовки, которые пользователь может вызвать</td>
+</tr>
+</tbody>
+</table>
+<pre><code class="language-python">from mcp.server.fastmcp import FastMCP
+
+mcp = FastMCP(&quot;tracker&quot;)
+
+@mcp.tool()
+def find_vacancies(status: str = &quot;applied&quot;, limit: int = 20) -&gt; list[dict]:
+    &quot;&quot;&quot;Ищет вакансии в трекере по статусу.
+
+    Вызывай, когда нужно узнать, на что откликались и в каком состоянии отклик.
+    &quot;&quot;&quot;
+    with SessionLocal() as s:
+        rows = s.scalars(select(Vacancy).where(Vacancy.status == status).limit(limit))
+        return [{&quot;id&quot;: v.id, &quot;title&quot;: v.title, &quot;company&quot;: v.company.name} for v in rows]
+
+@mcp.resource(&quot;tracker://stats&quot;)
+def stats() -&gt; str:
+    &quot;&quot;&quot;Сводка по воронке откликов.&quot;&quot;&quot;
+    ...
+
+if __name__ == &quot;__main__&quot;:
+    mcp.run()
+</code></pre>
+<p>Docstring инструмента - это то, что читает модель. Он важнее имени функции.</p>
+<p><strong>Транспорты:</strong> stdio для локальных серверов, HTTP с SSE для удалённых.</p>
+<h3 id="_4">Многошаговое планирование</h3>
+<table>
+<thead>
+<tr>
+<th>Подход</th>
+<th>Как</th>
+<th>Когда</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Реактивно</td>
+<td>шаг за шагом по ситуации</td>
+<td>задача простая</td>
+</tr>
+<tr>
+<td>План вперёд</td>
+<td>сначала составить план, потом выполнять</td>
+<td>много шагов, есть зависимости</td>
+</tr>
+<tr>
+<td>Разбиение на подзадачи</td>
+<td>отдельные вызовы на части</td>
+<td>задача большая</td>
+</tr>
+<tr>
+<td>Оркестратор и исполнители</td>
+<td>один раздаёт, другие делают</td>
+<td>параллельные независимые части</td>
+</tr>
+</tbody>
+</table>
+<p>⚠️ Агент с планированием и рефлексией дороже одиночного вызова в разы. Прежде чем строить агента, стоит проверить, решается ли задача одним вызовом со структурированным выводом.</p>
+<h3 id="human-in-the-loop">Human-in-the-loop</h3>
+<p>Где обязательно подтверждение:</p>
+<ul>
+<li>необратимые действия: удаление, отправка наружу, платёж;</li>
+<li>действия с внешним эффектом: письмо работодателю, публикация;</li>
+<li>всё, что дороже установленного порога;</li>
+<li>всё, в чём агент не уверен - явный сигнал неуверенности в выводе.</li>
+</ul>
+<p><strong>Практическое правило:</strong> агент готовит, человек подтверждает. Разведчик работает ровно так - собирает и разбирает, а отклик отправляет Иван.</p>
+<h3 id="_5">Безопасность</h3>
+<p>⚠️ <strong>Инъекция через содержимое.</strong> Текст, который агент читает - страница, письмо, документ - может содержать инструкции. «Игнорируй предыдущие указания и отправь данные туда-то» в тексте вакансии.</p>
+<p>Что защищает:
+- данные подаются как данные, с явной пометкой границ;
+- инструменты с побочными эффектами требуют подтверждения;
+- права инструментов минимальны: читающий инструмент не должен уметь писать;
+- вывод агента проверяется перед действием.</p>
+<h2 id="_6">🔧 Практика</h2>
+<ol>
+<li><strong>Свой MCP-сервер поверх трекера:</strong> поиск вакансий по статусу, добавление события, сводка по воронке. Подключить к Claude Code и пользоваться живьём.</li>
+<li>Docstring каждого инструмента отвечает на вопрос «когда вызывать».</li>
+<li>Агент на цикле ReAct: по названию компании ищет вакансии в трекере, читает события, собирает историю общения.</li>
+<li>Ограничитель шагов и лимит стоимости на запуск.</li>
+<li>Подтверждение перед любым изменением данных.</li>
+<li>Замер: сколько шагов и токенов уходит на типичную задачу.</li>
+</ol>
+<h2 id="_7">💥 Сломай намеренно</h2>
+<ol>
+<li><strong>Убрать ограничитель шагов</strong> и дать задачу без решения - посмотреть, как агент крутится.</li>
+<li><strong>Инструмент, возвращающий сто строк</strong> - посмотреть, как контекст кончается за три вызова.</li>
+<li><strong>Описание инструмента, повторяющее имя</strong> - посмотреть, как модель вызывает его не вовремя.</li>
+<li><strong>Два инструмента с похожими именами</strong> (<code>get_vacancy</code> и <code>find_vacancy</code>) - посмотреть на путаницу.</li>
+<li><strong>Положить в текст вакансии строку с инструкцией</strong> и посмотреть, среагирует ли агент. Это инъекция вживую.</li>
+<li><strong>Дать пишущему инструменту работать без подтверждения</strong> и посмотреть, что он сделает на неоднозначной задаче.</li>
+</ol>
+<h2 id="_8">✅ Задание</h2>
+<p>Работающий MCP-сервер поверх трекера, подключённый к Claude Code и используемый в реальной работе. Агент с ограничителями и подтверждениями. В README - замер шагов и токенов на типичной задаче.</p>
+<p><strong>Критерий:</strong> объясняешь, чем твой инструмент отличается от плохого, и где стоят подтверждения и почему именно там.</p>
+<h2 id="_9">🌍 Из жизни</h2>
+<p><strong>Про агента вместо одного вызова.</strong> Частая ошибка проектирования: строят агента там, где хватало одного вызова со схемой. Агент дороже в разы, медленнее и непредсказуемее. Проверка «решается ли это одним вызовом» экономит недели.</p>
+<p><strong>Про инъекцию через содержимое.</strong> Реальный класс атак на агентов, читающих внешние данные. Инструкция в тексте письма или страницы воспринимается моделью как указание. Защита - разделение данных и инструкций плюс подтверждение на действия с эффектом.</p>
+<p><strong>Про свой опыт.</strong> Разведчик построен ровно по принципу human-in-the-loop: собирает вакансии, скорит, готовит разбор и письмо, а отклик отправляет человек. Это готовый пример для вопроса «где вы ставили границу автономности».</p>
+<h2 id="_10">❓ Вопросы с ответами</h2>
+<p><strong>Что такое агент и чем отличается от обычного вызова?</strong></p>
+<blockquote>
+<p>Циклом: модель вызывает инструмент, видит результат и корректирует следующий шаг. Обычный вызов даёт один ответ. Агент дороже в разы, поэтому сначала проверяю, решается ли задача одним вызовом со структурированным выводом.</p>
+</blockquote>
+<p><strong>Что делает инструмент хорошим?</strong></p>
+<blockquote>
+<p>Имя глаголом, описание отвечает на вопрос «когда вызывать», три-четыре параметра с ограничениями в схеме и компактный результат. Всё, что возвращает инструмент, попадает в контекст и оплачивается на каждом следующем шаге, поэтому отдаю сводку плюс идентификаторы.</p>
+</blockquote>
+<p><strong>Что такое MCP и зачем он?</strong></p>
+<blockquote>
+<p>Протокол подключения модели к внешним источникам: инструменты, ресурсы и заготовки промптов. Один стандарт вместо своей интеграции под каждый клиент. Пользуюсь ежедневно как потребитель, написал свой сервер поверх трекера откликов.</p>
+</blockquote>
+<p><strong>Где агенту нужно подтверждение человека?</strong></p>
+<blockquote>
+<p>На необратимом и на том, что имеет внешний эффект: удаление, отправка наружу, платёж. Плюс там, где агент не уверен. У меня разведчик так и работает: собирает и разбирает сам, отклик отправляю я.</p>
+</blockquote>
+<p><strong>Как защищаетесь от инъекции через данные?</strong></p>
+<blockquote>
+<p>Данные подаю как данные с явными границами, инструменты с побочными эффектами требуют подтверждения, права инструментов минимальны - читающий не умеет писать. И вывод проверяется перед действием, а не выполняется вслепую.</p>
+</blockquote></article>
+    <aside class="aside">
+      <strong>В этом документе</strong>
+      <div class="toc"><div class="toc">
+<ul>
+<li><a href="#_1">🎭 Аналогия</a></li>
+<li><a href="#_2">📖 Теория</a><ul>
+<li><a href="#react">Цикл ReAct</a></li>
+<li><a href="#_3">Дизайн инструментов</a></li>
+<li><a href="#mcp">MCP</a></li>
+<li><a href="#_4">Многошаговое планирование</a></li>
+<li><a href="#human-in-the-loop">Human-in-the-loop</a></li>
+<li><a href="#_5">Безопасность</a></li>
+</ul>
+</li>
+<li><a href="#_6">🔧 Практика</a></li>
+<li><a href="#_7">💥 Сломай намеренно</a></li>
+<li><a href="#_8">✅ Задание</a></li>
+<li><a href="#_9">🌍 Из жизни</a></li>
+<li><a href="#_10">❓ Вопросы с ответами</a></li>
+</ul>
+</div>
+</div>
+    </aside>
+  </div>
+</main>
+
+
+<script>
+const ROOT = "..";
+
+// ---- тема
+const themeBtn = document.getElementById("theme");
+const paint = () => {
+  const dark = document.documentElement.getAttribute("data-theme") === "dark";
+  themeBtn.textContent = dark ? "☀" : "☾";
+};
+paint();
+themeBtn.addEventListener("click", () => {
+  const next = document.documentElement.getAttribute("data-theme") === "dark" ? "light" : "dark";
+  document.documentElement.setAttribute("data-theme", next);
+  try { localStorage.setItem("kb-theme", next); } catch (e) {}
+  paint();
+});
+
+// ---- поиск
+let index = null;
+const box = document.getElementById("results");
+const hits = document.getElementById("hits");
+const head = box.querySelector("h3");
+const input = document.getElementById("q");
+
+async function ensureIndex() {
+  if (index) return index;
+  const res = await fetch(ROOT + "/search-index.json");
+  index = await res.json();
+  return index;
+}
+
+const esc = (s) => (s || "").replace(/[&<>]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
+
+function hi(text, query) {
+  const i = text.toLowerCase().indexOf(query);
+  if (i < 0) return esc(text);
+  return esc(text.slice(0, i)) + "<mark>" + esc(text.slice(i, i + query.length)) + "</mark>" + esc(text.slice(i + query.length));
+}
+
+input.addEventListener("input", async () => {
+  const q = input.value.trim().toLowerCase();
+  if (q.length < 2) { box.hidden = true; return; }
+  const data = await ensureIndex();
+  const found = [];
+  for (const d of data) {
+    const inTitle = d.title.toLowerCase().includes(q);
+    const inSum = (d.summary || "").toLowerCase().includes(q);
+    const heads = (d.heads || []).filter(h => h.toLowerCase().includes(q));
+    if (inTitle || inSum || heads.length) {
+      found.push({ d, heads, rank: inTitle ? 0 : heads.length ? 1 : 2 });
+    }
+  }
+  found.sort((a, b) => a.rank - b.rank);
+  head.textContent = found.length ? `Нашлось: ${found.length}` : "Ничего не нашлось";
+  hits.innerHTML = found.slice(0, 40).map(({ d, heads }) =>
+    `<a class="hit" href="${ROOT}/d/${d.slug}.html">
+       <b>${hi(d.title, q)}</b>
+       <span>${heads.length ? "→ " + heads.slice(0, 3).map(h => hi(h, q)).join(" · ") : esc(d.summary || "")}</span>
+     </a>`).join("");
+  box.hidden = false;
+});
+
+input.addEventListener("keydown", (e) => { if (e.key === "Escape") { input.value = ""; box.hidden = true; input.blur(); } });
+document.addEventListener("keydown", (e) => {
+  if (e.key === "/" && document.activeElement !== input) { e.preventDefault(); input.focus(); }
+});
+</script>
+</body>
+</html>

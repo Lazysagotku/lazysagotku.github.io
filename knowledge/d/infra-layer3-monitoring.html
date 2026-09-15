@@ -1,0 +1,544 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>📊 Слой 3. Мониторинг с нуля (дни 7-10, 5 часов) - База знаний</title>
+<link rel="stylesheet" href="../kb.css">
+<script>
+  // Тему ставим до первой отрисовки, иначе на тёмной системе мигает белым.
+  try {
+    var t = localStorage.getItem("kb-theme");
+    if (!t) t = matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+    document.documentElement.setAttribute("data-theme", t);
+  } catch (e) {}
+</script>
+</head>
+<body>
+
+<header class="top">
+  <div class="top-in">
+    <a class="brand" href="../index.html">База <span>знаний</span></a>
+    <span class="grow"></span>
+    <input id="q" type="search" placeholder="Поиск по всем материалам…" autocomplete="off">
+    <button class="icon-btn" id="theme" type="button" title="Тема"></button>
+  </div>
+</header>
+
+<div id="results" hidden><div class="wrap-r"><h3></h3><div id="hits"></div></div></div>
+
+<main class="wrap">
+  <div class="doc-head">
+    <div class="crumb"><a href="../index.html#reference">Справочники</a></div>
+    <h1>📊 Слой 3. Мониторинг с нуля (дни 7-10, 5 часов)</h1>
+    <div class="meta">354 строк · источник <code>l2code/Infra_Layer3_Monitoring.md</code></div>
+  </div>
+
+  <div class="layout">
+    <article class="prose"><blockquote>
+<p>📖 Слой роадмапа <strong>«Стенд с нуля»</strong>. Оглавление, срез под Сбер и календарь - в <code>Roadmap_Infra_Sept2026.md</code>.
+Каждый слой самодостаточен: 🎭 аналогия → 🗺 карта мест → 📖 теория → 🔧 практика → 💥 сломай намеренно → ✅ задание → 🌍 из жизни → ❓ вопросы с ответами.</p>
+</blockquote>
+<h2 id="_1">🎭 Аналогия</h2>
+<p>Приборная панель автомобиля. Датчиков в двигателе триста, на панель выведено пять: скорость, топливо, температура, обороты, лампочка масла. Если вывести все триста, водитель не увидит ни одного.</p>
+<p><strong>Вторая аналогия, про алерты.</strong> Пожарная сигнализация, срабатывающая на пар из чайника, через неделю будет отключена жильцами. Алерт, который часто ложный, хуже отсутствующего: он приучает игнорировать.</p>
+<p><strong>Третья, про Prometheus.</strong> Обходчик на железной дороге. Он сам идёт вдоль путей по расписанию и записывает показания, вместо того чтобы ждать отчёта от каждого датчика.</p>
+<h2 id="_2">🗺 Карта мест</h2>
+<p><strong>Сделать:</strong> Prometheus, node_exporter, Alertmanager и Grafana в docker compose; правила алертов; доставка алерта в Telegram; дашборд руками.</p>
+<p><strong>Понять:</strong> Prometheus сам ходит за метриками по HTTP (pull), каждые 15 секунд, и хранит числа во времени. Алерт - это PromQL-выражение, которое остаётся истинным дольше, чем <code>for</code>. Alertmanager решает, куда и как часто слать. Grafana только рисует то, что лежит в Prometheus.</p>
+<p><strong>Где писать:</strong> <code>/opt/monitoring/docker-compose.yml</code>; <code>prometheus.yml</code> - кого опрашивать (targets); <code>alerts.yml</code> - правила; <code>alertmanager.yml</code> - куда слать; дашборды - в интерфейсе Grafana, потом экспорт в JSON в репо.</p>
+<p><strong>Чем запустить:</strong> <code>docker compose up -d</code>. После правки правил: <code>curl -X POST localhost:9090/-/reload</code> или <code>docker compose restart prometheus</code>.</p>
+<p><strong>Где смотреть результат:</strong>
+- <code>localhost:9090</code> - Status → Targets (все UP?), Graph (проверить PromQL), Alerts (правило видно, в каком состоянии).
+- <code>localhost:3000</code> - Grafana. <code>localhost:9093</code> - Alertmanager, что сейчас горит.
+- <code>docker compose logs -f prometheus alertmanager</code> - если что-то не так с конфигом.
+- Telegram - сюда должно прийти сообщение.</p>
+<p><strong>Как понять, что получилось:</strong> все targets UP; забил диск через <code>fallocate</code> - через <code>for</code> минут в Telegram пришёл алерт, освободил - пришло resolved; на дашборде видно, как это выглядело.</p>
+<h2 id="_3">📖 Теория</h2>
+<p>Ключевое отличие этого слоя от текущего опыта - глагол. «Пользовался Zabbix и Grafana» и «развернул Prometheus» звучат по-разному, и уточняющий вопрос это разводит сразу.</p>
+<h3 id="pull-push">Pull против push</h3>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>Pull (Prometheus)</th>
+<th>Push (Zabbix trapper, StatsD)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Кто инициирует</td>
+<td>сервер мониторинга</td>
+<td>сам сервис</td>
+</tr>
+<tr>
+<td>Знание о доступности</td>
+<td>бесплатно: не ответил - лежит</td>
+<td>нужен отдельный механизм</td>
+</tr>
+<tr>
+<td>Новый сервис</td>
+<td>добавить адрес в конфиг мониторинга</td>
+<td>настроить доставку в сервисе</td>
+</tr>
+<tr>
+<td>Проблема</td>
+<td>цели за NAT недостижимы</td>
+<td>всплеск при массовом рестарте</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Ответ на «а если цель за NAT или живёт секунды»:</strong> Pushgateway. Оговорка, которую ценят: он нужен для коротких задач вроде cron-джобов, и злоупотребление им ломает модель, потому что Prometheus перестаёт видеть реальную доступность.</p>
+<h3 id="_4">Типы метрик</h3>
+<table>
+<thead>
+<tr>
+<th>Тип</th>
+<th>Поведение</th>
+<th>Пример</th>
+<th>Как читать</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>counter</strong></td>
+<td>только растёт, обнуляется при рестарте</td>
+<td>число запросов, ошибок</td>
+<td>всегда через <code>rate()</code></td>
+</tr>
+<tr>
+<td><strong>gauge</strong></td>
+<td>скачет вверх и вниз</td>
+<td>память, число соединений</td>
+<td>значение напрямую</td>
+</tr>
+<tr>
+<td><strong>histogram</strong></td>
+<td>раскладывает по корзинам</td>
+<td>время ответа</td>
+<td><code>histogram_quantile</code></td>
+</tr>
+<tr>
+<td><strong>summary</strong></td>
+<td>перцентили на стороне клиента</td>
+<td>время ответа</td>
+<td>между экземплярами не складывается</td>
+</tr>
+</tbody>
+</table>
+<p>⚠️ Главная ловушка: применить <code>rate()</code> к gauge или взять counter напрямую. Counter после рестарта начинается с нуля - <code>rate()</code> умеет это учитывать, простое вычитание нет.</p>
+<p><strong>Histogram против summary</strong> - вопрос уровнем выше. Histogram считает корзины на сервере, поэтому перцентили складываются по нескольким экземплярам. Summary считает на клиенте, и сложить их математически нельзя.</p>
+<h3 id="_5">Четыре золотых сигнала</h3>
+<table>
+<thead>
+<tr>
+<th>Сигнал</th>
+<th>Что означает</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Latency</strong></td>
+<td>сколько отвечаем, отдельно по успешным и ошибочным</td>
+</tr>
+<tr>
+<td><strong>Traffic</strong></td>
+<td>сколько запросов принимаем</td>
+</tr>
+<tr>
+<td><strong>Errors</strong></td>
+<td>доля неуспешных</td>
+</tr>
+<tr>
+<td><strong>Saturation</strong></td>
+<td>насколько близко к пределу ресурсов</td>
+</tr>
+</tbody>
+</table>
+<p>Назвать их по именам - сильный ход, они из практики SRE.</p>
+<h3 id="-">Про пороги - готовый сильный ответ</h3>
+<blockquote>
+<p>Порог на отклонение от нормы работает лучше круглого числа. 80 процентов процессора для одной системы норма, для другой авария. Смотрю профиль нагрузки: как система ведёт себя в обычный день и в пик, и ставлю порог там, где начинается непохожее на себя поведение.</p>
+<p>Второй принцип: алерт, который часто ложный, хуже отсутствующего. У каждого алерта должно быть понятно, что человек по нему сделает. Если действия нет - это панель на дашборде, а не повод будить.</p>
+</blockquote>
+<p>Этот принцип у Ивана уже был в собственных bash-скриптах мониторинга источников. Говорить о нём надо как о своём, потому что оно и есть своё.</p>
+<h2 id="_6">🔧 Практика</h2>
+<p><strong><code>docker-compose.yml</code>:</strong></p>
+<pre><code class="language-yaml">services:
+  prometheus:
+    image: prom/prometheus:latest
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./alerts.yml:/etc/prometheus/alerts.yml
+      - prom_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.retention.time=30d'
+    ports: [&quot;9090:9090&quot;]
+    restart: unless-stopped
+
+  node_exporter:
+    image: prom/node-exporter:latest
+    pid: host
+    volumes: [&quot;/:/host:ro,rslave&quot;]
+    command: ['--path.rootfs=/host']
+    ports: [&quot;9100:9100&quot;]
+    restart: unless-stopped
+
+  alertmanager:
+    image: prom/alertmanager:latest
+    volumes: [&quot;./alertmanager.yml:/etc/alertmanager/alertmanager.yml&quot;]
+    ports: [&quot;9093:9093&quot;]
+    restart: unless-stopped
+
+  grafana:
+    image: grafana/grafana:latest
+    volumes: [&quot;grafana_data:/var/lib/grafana&quot;]
+    environment: [&quot;GF_SECURITY_ADMIN_PASSWORD=&lt;пароль&gt;&quot;]
+    ports: [&quot;3000:3000&quot;]
+    restart: unless-stopped
+
+volumes:
+  prom_data:
+  grafana_data:
+</code></pre>
+<p><strong><code>prometheus.yml</code>:</strong></p>
+<pre><code class="language-yaml">global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets: ['alertmanager:9093']
+
+rule_files:
+  - '/etc/prometheus/alerts.yml'
+
+scrape_configs:
+  - job_name: 'node'
+    static_configs:
+      - targets: ['node_exporter:9100']
+  - job_name: 'tracker'
+    metrics_path: /metrics
+    static_configs:
+      - targets: ['host.docker.internal:8000']
+</code></pre>
+<p><strong><code>scrape_interval</code></strong> - как часто ходим за метриками. 15 секунд разумно: меньше даёт детальность ценой хранения, больше экономит место ценой слепых зон.</p>
+<p>⚠️ Хранение по умолчанию 15 дней. Строка <code>--storage.tsdb.retention.time=30d</code> - готовый ответ на «как увеличить срок». Для долгого хранения нужны Thanos, VictoriaMetrics или Mimir.</p>
+<h3 id="promql-">PromQL - минимум</h3>
+<pre><code class="language-promql"># текущее значение
+node_memory_MemAvailable_bytes
+
+# скорость роста counter
+rate(http_requests_total[5m])
+
+# загрузка процессора в процентах - просят написать чаще всего
+100 - (avg by (instance) (rate(node_cpu_seconds_total{mode=&quot;idle&quot;}[5m])) * 100)
+
+# свободное место в процентах
+node_filesystem_avail_bytes{mountpoint=&quot;/&quot;} / node_filesystem_size_bytes{mountpoint=&quot;/&quot;} * 100
+
+# доля пятисоток
+sum(rate(http_requests_total{status=~&quot;5..&quot;}[5m])) / sum(rate(http_requests_total[5m])) * 100
+
+# 95-й перцентиль времени ответа
+histogram_quantile(0.95, sum by (le) (rate(http_request_duration_seconds_bucket[5m])))
+</code></pre>
+<p>Синтаксис: <code>[5m]</code> - окно назад, обязательно для <code>rate</code>; <code>sum by (instance)</code> - агрегировать, оставив метку; <code>=~</code> - регулярка.</p>
+<p><strong><code>rate</code> против <code>irate</code>:</strong> <code>rate</code> усредняет по окну и сглаживает, <code>irate</code> берёт две последние точки и показывает всплески. Для алертов почти всегда <code>rate</code>.</p>
+<h3 id="alertsyml">Алерты <code>alerts.yml</code></h3>
+<pre><code class="language-yaml">groups:
+  - name: базовые
+    rules:
+      - alert: ДискЗаполняется
+        expr: (node_filesystem_avail_bytes{mountpoint=&quot;/&quot;} / node_filesystem_size_bytes{mountpoint=&quot;/&quot;}) * 100 &lt; 15
+        for: 10m
+        labels: {severity: warning}
+        annotations:
+          summary: &quot;Свободно меньше 15% на {{ $labels.instance }}&quot;
+
+      - alert: МногоПятисоток
+        expr: sum(rate(http_requests_total{status=~&quot;5..&quot;}[5m])) / sum(rate(http_requests_total[5m])) * 100 &gt; 5
+        for: 5m
+        labels: {severity: critical}
+        annotations:
+          summary: &quot;Больше 5% ответов с ошибкой сервера&quot;
+
+      - alert: ЦельНеОтвечает
+        expr: up == 0
+        for: 2m
+        labels: {severity: critical}
+        annotations:
+          summary: &quot;{{ $labels.job }} на {{ $labels.instance }} недоступен&quot;
+</code></pre>
+<p><strong><code>for:</code> - самая важная директива.</strong> Условие должно держаться указанное время, прежде чем алерт уйдёт. Без неё одиночный всплеск разбудит человека ночью. Именно <code>for</code> превращает шумный мониторинг в рабочий.</p>
+<p><strong>Метрика <code>up</code></strong> появляется сама для каждой цели: 1 если достучались, 0 если нет. Бесплатная проверка доступности - следствие pull-модели.</p>
+<h3 id="alertmanager-telegram">Alertmanager в Telegram</h3>
+<pre><code class="language-yaml">route:
+  receiver: telegram
+  group_by: ['alertname', 'instance']
+  group_wait: 30s
+  group_interval: 5m
+  repeat_interval: 4h
+
+receivers:
+  - name: telegram
+    telegram_configs:
+      - bot_token: '&lt;токен&gt;'
+        chat_id: &lt;id&gt;
+        parse_mode: HTML
+</code></pre>
+<p><strong>Разделение ролей:</strong> Prometheus решает, когда алерт возник. Alertmanager решает, кому и как сказать - группировка, подавление, маршрутизация, тишина на время работ.</p>
+<p><strong><code>inhibit_rules</code></strong> стоит упомянуть: когда падает вся нода, нет смысла слать двадцать алертов по каждому сервису на ней. Подавление гасит следствия, оставляя причину.</p>
+<h3 id="_7">Дашборд руками</h3>
+<p><strong>Собирать вручную, не импортом.</strong> Импортированный дашборд на 60 панелей выглядит внушительно и не защищается ни одним вопросом. Шесть панелей, собранных самому, защищаются полностью.</p>
+<p>Что вынести:
+1. Загрузка процессора, проценты.
+2. Свободная память.
+3. Свободное место на диске.
+4. Запросов в секунду.
+5. Доля ошибок 5xx.
+6. 95-й перцентиль времени ответа.</p>
+<p>Порядок: Data sources → Prometheus → <code>http://prometheus:9090</code>. Дальше New dashboard → Add visualization → PromQL → в Panel options задать единицы (проценты, байты, секунды) → Thresholds для пороговых линий.</p>
+<h3 id="_8">Метрики трекера</h3>
+<p>Для FastAPI три строки:</p>
+<pre><code class="language-python">from prometheus_fastapi_instrumentator import Instrumentator
+Instrumentator().instrument(app).expose(app)
+</code></pre>
+<h2 id="_9">💥 Сломай намеренно</h2>
+<p><strong>1. Забить диск и пройти весь путь алерта:</strong></p>
+<pre><code class="language-bash">fallocate -l 5G /tmp/big
+# ждём 10 минут (for: 10m), ловим сообщение в Telegram
+rm /tmp/big
+# ждём резолв - алерт должен закрыться сам
+</code></pre>
+<p><strong>2. Остановить трекер</strong> и получить <code>ЦельНеОтвечает</code> через <code>up == 0</code>.</p>
+<p><strong>3. Сделать эндпоинт, отдающий 500</strong>, постучать в него и поймать алерт по доле ошибок.</p>
+<p><strong>4. Убрать <code>for:</code> из правила</strong>, кратковременно дёрнуть метрику и увидеть ложное срабатывание. Вернуть обратно - это и есть демонстрация, зачем <code>for</code> нужен.</p>
+<p><strong>5. Применить <code>rate()</code> к gauge</strong> и посмотреть на бессмысленный график.</p>
+<p><strong>6. Остановить node_exporter</strong> и увидеть, как пропадают панели, а <code>up</code> уходит в ноль.</p>
+<h2 id="_10">✅ Задание</h2>
+<ul>
+<li>Дашборд из шести панелей, собранный руками, с единицами измерения и порогами.</li>
+<li>Три работающих правила алертов.</li>
+<li>Скриншот пришедшего в Telegram уведомления - его показывают на собеседовании.</li>
+<li>Метрики трекера отдаются на <code>/metrics</code> и собираются.</li>
+</ul>
+<p><strong>Критерий готовности:</strong> объясняешь каждую строку <code>prometheus.yml</code> и <code>alerts.yml</code>, и можешь на месте написать PromQL для загрузки процессора и для доли ошибок.</p>
+<h2 id="zabbix-grafana-">🔁 Твоя миграция Zabbix → Grafana - вспомнить с нуля</h2>
+<p>Это твой реальный опыт, и на собеседовании он весит больше стенда. Задача раздела - восстановить его в голове до уровня «рассказываю по шагам», потому что спросят именно шаги.</p>
+<h3 id="-_1">Словарь соответствий - что чем стало</h3>
+<table>
+<thead>
+<tr>
+<th>Zabbix</th>
+<th>Prometheus + Grafana</th>
+<th>Что важно сказать</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Агент на хосте, сервер сам опрашивает</td>
+<td>node_exporter на хосте, Prometheus опрашивает (pull)</td>
+<td>принцип один: сервер ходит к хостам, а не наоборот</td>
+</tr>
+<tr>
+<td>Хост</td>
+<td>target в <code>prometheus.yml</code></td>
+<td>добавил хост = добавил строку в конфиг</td>
+</tr>
+<tr>
+<td>Item (элемент данных)</td>
+<td>метрика с лейблами</td>
+<td><code>node_filesystem_avail_bytes{mountpoint="/"}</code> вместо «Free disk space on /»</td>
+</tr>
+<tr>
+<td>Trigger с выражением</td>
+<td>alert rule на PromQL с <code>for</code></td>
+<td><code>for</code> - это «проблема держится N минут», в Zabbix то же делали через <code>.avg(5m)</code></td>
+</tr>
+<tr>
+<td>Action (кому слать)</td>
+<td>Alertmanager: route, receiver</td>
+<td>маршруты по severity, группировка, тишина на время работ</td>
+</tr>
+<tr>
+<td>Template</td>
+<td>Grafana dashboard + набор правил</td>
+<td>шаблон Zabbix = дашборд плюс правила, порознь</td>
+</tr>
+<tr>
+<td>Screen, график</td>
+<td>панель в дашборде</td>
+<td>перенос - руками, один к одному по смыслу, не по картинке</td>
+</tr>
+<tr>
+<td>История и тренды</td>
+<td>TSDB Prometheus, retention</td>
+<td>Prometheus хранит меньше и проще, длинная история - отдельная тема</td>
+</tr>
+</tbody>
+</table>
+<h3 id="-_2">Как это делалось - порядок шагов, который надо уметь проговорить</h3>
+<ol>
+<li><strong>Инвентаризация.</strong> Выписать из Zabbix, что реально смотрели: хосты, какие items, какие триггеры срабатывали за последние месяцы, кому уходили алерты. Половина настроенного в Zabbix обычно мёртвая - её не переносим.</li>
+<li><strong>Что взять за источник.</strong> Для серверов - node_exporter, для базы - postgres_exporter, для своих сервисов - эндпоинт <code>/metrics</code>. Zabbix-агент остаётся жить параллельно, пока новое не проверено.</li>
+<li><strong>Перенос триггеров в правила.</strong> Каждый живой триггер переписать в PromQL с <code>for</code>. Пороги пересмотреть, а не скопировать: в Zabbix они копились годами, часть уже не про то.</li>
+<li><strong>Дашборды.</strong> Не переносить экраны Zabbix один к одному. Собрать по четырём золотым сигналам: нагрузка, ошибки, латентность, насыщение. Один дашборд «обзор», по одному на сервис.</li>
+<li><strong>Параллельная работа.</strong> Две системы живут вместе две-четыре недели: сравниваешь, что видит одна и другая, ловишь расхождения. Это ответ на вопрос «как убедились, что ничего не потеряли».</li>
+<li><strong>Переключение алертов.</strong> Сначала Alertmanager шлёт в отдельный канал, рядом с боевым Zabbix. Когда неделю совпадает - боевой канал переводится, Zabbix отключается.</li>
+<li><strong>Что осталось после.</strong> Что убрали как шум, сколько правил стало вместо триггеров, что стало видно, чего в Zabbix не было (латентность запросов, ошибки по эндпоинтам).</li>
+</ol>
+<h3 id="-_3">Как рассказать про свой опыт - две минуты</h3>
+<p>«Мониторинг серверов вёл в Zabbix, потом переводили на Grafana. Делал по шагам: сначала выписал, что из настроенного в Zabbix реально смотрят и на что реагируют - оказалось, меньше половины. Хосты и триггеры переносил в источники метрик и правила, пороги пересматривал. Дашборды собирал заново под то, что нужно людям, а не копировал экраны. Пару недель системы работали параллельно, сверял расхождения, потом переключили алерты. Что запомнил - нагрузку под окна бэкапов стало видно заранее, а не по факту, когда бэкап не влез».</p>
+<p>Заполни это своими деталями: сколько хостов, что именно сверяли, где расходилось. Цифры из своей практики, даже приблизительные, звучат сильнее любого термина.</p>
+<h3 id="_11">Практика на стенде под этот раздел</h3>
+<p>После того как Prometheus и Grafana подняты по основной практике слоя, добавь один шаг: возьми любые три триггера, которые помнишь из Zabbix (диск, CPU, недоступность хоста), и запиши их как правила в <code>alerts.yml</code>. Проверь каждое через «сломай намеренно». Это и есть перенос в миниатюре - и готовый ответ на «как вы переносили триггеры».</p>
+<h2 id="_12">🌍 Из жизни</h2>
+<p><strong>Опыт Ивана.</strong> Zabbix на мониторинг серверов, включая отслеживание нагрузки под окна бэкапов. Участие в переходе с Zabbix на Grafana. Это сильная позиция: большинство кандидатов на такие роли Prometheus не разворачивали вообще.</p>
+<p><strong>Про усталость от алертов.</strong> Реальный механизм деградации: сначала шумный алерт раздражает, потом его молча отключают в чате, потом настоящая авария приходит по тому же каналу и её не замечают. Отсюда правило «у каждого алерта должно быть действие».</p>
+<p><strong>Про импортированные дашборды.</strong> На собеседованиях спрашивают «что на дашборде и почему именно это». Человек с импортированным Node Exporter Full теряется на втором вопросе, потому что не он выбирал панели.</p>
+<p><strong>Про алерт на диск.</strong> По опыту Ивана это самый окупаемый алерт из всех: диск, забитый логами, - первая причина «всё встало». Ставить его надо в первый же день, до всего остального.</p>
+<h2 id="_13">❓ Вопросы с ответами</h2>
+<p><strong>Prometheus - pull или push, и почему так?</strong></p>
+<blockquote>
+<p>Pull: сам ходит за метриками по HTTP. Это даёт бесплатную проверку доступности через метрику <code>up</code> и убирает настройку доставки в каждом сервисе. Для коротких задач есть Pushgateway, но злоупотреблять им нельзя - он ломает контроль доступности.</p>
+</blockquote>
+<p><strong>Какие типы метрик бывают?</strong></p>
+<blockquote>
+<p>Counter только растёт и читается через <code>rate</code>. Gauge скачет и читается напрямую. Histogram раскладывает по корзинам, перцентили считаются на сервере и агрегируются между экземплярами. Summary считает на клиенте, складывать их между экземплярами нельзя.</p>
+</blockquote>
+<p><strong>Напишите PromQL для загрузки процессора.</strong></p>
+<blockquote>
+<p><code>100 - (avg by (instance) (rate(node_cpu_seconds_total{mode="idle"}[5m])) * 100)</code> - считаем долю простоя и вычитаем из ста.</p>
+</blockquote>
+<p><strong>Что такое scrape interval и как выбрать?</strong></p>
+<blockquote>
+<p>Как часто забираем метрики. 15 секунд по умолчанию. Меньше - детальнее и дороже по хранению, больше - экономнее и со слепыми зонами.</p>
+</blockquote>
+<p><strong>Чем Alertmanager отличается от алертов в Grafana?</strong></p>
+<blockquote>
+<p>Prometheus решает, когда алерт возник, Alertmanager - кому и как сообщить: группировка, подавление, маршрутизация, тишина на время работ. Grafana умеет свои алерты на любой источник. Если весь мониторинг на Prometheus, правила держу в Prometheus - они лежат в git рядом с конфигом.</p>
+</blockquote>
+<p><strong>Сколько алертов должно приходить в день?</strong></p>
+<blockquote>
+<p>Столько, сколько человек реально разбирает. Если алертов много, на них перестают реагировать, и настоящий теряется в шуме. У каждого должно быть понятно, что по нему сделают.</p>
+</blockquote>
+<p><strong>Что вынесете на дашборд базы данных?</strong></p>
+<blockquote>
+<p>Число соединений против максимума, длительные транзакции и <code>idle in transaction</code>, задержку репликации, попадание в кэш, мёртвые строки и время последнего autovacuum, рост размера.</p>
+</blockquote>
+<p><strong>Как понять, что приложение живо, а не просто процесс запущен?</strong></p>
+<blockquote>
+<p>Проверкой, которая делает работу: ходит в базу, проверяет очередь. Процесс в <code>ps</code> говорит только о том, что он не умер.</p>
+</blockquote></article>
+    <aside class="aside">
+      <strong>В этом документе</strong>
+      <div class="toc"><div class="toc">
+<ul>
+<li><a href="#_1">🎭 Аналогия</a></li>
+<li><a href="#_2">🗺 Карта мест</a></li>
+<li><a href="#_3">📖 Теория</a><ul>
+<li><a href="#pull-push">Pull против push</a></li>
+<li><a href="#_4">Типы метрик</a></li>
+<li><a href="#_5">Четыре золотых сигнала</a></li>
+<li><a href="#-">Про пороги - готовый сильный ответ</a></li>
+</ul>
+</li>
+<li><a href="#_6">🔧 Практика</a><ul>
+<li><a href="#promql-">PromQL - минимум</a></li>
+<li><a href="#alertsyml">Алерты alerts.yml</a></li>
+<li><a href="#alertmanager-telegram">Alertmanager в Telegram</a></li>
+<li><a href="#_7">Дашборд руками</a></li>
+<li><a href="#_8">Метрики трекера</a></li>
+</ul>
+</li>
+<li><a href="#_9">💥 Сломай намеренно</a></li>
+<li><a href="#_10">✅ Задание</a></li>
+<li><a href="#zabbix-grafana-">🔁 Твоя миграция Zabbix → Grafana - вспомнить с нуля</a><ul>
+<li><a href="#-_1">Словарь соответствий - что чем стало</a></li>
+<li><a href="#-_2">Как это делалось - порядок шагов, который надо уметь проговорить</a></li>
+<li><a href="#-_3">Как рассказать про свой опыт - две минуты</a></li>
+<li><a href="#_11">Практика на стенде под этот раздел</a></li>
+</ul>
+</li>
+<li><a href="#_12">🌍 Из жизни</a></li>
+<li><a href="#_13">❓ Вопросы с ответами</a></li>
+</ul>
+</div>
+</div>
+    </aside>
+  </div>
+</main>
+
+
+<script>
+const ROOT = "..";
+
+// ---- тема
+const themeBtn = document.getElementById("theme");
+const paint = () => {
+  const dark = document.documentElement.getAttribute("data-theme") === "dark";
+  themeBtn.textContent = dark ? "☀" : "☾";
+};
+paint();
+themeBtn.addEventListener("click", () => {
+  const next = document.documentElement.getAttribute("data-theme") === "dark" ? "light" : "dark";
+  document.documentElement.setAttribute("data-theme", next);
+  try { localStorage.setItem("kb-theme", next); } catch (e) {}
+  paint();
+});
+
+// ---- поиск
+let index = null;
+const box = document.getElementById("results");
+const hits = document.getElementById("hits");
+const head = box.querySelector("h3");
+const input = document.getElementById("q");
+
+async function ensureIndex() {
+  if (index) return index;
+  const res = await fetch(ROOT + "/search-index.json");
+  index = await res.json();
+  return index;
+}
+
+const esc = (s) => (s || "").replace(/[&<>]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
+
+function hi(text, query) {
+  const i = text.toLowerCase().indexOf(query);
+  if (i < 0) return esc(text);
+  return esc(text.slice(0, i)) + "<mark>" + esc(text.slice(i, i + query.length)) + "</mark>" + esc(text.slice(i + query.length));
+}
+
+input.addEventListener("input", async () => {
+  const q = input.value.trim().toLowerCase();
+  if (q.length < 2) { box.hidden = true; return; }
+  const data = await ensureIndex();
+  const found = [];
+  for (const d of data) {
+    const inTitle = d.title.toLowerCase().includes(q);
+    const inSum = (d.summary || "").toLowerCase().includes(q);
+    const heads = (d.heads || []).filter(h => h.toLowerCase().includes(q));
+    if (inTitle || inSum || heads.length) {
+      found.push({ d, heads, rank: inTitle ? 0 : heads.length ? 1 : 2 });
+    }
+  }
+  found.sort((a, b) => a.rank - b.rank);
+  head.textContent = found.length ? `Нашлось: ${found.length}` : "Ничего не нашлось";
+  hits.innerHTML = found.slice(0, 40).map(({ d, heads }) =>
+    `<a class="hit" href="${ROOT}/d/${d.slug}.html">
+       <b>${hi(d.title, q)}</b>
+       <span>${heads.length ? "→ " + heads.slice(0, 3).map(h => hi(h, q)).join(" · ") : esc(d.summary || "")}</span>
+     </a>`).join("");
+  box.hidden = false;
+});
+
+input.addEventListener("keydown", (e) => { if (e.key === "Escape") { input.value = ""; box.hidden = true; input.blur(); } });
+document.addEventListener("keydown", (e) => {
+  if (e.key === "/" && document.activeElement !== input) { e.preventDefault(); input.focus(); }
+});
+</script>
+</body>
+</html>

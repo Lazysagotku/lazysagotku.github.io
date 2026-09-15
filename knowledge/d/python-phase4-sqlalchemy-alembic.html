@@ -1,0 +1,311 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>🗄️ Фаза 4. Базы данных: SQLAlchemy и Alembic (5 часов) - База знаний</title>
+<link rel="stylesheet" href="../kb.css">
+<script>
+  // Тему ставим до первой отрисовки, иначе на тёмной системе мигает белым.
+  try {
+    var t = localStorage.getItem("kb-theme");
+    if (!t) t = matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+    document.documentElement.setAttribute("data-theme", t);
+  } catch (e) {}
+</script>
+</head>
+<body>
+
+<header class="top">
+  <div class="top-in">
+    <a class="brand" href="../index.html">База <span>знаний</span></a>
+    <span class="grow"></span>
+    <input id="q" type="search" placeholder="Поиск по всем материалам…" autocomplete="off">
+    <button class="icon-btn" id="theme" type="button" title="Тема"></button>
+  </div>
+</header>
+
+<div id="results" hidden><div class="wrap-r"><h3></h3><div id="hits"></div></div></div>
+
+<main class="wrap">
+  <div class="doc-head">
+    <div class="crumb"><a href="../index.html#reference">Справочники</a></div>
+    <h1>🗄️ Фаза 4. Базы данных: SQLAlchemy и Alembic (5 часов)</h1>
+    <div class="meta">170 строк · источник <code>l2code/Python_Phase4_SQLAlchemy_Alembic.md</code></div>
+  </div>
+
+  <div class="layout">
+    <article class="prose"><blockquote>
+<p>📖 Фаза роадмапа <strong>«Python Backend»</strong>. Оглавление и статус - в <code>PythonBackend_Roadmap.md</code>.
+Каждая фаза самодостаточна: 🎭 аналогия → 📖 теория → 🔧 практика → 💥 сломай намеренно → ✅ задание → 🌍 из жизни → ❓ вопросы с ответами.</p>
+<p>В трекере это уже написано - Claude. Цель фазы: разобрать чужой код до состояния, когда можешь его защитить, и закрыть слепые места.</p>
+</blockquote>
+<h2 id="_1">🎭 Аналогия</h2>
+<p>Переводчик между двумя языками. Приложение говорит объектами, база - таблицами и строками. ORM переводит. Проблемы начинаются там, где переводчик слишком старается: делает сто запросов вместо одного, потому что не понял, что нужно всё сразу.</p>
+<h2 id="_2">📖 Теория</h2>
+<h3 id="core-orm">Core и ORM</h3>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>Core</th>
+<th>ORM</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Что пишешь</td>
+<td>выражения близко к SQL</td>
+<td>классы и объекты</td>
+</tr>
+<tr>
+<td>Когда лучше</td>
+<td>массовые операции, аналитика</td>
+<td>обычная бизнес-логика</td>
+</tr>
+<tr>
+<td>Контроль над SQL</td>
+<td>полный</td>
+<td>через настройки загрузки</td>
+</tr>
+</tbody>
+</table>
+<p>В трекере используется ORM. Знать про Core стоит: массовая вставка и сложные отчёты пишутся там проще и работают быстрее.</p>
+<h3 id="20">Декларативные модели, стиль 2.0</h3>
+<pre><code class="language-python">from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
+
+class Base(DeclarativeBase):
+    pass
+
+class Vacancy(Base):
+    __tablename__ = &quot;vacancies&quot;
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    company_id: Mapped[int] = mapped_column(ForeignKey(&quot;companies.id&quot;, ondelete=&quot;CASCADE&quot;), index=True)
+    title: Mapped[str] = mapped_column(String(300))
+    status: Mapped[Status] = mapped_column(Enum(Status, name=&quot;vacancy_status&quot;), index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+    company: Mapped[&quot;Company&quot;] = relationship(back_populates=&quot;vacancies&quot;)
+    events: Mapped[list[&quot;Event&quot;]] = relationship(back_populates=&quot;vacancy&quot;, cascade=&quot;all, delete-orphan&quot;)
+</code></pre>
+<p><code>Mapped[...]</code> - типизация, которую понимает и mypy, и SQLAlchemy. Это стиль 2.0, старый через <code>Column(...)</code> встречается в примерах из интернета.</p>
+<h3 id="n1-orm">N+1 - главная проблема любой ORM</h3>
+<pre><code class="language-python"># ПЛОХО: один запрос за списком плюс по запросу на каждую компанию
+for v in session.scalars(select(Vacancy)):
+    print(v.company.name)
+
+# ХОРОШО: один запрос с соединением
+stmt = select(Vacancy).options(joinedload(Vacancy.company))
+for v in session.scalars(stmt).unique():
+    print(v.company.name)
+</code></pre>
+<table>
+<thead>
+<tr>
+<th>Стратегия</th>
+<th>Что делает</th>
+<th>Когда</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>lazy="select"</code></td>
+<td>грузит при обращении, по умолчанию</td>
+<td>связь нужна редко</td>
+</tr>
+<tr>
+<td><code>joinedload</code></td>
+<td>одним запросом с JOIN</td>
+<td>связь «много к одному»</td>
+</tr>
+<tr>
+<td><code>selectinload</code></td>
+<td>вторым запросом с <code>IN</code></td>
+<td>связь «один ко многим»</td>
+</tr>
+<tr>
+<td><code>raiseload</code></td>
+<td>бросает исключение при ленивой загрузке</td>
+<td>чтобы найти N+1 в тестах</td>
+</tr>
+</tbody>
+</table>
+<p>⚠️ <code>raiseload("*")</code> в тестах - способ поймать все N+1 разом, вместо того чтобы искать их по логам.</p>
+<h3 id="_3">Сессия и жизненный цикл</h3>
+<pre><code class="language-python">with SessionLocal() as session:
+    with session.begin():          # commit при выходе, rollback при исключении
+        session.add(item)
+</code></pre>
+<p>Три состояния объекта: <strong>transient</strong> (создан, не в сессии), <strong>pending</strong> (добавлен, не сохранён), <strong>persistent</strong> (сохранён). После <code>commit</code> объекты по умолчанию устаревают и при следующем обращении делают новый запрос. <code>expire_on_commit=False</code> это отключает - в трекере так и сделано.</p>
+<h3 id="sql">Как посмотреть настоящий SQL</h3>
+<pre><code class="language-python">engine = create_engine(url, echo=True)          # всё в лог
+
+print(stmt.compile(compile_kwargs={&quot;literal_binds&quot;: True}))   # один запрос
+</code></pre>
+<p>Это первое, что надо делать при разборе медленной страницы: увидеть, во что превратился код.</p>
+<h3 id="alembic">Alembic</h3>
+<pre><code class="language-bash">alembic revision --autogenerate -m &quot;добавить приоритет&quot;
+alembic upgrade head
+alembic downgrade -1
+alembic history --verbose
+</code></pre>
+<p>⚠️ <strong>Autogenerate не всесилен.</strong> Он не видит переименования (показывает как удаление плюс добавление), изменения типов в некоторых случаях, изменения в данных. Каждую сгенерированную миграцию надо читать глазами до применения.</p>
+<p><strong>Правила миграций в проде:</strong>
+1. Читать сгенерированное перед применением.
+2. Писать <code>downgrade</code>, а не оставлять <code>pass</code>.
+3. Разделять изменение схемы и перенос данных на разные миграции.
+4. Добавлять колонку с <code>NOT NULL</code> в три шага: колонка допускающая пустоту, заполнение, ограничение.
+5. Индексы на больших таблицах - <code>CREATE INDEX CONCURRENTLY</code> через <code>op.execute</code>.</p>
+<h3 id="_4">Асинхронный доступ</h3>
+<pre><code class="language-python">from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
+
+engine = create_async_engine(&quot;postgresql+asyncpg://...&quot;)
+Session = async_sessionmaker(engine, expire_on_commit=False)
+
+async with Session() as session:
+    result = await session.scalars(select(Vacancy).limit(10))
+</code></pre>
+<p>⚠️ В асинхронном режиме ленивая загрузка связей не работает - обращение к незагруженной связи бросает исключение. Загрузку надо указывать явно через <code>selectinload</code>.</p>
+<h2 id="_5">🔧 Практика</h2>
+<p><strong>На трекере:</strong>
+1. Включить <code>echo=True</code> и посмотреть, сколько запросов делает главная страница.
+2. Найти N+1 и убрать через <code>selectinload</code> на событиях и <code>joinedload</code> на компании. <strong>Записать: было столько запросов, стало столько.</strong>
+3. Поставить <code>raiseload("*")</code> в тестовой конфигурации.
+4. Написать миграцию с осмысленным <code>downgrade</code> и прогнать её вперёд и назад.
+5. Добавить колонку с <code>NOT NULL</code> в три шага на живых данных.
+6. Массовую операцию (пересчёт приоритетов) переписать на Core через <code>update()</code>, сравнить время.</p>
+<h2 id="_6">💥 Сломай намеренно</h2>
+<ol>
+<li><strong>Обратиться к связи после <code>commit</code></strong> при <code>expire_on_commit=True</code> - увидеть лишний запрос в логе.</li>
+<li><strong>Написать цикл с обращением к <code>v.company</code></strong> без загрузки - посчитать запросы в логе, это N+1 своими глазами.</li>
+<li><strong>Оставить <code>downgrade</code> пустым</strong>, применить миграцию, попробовать откатиться.</li>
+<li><strong>Autogenerate на переименование колонки</strong> - посмотреть, что он сгенерировал удаление плюс добавление, то есть потерю данных.</li>
+<li><strong>Забыть <code>await</code> перед <code>session.scalars</code></strong> в асинхронном коде - получить корутину вместо результата.</li>
+<li><strong>Открыть сессию и не закрыть</strong> в цикле - посмотреть рост соединений в <code>pg_stat_activity</code>.</li>
+</ol>
+<h2 id="_7">✅ Задание</h2>
+<p>Главная страница трекера делает фиксированное число запросов независимо от количества строк. В коммите записан замер до и после. Есть миграция с рабочим <code>downgrade</code>, прогнанная в обе стороны.</p>
+<p><strong>Критерий:</strong> можешь показать в логе, где был N+1, и объяснить, почему выбрана именно <code>selectinload</code>, а не <code>joinedload</code>.</p>
+<h2 id="_8">🌍 Из жизни</h2>
+<p><strong>Про N+1 на проде.</strong> Страница со списком из двадцати элементов делает двадцать один запрос. На тестовых данных незаметно, на реальных с сетевой задержкой до базы страница открывается секундами. Это самая частая причина «сайт стал тормозить, а код не меняли» - выросло число строк.</p>
+<p><strong>Про autogenerate и переименование.</strong> Реальный сценарий потери данных: разработчик переименовал колонку, autogenerate сгенерировал <code>drop_column</code> плюс <code>add_column</code>, миграция уехала на прод, данные из колонки исчезли. Поэтому правило читать сгенерированное глазами.</p>
+<p><strong>Про пустой downgrade.</strong> Alembic вставляет <code>pass</code> в <code>downgrade</code>, если не смог придумать обратное. Обнаруживается это в момент, когда откат нужен срочно.</p>
+<h2 id="_9">❓ Вопросы с ответами</h2>
+<p><strong>Что такое N+1 и как его найти?</strong></p>
+<blockquote>
+<p>Один запрос за списком и по запросу на каждый элемент за связанными данными. Нахожу через <code>echo=True</code> в логе или через <code>raiseload("*")</code> в тестах, который бросает исключение на ленивой загрузке. Лечится <code>joinedload</code> для связи «много к одному» и <code>selectinload</code> для «один ко многим».</p>
+</blockquote>
+<p><strong>Чем <code>joinedload</code> отличается от <code>selectinload</code>?</strong></p>
+<blockquote>
+<p><code>joinedload</code> тянет одним запросом через JOIN, хорош для «много к одному». <code>selectinload</code> делает второй запрос с <code>IN</code>, хорош для «один ко многим» - JOIN там размножает строки основной таблицы.</p>
+</blockquote>
+<p><strong>Как делаете миграции без простоя?</strong></p>
+<blockquote>
+<p>Читаю сгенерированное перед применением. Колонку с <code>NOT NULL</code> добавляю в три шага: сначала допускающая пустоту, потом заполнение, потом ограничение. Индексы на больших таблицах - <code>CREATE INDEX CONCURRENTLY</code>. Изменение схемы и перенос данных - разные миграции.</p>
+</blockquote>
+<p><strong>Что autogenerate не увидит?</strong></p>
+<blockquote>
+<p>Переименования - он покажет их как удаление плюс добавление, то есть потерю данных. Часть изменений типов. Изменения в самих данных. Поэтому каждую миграцию читаю глазами.</p>
+</blockquote>
+<p><strong>Когда Core вместо ORM?</strong></p>
+<blockquote>
+<p>Массовые операции и аналитика. Обновление тысяч строк через ORM означает загрузить их в память и обновить по одной. Через Core это один <code>update()</code> на стороне базы.</p>
+</blockquote></article>
+    <aside class="aside">
+      <strong>В этом документе</strong>
+      <div class="toc"><div class="toc">
+<ul>
+<li><a href="#_1">🎭 Аналогия</a></li>
+<li><a href="#_2">📖 Теория</a><ul>
+<li><a href="#core-orm">Core и ORM</a></li>
+<li><a href="#20">Декларативные модели, стиль 2.0</a></li>
+<li><a href="#n1-orm">N+1 - главная проблема любой ORM</a></li>
+<li><a href="#_3">Сессия и жизненный цикл</a></li>
+<li><a href="#sql">Как посмотреть настоящий SQL</a></li>
+<li><a href="#alembic">Alembic</a></li>
+<li><a href="#_4">Асинхронный доступ</a></li>
+</ul>
+</li>
+<li><a href="#_5">🔧 Практика</a></li>
+<li><a href="#_6">💥 Сломай намеренно</a></li>
+<li><a href="#_7">✅ Задание</a></li>
+<li><a href="#_8">🌍 Из жизни</a></li>
+<li><a href="#_9">❓ Вопросы с ответами</a></li>
+</ul>
+</div>
+</div>
+    </aside>
+  </div>
+</main>
+
+
+<script>
+const ROOT = "..";
+
+// ---- тема
+const themeBtn = document.getElementById("theme");
+const paint = () => {
+  const dark = document.documentElement.getAttribute("data-theme") === "dark";
+  themeBtn.textContent = dark ? "☀" : "☾";
+};
+paint();
+themeBtn.addEventListener("click", () => {
+  const next = document.documentElement.getAttribute("data-theme") === "dark" ? "light" : "dark";
+  document.documentElement.setAttribute("data-theme", next);
+  try { localStorage.setItem("kb-theme", next); } catch (e) {}
+  paint();
+});
+
+// ---- поиск
+let index = null;
+const box = document.getElementById("results");
+const hits = document.getElementById("hits");
+const head = box.querySelector("h3");
+const input = document.getElementById("q");
+
+async function ensureIndex() {
+  if (index) return index;
+  const res = await fetch(ROOT + "/search-index.json");
+  index = await res.json();
+  return index;
+}
+
+const esc = (s) => (s || "").replace(/[&<>]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
+
+function hi(text, query) {
+  const i = text.toLowerCase().indexOf(query);
+  if (i < 0) return esc(text);
+  return esc(text.slice(0, i)) + "<mark>" + esc(text.slice(i, i + query.length)) + "</mark>" + esc(text.slice(i + query.length));
+}
+
+input.addEventListener("input", async () => {
+  const q = input.value.trim().toLowerCase();
+  if (q.length < 2) { box.hidden = true; return; }
+  const data = await ensureIndex();
+  const found = [];
+  for (const d of data) {
+    const inTitle = d.title.toLowerCase().includes(q);
+    const inSum = (d.summary || "").toLowerCase().includes(q);
+    const heads = (d.heads || []).filter(h => h.toLowerCase().includes(q));
+    if (inTitle || inSum || heads.length) {
+      found.push({ d, heads, rank: inTitle ? 0 : heads.length ? 1 : 2 });
+    }
+  }
+  found.sort((a, b) => a.rank - b.rank);
+  head.textContent = found.length ? `Нашлось: ${found.length}` : "Ничего не нашлось";
+  hits.innerHTML = found.slice(0, 40).map(({ d, heads }) =>
+    `<a class="hit" href="${ROOT}/d/${d.slug}.html">
+       <b>${hi(d.title, q)}</b>
+       <span>${heads.length ? "→ " + heads.slice(0, 3).map(h => hi(h, q)).join(" · ") : esc(d.summary || "")}</span>
+     </a>`).join("");
+  box.hidden = false;
+});
+
+input.addEventListener("keydown", (e) => { if (e.key === "Escape") { input.value = ""; box.hidden = true; input.blur(); } });
+document.addEventListener("keydown", (e) => {
+  if (e.key === "/" && document.activeElement !== input) { e.preventDefault(); input.focus(); }
+});
+</script>
+</body>
+</html>

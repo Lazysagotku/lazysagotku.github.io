@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>🗺️ Python Backend Roadmap - База знаний</title>
+<title>🐍 Python Backend Roadmap - База знаний</title>
 <link rel="stylesheet" href="../kb.css">
 <script>
   // Тему ставим до первой отрисовки, иначе на тёмной системе мигает белым.
@@ -30,178 +30,235 @@
 <main class="wrap">
   <div class="doc-head">
     <div class="crumb"><a href="../index.html#roadmaps">Роадмапы</a></div>
-    <h1>🗺️ Python Backend Roadmap</h1>
-    <div class="meta">129 строк · источник <code>l2code/PythonBackend_Roadmap.md</code></div>
+    <h1>🐍 Python Backend Roadmap</h1>
+    <div class="meta">102 строк · источник <code>l2code/PythonBackend_Roadmap.md</code></div>
   </div>
 
   <div class="layout">
-    <article class="prose"><blockquote>
-<p>💤 <strong>СПЯЩИЙ план — не активная работа.</strong> Триггер активации: предложение по Python-резюме приходит РАНЬШЕ, чем завершится C#-курс (Tier 0). До триггера — ноль обязательных часов, файл существует для просмотра "в перерывах", не для прохождения.
-Уровень старта: Python уже знаешь (pandas, Selenium, Flask/Django, threading, self/ООП) — роадмап калиброван под "закрыть бэкенд-паттерны и идиомы", не учить язык с нуля.</p>
-</blockquote>
-<hr>
-<h2 id="_1">📊 Статус</h2>
-<ul>
-<li>[ ] Фаза 1 — Идиомы и продвинутый Python</li>
-<li>[ ] Фаза 2 — Async/Concurrency</li>
-<li>[ ] Фаза 3 — Web-фреймворк (FastAPI) — 🔗 <strong>частично уже написано</strong>, см. ниже</li>
-<li>[ ] Фаза 4 — Базы данных (SQLAlchemy, Alembic)</li>
-<li>[ ] Фаза 5 — Тестирование — 🔗 <strong>частично уже написано</strong></li>
-<li>[ ] Фаза 6 — DevOps</li>
-<li>[ ] Фаза 7 — Архитектура и продакшен-паттерны</li>
-</ul>
-<p><strong>Уже есть готовый материал:</strong> <code>Python_Backend_Crash_Course.md</code> (создан 22 июля) закрывает часть Фазы 3 (Pydantic, Strategy/ABC, FastAPI DI/BackgroundTasks) и часть Фазы 5 (pytest, fixtures, mocking, coverage) — не переписывать заново, использовать как есть, когда дойдёт очередь.</p>
-<hr>
-<h2 id="1-python">🔵 Фаза 1 — Идиомы и продвинутый Python</h2>
+    <article class="prose"><!-- progress: 1=55; 2=25; 3=45; 4=40; 5=5; 6=30; 7=10 -->
+<!-- progress_note: самооценка поглощения с прежней страницы портфолио, 30.08.2026 -->
+
 <blockquote>
-<p>Цель: писать на Python не "как на C# с другим синтаксисом", а на его собственных идиомах</p>
+<p>Создан 18 августа 2026, переписан 11 сентября под единый формат фаз.</p>
+<p>⚠️ <strong>Статус «спящий» снят.</strong> Причина не в том, что стало больше практики,
+а в требованиях рынка: в инфраструктурных вакансиях автоматизация скриптами
+стоит вторым требованием после Linux. У Сбера прямо в описании - «навыки
+автоматизации на любом скриптовом языке и желание их регулярно применять».</p>
 </blockquote>
-<h3 id="_2">Темы</h3>
-<ul>
-<li>[ ] 1.1 Типизация — mutable vs immutable, что реально копируется при присвоении</li>
-<li>[ ] 1.2 List/dict/set comprehensions — когда идиоматично, когда усложняет</li>
-<li>[ ] 1.3 <em>args / </em><em>kwargs — 🎯 </em>уже назван самим Иваном как пробел (объяснено 8 июля)*</li>
-<li>[ ] 1.4 Итераторы и генераторы — <code>yield</code>, ленивые вычисления (мост от C# <code>IEnumerable</code>/<code>yield return</code>)</li>
-<li>[ ] 1.5 Декораторы — свои декораторы, <code>functools.wraps</code>, параметризованные декораторы</li>
-<li>[ ] 1.6 Контекстные менеджеры — <code>with</code>, <code>__enter__</code>/<code>__exit__</code>, <code>contextlib</code> (мост от C# <code>using</code>/<code>IDisposable</code>)</li>
-<li>[ ] 1.7 ООП в Python — dunder-методы (<code>__eq__</code>, <code>__repr__</code>, <code>__hash__</code>), <code>@property</code>, dataclasses (мост от C# <code>record</code>)</li>
-<li>[ ] 1.8 Type hints — <code>typing</code> модуль, <code>Optional</code>/<code>Union</code>, статическая проверка через mypy</li>
-</ul>
-<h3 id="_3">🎯 Итоговое задание</h3>
-<p>Переписать один из существующих реальных Python-скриптов (например CSV-импорт) с применением: типизации через hints, генератора вместо списка там, где уместно, контекстного менеджера для работы с файлом/соединением, dataclass вместо словаря для структуры данных.</p>
+<p><strong>Уровень старта.</strong> Python знаешь: pandas, Selenium, Flask и Django, threading, ООП. Роадмап калиброван под «закрыть бэкенд-паттерны и идиомы», а не учить язык с нуля.</p>
 <hr>
-<h2 id="2-asyncconcurrency">🟢 Фаза 2 — Async/Concurrency</h2>
+<h2 id="-">⚠️ Про трекер и разведчик - читать до начала</h2>
+<p>Трекер откликов на FastAPI и разведчик вакансий на Playwright <strong>написал Claude, а не Иван</strong>. Из этого следуют два правила, и оба важные.</p>
+<p><strong>Первое: этот код не идёт в опыт.</strong> Ни в резюме, ни в ответы на собеседовании, ни в проценты прохождения фаз. Фраза «я собрал трекер на FastAPI» рассыпается от первого уточняющего вопроса про <code>Depends</code> или про то, почему сессия закрывается именно так.</p>
+<p><strong>Второе: этот код - отличный полигон.</strong> Он лучше выдуманного Task Manager по трём причинам: база настоящая с реальными данными, логика живая и уже ломалась, а ошибки в ней имеют последствия, которые видно. Учиться на нём можно и нужно.</p>
+<p><strong>Отсюда критерий закрытия любой фазы:</strong> можешь объяснить каждую строку разобранного куска и изменить её сам, без подсказки. Не «код работает», а «я понимаю, почему он работает так».</p>
+<p><strong>Честная формулировка для собеседования</strong>, если спросят про эти проекты:</p>
 <blockquote>
-<p>Цель: понимать разницу async/threading/multiprocessing и не путать их применение</p>
+<p>Трекер откликов и разведчик вакансий я собрал через Claude Code: ставил задачу, разбирал результат, правил и эксплуатирую. Сам код писал не я - это инструментальное владение ИИ, а не моя разработка. Что делаю руками: держу их живыми на сервере, разбираю падения, читаю логи, правлю конфигурацию.</p>
 </blockquote>
-<h3 id="_4">Темы</h3>
-<ul>
-<li>[ ] 2.1 GIL (Global Interpreter Lock) — что это и почему <code>threading</code> не даёт настоящего параллелизма для CPU-bound задач</li>
-<li>[ ] 2.2 <code>asyncio</code> — event loop, <code>async</code>/<code>await</code>, <code>Task</code> (мост от C# <code>Task</code>/async-await — тот же паттерн, разный рантайм)</li>
-<li>[ ] 2.3 Когда <code>threading</code>, когда <code>multiprocessing</code>, когда <code>asyncio</code> — I/O-bound vs CPU-bound</li>
-<li>[ ] 2.4 <code>aiohttp</code>/<code>httpx</code> — асинхронные HTTP-запросы</li>
-<li>[ ] 2.5 <code>Semaphore</code>/<code>Lock</code> в asyncio — та же логика, что <code>SemaphoreSlim</code>/<code>lock</code> в C# (Phase3_Advanced.md §3.5), просто другой API</li>
-</ul>
-<h3 id="_5">🎯 Итоговое задание</h3>
-<p>Написать скрипт, параллельно обращающийся к нескольким внешним API (например тестовым эндпоинтам) через <code>asyncio.gather</code> + <code>Semaphore</code> для ограничения одновременных запросов — прямая параллель уже пройденному <code>SemaphoreSlim</code>-примеру из C#-курса.</p>
+<p>Этот вариант звучит не слабее выдуманного, а в вакансиях, где GigaChat и владение AI стоят в требованиях, - сильнее.</p>
 <hr>
-<h2 id="3-web-fastapi">🟡 Фаза 3 — Web-фреймворк (FastAPI) — 🔗 частично готово</h2>
-<blockquote>
-<p>Цель: строить REST API на современном Python-стеке (мост от ASP.NET Core)</p>
-</blockquote>
-<h3 id="_6">Темы</h3>
-<ul>
-<li>[ ] 3.1 FastAPI основы — маршрутизация, path/query параметры, статус коды</li>
-<li>[x] 3.2 Pydantic — валидация данных, модели запроса/ответа <em>(есть в Python_Backend_Crash_Course.md, День 1)</em></li>
-<li>[x] 3.3 Dependency Injection — <code>Depends()</code> (мост от C# DI-контейнера) <em>(есть в крэш-курсе, День 2)</em></li>
-<li>[x] 3.4 Strategy pattern через ABC <em>(есть в крэш-курсе, День 1)</em></li>
-<li>[ ] 3.5 Middleware в FastAPI — свой middleware (мост от ASP.NET Core middleware, Фаза 5.8 C#-роадмапа)</li>
-<li>[ ] 3.6 Background Tasks <em>(частично есть в крэш-курсе, День 2 — проверить/расширить)</em></li>
-<li>[ ] 3.7 Аутентификация — OAuth2/JWT в FastAPI (мост от C# JWT, Фаза 5.9)</li>
-</ul>
-<h3 id="_7">🎯 Итоговое задание</h3>
-<p>CRUD REST API (тот же "Task Manager", что и в C#-роадмапе Фазе 5) — но на FastAPI, чтобы напрямую сравнить подход двух экосистем к одной и той же задаче.</p>
+<h2 id="_1">Как устроена каждая фаза</h2>
+<table>
+<thead>
+<tr>
+<th>Блок</th>
+<th>Что в нём</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>🎭 <strong>Аналогия</strong></td>
+<td>бытовой образ до теории</td>
+</tr>
+<tr>
+<td>📖 <strong>Теория</strong></td>
+<td>что понять, с таблицами сравнения</td>
+</tr>
+<tr>
+<td>🔧 <strong>Практика</strong></td>
+<td>на трекере и разведчике, командами</td>
+</tr>
+<tr>
+<td>💥 <strong>Сломай намеренно</strong></td>
+<td>что испортить, чтобы увидеть симптом</td>
+</tr>
+<tr>
+<td>✅ <strong>Задание</strong></td>
+<td>что предъявить</td>
+</tr>
+<tr>
+<td>🌍 <strong>Из жизни</strong></td>
+<td>случаи, цифры, чем оборачивается в проде</td>
+</tr>
+<tr>
+<td>❓ <strong>Вопросы с ответами</strong></td>
+<td>формулировки для собеседования</td>
+</tr>
+</tbody>
+</table>
 <hr>
-<h2 id="4">🗄️ Фаза 4 — Базы данных</h2>
-<blockquote>
-<p>Цель: ORM-слой на Python (мост от EF Core)</p>
-</blockquote>
-<h3 id="_8">Темы</h3>
-<ul>
-<li>[ ] 4.1 SQLAlchemy — Core vs ORM, модели, сессии (мост от EF Core <code>DbContext</code>)</li>
-<li>[ ] 4.2 Alembic — миграции (уже реально знаком — резюме упоминает Alembic и Django ORM migrations)</li>
-<li>[ ] 4.3 Async SQLAlchemy — <code>asyncpg</code> драйвер, async-сессии</li>
-<li>[ ] 4.4 Repository pattern на Python — тот же принцип, что в C#-роадмапе Фазе 6.5</li>
-</ul>
-<h3 id="_9">🎯 Итоговое задание</h3>
-<p>Подключить SQLAlchemy + PostgreSQL к FastAPI-приложению из Фазы 3, с Alembic-миграцией и repository-слоем.</p>
+<h2 id="_2">📊 Статус</h2>
+<table>
+<thead>
+<tr>
+<th>Фаза</th>
+<th>Тема</th>
+<th>Часов</th>
+<th>Состояние</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>Идиомы и продвинутый Python</td>
+<td>6</td>
+<td>не начата</td>
+</tr>
+<tr>
+<td>2</td>
+<td>Async и параллелизм</td>
+<td>6</td>
+<td>не начата</td>
+</tr>
+<tr>
+<td>3</td>
+<td>FastAPI</td>
+<td>5</td>
+<td>частично: крэш-курс закрывает Pydantic, DI, Strategy</td>
+</tr>
+<tr>
+<td>4</td>
+<td>Базы данных: SQLAlchemy и Alembic</td>
+<td>5</td>
+<td>не начата, есть код для разбора</td>
+</tr>
+<tr>
+<td>5</td>
+<td>Тестирование</td>
+<td>4</td>
+<td>частично: крэш-курс закрывает pytest, моки, coverage</td>
+</tr>
+<tr>
+<td>6</td>
+<td>Упаковка и эксплуатация</td>
+<td>4</td>
+<td>пересекается со слоями 0-2 инфра-роадмапа</td>
+</tr>
+<tr>
+<td>7</td>
+<td>Архитектура и продакшен</td>
+<td>5</td>
+<td>не начата</td>
+</tr>
+</tbody>
+</table>
+<p>Итого 35 часов. <strong>Готовый материал:</strong> <code>Python_Backend_Crash_Course.md</code> от 22 июля закрывает часть фаз 3 и 5. Переписывать заново не надо, использовать как есть.</p>
 <hr>
-<h2 id="5">🧪 Фаза 5 — Тестирование — 🔗 частично готово</h2>
-<blockquote>
-<p>Цель: pytest-экосистема (мост от xUnit/Moq)</p>
-</blockquote>
-<h3 id="_10">Темы</h3>
-<ul>
-<li>[x] 5.1 pytest основы, fixtures <em>(есть в крэш-курсе, День 3)</em></li>
-<li>[x] 5.2 Mocking — <code>pytest-mock</code>, <code>unittest.mock</code> (мост от Moq) <em>(есть в крэш-курсе)</em></li>
-<li>[x] 5.3 Coverage <em>(есть в крэш-курсе)</em></li>
-<li>[ ] 5.4 Integration-тесты FastAPI — <code>TestClient</code>/<code>httpx.AsyncClient</code> (мост от <code>WebApplicationFactory</code>)</li>
-<li>[ ] 5.5 Параметризованные тесты — <code>@pytest.mark.parametrize</code></li>
-</ul>
-<h3 id="_11">🎯 Итоговое задание</h3>
-<p>Покрыть FastAPI-приложение из Фазы 3-4 unit- и integration-тестами (тот же принцип "80%+ на сервисном слое", что в C#-роадмапе Фазе 7).</p>
+<h1 id="_3">📂 Файлы фаз</h1>
+<p>Одна фаза - один файл, как в C#-роадмапе. Внутри каждого полный набор блоков.</p>
+<table>
+<thead>
+<tr>
+<th>Фаза</th>
+<th>Файл</th>
+<th>Часов</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1. Идиомы и продвинутый Python</td>
+<td><code>Python_Phase1_Idioms.md</code></td>
+<td>6 часов</td>
+</tr>
+<tr>
+<td>2. Async и параллелизм</td>
+<td><code>Python_Phase2_Async.md</code></td>
+<td>6 часов</td>
+</tr>
+<tr>
+<td>3. FastAPI</td>
+<td><code>Python_Phase3_FastAPI.md</code></td>
+<td>5 часов</td>
+</tr>
+<tr>
+<td>4. Базы данных: SQLAlchemy и Alembic</td>
+<td><code>Python_Phase4_SQLAlchemy_Alembic.md</code></td>
+<td>5 часов</td>
+</tr>
+<tr>
+<td>5. Тестирование</td>
+<td><code>Python_Phase5_Testing.md</code></td>
+<td>4 часа</td>
+</tr>
+<tr>
+<td>6. Упаковка и эксплуатация</td>
+<td><code>Python_Phase6_Packaging_Ops.md</code></td>
+<td>4 часа</td>
+</tr>
+<tr>
+<td>7. Архитектура и продакшен-паттерны</td>
+<td><code>Python_Phase7_Architecture.md</code></td>
+<td>5 часов</td>
+</tr>
+</tbody>
+</table>
 <hr>
-<h2 id="6-devops">🚀 Фаза 6 — DevOps</h2>
-<blockquote>
-<p>Большая часть уже знакома по C#-треку — концепции переносятся 1:1, меняется только конкретный синтаксис</p>
-</blockquote>
-<h3 id="_12">Темы</h3>
+<h1 id="_4">📚 Ресурсы</h1>
 <ul>
-<li>[ ] 6.1 Docker для Python-приложений — отличия от .NET-контейнеров (нет отдельного шага компиляции)</li>
-<li>[ ] 6.2 <code>uvicorn</code>/<code>gunicorn</code> — как реально запускают FastAPI в проде</li>
-<li>[ ] 6.3 <code>pydantic-settings</code> — конфигурация через env vars (мост от C# <code>IOptions</code>)</li>
-<li>[ ] 6.4 CI/CD — тот же GitLab CI, что и в C#-треке, просто другой build-шаг</li>
+<li><a href="https://fastapi.tiangolo.com">fastapi.tiangolo.com</a> - официальная документация, одна из лучших в экосистеме.</li>
+<li><a href="https://docs.sqlalchemy.org">docs.sqlalchemy.org</a> - раздел ORM Querying Guide про стратегии загрузки.</li>
+<li><a href="https://alembic.sqlalchemy.org">alembic.sqlalchemy.org</a> - раздел Cookbook про миграции без простоя.</li>
+<li><a href="https://docs.pytest.org">docs.pytest.org</a> - фикстуры и параметризация.</li>
+<li><a href="https://docs.python.org/3/whatsnew">docs.python.org/3/whatsnew</a> - что изменилось в 3.12 и 3.13.</li>
 </ul>
-<h3 id="_13">🎯 Итоговое задание</h3>
-<p>Docker-контейнер для FastAPI-приложения + <code>docker-compose</code> с PostgreSQL, аналогично тому, что предполагается для Life Notes.</p>
+<h1 id="_5">🔗 Связанные документы</h1>
+<table>
+<thead>
+<tr>
+<th>Документ</th>
+<th>Что в нём</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Python_Backend_Crash_Course.md</code></td>
+<td>готовый материал под фазы 3 и 5</td>
+</tr>
+<tr>
+<td><code>FastAPI_Reference_10min.md</code></td>
+<td>быстрая шпаргалка</td>
+</tr>
+<tr>
+<td><code>Roadmap_Infra_Sept2026.md</code></td>
+<td>слои 0-2 и 8 пересекаются с фазой 6, слой 4 - с фазой 4</td>
+</tr>
+<tr>
+<td><code>PostgreSQL_Companion.md</code></td>
+<td>SQL и эксплуатация базы под фазой 4</td>
+</tr>
+<tr>
+<td><code>Infra_Layer8_Python_Automation.md</code></td>
+<td>скрипты эксплуатации</td>
+</tr>
+<tr>
+<td><code>SystemDesign_Companion.md</code></td>
+<td>архитектура под фазой 7</td>
+</tr>
+</tbody>
+</table>
 <hr>
-<h2 id="7-">🏛️ Фаза 7 — Архитектура и продакшен-паттерны</h2>
-<h3 id="_14">Темы</h3>
-<ul>
-<li>[ ] 7.1 Clean Architecture на Python — те же слои, что в C#-роадмапе Фазе 9.2</li>
-<li>[ ] 7.2 Celery — фоновые задачи/очереди (мост от RabbitMQ-темы C#-роадмапа)</li>
-<li>[ ] 7.3 <code>redis-py</code> — кэширование (мост от Redis-темы)</li>
-<li>[ ] 7.4 FastAPI vs Django vs Flask — когда что выбрать (у тебя уже реальный опыт с двумя последними)</li>
-</ul>
-<hr>
-<h2 id="_15">📚 Ресурсы</h2>
-<ul>
-<li><a href="https://fastapi.tiangolo.com">fastapi.tiangolo.com</a> — официальная документация, одна из лучших в экосистеме</li>
-<li><a href="https://docs.sqlalchemy.org">docs.sqlalchemy.org</a></li>
-<li><code>Python_Backend_Crash_Course.md</code> — уже написанный материал под Фазы 3 и 5</li>
-</ul>
-<hr>
-<p><em>Создано: 2026-08-18 | Статус: спящий, ждёт триггера</em></p></article>
+<p><em>Создан 18.08.2026, переписан 11.09.2026 под единый формат фаз.</em></p></article>
     <aside class="aside">
       <strong>В этом документе</strong>
       <div class="toc"><div class="toc">
 <ul>
-<li><a href="#_1">📊 Статус</a></li>
-<li><a href="#1-python">🔵 Фаза 1 — Идиомы и продвинутый Python</a><ul>
-<li><a href="#_2">Темы</a></li>
-<li><a href="#_3">🎯 Итоговое задание</a></li>
-</ul>
-</li>
-<li><a href="#2-asyncconcurrency">🟢 Фаза 2 — Async/Concurrency</a><ul>
-<li><a href="#_4">Темы</a></li>
-<li><a href="#_5">🎯 Итоговое задание</a></li>
-</ul>
-</li>
-<li><a href="#3-web-fastapi">🟡 Фаза 3 — Web-фреймворк (FastAPI) — 🔗 частично готово</a><ul>
-<li><a href="#_6">Темы</a></li>
-<li><a href="#_7">🎯 Итоговое задание</a></li>
-</ul>
-</li>
-<li><a href="#4">🗄️ Фаза 4 — Базы данных</a><ul>
-<li><a href="#_8">Темы</a></li>
-<li><a href="#_9">🎯 Итоговое задание</a></li>
-</ul>
-</li>
-<li><a href="#5">🧪 Фаза 5 — Тестирование — 🔗 частично готово</a><ul>
-<li><a href="#_10">Темы</a></li>
-<li><a href="#_11">🎯 Итоговое задание</a></li>
-</ul>
-</li>
-<li><a href="#6-devops">🚀 Фаза 6 — DevOps</a><ul>
-<li><a href="#_12">Темы</a></li>
-<li><a href="#_13">🎯 Итоговое задание</a></li>
-</ul>
-</li>
-<li><a href="#7-">🏛️ Фаза 7 — Архитектура и продакшен-паттерны</a><ul>
-<li><a href="#_14">Темы</a></li>
-</ul>
-</li>
-<li><a href="#_15">📚 Ресурсы</a></li>
+<li><a href="#-">⚠️ Про трекер и разведчик - читать до начала</a></li>
+<li><a href="#_1">Как устроена каждая фаза</a></li>
+<li><a href="#_2">📊 Статус</a></li>
+<li><a href="#_3">📂 Файлы фаз</a></li>
+<li><a href="#_4">📚 Ресурсы</a></li>
+<li><a href="#_5">🔗 Связанные документы</a></li>
 </ul>
 </div>
 </div>

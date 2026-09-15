@@ -1,0 +1,337 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>🐍 Слой 8. Python и автоматизация (дни 27-30, 6 часов) - База знаний</title>
+<link rel="stylesheet" href="../kb.css">
+<script>
+  // Тему ставим до первой отрисовки, иначе на тёмной системе мигает белым.
+  try {
+    var t = localStorage.getItem("kb-theme");
+    if (!t) t = matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+    document.documentElement.setAttribute("data-theme", t);
+  } catch (e) {}
+</script>
+</head>
+<body>
+
+<header class="top">
+  <div class="top-in">
+    <a class="brand" href="../index.html">База <span>знаний</span></a>
+    <span class="grow"></span>
+    <input id="q" type="search" placeholder="Поиск по всем материалам…" autocomplete="off">
+    <button class="icon-btn" id="theme" type="button" title="Тема"></button>
+  </div>
+</header>
+
+<div id="results" hidden><div class="wrap-r"><h3></h3><div id="hits"></div></div></div>
+
+<main class="wrap">
+  <div class="doc-head">
+    <div class="crumb"><a href="../index.html#reference">Справочники</a></div>
+    <h1>🐍 Слой 8. Python и автоматизация (дни 27-30, 6 часов)</h1>
+    <div class="meta">229 строк · источник <code>l2code/Infra_Layer8_Python_Automation.md</code></div>
+  </div>
+
+  <div class="layout">
+    <article class="prose"><blockquote>
+<p>📖 Слой роадмапа <strong>«Стенд с нуля»</strong>. Оглавление, срез под Сбер и календарь - в <code>Roadmap_Infra_Sept2026.md</code>.
+Каждый слой самодостаточен: 🎭 аналогия → 🗺 карта мест → 📖 теория → 🔧 практика → 💥 сломай намеренно → ✅ задание → 🌍 из жизни → ❓ вопросы с ответами.</p>
+<p>Второе требование в вакансии Сбера: «навыки автоматизации на любом скриптовом языке и <strong>желание их регулярно применять</strong>». Формулировка про желание - подсказка: ищут человека, который сам находит рутину и убирает её.</p>
+</blockquote>
+<h2 id="_1">🎭 Аналогия</h2>
+<p>Конвейер станков. Каждая команда - станок с одним входом и одним выходом, <code>|</code> - лента между ними. Задача решается расстановкой станков, а не одним умным устройством.</p>
+<p><strong>Аналогия для GIL.</strong> Одна касса в магазине. Пока кассир пробивает товар, очередь стоит. Но если кассир ждёт, пока клиент найдёт карту, он может обслужить соседнего. Поэтому потоки помогают на ожидании и не помогают на счёте.</p>
+<h2 id="_2">🗺 Карта мест</h2>
+<p><strong>Сделать:</strong> bash-скрипт с правильной шапкой, задача в cron, Python-скрипт эксплуатации с логами, аргументами и кодами выхода, плюс десяток однострочников наизусть.</p>
+<p><strong>Понять:</strong> скрипт эксплуатации - конвейер команд с одним входом и одним выходом. Ценится предсказуемость: <code>set -euo pipefail</code>, лог каждого запуска, код возврата, идемпотентность (второй запуск не ломает результат первого).</p>
+<p><strong>Где писать:</strong> <code>/opt/scripts/</code> на сервере (в репо, не только на диске); расписание - <code>crontab -e</code> или systemd timer; Python - в своём venv.</p>
+<p><strong>Чем запустить:</strong> <code>bash script.sh</code>, <code>python3 script.py</code>; cron запускает сам, ты только ждёшь.</p>
+<p><strong>Где смотреть результат:</strong></p>
+<pre><code class="language-bash">echo $?                          # код выхода последней команды: 0 - хорошо
+tail -f /var/log/scripts/имя.log # свой лог скрипта
+grep CRON /var/log/syslog        # запускал ли cron и когда
+systemctl list-timers            # если через systemd timer
+</code></pre>
+<p><strong>Как понять, что получилось:</strong> скрипт, запущенный дважды подряд, даёт тот же результат; в логе виден каждый запуск по расписанию с датой; упавший шаг останавливает скрипт с понятным сообщением, а не идёт дальше молча.</p>
+<h2 id="_3">📖 Теория</h2>
+<h3 id="_4">Как отвечать про свой опыт</h3>
+<p>Слабый ответ - список языков. Сильный - привычка с метрикой:</p>
+<blockquote>
+<p>Главное - скрипт миграции заявок в Jira на Python. Больше года работал в проде, им пользовалась вся группа поддержки. Метрика, которой горжусь: руководство импортировало задачи само, без обращения ко мне. Значит инструмент вышел понятный.</p>
+<p>На bash - мониторинг источников: обход по расписанию через cron, забор через wget, письмо при отклонении.</p>
+<p>Логика у всех автоматизаций одна: я слушал, на что тратят время коллеги и пользователи, и убирал именно это.</p>
+</blockquote>
+<p><strong>Когда автоматизировать не надо</strong> - ответ, показывающий зрелость:</p>
+<blockquote>
+<p>Когда задача разовая, когда правила меняются каждую неделю, и когда цена ошибки автоматики выше цены ручной работы. Скрипт, который молча делает не то, хуже человека, который делает медленно.</p>
+</blockquote>
+<h3 id="_5">Однострочники, которые просят написать</h3>
+<pre><code class="language-bash"># коды ответа в access.log
+awk '{print $9}' access.log | sort | uniq -c | sort -rn
+
+# топ URL и топ IP
+awk '{print $7}' access.log | sort | uniq -c | sort -rn | head -20
+awk '{print $1}' access.log | sort | uniq -c | sort -rn | head
+
+# ошибки по типу в логе приложения
+grep -oP 'ERROR \K\w+' app.log | sort | uniq -c | sort -rn
+
+# самые медленные запросы
+grep -oP 'rt=\K[0-9.]+' access.log | sort -rn | head
+
+# что занимает место
+du -h / --max-depth=1 2&gt;/dev/null | sort -rh | head -20
+
+# удалить логи старше 30 дней
+find /var/log -name &quot;*.log&quot; -mtime +30 -delete
+</code></pre>
+<p><strong>Связка <code>sort | uniq -c | sort -rn</code> - главная.</strong> <code>uniq</code> считает только соседние повторы, поэтому сортировка перед ним обязательна. Уметь писать вслепую.</p>
+<p><strong>Флаги, отличающие знающего:</strong> <code>grep -c</code> посчитать, <code>-v</code> исключить, <code>-A5 -B5</code> контекст, <code>-oP</code> вырезать часть, <code>zgrep</code> искать в сжатых, <code>cut -d',' -f2,5</code> колонки, <code>sort -u</code> с удалением дублей.</p>
+<h3 id="bash-">Шапка bash-скрипта</h3>
+<pre><code class="language-bash">#!/usr/bin/env bash
+set -euo pipefail
+</code></pre>
+<table>
+<thead>
+<tr>
+<th>Флаг</th>
+<th>Что делает</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>-e</code></td>
+<td>выйти при первой ошибке</td>
+</tr>
+<tr>
+<td><code>-u</code></td>
+<td>ошибка при обращении к необъявленной переменной</td>
+</tr>
+<tr>
+<td><code>-o pipefail</code></td>
+<td>код возврата конвейера - первый ненулевой</td>
+</tr>
+</tbody>
+</table>
+<p>⚠️ <code>-e</code> мешает там, где ненулевой код ожидаем - например в цикле проверки хостов. Тогда <code>set -uo pipefail</code> и проверка кода руками. Умение назвать это исключение отличает понимающего от скопировавшего.</p>
+<h3 id="cron">Три ловушки cron</h3>
+<ol>
+<li><strong>Урезанное окружение.</strong> <code>PATH</code> короткий, переменных из профиля нет. Абсолютные пути везде.</li>
+<li><strong>Вывод исчезает.</strong> Всегда <code>&gt;&gt; /var/log/имя.log 2&gt;&amp;1</code>.</li>
+<li><strong>Наложение запусков.</strong> <code>flock -n /tmp/task.lock</code> в строке cron.</li>
+</ol>
+<h3 id="python-">Что ценят в Python-скриптах эксплуатации</h3>
+<ul>
+<li><strong>Стандартная библиотека вместо зависимостей</strong> - скрипт запустится на любом сервере.</li>
+<li><strong><code>argparse</code> вместо разбора <code>sys.argv</code></strong> - сразу появляется <code>--help</code>.</li>
+<li><strong><code>logging</code> вместо <code>print</code></strong> - уровни, время, вывод в файл.</li>
+<li><strong><code>subprocess.run(..., check=True, capture_output=True, timeout=30)</code></strong> вместо <code>os.system</code>.</li>
+<li><strong>Точечная обработка ошибок.</strong> Голый <code>except</code> прячет опечатки вместе с сетевыми сбоями.</li>
+<li><strong>Таймауты на всё сетевое.</strong> Без них скрипт однажды повиснет навсегда.</li>
+<li><strong>Идемпотентность.</strong> Повторный запуск не должен плодить: <code>ON CONFLICT DO NOTHING</code>, проверка существования.</li>
+</ul>
+<h3 id="python-_1">Python как язык - апдейт</h3>
+<ul>
+<li>Что нового в 3.12 и 3.13: сообщения об ошибках, типизация, экспериментальный free-threaded режим.</li>
+<li>Типизация: аннотации, mypy, dataclasses, pydantic.</li>
+<li>GIL: threading для ввода-вывода, asyncio для высоконагруженного ввода-вывода, multiprocessing для счёта.</li>
+<li>Тесты: pytest, фикстуры, параметризация, моки.</li>
+</ul>
+<h2 id="-">🔧 Практика - три скрипта в репозиторий</h2>
+<p>Сложить в <code>l2code/Playground/scripts/</code>, залить в git.</p>
+<p><strong>1. <code>log_errors.py</code></strong> - разбор лога с подсчётом по типу и фильтром по времени:</p>
+<pre><code class="language-python">#!/usr/bin/env python3
+&quot;&quot;&quot;Считает ошибки по типу в логе. Тип - первое слово после ERROR.&quot;&quot;&quot;
+import re, sys
+from collections import Counter
+
+def count_errors(path: str, since: str | None = None) -&gt; Counter:
+    pattern = re.compile(r&quot;ERROR\s+(\w+)&quot;)
+    found = Counter()
+    with open(path, encoding=&quot;utf-8&quot;, errors=&quot;replace&quot;) as f:
+        for line in f:
+            if since and since not in line:
+                continue
+            if (m := pattern.search(line)):
+                found[m.group(1)] += 1
+    return found
+
+if __name__ == &quot;__main__&quot;:
+    since = sys.argv[2] if len(sys.argv) &gt; 2 else None
+    for kind, count in count_errors(sys.argv[1], since).most_common():
+        print(f&quot;{count:6d}  {kind}&quot;)
+</code></pre>
+<p>Что отметят: построчное чтение вместо <code>read()</code> целиком - лог может быть в гигабайты; <code>errors="replace"</code> - в логах бывает битая кодировка.</p>
+<p><strong>2. <code>check_hosts.py</code></strong> - параллельная проверка доступности:</p>
+<pre><code class="language-python">#!/usr/bin/env python3
+&quot;&quot;&quot;Проверяет доступность хостов по TCP-порту. Параллельно, с таймаутом.&quot;&quot;&quot;
+import socket, sys
+from concurrent.futures import ThreadPoolExecutor
+
+def check(host: str, port: int = 443, timeout: float = 3.0) -&gt; tuple[str, bool]:
+    try:
+        with socket.create_connection((host, port), timeout=timeout):
+            return host, True
+    except OSError:
+        return host, False
+
+def main() -&gt; int:
+    hosts = [l.strip() for l in open(sys.argv[1], encoding=&quot;utf-8&quot;)
+             if l.strip() and not l.startswith(&quot;#&quot;)]
+    port = int(sys.argv[2]) if len(sys.argv) &gt; 2 else 443
+    with ThreadPoolExecutor(max_workers=20) as pool:
+        results = list(pool.map(lambda h: check(h, port), hosts))
+    failed = [h for h, ok in results if not ok]
+    for host, ok in results:
+        print(f&quot;{host:&lt;30} {'OK' if ok else 'FAIL'}&quot;)
+    return 1 if failed else 0
+
+if __name__ == &quot;__main__&quot;:
+    sys.exit(main())
+</code></pre>
+<p>Что отметят: таймаут обязателен, иначе зависнет на первом мёртвом хосте; ненулевой код возврата, чтобы cron и CI увидели проблему.</p>
+<p><strong>3. <code>csv_to_db.py</code></strong> - загрузка пачками с защитой от повторного запуска:</p>
+<pre><code class="language-python">BATCH = 1000
+cur.executemany(
+    &quot;INSERT INTO t (id, name, amount) VALUES (%s, %s, %s) &quot;
+    &quot;ON CONFLICT (id) DO NOTHING&quot;, batch)
+</code></pre>
+<p>Что отметят: пачками вместо построчной вставки - на миллионе строк разница в десятки раз; <code>ON CONFLICT DO NOTHING</code> делает скрипт перезапускаемым; коммит по пачкам, чтобы транзакция не висела часами.</p>
+<p><strong>4. Бонус:</strong> <code>daily_report.sh</code> - собирает состояние стенда (место, память, статус сервисов, число пятисоток за сутки) и шлёт в Telegram. В cron через <code>flock</code>.</p>
+<p><strong>5. Покрыть Скаута тестами</strong>, добавить типизацию, прогнать mypy.</p>
+<h2 id="_6">💥 Сломай намеренно</h2>
+<p><strong>1. Убрать таймаут</strong> из <code>check_hosts.py</code> и подсунуть недоступный адрес - увидеть зависание навсегда.</p>
+<p><strong>2. Поставить скрипт в cron без абсолютных путей</strong> и увидеть, как он молча не работает. Добавить <code>&gt;&gt; log 2&gt;&amp;1</code> и прочитать настоящую ошибку.</p>
+<p><strong>3. Запустить долгую задачу раз в минуту без <code>flock</code></strong> и посмотреть в <code>ps</code>, как копятся копии.</p>
+<p><strong>4. Убрать <code>ON CONFLICT DO NOTHING</code></strong> и запустить загрузку дважды - получить дубли.</p>
+<p><strong>5. Написать <code>except:</code> без типа</strong>, спрятать под ним опечатку в имени переменной и убедиться, что скрипт «работает» и молчит.</p>
+<h2 id="_7">✅ Задание</h2>
+<p>Три скрипта в репозитории, каждый с <code>--help</code>, логированием и кодом возврата. Плюс <code>daily_report.sh</code> в cron через <code>flock</code>, реально присылающий сводку.</p>
+<p><strong>Критерий готовности:</strong> на вопрос «покажите, что писали» отвечаешь ссылкой на репозиторий и объясняешь, почему каждый сделан именно так.</p>
+<h2 id="_8">🌍 Из жизни</h2>
+<p><strong>Про метрику «руководство справилось само».</strong> Это лучшее, что можно сказать про инструмент. Она говорит и про качество кода, и про то, что автор думал о пользователе. На собеседовании такая метрика весит больше, чем перечисление технологий.</p>
+<p><strong>Про молчащие скрипты в cron.</strong> Самый частый способ потерять автоматизацию: скрипт перестал работать полгода назад, вывод шёл в никуда, никто не заметил. Поэтому у любой периодической задачи должен быть не только алерт на падение, но и алерт на отсутствие успешной отработки.</p>
+<h2 id="_9">❓ Вопросы с ответами</h2>
+<p><strong>Bash или Python - что выберете?</strong></p>
+<blockquote>
+<p>Bash, если задача склеить существующие утилиты в конвейер: разбор логов, обход файлов, проверки. Python, когда появляется логика, структуры данных, работа с API или базой. Граница там, где в bash начинаются массивы и вложенные условия.</p>
+</blockquote>
+<p><strong>Как решаете, что автоматизировать?</strong></p>
+<blockquote>
+<p>Смотрю, что делается часто и одинаково. Разовую задачу дешевле сделать руками. Автоматизирую то, где ручная работа регулярна и где ошибка человека повторяется.</p>
+</blockquote>
+<p><strong>Что означает <code>set -euo pipefail</code>?</strong></p>
+<blockquote>
+<p>Выйти при первой ошибке, ругаться на необъявленные переменные, брать код возврата конвейера по первому неуспеху. Исключение - циклы, где ненулевой код ожидаем.</p>
+</blockquote>
+<p><strong>Скрипт работает из терминала и падает из cron. Почему?</strong></p>
+<blockquote>
+<p>Урезанное окружение: короткий <code>PATH</code>, нет переменных из профиля. Лечится абсолютными путями и перенаправлением вывода в лог, иначе падение вообще не видно.</p>
+</blockquote>
+<p><strong>Что такое идемпотентность и зачем она в скриптах?</strong></p>
+<blockquote>
+<p>Повторный запуск не ломает и не плодит. В загрузке данных это <code>ON CONFLICT DO NOTHING</code>, в создании ресурсов - проверка существования. Скрипт, который нельзя перезапустить, нельзя и поставить в автоматику.</p>
+</blockquote>
+<p><strong>Что блокирует GIL?</strong></p>
+<blockquote>
+<p>Одновременное выполнение байткода Python в нескольких потоках. На вводе-выводе GIL отпускается, поэтому потоки там помогают. На счёте не помогают - нужен multiprocessing.</p>
+</blockquote></article>
+    <aside class="aside">
+      <strong>В этом документе</strong>
+      <div class="toc"><div class="toc">
+<ul>
+<li><a href="#_1">🎭 Аналогия</a></li>
+<li><a href="#_2">🗺 Карта мест</a></li>
+<li><a href="#_3">📖 Теория</a><ul>
+<li><a href="#_4">Как отвечать про свой опыт</a></li>
+<li><a href="#_5">Однострочники, которые просят написать</a></li>
+<li><a href="#bash-">Шапка bash-скрипта</a></li>
+<li><a href="#cron">Три ловушки cron</a></li>
+<li><a href="#python-">Что ценят в Python-скриптах эксплуатации</a></li>
+<li><a href="#python-_1">Python как язык - апдейт</a></li>
+</ul>
+</li>
+<li><a href="#-">🔧 Практика - три скрипта в репозиторий</a></li>
+<li><a href="#_6">💥 Сломай намеренно</a></li>
+<li><a href="#_7">✅ Задание</a></li>
+<li><a href="#_8">🌍 Из жизни</a></li>
+<li><a href="#_9">❓ Вопросы с ответами</a></li>
+</ul>
+</div>
+</div>
+    </aside>
+  </div>
+</main>
+
+
+<script>
+const ROOT = "..";
+
+// ---- тема
+const themeBtn = document.getElementById("theme");
+const paint = () => {
+  const dark = document.documentElement.getAttribute("data-theme") === "dark";
+  themeBtn.textContent = dark ? "☀" : "☾";
+};
+paint();
+themeBtn.addEventListener("click", () => {
+  const next = document.documentElement.getAttribute("data-theme") === "dark" ? "light" : "dark";
+  document.documentElement.setAttribute("data-theme", next);
+  try { localStorage.setItem("kb-theme", next); } catch (e) {}
+  paint();
+});
+
+// ---- поиск
+let index = null;
+const box = document.getElementById("results");
+const hits = document.getElementById("hits");
+const head = box.querySelector("h3");
+const input = document.getElementById("q");
+
+async function ensureIndex() {
+  if (index) return index;
+  const res = await fetch(ROOT + "/search-index.json");
+  index = await res.json();
+  return index;
+}
+
+const esc = (s) => (s || "").replace(/[&<>]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
+
+function hi(text, query) {
+  const i = text.toLowerCase().indexOf(query);
+  if (i < 0) return esc(text);
+  return esc(text.slice(0, i)) + "<mark>" + esc(text.slice(i, i + query.length)) + "</mark>" + esc(text.slice(i + query.length));
+}
+
+input.addEventListener("input", async () => {
+  const q = input.value.trim().toLowerCase();
+  if (q.length < 2) { box.hidden = true; return; }
+  const data = await ensureIndex();
+  const found = [];
+  for (const d of data) {
+    const inTitle = d.title.toLowerCase().includes(q);
+    const inSum = (d.summary || "").toLowerCase().includes(q);
+    const heads = (d.heads || []).filter(h => h.toLowerCase().includes(q));
+    if (inTitle || inSum || heads.length) {
+      found.push({ d, heads, rank: inTitle ? 0 : heads.length ? 1 : 2 });
+    }
+  }
+  found.sort((a, b) => a.rank - b.rank);
+  head.textContent = found.length ? `Нашлось: ${found.length}` : "Ничего не нашлось";
+  hits.innerHTML = found.slice(0, 40).map(({ d, heads }) =>
+    `<a class="hit" href="${ROOT}/d/${d.slug}.html">
+       <b>${hi(d.title, q)}</b>
+       <span>${heads.length ? "→ " + heads.slice(0, 3).map(h => hi(h, q)).join(" · ") : esc(d.summary || "")}</span>
+     </a>`).join("");
+  box.hidden = false;
+});
+
+input.addEventListener("keydown", (e) => { if (e.key === "Escape") { input.value = ""; box.hidden = true; input.blur(); } });
+document.addEventListener("keydown", (e) => {
+  if (e.key === "/" && document.activeElement !== input) { e.preventDefault(); input.focus(); }
+});
+</script>
+</body>
+</html>

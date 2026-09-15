@@ -1,0 +1,269 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>🚀 Фаза 6. Упаковка и эксплуатация (4 часа) - База знаний</title>
+<link rel="stylesheet" href="../kb.css">
+<script>
+  // Тему ставим до первой отрисовки, иначе на тёмной системе мигает белым.
+  try {
+    var t = localStorage.getItem("kb-theme");
+    if (!t) t = matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+    document.documentElement.setAttribute("data-theme", t);
+  } catch (e) {}
+</script>
+</head>
+<body>
+
+<header class="top">
+  <div class="top-in">
+    <a class="brand" href="../index.html">База <span>знаний</span></a>
+    <span class="grow"></span>
+    <input id="q" type="search" placeholder="Поиск по всем материалам…" autocomplete="off">
+    <button class="icon-btn" id="theme" type="button" title="Тема"></button>
+  </div>
+</header>
+
+<div id="results" hidden><div class="wrap-r"><h3></h3><div id="hits"></div></div></div>
+
+<main class="wrap">
+  <div class="doc-head">
+    <div class="crumb"><a href="../index.html#reference">Справочники</a></div>
+    <h1>🚀 Фаза 6. Упаковка и эксплуатация (4 часа)</h1>
+    <div class="meta">146 строк · источник <code>l2code/Python_Phase6_Packaging_Ops.md</code></div>
+  </div>
+
+  <div class="layout">
+    <article class="prose"><blockquote>
+<p>📖 Фаза роадмапа <strong>«Python Backend»</strong>. Оглавление и статус - в <code>PythonBackend_Roadmap.md</code>.
+Каждая фаза самодостаточна: 🎭 аналогия → 📖 теория → 🔧 практика → 💥 сломай намеренно → ✅ задание → 🌍 из жизни → ❓ вопросы с ответами.</p>
+<p>Пересекается со слоями 0-2 инфра-роадмапа. Здесь - то, что специфично для Python.</p>
+</blockquote>
+<h2 id="_1">🎭 Аналогия</h2>
+<p>Разница между «работает у меня» и «работает у всех». Рецепт в голове повара против рецепта, записанного с граммовкой: второй воспроизводится на другой кухне.</p>
+<h2 id="_2">📖 Теория</h2>
+<h3 id="_3">Зависимости и окружение</h3>
+<table>
+<thead>
+<tr>
+<th>Инструмент</th>
+<th>Что делает</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>venv</code></td>
+<td>изолированное окружение, встроен</td>
+</tr>
+<tr>
+<td><code>pip-tools</code></td>
+<td><code>requirements.in</code> в закреплённый <code>requirements.txt</code></td>
+</tr>
+<tr>
+<td><code>poetry</code></td>
+<td>зависимости плюс сборка пакета</td>
+</tr>
+<tr>
+<td><code>uv</code></td>
+<td>быстрая замена pip и venv, набирает популярность</td>
+</tr>
+</tbody>
+</table>
+<p>⚠️ Незакреплённые версии - причина «вчера собиралось, сегодня нет». В <code>requirements.txt</code> версии должны быть точными.</p>
+<h3 id="python">Контейнер для Python</h3>
+<pre><code class="language-dockerfile">FROM python:3.12-slim AS builder
+WORKDIR /app
+COPY requirements.txt .
+RUN pip install --no-cache-dir --prefix=/install -r requirements.txt
+
+FROM python:3.12-slim
+WORKDIR /app
+RUN useradd -m app
+COPY --from=builder /install /usr/local
+COPY . .
+USER app
+ENV PYTHONUNBUFFERED=1 PYTHONDONTWRITEBYTECODE=1
+EXPOSE 8000
+CMD [&quot;uvicorn&quot;, &quot;app.main:app&quot;, &quot;--host&quot;, &quot;0.0.0.0&quot;, &quot;--port&quot;, &quot;8000&quot;]
+</code></pre>
+<p><strong>Что тут важно:</strong>
+- многоэтапная сборка - в итоговый образ не попадают инструменты сборки;
+- <code>PYTHONUNBUFFERED=1</code> - <strong>обязательно</strong>, иначе логи буферизуются и в <code>docker logs</code> пусто;
+- <code>USER app</code> - не root внутри контейнера;
+- <code>requirements.txt</code> копируется отдельно и раньше кода: слой с зависимостями кешируется и не пересобирается при каждом изменении кода;
+- <code>.dockerignore</code> с <code>.venv</code>, <code>__pycache__</code>, <code>.git</code>, иначе образ распухает.</p>
+<h3 id="_4">Как запускают в проде</h3>
+<pre><code class="language-bash"># один процесс
+uvicorn app.main:app --host 0.0.0.0 --port 8000
+
+# несколько рабочих процессов
+gunicorn app.main:app -k uvicorn.workers.UvicornWorker -w 4 --bind 0.0.0.0:8000
+</code></pre>
+<p>Число процессов обычно <code>2 × ядра + 1</code>, но для асинхронного приложения меньше: каждый и так держит много соединений. Больше процессов означает больше соединений к базе - это надо согласовать с пулом.</p>
+<h3 id="_5">Конфигурация</h3>
+<pre><code class="language-python">from pydantic_settings import BaseSettings
+
+class Settings(BaseSettings):
+    database_url: str
+    app_password: str
+    debug: bool = False
+    model_config = {&quot;env_file&quot;: &quot;.env&quot;}
+
+settings = Settings()
+</code></pre>
+<p>Мост от C#: это <code>IOptions</code>. Отсутствие обязательной переменной обнаруживается при старте, а не в момент первого обращения.</p>
+<p>⚠️ <code>.env</code> в <code>.gitignore</code>, в репозитории только <code>.env.example</code> без значений.</p>
+<h3 id="_6">Логирование</h3>
+<pre><code class="language-python">import logging, sys, json
+
+class JsonFormatter(logging.Formatter):
+    def format(self, record):
+        return json.dumps({
+            &quot;ts&quot;: self.formatTime(record),
+            &quot;level&quot;: record.levelname,
+            &quot;msg&quot;: record.getMessage(),
+            &quot;logger&quot;: record.name,
+        }, ensure_ascii=False)
+
+handler = logging.StreamHandler(sys.stdout)
+handler.setFormatter(JsonFormatter())
+logging.basicConfig(level=logging.INFO, handlers=[handler])
+</code></pre>
+<p>В контейнере логи идут в stdout, а не в файл - их забирает демон Docker или сборщик логов. Структурированный формат нужен, если логи попадают в Elastic или Loki.</p>
+<h2 id="_7">🔧 Практика</h2>
+<ol>
+<li>Собрать многоэтапный образ трекера, посмотреть размер до и после.</li>
+<li>Добавить <code>.dockerignore</code>, пересобрать, сравнить размер.</li>
+<li><code>docker-compose</code> с трекером и PostgreSQL, проверить, что приложение находит базу по имени сервиса.</li>
+<li>Перевести настройки на <code>pydantic-settings</code>, убрать чтение <code>.env</code> руками.</li>
+<li>Убрать <code>PYTHONUNBUFFERED</code>, посмотреть на пустой <code>docker logs</code>, вернуть.</li>
+<li>Запустить через gunicorn с четырьмя процессами, посмотреть число соединений в <code>pg_stat_activity</code>.</li>
+</ol>
+<h2 id="_8">💥 Сломай намеренно</h2>
+<ol>
+<li><strong>Убрать <code>PYTHONUNBUFFERED=1</code></strong> и убедиться, что логи не появляются в <code>docker logs</code> до заполнения буфера.</li>
+<li><strong>Скопировать код до <code>requirements.txt</code></strong> в Dockerfile, поменять одну строку кода, пересобрать - увидеть, что зависимости ставятся заново.</li>
+<li><strong>Не поставить <code>.dockerignore</code></strong> и собрать образ с <code>.venv</code> внутри - посмотреть на размер.</li>
+<li><strong>Убрать обязательную переменную окружения</strong> и убедиться, что pydantic-settings падает на старте с понятным текстом.</li>
+<li><strong>Поставить 16 процессов gunicorn</strong> при пуле базы на 20 и погонять нагрузку - упереться в <code>max_connections</code>.</li>
+</ol>
+<h2 id="_9">✅ Задание</h2>
+<p>Трекер собирается многоэтапным Dockerfile, образ меньше 200 МБ, запускается из <code>docker-compose</code> с базой, настройки через <code>pydantic-settings</code>, логи структурированные и видны в <code>docker logs</code>.</p>
+<p><strong>Критерий:</strong> объясняешь каждую строку Dockerfile и почему <code>requirements.txt</code> копируется раньше кода.</p>
+<h2 id="_10">🌍 Из жизни</h2>
+<p><strong>Про пустые логи в контейнере.</strong> Классика первого дня с Docker: приложение работает, <code>docker logs</code> пуст. Причина - буферизация вывода Python. Одна переменная окружения, а ищут её часами.</p>
+<p><strong>Про размер образа.</strong> Наивный Dockerfile на <code>python:3.12</code> с копированием всего каталога даёт образ под гигабайт. Многоэтапная сборка на <code>slim</code> плюс <code>.dockerignore</code> дают 150-200 МБ. Разница видна на каждом деплое.</p>
+<p><strong>Про число процессов и пул базы.</strong> Четыре процесса gunicorn с пулом по 10 соединений каждый - это 40 соединений от одного приложения. Три экземпляра - 120. При <code>max_connections</code> 100 всё встаёт, и выглядит это как «база отказала».</p>
+<h2 id="_11">❓ Вопросы с ответами</h2>
+<p><strong>Как запускаете FastAPI в проде?</strong></p>
+<blockquote>
+<p>Gunicorn с воркерами uvicorn, число процессов согласовано с пулом соединений к базе. Перед ним nginx, который терминирует TLS и раздаёт статику. Логи в stdout, забирает их сборщик.</p>
+</blockquote>
+<p><strong>Чем отличается контейнер для Python от контейнера для .NET?</strong></p>
+<blockquote>
+<p>Нет отдельного шага компиляции: собирать нечего, ставятся зависимости. Зато нужен <code>PYTHONUNBUFFERED</code>, иначе логи не видны, и многоэтапная сборка нужна, чтобы в итоговый образ не попали инструменты сборки.</p>
+</blockquote>
+<p><strong>Как передаёте настройки?</strong></p>
+<blockquote>
+<p>Через переменные окружения, читаю <code>pydantic-settings</code>. Отсутствие обязательной переменной ловится при старте, а не в момент первого обращения. Секреты в репозитории не лежат, там только <code>.env.example</code>.</p>
+</blockquote>
+<p><strong>Почему <code>requirements.txt</code> копируется отдельно?</strong></p>
+<blockquote>
+<p>Docker кеширует слои. Если сначала скопировать весь код, любое изменение в нём инвалидирует слой с установкой зависимостей, и они ставятся заново при каждой сборке.</p>
+</blockquote></article>
+    <aside class="aside">
+      <strong>В этом документе</strong>
+      <div class="toc"><div class="toc">
+<ul>
+<li><a href="#_1">🎭 Аналогия</a></li>
+<li><a href="#_2">📖 Теория</a><ul>
+<li><a href="#_3">Зависимости и окружение</a></li>
+<li><a href="#python">Контейнер для Python</a></li>
+<li><a href="#_4">Как запускают в проде</a></li>
+<li><a href="#_5">Конфигурация</a></li>
+<li><a href="#_6">Логирование</a></li>
+</ul>
+</li>
+<li><a href="#_7">🔧 Практика</a></li>
+<li><a href="#_8">💥 Сломай намеренно</a></li>
+<li><a href="#_9">✅ Задание</a></li>
+<li><a href="#_10">🌍 Из жизни</a></li>
+<li><a href="#_11">❓ Вопросы с ответами</a></li>
+</ul>
+</div>
+</div>
+    </aside>
+  </div>
+</main>
+
+
+<script>
+const ROOT = "..";
+
+// ---- тема
+const themeBtn = document.getElementById("theme");
+const paint = () => {
+  const dark = document.documentElement.getAttribute("data-theme") === "dark";
+  themeBtn.textContent = dark ? "☀" : "☾";
+};
+paint();
+themeBtn.addEventListener("click", () => {
+  const next = document.documentElement.getAttribute("data-theme") === "dark" ? "light" : "dark";
+  document.documentElement.setAttribute("data-theme", next);
+  try { localStorage.setItem("kb-theme", next); } catch (e) {}
+  paint();
+});
+
+// ---- поиск
+let index = null;
+const box = document.getElementById("results");
+const hits = document.getElementById("hits");
+const head = box.querySelector("h3");
+const input = document.getElementById("q");
+
+async function ensureIndex() {
+  if (index) return index;
+  const res = await fetch(ROOT + "/search-index.json");
+  index = await res.json();
+  return index;
+}
+
+const esc = (s) => (s || "").replace(/[&<>]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
+
+function hi(text, query) {
+  const i = text.toLowerCase().indexOf(query);
+  if (i < 0) return esc(text);
+  return esc(text.slice(0, i)) + "<mark>" + esc(text.slice(i, i + query.length)) + "</mark>" + esc(text.slice(i + query.length));
+}
+
+input.addEventListener("input", async () => {
+  const q = input.value.trim().toLowerCase();
+  if (q.length < 2) { box.hidden = true; return; }
+  const data = await ensureIndex();
+  const found = [];
+  for (const d of data) {
+    const inTitle = d.title.toLowerCase().includes(q);
+    const inSum = (d.summary || "").toLowerCase().includes(q);
+    const heads = (d.heads || []).filter(h => h.toLowerCase().includes(q));
+    if (inTitle || inSum || heads.length) {
+      found.push({ d, heads, rank: inTitle ? 0 : heads.length ? 1 : 2 });
+    }
+  }
+  found.sort((a, b) => a.rank - b.rank);
+  head.textContent = found.length ? `Нашлось: ${found.length}` : "Ничего не нашлось";
+  hits.innerHTML = found.slice(0, 40).map(({ d, heads }) =>
+    `<a class="hit" href="${ROOT}/d/${d.slug}.html">
+       <b>${hi(d.title, q)}</b>
+       <span>${heads.length ? "→ " + heads.slice(0, 3).map(h => hi(h, q)).join(" · ") : esc(d.summary || "")}</span>
+     </a>`).join("");
+  box.hidden = false;
+});
+
+input.addEventListener("keydown", (e) => { if (e.key === "Escape") { input.value = ""; box.hidden = true; input.blur(); } });
+document.addEventListener("keydown", (e) => {
+  if (e.key === "/" && document.activeElement !== input) { e.preventDefault(); input.focus(); }
+});
+</script>
+</body>
+</html>

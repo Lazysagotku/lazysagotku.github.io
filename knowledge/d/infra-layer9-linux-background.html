@@ -1,0 +1,279 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>🐧 Слой 9. Linux фоном (по 20 минут в день, весь месяц) - База знаний</title>
+<link rel="stylesheet" href="../kb.css">
+<script>
+  // Тему ставим до первой отрисовки, иначе на тёмной системе мигает белым.
+  try {
+    var t = localStorage.getItem("kb-theme");
+    if (!t) t = matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+    document.documentElement.setAttribute("data-theme", t);
+  } catch (e) {}
+</script>
+</head>
+<body>
+
+<header class="top">
+  <div class="top-in">
+    <a class="brand" href="../index.html">База <span>знаний</span></a>
+    <span class="grow"></span>
+    <input id="q" type="search" placeholder="Поиск по всем материалам…" autocomplete="off">
+    <button class="icon-btn" id="theme" type="button" title="Тема"></button>
+  </div>
+</header>
+
+<div id="results" hidden><div class="wrap-r"><h3></h3><div id="hits"></div></div></div>
+
+<main class="wrap">
+  <div class="doc-head">
+    <div class="crumb"><a href="../index.html#reference">Справочники</a></div>
+    <h1>🐧 Слой 9. Linux фоном (по 20 минут в день, весь месяц)</h1>
+    <div class="meta">164 строк · источник <code>l2code/Infra_Layer9_Linux_Background.md</code></div>
+  </div>
+
+  <div class="layout">
+    <article class="prose"><blockquote>
+<p>📖 Слой роадмапа <strong>«Стенд с нуля»</strong>. Оглавление, срез под Сбер и календарь - в <code>Roadmap_Infra_Sept2026.md</code>.
+Каждый слой самодостаточен: 🎭 аналогия → 🗺 карта мест → 📖 теория → 🔧 практика → 💥 сломай намеренно → ✅ задание → 🌍 из жизни → ❓ вопросы с ответами.</p>
+<p>Базовая диагностика разобрана в слое 0. Здесь - то, что добирается фоном и всплывает на собеседованиях отдельными вопросами.</p>
+</blockquote>
+<h2 id="_1">🎭 Аналогия</h2>
+<p>Иностранный язык. Грамматику можно выучить за неделю, беглость набирается только ежедневными двадцатью минутами. С командной строкой так же: список команд запоминается быстро, уверенность приходит от повторения.</p>
+<p>Иван прямо сказал, что Linux его раздражает. Поэтому малыми дозами и только то, что спрашивают.</p>
+<h2 id="_2">🗺 Карта мест</h2>
+<p><strong>Сделать:</strong> по 20 минут в день - права и файловая система, сеть, планировщик и сигналы, logrotate и strace; в конце - разведчик как systemd-сервис с таймером.</p>
+<p><strong>Понять:</strong> в Linux всё - либо файл, либо процесс. Три темы, вокруг которых крутятся вопросы на собеседовании: права (кто что может), сигналы (как процесс умирает), порты (кто кого слушает).</p>
+<p><strong>Где писать:</strong> терминал сервера; <code>/etc/systemd/system/scout.service</code> и <code>scout.timer</code>.</p>
+<p><strong>Чем запустить:</strong> команда дня на реальной задаче; <code>sudo systemctl enable --now scout.timer</code>.</p>
+<p><strong>Где смотреть результат:</strong></p>
+<pre><code class="language-bash">ls -l файл                    # права и владелец
+ss -tlnp                      # порты
+systemctl list-timers         # когда таймер сработает в следующий раз
+journalctl -u scout -n 30     # что сделал последний запуск
+strace -p PID                 # что процесс делает прямо сейчас
+</code></pre>
+<p><strong>Как понять, что получилось:</strong> воспроизвёл «сломай намеренно» дня и объяснил текст ошибки своими словами; разведчик собирает вакансии по таймеру без твоего участия, и это видно в <code>journalctl</code>.</p>
+<h2 id="_3">📖 Темы по неделям</h2>
+<h3 id="1">Неделя 1. Файловая система и права</h3>
+<pre><code class="language-bash">ls -l                      # -rw-r--r-- 1 ivan devs
+chmod 600 ~/.ssh/id_ed25519
+chown ivan:devs file.txt
+umask                      # какие права у создаваемых файлов
+</code></pre>
+<p><code>r</code> = 4, <code>w</code> = 2, <code>x</code> = 1.</p>
+<table>
+<thead>
+<tr>
+<th>Число</th>
+<th>Означает</th>
+<th>Где</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>644</code></td>
+<td>владелец пишет, остальные читают</td>
+<td>обычные файлы</td>
+</tr>
+<tr>
+<td><code>755</code></td>
+<td>плюс право входа</td>
+<td>каталоги, скрипты</td>
+</tr>
+<tr>
+<td><code>600</code></td>
+<td>только владелец</td>
+<td>ключи, файлы с паролями</td>
+</tr>
+<tr>
+<td><code>700</code></td>
+<td>только владелец, полный</td>
+<td><code>~/.ssh</code></td>
+</tr>
+</tbody>
+</table>
+<p>⚠️ SSH откажется работать с ключом, у которого права шире <code>600</code>. Первая причина, по которой «ключ не подходит».</p>
+<p><strong><code>x</code> на каталоге</strong> - право войти внутрь, а не выполнить. Каталог без <code>x</code> виден по имени, но заглянуть нельзя.</p>
+<p><strong>Структура каталогов, которую спрашивают:</strong> <code>/etc</code> конфиги, <code>/var/log</code> логи, <code>/opt</code> стороннее ПО, <code>/usr/bin</code> программы, <code>/proc</code> виртуальная информация о процессах, <code>/tmp</code> временное с очисткой при перезагрузке.</p>
+<h3 id="2">Неделя 2. Сеть</h3>
+<pre><code class="language-bash">ss -tulpn                  # кто на каких портах слушает
+ss -tan state established  # активные соединения
+curl -I https://host       # только заголовки
+curl -v https://host       # весь диалог, включая TLS
+nc -zv host 5432           # достучаться до порта
+dig host                   # что отдаёт DNS
+ip a &amp;&amp; ip r               # адреса и маршруты
+traceroute host
+tcpdump -i any port 5432 -nn
+</code></pre>
+<p><strong>Порядок при «сервис недоступен»:</strong>
+1. Слушает ли: <code>ss -tulpn | grep &lt;порт&gt;</code> на сервере.
+2. Отвечает ли локально: <code>curl localhost:&lt;порт&gt;</code>.
+3. Пускает ли firewall: <code>ufw status</code>.
+4. Резолвится ли имя: <code>dig</code>.
+5. Проходит ли снаружи: <code>nc -zv</code> с другой машины.</p>
+<p>Если 2 работает, а 5 нет - проблема между ними: firewall, прокси, балансировщик, группа безопасности облака.</p>
+<p>⚠️ <code>ss</code> вместо <code>netstat</code> - последний устарел и в свежих дистрибутивах его может не быть.</p>
+<h3 id="3">Неделя 3. Планировщик и сигналы</h3>
+<pre><code class="language-bash">crontab -e &amp;&amp; crontab -l
+systemctl list-timers      # systemd-таймеры
+</code></pre>
+<p>Формат cron: <code>минута час день месяц день_недели</code></p>
+<pre><code>*/5 * * * *   /opt/scripts/check.sh
+0 3 * * *     /opt/scripts/backup.sh
+0 9 * * 1-5   /opt/scripts/report.sh
+</code></pre>
+<p><strong>systemd timer против cron:</strong> таймер пишет логи в journald, умеет зависимости от других юнитов и <code>Persistent=true</code> для запуска пропущенного после включения машины.</p>
+<p><strong>Сигналы - важно для Kubernetes.</strong> При остановке пода приходит SIGTERM, и приложение должно успеть корректно завершиться, иначе через таймаут прилетит SIGKILL. Это связывает Linux и Kubernetes, и об этом спрашивают.</p>
+<h3 id="4">Неделя 4. Что осталось</h3>
+<ul>
+<li><strong>Ротация логов:</strong> <code>logrotate</code>, директива <code>copytruncate</code> и почему нельзя просто удалить лог, пока сервис в него пишет.</li>
+<li><strong><code>strace -p &lt;PID&gt;</code></strong> - посмотреть системные вызовы живого процесса.</li>
+<li><strong><code>/proc/&lt;PID&gt;/</code></strong> - <code>cwd</code>, <code>fd</code>, <code>limits</code>, <code>environ</code>.</li>
+<li><strong><code>ulimit -n</code></strong> - лимит открытых файлов, частая причина «too many open files».</li>
+<li><strong><code>fail2ban</code></strong> - автоматическая блокировка перебора по логам.</li>
+<li><strong>SELinux и AppArmor</strong> - на уровне «знаю, что существует, и что они могут запретить соединение, которое по правам разрешено».</li>
+</ul>
+<h2 id="_4">🔧 Практика</h2>
+<p><strong>1. Неделя 1</strong> - права, chmod, umask, структура каталогов. Каждый день одна команда на реальной задаче.</p>
+<p><strong>2. Неделя 2</strong> - сеть: <code>ss</code>, <code>curl</code>, <code>dig</code>, <code>tcpdump</code>, порядок диагностики «сервис недоступен».</p>
+<p><strong>3. Неделя 3</strong> - cron, systemd timers, сигналы TERM против KILL.</p>
+<p><strong>4. Неделя 4</strong> - logrotate, strace, <code>/proc</code>, ulimit, fail2ban.</p>
+<p><strong>5. Оформить Скаута как systemd-сервис</strong> с автозапуском и сбором по таймеру.</p>
+<h2 id="_5">💥 Сломай намеренно</h2>
+<p><strong>1. Поставить на приватный ключ права <code>644</code></strong> и попробовать зайти - получить отказ и прочитать текст ошибки.</p>
+<p><strong>2. Снять <code>x</code> с каталога</strong> и попробовать в него зайти при живом <code>r</code>.</p>
+<p><strong>3. Упереться в <code>ulimit -n</code></strong>: открыть больше файлов, чем разрешено, получить «too many open files».</p>
+<p><strong>4. Удалить лог, в который пишет <code>logrotate</code> без <code>copytruncate</code></strong>, и увидеть, что новый файл не создаётся.</p>
+<h2 id="_6">✅ Задание</h2>
+<p>Скаут как systemd-сервис с таймером, переживающий перезагрузку. Плюс уверенное владение списком команд без подглядывания.</p>
+<h2 id="_7">❓ Вопросы с ответами</h2>
+<p><strong>Как запускать задачу по расписанию?</strong></p>
+<blockquote>
+<p><code>cron</code> для простого, systemd timer там, где нужны логи в journald и зависимости. В cron всегда абсолютные пути и перенаправление вывода - у него урезанное окружение.</p>
+</blockquote>
+<p><strong>Что происходит при остановке пода в Kubernetes?</strong></p>
+<blockquote>
+<p>Приходит SIGTERM, приложение должно корректно завершить текущие запросы и закрыть соединения. Не успело за grace period - прилетает SIGKILL. Поэтому приложение обязано обрабатывать SIGTERM.</p>
+</blockquote>
+<p><strong>Почему не работать под root постоянно?</strong></p>
+<blockquote>
+<p>Любая опечатка выполняется без подтверждения, и в логах не видно, кто именно сделал. <code>sudo</code> даёт разовое повышение и оставляет след в <code>auth.log</code>.</p>
+</blockquote>
+<p><strong>Как посмотреть, что слушает порт?</strong></p>
+<blockquote>
+<p><code>ss -tulpn</code>. <code>netstat</code> устарел и в свежих дистрибутивах может отсутствовать.</p>
+</blockquote>
+<p><strong>«Too many open files» - что это?</strong></p>
+<blockquote>
+<p>Процесс упёрся в лимит дескрипторов. Смотрю <code>ulimit -n</code> и <code>/proc/&lt;PID&gt;/limits</code>, считаю открытые через <code>lsof -p &lt;PID&gt; | wc -l</code>. Причина обычно в утечке: соединения или файлы открываются и не закрываются.</p>
+</blockquote>
+<p><strong>«Не открывается по имени» - в чём разница симптомов?</strong> <em>(добавлено 15.09)</em></p>
+<blockquote>
+<p>Три разных отказа, и они указывают на разные слои. <code>Connection refused</code> - до хоста дошли, порт закрыт или сервис не слушает, смотрю <code>ss -tulpn</code> на целевой машине. Таймаут без ответа - пакет теряется по дороге: firewall режет молча, маршрута нет, или сервис висит и не принимает новые соединения - <code>ping</code> и <code>traceroute</code> покажут, докуда доходит. Ошибка TLS-рукопожатия - до порта достучались, а сертификат не подошёл: просрочен, имя не совпадает, устаревший протокол - <code>curl -v</code> печатает весь диалог, включая точный шаг, на котором упало.</p>
+</blockquote>
+<p><strong>Как устроен DNS на уровне, который спросят?</strong></p>
+<blockquote>
+<p>A-запись - имя в IPv4, AAAA - в IPv6, CNAME - имя в другое имя, по нему идёт повторный поиск. <code>dig +short host</code> вместо <code>nslookup</code> - короче и не деприкейтед. Если <code>dig</code> отдаёт адрес, а <code>curl</code> всё равно не может подключиться - проблема не в DNS, дальше по цепочке firewall и порт.</p>
+</blockquote>
+<p><strong>Как отличить медленный бэкенд от медленного nginx?</strong></p>
+<blockquote>
+<p>В логе nginx <code>$request_time</code> - весь путь до ответа клиенту, <code>$upstream_response_time</code> - сколько ответа ждали от приложения. Близки - виноват бэкенд. <code>request_time</code> заметно больше апстрима - время съедает сам nginx или сеть до клиента. Смотрю access log за инцидент, при 502/504 - error log за тот же момент, там обычно <code>upstream timed out</code> с адресом апстрима.</p>
+</blockquote></article>
+    <aside class="aside">
+      <strong>В этом документе</strong>
+      <div class="toc"><div class="toc">
+<ul>
+<li><a href="#_1">🎭 Аналогия</a></li>
+<li><a href="#_2">🗺 Карта мест</a></li>
+<li><a href="#_3">📖 Темы по неделям</a><ul>
+<li><a href="#1">Неделя 1. Файловая система и права</a></li>
+<li><a href="#2">Неделя 2. Сеть</a></li>
+<li><a href="#3">Неделя 3. Планировщик и сигналы</a></li>
+<li><a href="#4">Неделя 4. Что осталось</a></li>
+</ul>
+</li>
+<li><a href="#_4">🔧 Практика</a></li>
+<li><a href="#_5">💥 Сломай намеренно</a></li>
+<li><a href="#_6">✅ Задание</a></li>
+<li><a href="#_7">❓ Вопросы с ответами</a></li>
+</ul>
+</div>
+</div>
+    </aside>
+  </div>
+</main>
+
+
+<script>
+const ROOT = "..";
+
+// ---- тема
+const themeBtn = document.getElementById("theme");
+const paint = () => {
+  const dark = document.documentElement.getAttribute("data-theme") === "dark";
+  themeBtn.textContent = dark ? "☀" : "☾";
+};
+paint();
+themeBtn.addEventListener("click", () => {
+  const next = document.documentElement.getAttribute("data-theme") === "dark" ? "light" : "dark";
+  document.documentElement.setAttribute("data-theme", next);
+  try { localStorage.setItem("kb-theme", next); } catch (e) {}
+  paint();
+});
+
+// ---- поиск
+let index = null;
+const box = document.getElementById("results");
+const hits = document.getElementById("hits");
+const head = box.querySelector("h3");
+const input = document.getElementById("q");
+
+async function ensureIndex() {
+  if (index) return index;
+  const res = await fetch(ROOT + "/search-index.json");
+  index = await res.json();
+  return index;
+}
+
+const esc = (s) => (s || "").replace(/[&<>]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
+
+function hi(text, query) {
+  const i = text.toLowerCase().indexOf(query);
+  if (i < 0) return esc(text);
+  return esc(text.slice(0, i)) + "<mark>" + esc(text.slice(i, i + query.length)) + "</mark>" + esc(text.slice(i + query.length));
+}
+
+input.addEventListener("input", async () => {
+  const q = input.value.trim().toLowerCase();
+  if (q.length < 2) { box.hidden = true; return; }
+  const data = await ensureIndex();
+  const found = [];
+  for (const d of data) {
+    const inTitle = d.title.toLowerCase().includes(q);
+    const inSum = (d.summary || "").toLowerCase().includes(q);
+    const heads = (d.heads || []).filter(h => h.toLowerCase().includes(q));
+    if (inTitle || inSum || heads.length) {
+      found.push({ d, heads, rank: inTitle ? 0 : heads.length ? 1 : 2 });
+    }
+  }
+  found.sort((a, b) => a.rank - b.rank);
+  head.textContent = found.length ? `Нашлось: ${found.length}` : "Ничего не нашлось";
+  hits.innerHTML = found.slice(0, 40).map(({ d, heads }) =>
+    `<a class="hit" href="${ROOT}/d/${d.slug}.html">
+       <b>${hi(d.title, q)}</b>
+       <span>${heads.length ? "→ " + heads.slice(0, 3).map(h => hi(h, q)).join(" · ") : esc(d.summary || "")}</span>
+     </a>`).join("");
+  box.hidden = false;
+});
+
+input.addEventListener("keydown", (e) => { if (e.key === "Escape") { input.value = ""; box.hidden = true; input.blur(); } });
+document.addEventListener("keydown", (e) => {
+  if (e.key === "/" && document.activeElement !== input) { e.preventDefault(); input.focus(); }
+});
+</script>
+</body>
+</html>

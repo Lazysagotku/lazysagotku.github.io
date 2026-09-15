@@ -1,0 +1,313 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>🟡 Фаза 3. FastAPI (5 часов) - База знаний</title>
+<link rel="stylesheet" href="../kb.css">
+<script>
+  // Тему ставим до первой отрисовки, иначе на тёмной системе мигает белым.
+  try {
+    var t = localStorage.getItem("kb-theme");
+    if (!t) t = matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+    document.documentElement.setAttribute("data-theme", t);
+  } catch (e) {}
+</script>
+</head>
+<body>
+
+<header class="top">
+  <div class="top-in">
+    <a class="brand" href="../index.html">База <span>знаний</span></a>
+    <span class="grow"></span>
+    <input id="q" type="search" placeholder="Поиск по всем материалам…" autocomplete="off">
+    <button class="icon-btn" id="theme" type="button" title="Тема"></button>
+  </div>
+</header>
+
+<div id="results" hidden><div class="wrap-r"><h3></h3><div id="hits"></div></div></div>
+
+<main class="wrap">
+  <div class="doc-head">
+    <div class="crumb"><a href="../index.html#reference">Справочники</a></div>
+    <h1>🟡 Фаза 3. FastAPI (5 часов)</h1>
+    <div class="meta">195 строк · источник <code>l2code/Python_Phase3_FastAPI.md</code></div>
+  </div>
+
+  <div class="layout">
+    <article class="prose"><blockquote>
+<p>📖 Фаза роадмапа <strong>«Python Backend»</strong>. Оглавление и статус - в <code>PythonBackend_Roadmap.md</code>.
+Каждая фаза самодостаточна: 🎭 аналогия → 📖 теория → 🔧 практика → 💥 сломай намеренно → ✅ задание → 🌍 из жизни → ❓ вопросы с ответами.</p>
+<p>Частично закрыто теорией: <code>Python_Backend_Crash_Course.md</code> разбирает Pydantic, <code>Depends</code>, Strategy через ABC, Background Tasks.</p>
+<p>Практика фазы - разбор трекера, написанного Claude, до состояния «объясню каждую строку и изменю сам».</p>
+</blockquote>
+<h2 id="_1">🎭 Аналогия</h2>
+<p>Ресепшн с анкетой. Посетитель заполняет форму, на входе её проверяют по бланку и разворачивают неправильно заполненную сразу, не пуская внутрь. Pydantic - это бланк: он описывает, что считается правильным, и проверка происходит до того, как данные дошли до логики.</p>
+<h2 id="_2">📖 Теория</h2>
+<h3 id="fastapi">Почему FastAPI</h3>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>Flask</th>
+<th>Django</th>
+<th>FastAPI</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Валидация</td>
+<td>руками</td>
+<td>формы и сериализаторы</td>
+<td>из аннотаций типов</td>
+</tr>
+<tr>
+<td>Документация</td>
+<td>подключать</td>
+<td>подключать</td>
+<td>генерируется сама</td>
+</tr>
+<tr>
+<td>Async</td>
+<td>ограниченно</td>
+<td>частично</td>
+<td>родной</td>
+</tr>
+<tr>
+<td>Размер</td>
+<td>микро</td>
+<td>всё сразу</td>
+<td>микро с батарейками</td>
+</tr>
+</tbody>
+</table>
+<p>Аннотации типов в FastAPI работают, а не украшают: из них строится валидация, документация и подсказки редактора.</p>
+<h3 id="_3">Слои приложения</h3>
+<pre><code>routers/     маршруты, только приём и отдача
+schemas.py   что приходит и что уходит - Pydantic
+crud.py      работа с базой
+models.py    таблицы - SQLAlchemy
+database.py  подключение и фабрика сессий
+</code></pre>
+<p>Ровно так устроен трекер откликов. Разбирать надо именно его: код перед глазами, база с данными, и видно, что происходит при изменении.</p>
+<h3 id="_4">Схемы запроса и ответа отдельно</h3>
+<pre><code class="language-python">from pydantic import BaseModel, Field, field_validator
+
+class VacancyIn(BaseModel):
+    title: str = Field(min_length=3, max_length=300)
+    salary_min: int | None = Field(default=None, ge=0)
+    priority: int = Field(default=3, ge=1, le=5)
+
+    @field_validator(&quot;title&quot;)
+    @classmethod
+    def strip_title(cls, v: str) -&gt; str:
+        return v.strip()
+
+class VacancyOut(BaseModel):
+    id: int
+    title: str
+    status: str
+    model_config = {&quot;from_attributes&quot;: True}    # читать из ORM-объекта
+</code></pre>
+<p>⚠️ Одна модель на вход и на выход - типичная ошибка. Наружу утекают внутренние поля, а внутрь можно передать <code>id</code> и <code>created_at</code>. Разделение схем закрывает это.</p>
+<h3 id="_5">Зависимости</h3>
+<pre><code class="language-python">from fastapi import Depends, HTTPException
+
+def get_session():
+    session = SessionLocal()
+    try:
+        yield session
+    finally:
+        session.close()
+
+@router.get(&quot;/vacancies/{vid}&quot;, response_model=VacancyOut)
+def read(vid: int, session: Session = Depends(get_session)):
+    item = crud.get(session, vid)
+    if item is None:
+        raise HTTPException(404, &quot;Вакансия не найдена&quot;)
+    return item
+</code></pre>
+<p><code>Depends</code> - это DI-контейнер. Зависимость с <code>yield</code> работает как контекстный менеджер: код после <code>yield</code> выполняется после ответа.</p>
+<p><strong>Вложенные зависимости</strong> - так строится авторизация:</p>
+<pre><code class="language-python">def current_user(token: str = Depends(oauth2_scheme)) -&gt; User: ...
+def admin_only(user: User = Depends(current_user)) -&gt; User:
+    if not user.is_admin:
+        raise HTTPException(403, &quot;Нужны права администратора&quot;)
+    return user
+</code></pre>
+<h3 id="middleware">Middleware</h3>
+<pre><code class="language-python">@app.middleware(&quot;http&quot;)
+async def add_timing(request: Request, call_next):
+    start = time.perf_counter()
+    response = await call_next(request)
+    response.headers[&quot;X-Process-Time&quot;] = f&quot;{time.perf_counter() - start:.3f}&quot;
+    return response
+</code></pre>
+<p>Middleware видит все запросы. Годится для логирования, замера времени, идентификатора запроса. Аутентификацию лучше держать в зависимостях - там она привязана к конкретным маршрутам.</p>
+<p>Basic-аутентификация в трекере сделана именно middleware, потому что закрывать надо всё сразу.</p>
+<h3 id="_6">Фоновые задачи</h3>
+<pre><code class="language-python">from fastapi import BackgroundTasks
+
+@router.post(&quot;/vacancies&quot;)
+def create(data: VacancyIn, tasks: BackgroundTasks, session=Depends(get_session)):
+    item = crud.create(session, data)
+    tasks.add_task(notify, item.id)      # выполнится после ответа
+    return item
+</code></pre>
+<p>⚠️ <code>BackgroundTasks</code> живёт внутри процесса. Перезапуск - задача потеряна. Для важного нужна очередь: Celery, RQ или таблица заданий в базе.</p>
+<h3 id="_7">Обработка ошибок</h3>
+<pre><code class="language-python">@app.exception_handler(IntegrityError)
+async def on_conflict(request: Request, exc: IntegrityError):
+    return JSONResponse(status_code=409, content={&quot;detail&quot;: &quot;Такая запись уже есть&quot;})
+</code></pre>
+<p>Общий обработчик держит формат ошибок одинаковым по всему приложению. Без него часть ошибок отдаётся как 500 с трассировкой наружу.</p>
+<h3 id="_8">Аутентификация</h3>
+<p>OAuth2 с JWT: маршрут выдаёт токен, зависимость его проверяет.</p>
+<pre><code class="language-python">from jose import jwt
+token = jwt.encode({&quot;sub&quot;: user.name, &quot;exp&quot;: expires}, SECRET, algorithm=&quot;HS256&quot;)
+</code></pre>
+<p>Что важно назвать вслух: пароли хранятся хешами через <code>passlib</code> с bcrypt, у токена всегда есть срок жизни, секрет лежит в переменных окружения.</p>
+<h2 id="_9">🔧 Практика</h2>
+<p><strong>На трекере:</strong>
+1. Развести схемы входа и выхода везде, где сейчас одна модель.
+2. Добавить валидаторы: заголовок обрезается, приоритет от 1 до 5, зарплата неотрицательная.
+3. Middleware, добавляющий <code>X-Process-Time</code> и идентификатор запроса в лог.
+4. Общий обработчик <code>IntegrityError</code> с ответом 409.
+5. Эндпоинт <code>/health</code>, который реально ходит в базу - он же нужен слою 2 инфра-роадмапа.
+6. Посмотреть <code>/docs</code> и убедиться, что схемы читаемые.</p>
+<h2 id="_10">💥 Сломай намеренно</h2>
+<ol>
+<li><strong>Отдать ORM-объект без <code>from_attributes</code></strong> - получить ошибку сериализации.</li>
+<li><strong>Использовать одну схему на вход и выход</strong> и передать в теле <code>id</code> - посмотреть, что произойдёт.</li>
+<li><strong>Убрать <code>finally: session.close()</code></strong> из зависимости, погонять нагрузку, посмотреть число соединений в <code>pg_stat_activity</code>.</li>
+<li><strong>Кинуть исключение в фоновой задаче</strong> и убедиться, что клиент об этом не узнал.</li>
+<li><strong>Сделать блокирующий вызов в <code>async def</code> маршруте</strong> и посмотреть, как встают параллельные запросы.</li>
+<li><strong>Отдать 500 без обработчика</strong> и увидеть, что уходит наружу в ответе.</li>
+</ol>
+<h2 id="_11">✅ Задание</h2>
+<p>Трекер с разделёнными схемами, валидаторами, middleware замера времени, общим обработчиком ошибок и рабочим <code>/health</code>. Документация на <code>/docs</code> читается без пояснений.</p>
+<p><strong>Критерий:</strong> объясняешь, почему схемы разделены и что делает зависимость с <code>yield</code>.</p>
+<h2 id="_12">🌍 Из жизни</h2>
+<p><strong>Про утечку полей.</strong> Одна модель на вход и выход - причина, по которой наружу уходят внутренние поля вроде <code>reason_real</code> из трекера. Обнаруживается обычно тогда, когда кто-то посмотрел ответ API.</p>
+<p><strong>Про незакрытые сессии.</strong> Забытый <code>close()</code> в зависимости даёт медленную утечку соединений. Приложение работает часами, потом упирается в <code>max_connections</code> и перестаёт отвечать целиком.</p>
+<p><strong>Про фоновые задачи.</strong> <code>BackgroundTasks</code> часто ставят туда, где нужна очередь: отправка почты, выгрузка отчёта. При перезапуске задача исчезает без следа, и никто не узнаёт.</p>
+<h2 id="_13">❓ Вопросы с ответами</h2>
+<p><strong>Почему FastAPI, а не Flask?</strong></p>
+<blockquote>
+<p>Валидация и документация строятся из аннотаций типов, async родной. Flask даёт больше свободы и требует собирать это руками. У меня опыт есть с обоими, для нового API беру FastAPI.</p>
+</blockquote>
+<p><strong>Зачем разделять схемы запроса и ответа?</strong></p>
+<blockquote>
+<p>Чтобы наружу не уходили внутренние поля, а внутрь нельзя было передать то, что приложение проставляет само - идентификаторы, даты создания. Одна модель на оба направления даёт обе проблемы сразу.</p>
+</blockquote>
+<p><strong>Что делает <code>Depends</code>?</strong></p>
+<blockquote>
+<p>Это DI-контейнер: FastAPI сам вызывает зависимость и подставляет результат. Зависимость с <code>yield</code> работает как контекстный менеджер - код после <code>yield</code> выполняется после ответа, там закрывают сессию.</p>
+</blockquote>
+<p><strong>Middleware или зависимость - что выбрать?</strong></p>
+<blockquote>
+<p>Middleware, когда правило касается всех запросов: логирование, замер времени, общая аутентификация. Зависимость, когда правило привязано к конкретным маршрутам: права доступа, сессия базы.</p>
+</blockquote>
+<p><strong>Как реализована аутентификация?</strong></p>
+<blockquote>
+<p>Basic через middleware Starlette со сравнением <code>hmac.compare_digest</code>, чтобы не утекало время сравнения - разбирал на своём трекере, там она стоит, и я понимаю, зачем именно постоянное по времени сравнение. С нуля такое не писал. Для публичного API брал бы OAuth2 с JWT: пароли хешами через bcrypt, у токена срок жизни, секрет в переменных окружения.</p>
+</blockquote>
+<p>⚠️ Этот ответ можно давать <strong>только после того, как фаза пройдена</strong>. До этого на уточняющий вопрос «а почему именно middleware, а не зависимость» ответить нечем.</p></article>
+    <aside class="aside">
+      <strong>В этом документе</strong>
+      <div class="toc"><div class="toc">
+<ul>
+<li><a href="#_1">🎭 Аналогия</a></li>
+<li><a href="#_2">📖 Теория</a><ul>
+<li><a href="#fastapi">Почему FastAPI</a></li>
+<li><a href="#_3">Слои приложения</a></li>
+<li><a href="#_4">Схемы запроса и ответа отдельно</a></li>
+<li><a href="#_5">Зависимости</a></li>
+<li><a href="#middleware">Middleware</a></li>
+<li><a href="#_6">Фоновые задачи</a></li>
+<li><a href="#_7">Обработка ошибок</a></li>
+<li><a href="#_8">Аутентификация</a></li>
+</ul>
+</li>
+<li><a href="#_9">🔧 Практика</a></li>
+<li><a href="#_10">💥 Сломай намеренно</a></li>
+<li><a href="#_11">✅ Задание</a></li>
+<li><a href="#_12">🌍 Из жизни</a></li>
+<li><a href="#_13">❓ Вопросы с ответами</a></li>
+</ul>
+</div>
+</div>
+    </aside>
+  </div>
+</main>
+
+
+<script>
+const ROOT = "..";
+
+// ---- тема
+const themeBtn = document.getElementById("theme");
+const paint = () => {
+  const dark = document.documentElement.getAttribute("data-theme") === "dark";
+  themeBtn.textContent = dark ? "☀" : "☾";
+};
+paint();
+themeBtn.addEventListener("click", () => {
+  const next = document.documentElement.getAttribute("data-theme") === "dark" ? "light" : "dark";
+  document.documentElement.setAttribute("data-theme", next);
+  try { localStorage.setItem("kb-theme", next); } catch (e) {}
+  paint();
+});
+
+// ---- поиск
+let index = null;
+const box = document.getElementById("results");
+const hits = document.getElementById("hits");
+const head = box.querySelector("h3");
+const input = document.getElementById("q");
+
+async function ensureIndex() {
+  if (index) return index;
+  const res = await fetch(ROOT + "/search-index.json");
+  index = await res.json();
+  return index;
+}
+
+const esc = (s) => (s || "").replace(/[&<>]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
+
+function hi(text, query) {
+  const i = text.toLowerCase().indexOf(query);
+  if (i < 0) return esc(text);
+  return esc(text.slice(0, i)) + "<mark>" + esc(text.slice(i, i + query.length)) + "</mark>" + esc(text.slice(i + query.length));
+}
+
+input.addEventListener("input", async () => {
+  const q = input.value.trim().toLowerCase();
+  if (q.length < 2) { box.hidden = true; return; }
+  const data = await ensureIndex();
+  const found = [];
+  for (const d of data) {
+    const inTitle = d.title.toLowerCase().includes(q);
+    const inSum = (d.summary || "").toLowerCase().includes(q);
+    const heads = (d.heads || []).filter(h => h.toLowerCase().includes(q));
+    if (inTitle || inSum || heads.length) {
+      found.push({ d, heads, rank: inTitle ? 0 : heads.length ? 1 : 2 });
+    }
+  }
+  found.sort((a, b) => a.rank - b.rank);
+  head.textContent = found.length ? `Нашлось: ${found.length}` : "Ничего не нашлось";
+  hits.innerHTML = found.slice(0, 40).map(({ d, heads }) =>
+    `<a class="hit" href="${ROOT}/d/${d.slug}.html">
+       <b>${hi(d.title, q)}</b>
+       <span>${heads.length ? "→ " + heads.slice(0, 3).map(h => hi(h, q)).join(" · ") : esc(d.summary || "")}</span>
+     </a>`).join("");
+  box.hidden = false;
+});
+
+input.addEventListener("keydown", (e) => { if (e.key === "Escape") { input.value = ""; box.hidden = true; input.blur(); } });
+document.addEventListener("keydown", (e) => {
+  if (e.key === "/" && document.activeElement !== input) { e.preventDefault(); input.focus(); }
+});
+</script>
+</body>
+</html>

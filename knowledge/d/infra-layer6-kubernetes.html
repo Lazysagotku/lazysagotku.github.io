@@ -1,0 +1,420 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>☸️ Слой 6. Kubernetes (дни 16-25, 10 часов) - База знаний</title>
+<link rel="stylesheet" href="../kb.css">
+<script>
+  // Тему ставим до первой отрисовки, иначе на тёмной системе мигает белым.
+  try {
+    var t = localStorage.getItem("kb-theme");
+    if (!t) t = matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+    document.documentElement.setAttribute("data-theme", t);
+  } catch (e) {}
+</script>
+</head>
+<body>
+
+<header class="top">
+  <div class="top-in">
+    <a class="brand" href="../index.html">База <span>знаний</span></a>
+    <span class="grow"></span>
+    <input id="q" type="search" placeholder="Поиск по всем материалам…" autocomplete="off">
+    <button class="icon-btn" id="theme" type="button" title="Тема"></button>
+  </div>
+</header>
+
+<div id="results" hidden><div class="wrap-r"><h3></h3><div id="hits"></div></div></div>
+
+<main class="wrap">
+  <div class="doc-head">
+    <div class="crumb"><a href="../index.html#reference">Справочники</a></div>
+    <h1>☸️ Слой 6. Kubernetes (дни 16-25, 10 часов)</h1>
+    <div class="meta">262 строк · источник <code>l2code/Infra_Layer6_Kubernetes.md</code></div>
+  </div>
+
+  <div class="layout">
+    <article class="prose"><blockquote>
+<p>📖 Слой роадмапа <strong>«Стенд с нуля»</strong>. Оглавление, срез под Сбер и календарь - в <code>Roadmap_Infra_Sept2026.md</code>.
+Каждый слой самодостаточен: 🎭 аналогия → 🗺 карта мест → 📖 теория → 🔧 практика → 💥 сломай намеренно → ✅ задание → 🌍 из жизни → ❓ вопросы с ответами.</p>
+<p>💾 Здесь сервер упирается в память. k3s с control plane и парой приложений забирает 2,5-3 ГБ, плюс уже работающий мониторинг. Тот самый слой, ради которого берём 4 ГБ.</p>
+<p>⚠️ В срез под Сбер не входит: в требованиях той вакансии Kubernetes не упоминается. Нужен под роли вроде Т1, где отказ пришёл именно из-за микросервисов.</p>
+</blockquote>
+<h2 id="_1">🎭 Аналогия</h2>
+<p>Docker - это один повар с одной плитой: он готовит блюдо и следит за ним сам. Kubernetes - шеф-повар большой кухни: он не готовит, он распределяет. Повар слёг - шеф ставит другого, не спрашивая. Гостей стало вдвое больше - добавляет плит. Блюдо подгорает - снимает и переделывает.</p>
+<p><strong>Вторая аналогия, для probes.</strong> Liveness - проверка пульса: нет пульса, пациента реанимируют, то есть под перезапускают. Readiness - готовность принимать посетителей: пульс есть, но человек ещё не оделся, посетителей пока не пускаем.</p>
+<p>⚠️ Путать их - классическая ошибка. Плохой liveness перезапускает работающее приложение по кругу.</p>
+<h2 id="_2">🗺 Карта мест</h2>
+<p><strong>Сделать:</strong> k3s на сервере; трекер как Deployment, Service и Ingress; PostgreSQL как StatefulSet с Secret и ConfigMap; CronJob для регламентного расчёта; Helm-чарт.</p>
+<p><strong>Понять:</strong> ты описываешь желаемое состояние в YAML, кластер сам приводит к нему и держит. Под умер - поднимется новый, без тебя. Всё, о чём спрашивают на собеседовании, - probes (как кластер понимает, что под живой), requests и limits (сколько ему можно), и как читать <code>describe</code> и <code>events</code>, когда под не поднимается.</p>
+<p><strong>Где писать:</strong> манифесты <code>k8s/*.yaml</code> в репо; Helm - папка <code>chart/</code> с <code>values.yaml</code> под окружения. Никаких генераторов - руками, чтобы понимать каждое поле.</p>
+<p><strong>Чем запустить:</strong> <code>kubectl apply -f файл.yaml</code>; <code>helm upgrade --install трекер ./chart</code>.</p>
+<p><strong>Где смотреть результат:</strong></p>
+<pre><code class="language-bash">kubectl get pods,svc,ingress -A          # что есть и в каком состоянии
+kubectl describe pod имя                 # почему Pending или CrashLoopBackOff
+kubectl logs -f имя                      # логи приложения
+kubectl get events --sort-by=.lastTimestamp   # что кластер делал последним
+kubectl top pods                         # кто сколько ест
+</code></pre>
+<p><strong>Как понять, что получилось:</strong> <code>kubectl delete pod имя</code> - через несколько секунд новый под в Running, сервис не заметил; <code>curl</code> через Ingress отдаёт трекер; приложение находит базу по имени сервиса, без IP.</p>
+<h2 id="2">📖 Теория (2 часа, не больше)</h2>
+<h3 id="docker">Зачем оркестратор поверх Docker</h3>
+<p>Три вещи, которых у голого Docker нет: самолечение, масштабирование, декларативность. Ты описываешь желаемое состояние, кластер приводит реальность к нему и удерживает.</p>
+<h3 id="_3">Объекты</h3>
+<table>
+<thead>
+<tr>
+<th>Объект</th>
+<th>Что делает</th>
+<th>Когда используют</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Pod</strong></td>
+<td>минимальная единица, один или несколько контейнеров с общей сетью</td>
+<td>напрямую почти никогда</td>
+</tr>
+<tr>
+<td><strong>ReplicaSet</strong></td>
+<td>держит заданное число подов</td>
+<td>создаётся Deployment'ом</td>
+</tr>
+<tr>
+<td><strong>Deployment</strong></td>
+<td>управляет ReplicaSet, умеет обновляться и откатываться</td>
+<td>обычные приложения без состояния</td>
+</tr>
+<tr>
+<td><strong>StatefulSet</strong></td>
+<td>у подов стабильные имена и своё хранилище</td>
+<td>базы, очереди</td>
+</tr>
+<tr>
+<td><strong>DaemonSet</strong></td>
+<td>по одному поду на каждую ноду</td>
+<td>агенты мониторинга, сбор логов</td>
+</tr>
+<tr>
+<td><strong>Job / CronJob</strong></td>
+<td>разовая задача / задача по расписанию</td>
+<td>миграции, регламентные расчёты</td>
+</tr>
+<tr>
+<td><strong>Service</strong></td>
+<td>стабильный адрес для группы подов</td>
+<td>всегда</td>
+</tr>
+<tr>
+<td><strong>Ingress</strong></td>
+<td>вход снаружи по именам и путям</td>
+<td>публикация наружу</td>
+</tr>
+<tr>
+<td><strong>ConfigMap / Secret</strong></td>
+<td>настройки / пароли</td>
+<td>всегда</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Почему деплоят Deployment, а не Pod.</strong> Pod умер - и всё. Deployment следит за числом реплик, поднимает новые вместо упавших и умеет обновляться постепенно.</p>
+<p><strong>Типы Service:</strong>
+- <code>ClusterIP</code> - только внутри кластера, по умолчанию;
+- <code>NodePort</code> - открывает порт на каждой ноде, грубо;
+- <code>LoadBalancer</code> - просит балансировщик у облака;
+- <code>Ingress</code> - умный вход по домену и пути, поверх Service.</p>
+<h3 id="labels-selectors">Labels и selectors</h3>
+<p>На них держится вся связность. Service находит поды не по именам, а по меткам. Deployment следит за подами тоже по меткам. Опечатка в метке означает, что Service никого не находит и отдаёт пустоту - при живых подах.</p>
+<h3 id="probes">Probes</h3>
+<table>
+<thead>
+<tr>
+<th>Проба</th>
+<th>Отвечает на вопрос</th>
+<th>Что при провале</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>liveness</strong></td>
+<td>жив ли контейнер</td>
+<td>перезапуск</td>
+</tr>
+<tr>
+<td><strong>readiness</strong></td>
+<td>готов ли принимать трафик</td>
+<td>вывод из Service, без перезапуска</td>
+</tr>
+<tr>
+<td><strong>startup</strong></td>
+<td>завершился ли долгий старт</td>
+<td>откладывает две первые</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Startup нужен приложениям с долгим стартом.</strong> Без него liveness начнёт убивать под, который просто ещё грузится, и получится бесконечный цикл перезапусков.</p>
+<h3 id="requests-limits">Requests и limits</h3>
+<table>
+<thead>
+<tr>
+<th>Параметр</th>
+<th>Смысл</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>requests</strong></td>
+<td>сколько гарантированно нужно, по этому планировщик выбирает ноду</td>
+</tr>
+<tr>
+<td><strong>limits</strong></td>
+<td>потолок, за который нельзя</td>
+</tr>
+</tbody>
+</table>
+<p>Превышение limit по памяти означает <strong>OOMKilled</strong>. Превышение по процессору означает троттлинг - под замедляют, но не убивают.</p>
+<p>⚠️ Без requests планировщик считает, что поду ничего не нужно, и напихает на ноду больше, чем она тянет. Без limits один под может съесть всю ноду.</p>
+<h3 id="dns">DNS внутри кластера</h3>
+<p>Приложение находит базу по имени сервиса: <code>postgres.default.svc.cluster.local</code>, короткая форма - просто <code>postgres</code>. Это ответ на частый вопрос «как приложение находит базу внутри кластера».</p>
+<h2 id="8-">🔧 Практика (8 часов - основное время)</h2>
+<p><strong>1. Поднять k3s:</strong></p>
+<pre><code class="language-bash">curl -sfL https://get.k3s.io | sh -
+kubectl get nodes
+</code></pre>
+<p><strong>2. Манифесты писать руками</strong>, без генераторов. Deployment для трекера:</p>
+<pre><code class="language-yaml">apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tracker
+spec:
+  replicas: 2
+  selector:
+    matchLabels: {app: tracker}
+  template:
+    metadata:
+      labels: {app: tracker}
+    spec:
+      containers:
+        - name: tracker
+          image: registry/tracker:1.0.3
+          ports: [{containerPort: 8000}]
+          env:
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef: {name: tracker-secrets, key: database-url}
+          resources:
+            requests: {memory: &quot;128Mi&quot;, cpu: &quot;100m&quot;}
+            limits:   {memory: &quot;256Mi&quot;, cpu: &quot;500m&quot;}
+          livenessProbe:
+            httpGet: {path: /health, port: 8000}
+            initialDelaySeconds: 10
+            periodSeconds: 15
+          readinessProbe:
+            httpGet: {path: /ready, port: 8000}
+            periodSeconds: 5
+</code></pre>
+<p><strong>3. Service и Ingress:</strong></p>
+<pre><code class="language-yaml">apiVersion: v1
+kind: Service
+metadata: {name: tracker}
+spec:
+  selector: {app: tracker}
+  ports: [{port: 80, targetPort: 8000}]
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata: {name: tracker}
+spec:
+  rules:
+    - host: tracker.example.ru
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service: {name: tracker, port: {number: 80}}
+</code></pre>
+<p><strong>4. PostgreSQL в кластере</strong> через StatefulSet, пароли в Secret, настройки в ConfigMap. Проверить DNS: приложение находит базу по имени сервиса.</p>
+<p><strong>5. CronJob</strong> - тот же регламентный расчёт, что в слое 4, но средствами кластера:</p>
+<pre><code class="language-yaml">apiVersion: batch/v1
+kind: CronJob
+metadata: {name: cleanup}
+spec:
+  schedule: &quot;0 3 * * *&quot;
+  concurrencyPolicy: Forbid      # защита от наложения
+  successfulJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      backoffLimit: 2
+      template:
+        spec:
+          restartPolicy: OnFailure
+          containers:
+            - name: cleanup
+              image: registry/tracker:1.0.3
+              command: [&quot;python&quot;, &quot;-m&quot;, &quot;app.cleanup&quot;]
+</code></pre>
+<p><code>concurrencyPolicy: Forbid</code> - тот же смысл, что <code>flock -n</code> в cron и <code>pg_try_advisory_lock</code> в базе. Три механизма от одной проблемы, полезно назвать связку.</p>
+<p><strong>6. Разбор инцидента - самое спрашиваемое:</strong></p>
+<pre><code class="language-bash">kubectl get pods -o wide
+kubectl describe pod &lt;под&gt;          # события внизу - там причина
+kubectl logs &lt;под&gt;
+kubectl logs &lt;под&gt; --previous       # логи упавшего экземпляра
+kubectl get events --sort-by=.lastTimestamp
+kubectl exec -it &lt;под&gt; -- sh
+kubectl rollout undo deployment/tracker
+</code></pre>
+<p><strong>7. Helm</strong> - упаковать своё приложение в чарт, values для разных окружений.</p>
+<h2 id="_4">💥 Сломай намеренно</h2>
+<p>Самая ценная часть слоя. Каждый пункт даёт узнаваемый симптом.</p>
+<p><strong>1. Убить под</strong> - <code>kubectl delete pod &lt;под&gt;</code>, посмотреть, как Deployment поднимает новый.</p>
+<p><strong>2. Неправильный readiness</strong> - указать путь, которого нет. Под живой, трафик не идёт, в <code>describe</code> видно, что Service его не берёт.</p>
+<p><strong>3. Агрессивный liveness</strong> - <code>periodSeconds: 1</code>, <code>timeoutSeconds: 1</code> на медленном эндпоинте. Получить перезапуск работающего приложения по кругу.</p>
+<p><strong>4. <code>OOMKilled</code></strong> - поставить <code>limits.memory: 32Mi</code>. В <code>describe</code> появится <code>Reason: OOMKilled</code>, под уйдёт в перезапуск.</p>
+<p><strong>5. <code>CrashLoopBackOff</code></strong> - сломать команду запуска в образе. Разобрать через <code>logs --previous</code>, потому что текущий контейнер уже мёртв.</p>
+<p><strong>6. <code>ImagePullBackOff</code></strong> - указать несуществующий тег образа.</p>
+<p><strong>7. <code>Pending</code> навсегда</strong> - выставить <code>requests.memory: 8Gi</code> на маленькой ноде. В событиях будет <code>Insufficient memory</code>.</p>
+<p><strong>8. Опечатка в метке</strong> - поменять <code>app: tracker</code> на <code>app: traker</code> в селекторе Service. Поды живы, Ingress отдаёт 503. Это учит смотреть на <code>kubectl get endpoints</code>.</p>
+<h2 id="_5">✅ Задание</h2>
+<ul>
+<li>Трекер развёрнут в кластере по своим манифестам, объясняешь каждую строку.</li>
+<li>Письменный разбор: что делать при <code>CrashLoopBackOff</code> по шагам.</li>
+<li>Прогнаны все восемь поломок, для каждой записан симптом и способ диагностики.</li>
+<li>Работающий CronJob с защитой от наложения.</li>
+</ul>
+<p><strong>Критерий готовности:</strong> можешь развернуть приложение в кластере с нуля и объяснить каждую строку манифеста.</p>
+<h2 id="_6">🌍 Из жизни</h2>
+<p><strong>Почему это стоило отказа.</strong> 10.09.2026 Т1 Иннотех отказал с формулировкой «критично отсутствие опыта с микросервисной архитектурой», за день до этого NGENIX отказал на младшей позиции. Это самый дорогой пробел в текущем профиле, и он закрывается именно этим слоем.</p>
+<p><strong>Про <code>describe</code> вместо <code>logs</code>.</strong> Начинающие сразу бегут в <code>logs</code> и не находят ничего, потому что контейнер не стартовал. Причина почти всегда в событиях внизу вывода <code>describe pod</code>: не скачался образ, не хватило ресурсов, не смонтировался том. Умение сказать «сначала <code>describe</code>, там события» сразу выделяет.</p>
+<p><strong>Про <code>--previous</code>.</strong> При <code>CrashLoopBackOff</code> текущий контейнер мёртв, и <code>kubectl logs</code> покажет пустоту или логи новой попытки. Логи упавшего экземпляра достаются только флагом <code>--previous</code>. Это тот самый вопрос «логов нет, ваши действия».</p>
+<h2 id="_7">❓ Вопросы с ответами</h2>
+<p><strong>Приложение падает с CrashLoopBackOff, логов нет. Ваши действия?</strong></p>
+<blockquote>
+<p>Сначала <code>kubectl describe pod</code> - события внизу почти всегда называют причину: не скачался образ, не хватило памяти, не смонтировался том. Логи упавшего экземпляра беру через <code>kubectl logs --previous</code>, потому что текущий контейнер уже мёртв. Если дело в OOM, в описании будет <code>Reason: OOMKilled</code> - тогда смотрю limits и профиль потребления.</p>
+</blockquote>
+<p><strong>Разница Pod, Deployment, StatefulSet, DaemonSet?</strong></p>
+<blockquote>
+<p>Pod - минимальная единица, напрямую почти не используют. Deployment держит число реплик и умеет обновляться и откатываться, для приложений без состояния. StatefulSet даёт подам стабильные имена и своё хранилище, для баз и очередей. DaemonSet ставит по одному поду на каждую ноду, для агентов мониторинга и сбора логов.</p>
+</blockquote>
+<p><strong>Liveness против readiness, что будет если перепутать?</strong></p>
+<blockquote>
+<p>Liveness отвечает «меня надо перезапустить», readiness - «мне можно давать трафик». Если поставить liveness слишком агрессивным, кластер начнёт перезапускать работающее приложение по кругу. Если readiness сделать всегда успешным, трафик пойдёт на неготовый под и пользователи получат ошибки.</p>
+</blockquote>
+<p><strong>Как приложение находит базу внутри кластера?</strong></p>
+<blockquote>
+<p>По DNS-имени сервиса. Внутри одного namespace достаточно короткого имени, полное - <code>postgres.default.svc.cluster.local</code>. Адрес пода меняется при пересоздании, имя сервиса стабильно.</p>
+</blockquote>
+<p><strong>Что происходит при OOM?</strong></p>
+<blockquote>
+<p>Контейнер превысил <code>limits.memory</code>, ядро его убивает, в описании пода появляется <code>OOMKilled</code>, дальше перезапуск по политике. По процессору поведение другое: превышение limit даёт троттлинг, под замедляют, но не убивают.</p>
+</blockquote>
+<p><strong>Зачем requests и limits, что если не поставить?</strong></p>
+<blockquote>
+<p>Requests - сколько гарантированно нужно, по ним планировщик выбирает ноду. Limits - потолок. Без requests планировщик решит, что поду ничего не надо, и напихает на ноду больше, чем она тянет. Без limits один под может съесть всю ноду.</p>
+</blockquote>
+<p><strong>Как откатить неудачный релиз?</strong></p>
+<blockquote>
+<p><code>kubectl rollout undo deployment/&lt;имя&gt;</code>. Deployment хранит историю ревизий, откат возвращает предыдущий ReplicaSet. Перед этим смотрю <code>kubectl rollout history</code>, чтобы понимать, куда откатываюсь.</p>
+</blockquote>
+<p><strong>Поды живы, а сайт отдаёт 503. Где смотреть?</strong></p>
+<blockquote>
+<p><code>kubectl get endpoints</code> - если пусто, Service никого не нашёл. Причина обычно в несовпадении меток в селекторе Service и в шаблоне пода, либо в непройденном readiness.</p>
+</blockquote></article>
+    <aside class="aside">
+      <strong>В этом документе</strong>
+      <div class="toc"><div class="toc">
+<ul>
+<li><a href="#_1">🎭 Аналогия</a></li>
+<li><a href="#_2">🗺 Карта мест</a></li>
+<li><a href="#2">📖 Теория (2 часа, не больше)</a><ul>
+<li><a href="#docker">Зачем оркестратор поверх Docker</a></li>
+<li><a href="#_3">Объекты</a></li>
+<li><a href="#labels-selectors">Labels и selectors</a></li>
+<li><a href="#probes">Probes</a></li>
+<li><a href="#requests-limits">Requests и limits</a></li>
+<li><a href="#dns">DNS внутри кластера</a></li>
+</ul>
+</li>
+<li><a href="#8-">🔧 Практика (8 часов - основное время)</a></li>
+<li><a href="#_4">💥 Сломай намеренно</a></li>
+<li><a href="#_5">✅ Задание</a></li>
+<li><a href="#_6">🌍 Из жизни</a></li>
+<li><a href="#_7">❓ Вопросы с ответами</a></li>
+</ul>
+</div>
+</div>
+    </aside>
+  </div>
+</main>
+
+
+<script>
+const ROOT = "..";
+
+// ---- тема
+const themeBtn = document.getElementById("theme");
+const paint = () => {
+  const dark = document.documentElement.getAttribute("data-theme") === "dark";
+  themeBtn.textContent = dark ? "☀" : "☾";
+};
+paint();
+themeBtn.addEventListener("click", () => {
+  const next = document.documentElement.getAttribute("data-theme") === "dark" ? "light" : "dark";
+  document.documentElement.setAttribute("data-theme", next);
+  try { localStorage.setItem("kb-theme", next); } catch (e) {}
+  paint();
+});
+
+// ---- поиск
+let index = null;
+const box = document.getElementById("results");
+const hits = document.getElementById("hits");
+const head = box.querySelector("h3");
+const input = document.getElementById("q");
+
+async function ensureIndex() {
+  if (index) return index;
+  const res = await fetch(ROOT + "/search-index.json");
+  index = await res.json();
+  return index;
+}
+
+const esc = (s) => (s || "").replace(/[&<>]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
+
+function hi(text, query) {
+  const i = text.toLowerCase().indexOf(query);
+  if (i < 0) return esc(text);
+  return esc(text.slice(0, i)) + "<mark>" + esc(text.slice(i, i + query.length)) + "</mark>" + esc(text.slice(i + query.length));
+}
+
+input.addEventListener("input", async () => {
+  const q = input.value.trim().toLowerCase();
+  if (q.length < 2) { box.hidden = true; return; }
+  const data = await ensureIndex();
+  const found = [];
+  for (const d of data) {
+    const inTitle = d.title.toLowerCase().includes(q);
+    const inSum = (d.summary || "").toLowerCase().includes(q);
+    const heads = (d.heads || []).filter(h => h.toLowerCase().includes(q));
+    if (inTitle || inSum || heads.length) {
+      found.push({ d, heads, rank: inTitle ? 0 : heads.length ? 1 : 2 });
+    }
+  }
+  found.sort((a, b) => a.rank - b.rank);
+  head.textContent = found.length ? `Нашлось: ${found.length}` : "Ничего не нашлось";
+  hits.innerHTML = found.slice(0, 40).map(({ d, heads }) =>
+    `<a class="hit" href="${ROOT}/d/${d.slug}.html">
+       <b>${hi(d.title, q)}</b>
+       <span>${heads.length ? "→ " + heads.slice(0, 3).map(h => hi(h, q)).join(" · ") : esc(d.summary || "")}</span>
+     </a>`).join("");
+  box.hidden = false;
+});
+
+input.addEventListener("keydown", (e) => { if (e.key === "Escape") { input.value = ""; box.hidden = true; input.blur(); } });
+document.addEventListener("keydown", (e) => {
+  if (e.key === "/" && document.activeElement !== input) { e.preventDefault(); input.focus(); }
+});
+</script>
+</body>
+</html>

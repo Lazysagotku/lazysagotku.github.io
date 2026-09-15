@@ -1,0 +1,306 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>🧪 Фаза 5. Тестирование (4 часа) - База знаний</title>
+<link rel="stylesheet" href="../kb.css">
+<script>
+  // Тему ставим до первой отрисовки, иначе на тёмной системе мигает белым.
+  try {
+    var t = localStorage.getItem("kb-theme");
+    if (!t) t = matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+    document.documentElement.setAttribute("data-theme", t);
+  } catch (e) {}
+</script>
+</head>
+<body>
+
+<header class="top">
+  <div class="top-in">
+    <a class="brand" href="../index.html">База <span>знаний</span></a>
+    <span class="grow"></span>
+    <input id="q" type="search" placeholder="Поиск по всем материалам…" autocomplete="off">
+    <button class="icon-btn" id="theme" type="button" title="Тема"></button>
+  </div>
+</header>
+
+<div id="results" hidden><div class="wrap-r"><h3></h3><div id="hits"></div></div></div>
+
+<main class="wrap">
+  <div class="doc-head">
+    <div class="crumb"><a href="../index.html#reference">Справочники</a></div>
+    <h1>🧪 Фаза 5. Тестирование (4 часа)</h1>
+    <div class="meta">164 строк · источник <code>l2code/Python_Phase5_Testing.md</code></div>
+  </div>
+
+  <div class="layout">
+    <article class="prose"><blockquote>
+<p>📖 Фаза роадмапа <strong>«Python Backend»</strong>. Оглавление и статус - в <code>PythonBackend_Roadmap.md</code>.
+Каждая фаза самодостаточна: 🎭 аналогия → 📖 теория → 🔧 практика → 💥 сломай намеренно → ✅ задание → 🌍 из жизни → ❓ вопросы с ответами.</p>
+<p>Частично закрыто крэш-курсом: pytest, фикстуры, моки, coverage. Здесь - интеграционные тесты и то, что вокруг.</p>
+</blockquote>
+<h2 id="_1">🎭 Аналогия</h2>
+<p>Приёмо-сдаточные испытания из слоя 5 инфра-роадмапа, только автоматические. Тот же принцип: критерий формулируется до проверки, иначе проверка превращается в спор о том, работает оно или нет.</p>
+<h2 id="_2">📖 Теория</h2>
+<h3 id="_3">Пирамида</h3>
+<table>
+<thead>
+<tr>
+<th>Уровень</th>
+<th>Чего много</th>
+<th>Что проверяет</th>
+<th>Скорость</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Unit</td>
+<td>больше всего</td>
+<td>одна функция без внешнего мира</td>
+<td>миллисекунды</td>
+</tr>
+<tr>
+<td>Integration</td>
+<td>средне</td>
+<td>связка приложения и базы</td>
+<td>десятки миллисекунд</td>
+</tr>
+<tr>
+<td>E2E</td>
+<td>мало</td>
+<td>сценарий целиком</td>
+<td>секунды</td>
+</tr>
+</tbody>
+</table>
+<p>Перевёрнутая пирамида - когда почти всё покрыто медленными сквозными тестами - даёт набор, который никто не гоняет, потому что он идёт двадцать минут.</p>
+<h3 id="_4">Фикстуры</h3>
+<pre><code class="language-python">import pytest
+from fastapi.testclient import TestClient
+
+@pytest.fixture(scope=&quot;session&quot;)
+def engine():
+    &quot;&quot;&quot;Одна база на весь прогон.&quot;&quot;&quot;
+    eng = create_engine(TEST_URL)
+    Base.metadata.create_all(eng)
+    yield eng
+    Base.metadata.drop_all(eng)
+
+@pytest.fixture
+def session(engine):
+    &quot;&quot;&quot;Каждый тест в своей транзакции с откатом - тесты не видят друг друга.&quot;&quot;&quot;
+    connection = engine.connect()
+    trans = connection.begin()
+    s = Session(bind=connection)
+    yield s
+    s.close()
+    trans.rollback()
+    connection.close()
+
+@pytest.fixture
+def client(session):
+    app.dependency_overrides[get_session] = lambda: session
+    with TestClient(app) as c:
+        yield c
+    app.dependency_overrides.clear()
+</code></pre>
+<p><strong>Транзакция с откатом</strong> - главный приём: тесты не оставляют следов и не зависят от порядка выполнения.</p>
+<p><strong><code>dependency_overrides</code></strong> - способ подменить зависимость FastAPI на тестовую. Именно так подставляется тестовая сессия.</p>
+<h3 id="_5">Параметризация</h3>
+<pre><code class="language-python">@pytest.mark.parametrize(&quot;title,expected&quot;, [
+    (&quot;DevOps-инженер&quot;, 25),
+    (&quot;Инженер сопровождения&quot;, 30),
+    (&quot;Курьер&quot;, 0),
+    (&quot;Руководитель отдела&quot;, 0),
+])
+def test_prescore(title, expected):
+    assert prescore({&quot;name&quot;: title})[&quot;score&quot;] == expected
+</code></pre>
+<p>Один тест вместо четырёх, и в отчёте видно, какой именно случай упал.</p>
+<h3 id="_6">Моки: что подменять, а что нет</h3>
+<table>
+<thead>
+<tr>
+<th>Подменять</th>
+<th>Не подменять</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>внешние HTTP-вызовы</td>
+<td>свою бизнес-логику</td>
+</tr>
+<tr>
+<td>отправку почты и сообщений</td>
+<td>базу в интеграционных тестах</td>
+</tr>
+<tr>
+<td>текущее время</td>
+<td>структуры данных</td>
+</tr>
+<tr>
+<td>файловую систему при необходимости</td>
+<td>ORM-модели</td>
+</tr>
+</tbody>
+</table>
+<p>⚠️ Тест, где замокано всё, проверяет моки. Такой набор остаётся зелёным при полностью сломанном приложении.</p>
+<pre><code class="language-python">def test_collect(monkeypatch):
+    monkeypatch.setattr(collector, &quot;fetch&quot;, lambda url: SAMPLE_HTML)
+    assert len(collector.parse(SAMPLE_HTML)) == 20
+</code></pre>
+<h3 id="api">Интеграционные тесты API</h3>
+<pre><code class="language-python">def test_create_and_read(client):
+    response = client.post(&quot;/vacancies&quot;, json={&quot;title&quot;: &quot;Инженер сопровождения&quot;})
+    assert response.status_code == 201
+    vid = response.json()[&quot;id&quot;]
+
+    got = client.get(f&quot;/vacancies/{vid}&quot;)
+    assert got.status_code == 200
+    assert got.json()[&quot;title&quot;] == &quot;Инженер сопровождения&quot;
+
+def test_not_found(client):
+    assert client.get(&quot;/vacancies/999999&quot;).status_code == 404
+</code></pre>
+<p>Для асинхронного приложения - <code>httpx.AsyncClient</code> с <code>ASGITransport</code> и <code>pytest-asyncio</code>.</p>
+<h3 id="_7">Покрытие</h3>
+<pre><code class="language-bash">pytest --cov=app --cov-report=term-missing --cov-fail-under=70
+</code></pre>
+<p>⚠️ Покрытие показывает, какие строки выполнились, а не какие проверены. Сто процентов покрытия при пустых <code>assert</code> ничего не значат. Смысл цифры - находить непокрытые куски, а не отчитываться.</p>
+<h2 id="_8">🔧 Практика</h2>
+<p><strong>На трекере и разведчике:</strong>
+1. Фикстуры: база на прогон, сессия в транзакции с откатом, клиент с подменённой зависимостью.
+2. Интеграционные тесты на основные маршруты трекера: создание, чтение, 404, конфликт.
+3. Параметризованный тест на <code>prescore</code> разведчика - вынести туда все накопленные случаи, включая стоп-слова и вилку ниже планки.
+4. Тест на <code>resume_for</code>: заголовок решает, описание не перебивает. Это был реальный баг.
+5. <code>raiseload("*")</code> в тестовой конфигурации - ловить N+1 автоматически.
+6. <code>pytest --cov</code> с порогом, встроить в GitHub Actions из слоя 2 инфра-роадмапа.</p>
+<h2 id="_9">💥 Сломай намеренно</h2>
+<ol>
+<li><strong>Убрать откат транзакции</strong> из фикстуры и запустить набор дважды - получить падения на дублях.</li>
+<li><strong>Сделать тесты зависимыми от порядка</strong> - один создаёт данные, второй их ждёт. Запустить с <code>-p no:randomly</code> и без.</li>
+<li><strong>Замокать всё</strong> в одном тесте, потом сломать функцию под моком - убедиться, что тест зелёный.</li>
+<li><strong>Написать тест без <code>assert</code></strong> и посмотреть, что покрытие выросло, а проверок нет.</li>
+<li><strong>Сломать <code>prescore</code></strong> на одном случае и посмотреть, как параметризованный тест показывает именно его.</li>
+</ol>
+<h2 id="_10">✅ Задание</h2>
+<p>Трекер и разведчик покрыты тестами, набор проходит за секунды и не зависит от порядка. <code>pytest --cov</code> с порогом стоит в пайплайне и роняет сборку при падении покрытия.</p>
+<p><strong>Критерий:</strong> объясняешь, почему сессия в фикстуре откатывается, и что именно проверяет каждый интеграционный тест.</p>
+<h2 id="_11">🌍 Из жизни</h2>
+<p><strong>Про тесты, зависящие от порядка.</strong> Набор проходит локально и падает в CI, потому что там другой порядок или параллельный запуск. Причина - общее состояние между тестами. Транзакция с откатом закрывает это целиком.</p>
+<p><strong>Про замоканные тесты.</strong> Реальный случай из практики: набор из двухсот зелёных тестов при полностью нерабочем приложении, потому что все внешние вызовы подменены, а проверяется поведение моков.</p>
+<p><strong>Про покрытие как цель.</strong> Требование «80 процентов покрытия» без требований к качеству проверок даёт тесты, которые вызывают код и ничего не утверждают. Цифра растёт, польза нет.</p>
+<h2 id="_12">❓ Вопросы с ответами</h2>
+<p><strong>Как устроены ваши тесты?</strong></p>
+<blockquote>
+<p>Пирамидой: много быстрых юнит-тестов, меньше интеграционных на связку с базой, единицы сквозных. Каждый тест идёт в своей транзакции с откатом, поэтому тесты не видят друг друга и не зависят от порядка.</p>
+</blockquote>
+<p><strong>Что мокаете, а что нет?</strong></p>
+<blockquote>
+<p>Мокаю внешние вызовы, отправку сообщений, время. Не мокаю свою логику и базу в интеграционных тестах. Тест, где замокано всё, проверяет моки и остаётся зелёным при сломанном приложении.</p>
+</blockquote>
+<p><strong>Как тестируете FastAPI-приложение?</strong></p>
+<blockquote>
+<p><code>TestClient</code> для синхронного, <code>httpx.AsyncClient</code> с <code>ASGITransport</code> для асинхронного. Зависимость сессии подменяю через <code>dependency_overrides</code> на тестовую, идущую в транзакции с откатом.</p>
+</blockquote>
+<p><strong>Покрытие 100 процентов - это хорошо?</strong></p>
+<blockquote>
+<p>Покрытие показывает выполненные строки, а не проверенные. Смысл цифры - находить непокрытые куски. Как цель она даёт тесты без утверждений.</p>
+</blockquote></article>
+    <aside class="aside">
+      <strong>В этом документе</strong>
+      <div class="toc"><div class="toc">
+<ul>
+<li><a href="#_1">🎭 Аналогия</a></li>
+<li><a href="#_2">📖 Теория</a><ul>
+<li><a href="#_3">Пирамида</a></li>
+<li><a href="#_4">Фикстуры</a></li>
+<li><a href="#_5">Параметризация</a></li>
+<li><a href="#_6">Моки: что подменять, а что нет</a></li>
+<li><a href="#api">Интеграционные тесты API</a></li>
+<li><a href="#_7">Покрытие</a></li>
+</ul>
+</li>
+<li><a href="#_8">🔧 Практика</a></li>
+<li><a href="#_9">💥 Сломай намеренно</a></li>
+<li><a href="#_10">✅ Задание</a></li>
+<li><a href="#_11">🌍 Из жизни</a></li>
+<li><a href="#_12">❓ Вопросы с ответами</a></li>
+</ul>
+</div>
+</div>
+    </aside>
+  </div>
+</main>
+
+
+<script>
+const ROOT = "..";
+
+// ---- тема
+const themeBtn = document.getElementById("theme");
+const paint = () => {
+  const dark = document.documentElement.getAttribute("data-theme") === "dark";
+  themeBtn.textContent = dark ? "☀" : "☾";
+};
+paint();
+themeBtn.addEventListener("click", () => {
+  const next = document.documentElement.getAttribute("data-theme") === "dark" ? "light" : "dark";
+  document.documentElement.setAttribute("data-theme", next);
+  try { localStorage.setItem("kb-theme", next); } catch (e) {}
+  paint();
+});
+
+// ---- поиск
+let index = null;
+const box = document.getElementById("results");
+const hits = document.getElementById("hits");
+const head = box.querySelector("h3");
+const input = document.getElementById("q");
+
+async function ensureIndex() {
+  if (index) return index;
+  const res = await fetch(ROOT + "/search-index.json");
+  index = await res.json();
+  return index;
+}
+
+const esc = (s) => (s || "").replace(/[&<>]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
+
+function hi(text, query) {
+  const i = text.toLowerCase().indexOf(query);
+  if (i < 0) return esc(text);
+  return esc(text.slice(0, i)) + "<mark>" + esc(text.slice(i, i + query.length)) + "</mark>" + esc(text.slice(i + query.length));
+}
+
+input.addEventListener("input", async () => {
+  const q = input.value.trim().toLowerCase();
+  if (q.length < 2) { box.hidden = true; return; }
+  const data = await ensureIndex();
+  const found = [];
+  for (const d of data) {
+    const inTitle = d.title.toLowerCase().includes(q);
+    const inSum = (d.summary || "").toLowerCase().includes(q);
+    const heads = (d.heads || []).filter(h => h.toLowerCase().includes(q));
+    if (inTitle || inSum || heads.length) {
+      found.push({ d, heads, rank: inTitle ? 0 : heads.length ? 1 : 2 });
+    }
+  }
+  found.sort((a, b) => a.rank - b.rank);
+  head.textContent = found.length ? `Нашлось: ${found.length}` : "Ничего не нашлось";
+  hits.innerHTML = found.slice(0, 40).map(({ d, heads }) =>
+    `<a class="hit" href="${ROOT}/d/${d.slug}.html">
+       <b>${hi(d.title, q)}</b>
+       <span>${heads.length ? "→ " + heads.slice(0, 3).map(h => hi(h, q)).join(" · ") : esc(d.summary || "")}</span>
+     </a>`).join("");
+  box.hidden = false;
+});
+
+input.addEventListener("keydown", (e) => { if (e.key === "Escape") { input.value = ""; box.hidden = true; input.blur(); } });
+document.addEventListener("keydown", (e) => {
+  if (e.key === "/" && document.activeElement !== input) { e.preventDefault(); input.focus(); }
+});
+</script>
+</body>
+</html>

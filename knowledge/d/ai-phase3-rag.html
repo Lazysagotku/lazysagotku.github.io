@@ -1,0 +1,332 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>🟡 Фаза 3. RAG (6 часов) - База знаний</title>
+<link rel="stylesheet" href="../kb.css">
+<script>
+  // Тему ставим до первой отрисовки, иначе на тёмной системе мигает белым.
+  try {
+    var t = localStorage.getItem("kb-theme");
+    if (!t) t = matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+    document.documentElement.setAttribute("data-theme", t);
+  } catch (e) {}
+</script>
+</head>
+<body>
+
+<header class="top">
+  <div class="top-in">
+    <a class="brand" href="../index.html">База <span>знаний</span></a>
+    <span class="grow"></span>
+    <input id="q" type="search" placeholder="Поиск по всем материалам…" autocomplete="off">
+    <button class="icon-btn" id="theme" type="button" title="Тема"></button>
+  </div>
+</header>
+
+<div id="results" hidden><div class="wrap-r"><h3></h3><div id="hits"></div></div></div>
+
+<main class="wrap">
+  <div class="doc-head">
+    <div class="crumb"><a href="../index.html#reference">Справочники</a></div>
+    <h1>🟡 Фаза 3. RAG (6 часов)</h1>
+    <div class="meta">155 строк · источник <code>l2code/AI_Phase3_RAG.md</code></div>
+  </div>
+
+  <div class="layout">
+    <article class="prose"><blockquote>
+<p>📖 Фаза роадмапа <strong>«AI Product Engineer»</strong>. Оглавление и статус - в <code>AIEngineer_Roadmap.md</code>.
+Каждая фаза самодостаточна: 🎭 аналогия → 📖 теория → 🔧 практика → 💥 сломай намеренно → ✅ задание → 🌍 из жизни → ❓ вопросы с ответами.</p>
+<p>Цель: научить модель отвечать по своим данным. <strong>Прямой мост: PostgreSQL уже уверенно.</strong></p>
+</blockquote>
+<h2 id="_1">🎭 Аналогия</h2>
+<p>Экзамен с открытой книгой. Студент не помнит всё наизусть, но умеет быстро найти нужную страницу и ответить по ней. RAG - это поиск нужной страницы перед тем, как модель начнёт отвечать.</p>
+<p><strong>Вторая аналогия, для эмбеддингов.</strong> Библиотечная расстановка не по алфавиту, а по смыслу: книги про садоводство стоят рядом, даже если названия не похожи. Эмбеддинг - это координата книги на такой полке.</p>
+<h2 id="_2">📖 Теория</h2>
+<h3 id="rag">Зачем RAG</h3>
+<table>
+<thead>
+<tr>
+<th>Проблема</th>
+<th>Что даёт RAG</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Модель не знает твои данные</td>
+<td>подкладываем их в контекст</td>
+</tr>
+<tr>
+<td>Данные меняются</td>
+<td>обновляется индекс, а не модель</td>
+</tr>
+<tr>
+<td>Всё не помещается в окно</td>
+<td>ищем релевантное, кладём только его</td>
+</tr>
+<tr>
+<td>Нужна проверяемость</td>
+<td>ответ идёт со ссылкой на источник</td>
+</tr>
+</tbody>
+</table>
+<p>Альтернатива - дообучение модели - дороже, медленнее и не решает проблему свежести.</p>
+<h3 id="_3">Эмбеддинги</h3>
+<p>Текст превращается в вектор из сотен чисел. Близкие по смыслу тексты дают близкие векторы. Близость меряется косинусным расстоянием.</p>
+<p>⚠️ Векторы от разных моделей несравнимы. Смена модели эмбеддингов означает переиндексацию всего.</p>
+<h3 id="pgvector">pgvector</h3>
+<p>Векторный поиск прямо в PostgreSQL - отдельная база не нужна, пока данных не миллионы.</p>
+<pre><code class="language-sql">CREATE EXTENSION vector;
+
+CREATE TABLE chunks (
+    id        bigserial PRIMARY KEY,
+    doc_id    text NOT NULL,
+    content   text NOT NULL,
+    embedding vector(1536)
+);
+
+-- индекс под косинусное расстояние
+CREATE INDEX ON chunks USING hnsw (embedding vector_cosine_ops);
+
+-- поиск ближайших
+SELECT content, 1 - (embedding &lt;=&gt; $1) AS similarity
+FROM chunks
+ORDER BY embedding &lt;=&gt; $1
+LIMIT 5;
+</code></pre>
+<table>
+<thead>
+<tr>
+<th>Оператор</th>
+<th>Метрика</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>&lt;=&gt;</code></td>
+<td>косинусное расстояние</td>
+</tr>
+<tr>
+<td><code>&lt;-&gt;</code></td>
+<td>евклидово</td>
+</tr>
+<tr>
+<td><code>&lt;#&gt;</code></td>
+<td>скалярное произведение со знаком</td>
+</tr>
+</tbody>
+</table>
+<p><strong>HNSW против IVFFlat:</strong> HNSW точнее и быстрее на поиске, дольше строится и занимает больше места. Для объёмов уровня личной базы знаний HNSW.</p>
+<p>⚠️ Индекс даёт приблизительный поиск. Он может не найти ближайшего соседа. Для точного нужен полный перебор, который на больших объёмах не годится.</p>
+<h3 id="chunking">Chunking</h3>
+<p>Как резать документы перед индексацией - решение, которое влияет на качество больше, чем выбор модели эмбеддингов.</p>
+<table>
+<thead>
+<tr>
+<th>Стратегия</th>
+<th>Как</th>
+<th>Когда</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Фиксированный размер</td>
+<td>500-1000 токенов с перекрытием 10-20%</td>
+<td>универсально</td>
+</tr>
+<tr>
+<td>По структуре</td>
+<td>по заголовкам, абзацам, разделам</td>
+<td>документация, markdown</td>
+</tr>
+<tr>
+<td>По смыслу</td>
+<td>резать там, где меняется тема</td>
+<td>дорого, качественно</td>
+</tr>
+<tr>
+<td>Родитель и потомок</td>
+<td>ищем по мелким, отдаём крупные</td>
+<td>лучший компромисс</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Перекрытие обязательно.</strong> Без него предложение на границе кусков теряется: половина в одном, половина в другом, целиком не находится нигде.</p>
+<p><strong>Метаданные к каждому куску:</strong> источник, заголовок раздела, дата. Без них ответ невозможно подтвердить ссылкой.</p>
+<h3 id="_4">Гибридный поиск</h3>
+<p>Векторный поиск находит по смыслу и промахивается по точным терминам, артикулам, именам. Полнотекстовый наоборот.</p>
+<pre><code class="language-sql">-- полнотекстовый в PostgreSQL, GIN-индекс
+CREATE INDEX ON chunks USING gin (to_tsvector('russian', content));
+</code></pre>
+<p>Объединение результатов через <strong>Reciprocal Rank Fusion</strong>: каждый документ получает балл по позиции в каждом списке, баллы складываются. Это работает лучше взвешивания сырых оценок, потому что шкалы у двух методов разные.</p>
+<h3 id="_5">Оценка качества</h3>
+<p>Без измерения улучшение RAG превращается в подкручивание вслепую.</p>
+<table>
+<thead>
+<tr>
+<th>Метрика</th>
+<th>Что меряет</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Recall@k</td>
+<td>нашёлся ли нужный кусок среди первых k</td>
+</tr>
+<tr>
+<td>Precision@k</td>
+<td>сколько из первых k релевантны</td>
+</tr>
+<tr>
+<td>MRR</td>
+<td>насколько высоко стоит первый релевантный</td>
+</tr>
+<tr>
+<td>Faithfulness</td>
+<td>опирается ли ответ на найденное</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Минимальный набор для оценки:</strong> 30-50 пар «вопрос - какой кусок обязан найтись». Собирается за час и окупается сразу: любое изменение chunking или модели проверяется цифрой.</p>
+<h2 id="_6">🔧 Практика</h2>
+<p><strong>На базе знаний</strong> - там уже 79 документов, это готовый корпус:
+1. Таблица <code>chunks</code> с pgvector в базе трекера.
+2. Разрезать документы базы знаний по заголовкам с перекрытием, сохранить метаданные.
+3. Посчитать эмбеддинги, залить, построить HNSW-индекс.
+4. Поиск: вопрос - пять ближайших кусков - промпт с ними - ответ со ссылками на источники.
+5. Добавить полнотекстовый поиск и объединить через RRF. Сравнить с чистым векторным.
+6. Собрать набор из 30 вопросов по своим документам, замерить Recall@5 до и после гибридного поиска. <strong>Записать цифры.</strong></p>
+<h2 id="_7">💥 Сломай намеренно</h2>
+<ol>
+<li><strong>Резать без перекрытия</strong> и найти вопрос, ответ на который попал на границу кусков.</li>
+<li><strong>Поставить кусок в 4000 токенов</strong> - посмотреть, как поиск возвращает почти весь документ и релевантность падает.</li>
+<li><strong>Поставить кусок в 50 токенов</strong> - посмотреть, как теряется контекст и ответы становятся обрывочными.</li>
+<li><strong>Сменить модель эмбеддингов</strong> без переиндексации - получить бессмысленные результаты.</li>
+<li><strong>Спросить про точный термин</strong> (название файла, номер версии) и убедиться, что чистый векторный поиск промахивается, а полнотекстовый находит.</li>
+<li><strong>Убрать метаданные</strong> и попробовать подтвердить ответ ссылкой.</li>
+</ol>
+<h2 id="_8">✅ Задание</h2>
+<p>Поиск по базе знаний: вопрос на естественном языке - ответ с цитатами и ссылками на исходные документы. Замер Recall@5 на наборе из 30 вопросов, зафиксированный до и после введения гибридного поиска.</p>
+<p><strong>Критерий:</strong> объясняешь свою стратегию chunking и показываешь цифру, которая улучшилась.</p>
+<h2 id="_9">🌍 Из жизни</h2>
+<p><strong>Про chunking важнее модели.</strong> Команды тратят недели на подбор модели эмбеддингов и оставляют наивную резку по 1000 символов без перекрытия. Переход на резку по структуре с перекрытием даёт больше, чем смена модели.</p>
+<p><strong>Про точные термины.</strong> Классическая жалоба на RAG: «спрашиваю про конкретный артикул, а находит что-то похожее». Векторный поиск работает по смыслу, а артикул смысла не несёт. Лечится только гибридом.</p>
+<p><strong>Про отсутствие метрик.</strong> Без набора вопросов улучшение RAG - это ощущения. Тридцать пар «вопрос - нужный кусок» собираются за час и превращают спор в измерение.</p>
+<h2 id="_10">❓ Вопросы с ответами</h2>
+<p><strong>Что такое RAG и зачем он?</strong></p>
+<blockquote>
+<p>Поиск релевантных фрагментов перед генерацией: модель отвечает по найденному, а не по памяти. Решает три задачи - знание своих данных, их свежесть и проверяемость ответа ссылкой на источник. Дешевле и быстрее дообучения.</p>
+</blockquote>
+<p><strong>Как выбираете размер куска?</strong></p>
+<blockquote>
+<p>Смотрю на структуру документа. Для документации режу по заголовкам, для сплошного текста - 500-1000 токенов с перекрытием 10-20 процентов. Перекрытие обязательно, иначе предложение на границе не находится целиком. Проверяю выбор на наборе вопросов, а не на ощущениях.</p>
+</blockquote>
+<p><strong>Зачем гибридный поиск?</strong></p>
+<blockquote>
+<p>Векторный находит по смыслу и промахивается по точным терминам - артикулам, именам, номерам версий. Полнотекстовый наоборот. Объединяю результаты через Reciprocal Rank Fusion, потому что шкалы оценок у двух методов разные и складывать их напрямую нельзя.</p>
+</blockquote>
+<p><strong>Нужна ли отдельная векторная база?</strong></p>
+<blockquote>
+<p>До миллионов векторов хватает pgvector в PostgreSQL: данные и векторы рядом, транзакции общие, эксплуатировать надо одну систему вместо двух. Отдельная база нужна на больших объёмах или при особых требованиях к скорости.</p>
+</blockquote>
+<p><strong>Как понять, что RAG работает?</strong></p>
+<blockquote>
+<p>Набор из нескольких десятков пар «вопрос - какой фрагмент обязан найтись» и метрика Recall@k. Любое изменение chunking, модели или поиска проверяется цифрой. Без набора это подкручивание вслепую.</p>
+</blockquote></article>
+    <aside class="aside">
+      <strong>В этом документе</strong>
+      <div class="toc"><div class="toc">
+<ul>
+<li><a href="#_1">🎭 Аналогия</a></li>
+<li><a href="#_2">📖 Теория</a><ul>
+<li><a href="#rag">Зачем RAG</a></li>
+<li><a href="#_3">Эмбеддинги</a></li>
+<li><a href="#pgvector">pgvector</a></li>
+<li><a href="#chunking">Chunking</a></li>
+<li><a href="#_4">Гибридный поиск</a></li>
+<li><a href="#_5">Оценка качества</a></li>
+</ul>
+</li>
+<li><a href="#_6">🔧 Практика</a></li>
+<li><a href="#_7">💥 Сломай намеренно</a></li>
+<li><a href="#_8">✅ Задание</a></li>
+<li><a href="#_9">🌍 Из жизни</a></li>
+<li><a href="#_10">❓ Вопросы с ответами</a></li>
+</ul>
+</div>
+</div>
+    </aside>
+  </div>
+</main>
+
+
+<script>
+const ROOT = "..";
+
+// ---- тема
+const themeBtn = document.getElementById("theme");
+const paint = () => {
+  const dark = document.documentElement.getAttribute("data-theme") === "dark";
+  themeBtn.textContent = dark ? "☀" : "☾";
+};
+paint();
+themeBtn.addEventListener("click", () => {
+  const next = document.documentElement.getAttribute("data-theme") === "dark" ? "light" : "dark";
+  document.documentElement.setAttribute("data-theme", next);
+  try { localStorage.setItem("kb-theme", next); } catch (e) {}
+  paint();
+});
+
+// ---- поиск
+let index = null;
+const box = document.getElementById("results");
+const hits = document.getElementById("hits");
+const head = box.querySelector("h3");
+const input = document.getElementById("q");
+
+async function ensureIndex() {
+  if (index) return index;
+  const res = await fetch(ROOT + "/search-index.json");
+  index = await res.json();
+  return index;
+}
+
+const esc = (s) => (s || "").replace(/[&<>]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
+
+function hi(text, query) {
+  const i = text.toLowerCase().indexOf(query);
+  if (i < 0) return esc(text);
+  return esc(text.slice(0, i)) + "<mark>" + esc(text.slice(i, i + query.length)) + "</mark>" + esc(text.slice(i + query.length));
+}
+
+input.addEventListener("input", async () => {
+  const q = input.value.trim().toLowerCase();
+  if (q.length < 2) { box.hidden = true; return; }
+  const data = await ensureIndex();
+  const found = [];
+  for (const d of data) {
+    const inTitle = d.title.toLowerCase().includes(q);
+    const inSum = (d.summary || "").toLowerCase().includes(q);
+    const heads = (d.heads || []).filter(h => h.toLowerCase().includes(q));
+    if (inTitle || inSum || heads.length) {
+      found.push({ d, heads, rank: inTitle ? 0 : heads.length ? 1 : 2 });
+    }
+  }
+  found.sort((a, b) => a.rank - b.rank);
+  head.textContent = found.length ? `Нашлось: ${found.length}` : "Ничего не нашлось";
+  hits.innerHTML = found.slice(0, 40).map(({ d, heads }) =>
+    `<a class="hit" href="${ROOT}/d/${d.slug}.html">
+       <b>${hi(d.title, q)}</b>
+       <span>${heads.length ? "→ " + heads.slice(0, 3).map(h => hi(h, q)).join(" · ") : esc(d.summary || "")}</span>
+     </a>`).join("");
+  box.hidden = false;
+});
+
+input.addEventListener("keydown", (e) => { if (e.key === "Escape") { input.value = ""; box.hidden = true; input.blur(); } });
+document.addEventListener("keydown", (e) => {
+  if (e.key === "/" && document.activeElement !== input) { e.preventDefault(); input.focus(); }
+});
+</script>
+</body>
+</html>

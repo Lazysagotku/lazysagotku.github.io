@@ -1,0 +1,329 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>🔄 Слой 2. CI/CD (дни 4-6, 4 часа) - База знаний</title>
+<link rel="stylesheet" href="../kb.css">
+<script>
+  // Тему ставим до первой отрисовки, иначе на тёмной системе мигает белым.
+  try {
+    var t = localStorage.getItem("kb-theme");
+    if (!t) t = matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+    document.documentElement.setAttribute("data-theme", t);
+  } catch (e) {}
+</script>
+</head>
+<body>
+
+<header class="top">
+  <div class="top-in">
+    <a class="brand" href="../index.html">База <span>знаний</span></a>
+    <span class="grow"></span>
+    <input id="q" type="search" placeholder="Поиск по всем материалам…" autocomplete="off">
+    <button class="icon-btn" id="theme" type="button" title="Тема"></button>
+  </div>
+</header>
+
+<div id="results" hidden><div class="wrap-r"><h3></h3><div id="hits"></div></div></div>
+
+<main class="wrap">
+  <div class="doc-head">
+    <div class="crumb"><a href="../index.html#reference">Справочники</a></div>
+    <h1>🔄 Слой 2. CI/CD (дни 4-6, 4 часа)</h1>
+    <div class="meta">185 строк · источник <code>l2code/Infra_Layer2_CICD.md</code></div>
+  </div>
+
+  <div class="layout">
+    <article class="prose"><blockquote>
+<p>📖 Слой роадмапа <strong>«Стенд с нуля»</strong>. Оглавление, срез под Сбер и календарь - в <code>Roadmap_Infra_Sept2026.md</code>.
+Каждый слой самодостаточен: 🎭 аналогия → 🗺 карта мест → 📖 теория → 🔧 практика → 💥 сломай намеренно → ✅ задание → 🌍 из жизни → ❓ вопросы с ответами.</p>
+</blockquote>
+<h2 id="_1">🎭 Аналогия</h2>
+<p>Конвейер на заводе. Деталь заходит с одного конца, проходит станки в заданном порядке, и на выходе получается изделие. Никто не носит деталь руками между станками, поэтому изделия одинаковые, а ошибки ловятся на том станке, где возникли.</p>
+<h2 id="_2">🗺 Карта мест</h2>
+<p><strong>Сделать:</strong> пайплайн GitHub Actions: тесты → деплой на сервер по SSH → проверка <code>/health</code>; скрипт отката на сервере.</p>
+<p><strong>Понять:</strong> пайплайн - это код в репозитории (<code>.github/workflows/*.yml</code>), который GitHub выполняет на своих машинах после каждого push. Секреты (ключ SSH, адрес сервера) лежат в настройках репозитория, в код не попадают. Деплой = зайти по SSH, обновить код, перезапустить сервис, проверить, что живой.</p>
+<p><strong>Где писать:</strong> <code>.github/workflows/deploy.yml</code> в репо трекера; <code>/opt/tracker/rollback.sh</code> на сервере; секреты - GitHub → Settings → Secrets and variables → Actions.</p>
+<p><strong>Чем запустить:</strong> <code>git push</code> в main. Вручную - вкладка Actions → Run workflow.</p>
+<p><strong>Где смотреть результат:</strong>
+- GitHub, вкладка Actions: каждый шаг раскрывается, лог как в терминале.
+- На сервере: <code>journalctl -u tracker -n 30</code>, <code>curl localhost:8000/health</code>, <code>git -C /opt/tracker log -1</code>.</p>
+<p><strong>Как понять, что получилось:</strong> после push зелёная галочка, на сервере новая версия отвечает на <code>/health</code>; сломал тест - деплой не пошёл, старая версия осталась; <code>rollback.sh</code> возвращает предыдущую за секунды.</p>
+<h2 id="_3">📖 Теория</h2>
+<h3 id="_4">Что означают буквы</h3>
+<table>
+<thead>
+<tr>
+<th>Термин</th>
+<th>Расшифровка</th>
+<th>Смысл</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>CI</strong></td>
+<td>Continuous Integration</td>
+<td>каждый коммит автоматически собирается и проверяется тестами</td>
+</tr>
+<tr>
+<td><strong>CD (Delivery)</strong></td>
+<td>Continuous Delivery</td>
+<td>артефакт всегда готов к выкатке, кнопку жмёт человек</td>
+</tr>
+<tr>
+<td><strong>CD (Deployment)</strong></td>
+<td>Continuous Deployment</td>
+<td>выкатка тоже автоматическая, без человека</td>
+</tr>
+</tbody>
+</table>
+<p>⚠️ Delivery и Deployment путают постоянно. Разница в одном: кто нажимает кнопку на прод. В банках почти всегда Delivery - выкатка требует согласования и окна.</p>
+<h3 id="_5">Стадии типового пайплайна</h3>
+<ol>
+<li><strong>Build</strong> - собрать образ или пакет.</li>
+<li><strong>Test</strong> - прогнать тесты, линтеры, проверку типов.</li>
+<li><strong>Scan</strong> - проверить зависимости и образ на уязвимости.</li>
+<li><strong>Publish</strong> - положить артефакт в реестр с тегом.</li>
+<li><strong>Deploy</strong> - выкатить на стенд, потом на прод.</li>
+</ol>
+<p><strong>Ключевой принцип: собираем один раз, катим везде.</strong> Один и тот же артефакт проходит стенд, препрод и прод. Пересборка под каждое окружение означает, что на проде окажется не то, что тестировали.</p>
+<h3 id="_6">Стратегии выкатки</h3>
+<table>
+<thead>
+<tr>
+<th>Стратегия</th>
+<th>Как</th>
+<th>Простой</th>
+<th>Откат</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Recreate</strong></td>
+<td>погасить старое, поднять новое</td>
+<td>есть</td>
+<td>перевыкатка</td>
+</tr>
+<tr>
+<td><strong>Rolling</strong></td>
+<td>заменять по одному экземпляру</td>
+<td>нет</td>
+<td>обратный rolling</td>
+</tr>
+<tr>
+<td><strong>Blue-Green</strong></td>
+<td>поднять полную копию, переключить трафик</td>
+<td>нет</td>
+<td>переключить обратно, секунды</td>
+</tr>
+<tr>
+<td><strong>Canary</strong></td>
+<td>пустить 5% трафика на новое, смотреть метрики</td>
+<td>нет</td>
+<td>убрать канарейку</td>
+</tr>
+</tbody>
+</table>
+<p>Blue-Green требует двойных ресурсов. Canary требует хорошего мониторинга, иначе непонятно, по чему судить.</p>
+<h3 id="_7">Секреты</h3>
+<p>⚠️ Пароли и токены <strong>никогда не лежат в репозитории</strong>. Даже в приватном: репозиторий переезжает, форкается, попадает в бэкапы. Правильные места: секреты CI-системы, Vault, переменные окружения на сервере с правами <code>600</code>.</p>
+<p>Проверка своего репозитория на утёкшее:</p>
+<pre><code class="language-bash">git log -p | grep -iE &quot;password|token|secret|api_key&quot; | head
+</code></pre>
+<h2 id="_8">🔧 Практика</h2>
+<p><strong>1. Написать пайплайн GitHub Actions</strong> - файл <code>.github/workflows/deploy.yml</code>:</p>
+<pre><code class="language-yaml">name: Deploy tracker
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install -r requirements.txt
+      - run: ruff check .
+      - run: pytest -q
+
+  deploy:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Выкатка по SSH
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.STAND_HOST }}
+          username: ${{ secrets.STAND_USER }}
+          key: ${{ secrets.STAND_SSH_KEY }}
+          script: |
+            cd /opt/tracker
+            git pull --ff-only
+            .venv/bin/pip install -r requirements.txt
+            sudo systemctl restart tracker
+            sleep 3
+            curl -sf http://127.0.0.1:8000/health || exit 1
+</code></pre>
+<p><strong>Что тут важно:</strong>
+- <code>needs: test</code> - деплой идёт только после зелёных тестов;
+- ключ и хост лежат в секретах репозитория, а не в файле;
+- <strong>проверка после выкатки</strong> через <code>/health</code> с <code>exit 1</code> - без неё пайплайн зелёный, а сервис лежит.</p>
+<p><strong>2. Добавить эндпоинт здоровья в трекер:</strong></p>
+<pre><code class="language-python">@app.get(&quot;/health&quot;)
+def health():
+    &quot;&quot;&quot;Проверяет то, без чего сервис бесполезен: живую базу.&quot;&quot;&quot;
+    with SessionLocal() as s:
+        s.execute(text(&quot;SELECT 1&quot;))
+    return {&quot;status&quot;: &quot;ok&quot;}
+</code></pre>
+<p>⚠️ Проверка, которая всегда возвращает <code>ok</code>, бесполезна. Живость означает, что сервис делает работу: ходит в базу, проверяет очередь.</p>
+<p><strong>3. Написать скрипт отката</strong> <code>/opt/tracker/rollback.sh</code>:</p>
+<pre><code class="language-bash">#!/usr/bin/env bash
+set -euo pipefail
+cd /opt/tracker
+PREV=$(git rev-parse HEAD~1)
+git checkout &quot;$PREV&quot;
+.venv/bin/pip install -r requirements.txt
+sudo systemctl restart tracker
+sleep 3
+curl -sf http://127.0.0.1:8000/health &amp;&amp; echo &quot;откат на $PREV выполнен&quot;
+</code></pre>
+<h2 id="_9">💥 Сломай намеренно</h2>
+<p><strong>1. Сломать тест</strong> и увидеть, что деплой не запустился. Проверить, что на сервере осталась старая версия.</p>
+<p><strong>2. Выкатить заведомо битый код</strong> (синтаксическая ошибка после тестов), увидеть, как <code>/health</code> возвращает ошибку и пайплайн краснеет.</p>
+<p><strong>3. Прогнать откат</strong> из скрипта выше и убедиться, что сервис вернулся.</p>
+<p><strong>4. Убрать <code>needs: test</code></strong> и посмотреть, как деплой уезжает параллельно с падающими тестами. Вернуть обратно.</p>
+<p><strong>5. Положить пароль в код</strong>, закоммитить, потом попробовать удалить: <code>git log -p | grep пароль</code> покажет, что он остался в истории. Вывод: утёкший секрет надо менять, а не «убирать из репозитория».</p>
+<h2 id="_10">✅ Задание</h2>
+<ul>
+<li>Пуш в main запускает тесты, при зелёных - выкатывает на стенд.</li>
+<li>После выкатки автоматически дёргается <code>/health</code>, при ошибке пайплайн красный.</li>
+<li>Есть рабочий скрипт отката, проверенный вживую.</li>
+<li>Ни одного секрета в репозитории.</li>
+</ul>
+<p><strong>Критерий готовности:</strong> можешь показать историю запусков, где виден и зелёный прогон, и красный с падением на тестах.</p>
+<h2 id="_11">🌍 Из жизни</h2>
+<p><strong>Опыт Ивана.</strong> В ТРИНФИКО релизы накатывались через Jenkins, а после накатки проверка шла через Postman и запросами к базе. Это ровно та же логика, что <code>/health</code> в пайплайне выше, только руками. На собеседовании стоит сказать именно так: «проверка после выкатки у меня была всегда, сначала руками через Postman и SQL, теперь автоматически».</p>
+<p><strong>Про «зелёный пайплайн при лежащем сервисе».</strong> Самая обидная категория инцидентов: деплой прошёл, статус зелёный, а приложение не поднялось. Причина всегда одна - в пайплайне нет проверки после выкатки. Один <code>curl</code> с <code>exit 1</code> закрывает этот класс проблем целиком.</p>
+<p><strong>Про утёкшие секреты.</strong> Боты сканируют публичные репозитории и находят ключи облаков за минуты. Известны случаи со счетами на десятки тысяч долларов за майнинг на украденных ключах. Поэтому правило жёсткое: секрет, попавший в git, считается скомпрометированным навсегда и подлежит замене.</p>
+<h2 id="_12">❓ Вопросы с ответами</h2>
+<p><strong>Чем Continuous Delivery отличается от Continuous Deployment?</strong></p>
+<blockquote>
+<p>Кто нажимает кнопку на прод. Delivery - артефакт всегда готов, выкатывает человек. Deployment - выкатка автоматическая. В банках обычно Delivery, потому что нужны согласование и окно.</p>
+</blockquote>
+<p><strong>Что должно быть в пайплайне обязательно?</strong></p>
+<blockquote>
+<p>Тесты до сборки артефакта, один артефакт на все окружения, проверка живости после выкатки и подготовленный откат. Без проверки после выкатки пайплайн может быть зелёным при лежащем сервисе.</p>
+</blockquote>
+<p><strong>Как выкатывать без простоя?</strong></p>
+<blockquote>
+<p>Rolling, если экземпляров несколько. Blue-Green, если нужен мгновенный откат и есть ресурсы на вторую копию. Canary, если есть мониторинг, по которому видно, что новой версии стало хуже.</p>
+</blockquote>
+<p><strong>Где хранить секреты?</strong></p>
+<blockquote>
+<p>В секретах CI-системы или в Vault, на сервере - в переменных окружения или файле с правами 600. В репозитории никогда: он форкается, переезжает, попадает в бэкапы. Секрет, попавший в git, считаю скомпрометированным и меняю.</p>
+</blockquote>
+<p><strong>Как откатить неудачный релиз?</strong></p>
+<blockquote>
+<p>Заранее подготовленным сценарием, а не импровизацией. У меня это скрипт, который откатывает на предыдущий коммит, переставляет зависимости, перезапускает сервис и проверяет здоровье. Откат надо прогонять на стенде, иначе в момент аварии выяснится, что он не работает.</p>
+</blockquote></article>
+    <aside class="aside">
+      <strong>В этом документе</strong>
+      <div class="toc"><div class="toc">
+<ul>
+<li><a href="#_1">🎭 Аналогия</a></li>
+<li><a href="#_2">🗺 Карта мест</a></li>
+<li><a href="#_3">📖 Теория</a><ul>
+<li><a href="#_4">Что означают буквы</a></li>
+<li><a href="#_5">Стадии типового пайплайна</a></li>
+<li><a href="#_6">Стратегии выкатки</a></li>
+<li><a href="#_7">Секреты</a></li>
+</ul>
+</li>
+<li><a href="#_8">🔧 Практика</a></li>
+<li><a href="#_9">💥 Сломай намеренно</a></li>
+<li><a href="#_10">✅ Задание</a></li>
+<li><a href="#_11">🌍 Из жизни</a></li>
+<li><a href="#_12">❓ Вопросы с ответами</a></li>
+</ul>
+</div>
+</div>
+    </aside>
+  </div>
+</main>
+
+
+<script>
+const ROOT = "..";
+
+// ---- тема
+const themeBtn = document.getElementById("theme");
+const paint = () => {
+  const dark = document.documentElement.getAttribute("data-theme") === "dark";
+  themeBtn.textContent = dark ? "☀" : "☾";
+};
+paint();
+themeBtn.addEventListener("click", () => {
+  const next = document.documentElement.getAttribute("data-theme") === "dark" ? "light" : "dark";
+  document.documentElement.setAttribute("data-theme", next);
+  try { localStorage.setItem("kb-theme", next); } catch (e) {}
+  paint();
+});
+
+// ---- поиск
+let index = null;
+const box = document.getElementById("results");
+const hits = document.getElementById("hits");
+const head = box.querySelector("h3");
+const input = document.getElementById("q");
+
+async function ensureIndex() {
+  if (index) return index;
+  const res = await fetch(ROOT + "/search-index.json");
+  index = await res.json();
+  return index;
+}
+
+const esc = (s) => (s || "").replace(/[&<>]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
+
+function hi(text, query) {
+  const i = text.toLowerCase().indexOf(query);
+  if (i < 0) return esc(text);
+  return esc(text.slice(0, i)) + "<mark>" + esc(text.slice(i, i + query.length)) + "</mark>" + esc(text.slice(i + query.length));
+}
+
+input.addEventListener("input", async () => {
+  const q = input.value.trim().toLowerCase();
+  if (q.length < 2) { box.hidden = true; return; }
+  const data = await ensureIndex();
+  const found = [];
+  for (const d of data) {
+    const inTitle = d.title.toLowerCase().includes(q);
+    const inSum = (d.summary || "").toLowerCase().includes(q);
+    const heads = (d.heads || []).filter(h => h.toLowerCase().includes(q));
+    if (inTitle || inSum || heads.length) {
+      found.push({ d, heads, rank: inTitle ? 0 : heads.length ? 1 : 2 });
+    }
+  }
+  found.sort((a, b) => a.rank - b.rank);
+  head.textContent = found.length ? `Нашлось: ${found.length}` : "Ничего не нашлось";
+  hits.innerHTML = found.slice(0, 40).map(({ d, heads }) =>
+    `<a class="hit" href="${ROOT}/d/${d.slug}.html">
+       <b>${hi(d.title, q)}</b>
+       <span>${heads.length ? "→ " + heads.slice(0, 3).map(h => hi(h, q)).join(" · ") : esc(d.summary || "")}</span>
+     </a>`).join("");
+  box.hidden = false;
+});
+
+input.addEventListener("keydown", (e) => { if (e.key === "Escape") { input.value = ""; box.hidden = true; input.blur(); } });
+document.addEventListener("keydown", (e) => {
+  if (e.key === "/" && document.activeElement !== input) { e.preventDefault(); input.focus(); }
+});
+</script>
+</body>
+</html>

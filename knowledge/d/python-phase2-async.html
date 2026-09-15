@@ -1,0 +1,281 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>🟢 Фаза 2. Async и параллелизм (6 часов) - База знаний</title>
+<link rel="stylesheet" href="../kb.css">
+<script>
+  // Тему ставим до первой отрисовки, иначе на тёмной системе мигает белым.
+  try {
+    var t = localStorage.getItem("kb-theme");
+    if (!t) t = matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+    document.documentElement.setAttribute("data-theme", t);
+  } catch (e) {}
+</script>
+</head>
+<body>
+
+<header class="top">
+  <div class="top-in">
+    <a class="brand" href="../index.html">База <span>знаний</span></a>
+    <span class="grow"></span>
+    <input id="q" type="search" placeholder="Поиск по всем материалам…" autocomplete="off">
+    <button class="icon-btn" id="theme" type="button" title="Тема"></button>
+  </div>
+</header>
+
+<div id="results" hidden><div class="wrap-r"><h3></h3><div id="hits"></div></div></div>
+
+<main class="wrap">
+  <div class="doc-head">
+    <div class="crumb"><a href="../index.html#reference">Справочники</a></div>
+    <h1>🟢 Фаза 2. Async и параллелизм (6 часов)</h1>
+    <div class="meta">159 строк · источник <code>l2code/Python_Phase2_Async.md</code></div>
+  </div>
+
+  <div class="layout">
+    <article class="prose"><blockquote>
+<p>📖 Фаза роадмапа <strong>«Python Backend»</strong>. Оглавление и статус - в <code>PythonBackend_Roadmap.md</code>.
+Каждая фаза самодостаточна: 🎭 аналогия → 📖 теория → 🔧 практика → 💥 сломай намеренно → ✅ задание → 🌍 из жизни → ❓ вопросы с ответами.</p>
+<p>Цель: понимать разницу между asyncio, threading и multiprocessing и не путать применение.</p>
+</blockquote>
+<h2 id="_1">🎭 Аналогия</h2>
+<p>Одна касса в магазине. Пока кассир пробивает товар, очередь стоит - это счёт, процессор занят. Но если кассир ждёт, пока клиент найдёт карту, он успевает обслужить соседнего - это ожидание, ввод-вывод.</p>
+<p><code>asyncio</code> - один кассир, который умеет переключаться на время ожидания. <code>multiprocessing</code> - несколько касс. <code>threading</code> - один кассир с несколькими окошками, помогает только на ожидании.</p>
+<h2 id="_2">📖 Теория</h2>
+<h3 id="gil">GIL</h3>
+<p>Global Interpreter Lock - блокировка, из-за которой в один момент байткод Python выполняет только один поток. На вводе-выводе GIL отпускается, поэтому потоки там работают. На счёте не отпускается, поэтому не работают.</p>
+<table>
+<thead>
+<tr>
+<th>Задача</th>
+<th>Инструмент</th>
+<th>Почему</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Сетевые запросы, файлы, база</td>
+<td><code>asyncio</code></td>
+<td>сотни одновременных ожиданий на одном потоке</td>
+</tr>
+<tr>
+<td>То же, но библиотека синхронная</td>
+<td><code>threading</code></td>
+<td>GIL отпускается на вводе-выводе</td>
+</tr>
+<tr>
+<td>Вычисления, обработка данных</td>
+<td><code>multiprocessing</code></td>
+<td>отдельные процессы, каждый со своим GIL</td>
+</tr>
+<tr>
+<td>Смешанное</td>
+<td><code>asyncio</code> плюс <code>run_in_executor</code></td>
+<td>тяжёлое уходит в пул</td>
+</tr>
+</tbody>
+</table>
+<p>⚠️ В 3.13 появился экспериментальный режим без GIL (free-threaded). Упомянуть можно, полагаться пока нет.</p>
+<h3 id="asyncio">asyncio</h3>
+<pre><code class="language-python">import asyncio, httpx
+
+async def fetch(client: httpx.AsyncClient, url: str) -&gt; dict:
+    response = await client.get(url, timeout=10)
+    response.raise_for_status()
+    return response.json()
+
+async def main(urls: list[str]) -&gt; list[dict]:
+    limit = asyncio.Semaphore(10)          # не больше 10 одновременно
+
+    async def guarded(client, url):
+        async with limit:
+            return await fetch(client, url)
+
+    async with httpx.AsyncClient() as client:
+        tasks = [guarded(client, u) for u in urls]
+        return await asyncio.gather(*tasks, return_exceptions=True)
+
+asyncio.run(main(urls))
+</code></pre>
+<p><strong>Что тут важно:</strong>
+- <code>Semaphore</code> ограничивает одновременность. Без него сто задач уйдут разом и получат отказ от сервера.
+- <code>return_exceptions=True</code> не даёт одной упавшей задаче обрушить весь <code>gather</code>.
+- Таймаут обязателен на каждом сетевом вызове.</p>
+<p><strong>Мост от C#:</strong> <code>async</code>/<code>await</code> тот же паттерн, <code>Task</code> соответствует корутине, <code>SemaphoreSlim</code> соответствует <code>asyncio.Semaphore</code>. Разница в рантайме: в C# потоки из пула, в Python один поток с циклом событий.</p>
+<h3 id="async">Главная ошибка async</h3>
+<pre><code class="language-python">async def bad():
+    time.sleep(5)          # БЛОКИРУЕТ весь цикл событий
+    requests.get(url)      # тоже блокирует
+
+async def good():
+    await asyncio.sleep(5)
+    async with httpx.AsyncClient() as c:
+        await c.get(url)
+</code></pre>
+<p>Одна синхронная блокирующая строка внутри корутины останавливает <strong>все</strong> остальные задачи. Внешне выглядит как «async не работает».</p>
+<p>Если библиотека только синхронная:</p>
+<pre><code class="language-python">result = await asyncio.to_thread(blocking_call, arg)
+</code></pre>
+<h3 id="_3">Отмена и таймауты</h3>
+<pre><code class="language-python">async with asyncio.timeout(30):        # 3.11+
+    await long_operation()
+
+task = asyncio.create_task(work())
+task.cancel()
+try:
+    await task
+except asyncio.CancelledError:
+    pass
+</code></pre>
+<p>Задача, созданная через <code>create_task</code>, должна где-то ожидаться. Иначе исключение внутри неё исчезнет молча, а сборщик мусора выдаст предупреждение <code>Task exception was never retrieved</code>.</p>
+<h3 id="threading-multiprocessing">threading и multiprocessing</h3>
+<pre><code class="language-python">from concurrent.futures import ThreadPoolExecutor, ProcessPoolExecutor
+
+with ThreadPoolExecutor(max_workers=20) as pool:
+    results = list(pool.map(check_host, hosts))       # ввод-вывод
+
+with ProcessPoolExecutor() as pool:
+    results = list(pool.map(heavy_calc, chunks))      # счёт
+</code></pre>
+<p>⚠️ У процессов аргументы и результаты сериализуются через pickle. Передавать туда открытые соединения и лямбды нельзя.</p>
+<h2 id="_4">🔧 Практика</h2>
+<p><strong>На разведчике:</strong>
+1. Переписать разбор вакансий на <code>asyncio</code> с <code>Semaphore</code> на 5 одновременных - hh не любит частых запросов.
+2. Добавить таймаут на каждый вызов и <code>return_exceptions=True</code> в <code>gather</code>.
+3. Прогнать замер: сколько занимал последовательный обход и сколько занимает асинхронный. <strong>Записать цифры.</strong></p>
+<p><strong>Отдельным скриптом:</strong>
+4. <code>check_hosts.py</code> из инфра-роадмапа переписать с <code>ThreadPoolExecutor</code> на <code>asyncio</code>, сравнить время и читаемость.</p>
+<h2 id="_5">💥 Сломай намеренно</h2>
+<ol>
+<li><strong>Вставить <code>time.sleep(3)</code> в корутину</strong> и посмотреть, как встают все параллельные задачи.</li>
+<li><strong>Убрать <code>Semaphore</code></strong> и запустить сто запросов разом - получить отказы или бан.</li>
+<li><strong>Убрать таймаут</strong> и подсунуть висящий адрес - получить вечное ожидание.</li>
+<li><strong>Создать задачу через <code>create_task</code> и не ожидать её</strong>, кинуть внутри исключение - убедиться, что оно исчезло молча.</li>
+<li><strong>Отдать в <code>ProcessPoolExecutor</code> лямбду</strong> - получить ошибку сериализации.</li>
+<li><strong>Посчитать что-то тяжёлое в <code>ThreadPoolExecutor</code></strong> и убедиться, что времени ушло столько же, сколько последовательно. Это GIL вживую.</li>
+</ol>
+<h2 id="_6">✅ Задание</h2>
+<p>Разведчик собирает вакансии асинхронно с ограничением одновременности и таймаутами. В README проекта записан замер: было столько-то, стало столько-то, на скольких вакансиях.</p>
+<p><strong>Критерий:</strong> объясняешь, почему выбран <code>asyncio</code>, а не потоки, и что произойдёт при синхронном вызове внутри корутины.</p>
+<h2 id="_7">🌍 Из жизни</h2>
+<p><strong>Про блокирующий вызов в корутине.</strong> Самая частая жалоба «переписали на async, быстрее не стало». Причина почти всегда одна: внутри остался синхронный <code>requests</code> или обращение к базе через обычный драйвер.</p>
+<p><strong>Про отсутствие ограничителя.</strong> Сто одновременных запросов к чужому сервису - это либо 429, либо блокировка по IP. Для hh.ru особенно: у него защита срабатывает быстро, и восстановление доступа занимает время.</p>
+<p><strong>Про GIL и собеседования.</strong> Вопрос про GIL задают почти всегда, когда в резюме есть Python. Плохой ответ - «это глобальная блокировка интерпретатора». Хороший - через практический вывод: потоки для ожидания, процессы для счёта.</p>
+<h2 id="_8">❓ Вопросы с ответами</h2>
+<p><strong>Что такое GIL и что он блокирует?</strong></p>
+<blockquote>
+<p>Блокировка, из-за которой байткод Python в один момент выполняет только один поток. На вводе-выводе она отпускается, поэтому потоки там помогают. На вычислениях не отпускается, поэтому там нужны процессы.</p>
+</blockquote>
+<p><strong>Когда asyncio, когда threading, когда multiprocessing?</strong></p>
+<blockquote>
+<p>Asyncio - когда много одновременных ожиданий и библиотеки асинхронные. Threading - то же, но библиотека синхронная и переписывать её нельзя. Multiprocessing - когда задача считает, а не ждёт.</p>
+</blockquote>
+<p><strong>Что произойдёт при <code>time.sleep()</code> внутри корутины?</strong></p>
+<blockquote>
+<p>Остановится весь цикл событий вместе со всеми остальными задачами. Нужен <code>await asyncio.sleep()</code>, а для синхронного кода без замены - <code>asyncio.to_thread</code>.</p>
+</blockquote>
+<p><strong>Как ограничить число одновременных запросов?</strong></p>
+<blockquote>
+<p><code>asyncio.Semaphore</code> вокруг вызова. Без него все задачи стартуют разом, и внешний сервис отвечает отказом. Это тот же принцип, что <code>SemaphoreSlim</code> в C#.</p>
+</blockquote>
+<p><strong>Что будет, если не дождаться задачу из <code>create_task</code>?</strong></p>
+<blockquote>
+<p>Исключение внутри неё исчезнет молча, а при сборке мусора появится предупреждение о непрочитанном исключении. Задачи надо собирать через <code>gather</code> или явно ожидать.</p>
+</blockquote></article>
+    <aside class="aside">
+      <strong>В этом документе</strong>
+      <div class="toc"><div class="toc">
+<ul>
+<li><a href="#_1">🎭 Аналогия</a></li>
+<li><a href="#_2">📖 Теория</a><ul>
+<li><a href="#gil">GIL</a></li>
+<li><a href="#asyncio">asyncio</a></li>
+<li><a href="#async">Главная ошибка async</a></li>
+<li><a href="#_3">Отмена и таймауты</a></li>
+<li><a href="#threading-multiprocessing">threading и multiprocessing</a></li>
+</ul>
+</li>
+<li><a href="#_4">🔧 Практика</a></li>
+<li><a href="#_5">💥 Сломай намеренно</a></li>
+<li><a href="#_6">✅ Задание</a></li>
+<li><a href="#_7">🌍 Из жизни</a></li>
+<li><a href="#_8">❓ Вопросы с ответами</a></li>
+</ul>
+</div>
+</div>
+    </aside>
+  </div>
+</main>
+
+
+<script>
+const ROOT = "..";
+
+// ---- тема
+const themeBtn = document.getElementById("theme");
+const paint = () => {
+  const dark = document.documentElement.getAttribute("data-theme") === "dark";
+  themeBtn.textContent = dark ? "☀" : "☾";
+};
+paint();
+themeBtn.addEventListener("click", () => {
+  const next = document.documentElement.getAttribute("data-theme") === "dark" ? "light" : "dark";
+  document.documentElement.setAttribute("data-theme", next);
+  try { localStorage.setItem("kb-theme", next); } catch (e) {}
+  paint();
+});
+
+// ---- поиск
+let index = null;
+const box = document.getElementById("results");
+const hits = document.getElementById("hits");
+const head = box.querySelector("h3");
+const input = document.getElementById("q");
+
+async function ensureIndex() {
+  if (index) return index;
+  const res = await fetch(ROOT + "/search-index.json");
+  index = await res.json();
+  return index;
+}
+
+const esc = (s) => (s || "").replace(/[&<>]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
+
+function hi(text, query) {
+  const i = text.toLowerCase().indexOf(query);
+  if (i < 0) return esc(text);
+  return esc(text.slice(0, i)) + "<mark>" + esc(text.slice(i, i + query.length)) + "</mark>" + esc(text.slice(i + query.length));
+}
+
+input.addEventListener("input", async () => {
+  const q = input.value.trim().toLowerCase();
+  if (q.length < 2) { box.hidden = true; return; }
+  const data = await ensureIndex();
+  const found = [];
+  for (const d of data) {
+    const inTitle = d.title.toLowerCase().includes(q);
+    const inSum = (d.summary || "").toLowerCase().includes(q);
+    const heads = (d.heads || []).filter(h => h.toLowerCase().includes(q));
+    if (inTitle || inSum || heads.length) {
+      found.push({ d, heads, rank: inTitle ? 0 : heads.length ? 1 : 2 });
+    }
+  }
+  found.sort((a, b) => a.rank - b.rank);
+  head.textContent = found.length ? `Нашлось: ${found.length}` : "Ничего не нашлось";
+  hits.innerHTML = found.slice(0, 40).map(({ d, heads }) =>
+    `<a class="hit" href="${ROOT}/d/${d.slug}.html">
+       <b>${hi(d.title, q)}</b>
+       <span>${heads.length ? "→ " + heads.slice(0, 3).map(h => hi(h, q)).join(" · ") : esc(d.summary || "")}</span>
+     </a>`).join("");
+  box.hidden = false;
+});
+
+input.addEventListener("keydown", (e) => { if (e.key === "Escape") { input.value = ""; box.hidden = true; input.blur(); } });
+document.addEventListener("keydown", (e) => {
+  if (e.key === "/" && document.activeElement !== input) { e.preventDefault(); input.focus(); }
+});
+</script>
+</body>
+</html>

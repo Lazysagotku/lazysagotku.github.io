@@ -1,0 +1,712 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>🐘 Слой 4. Эксплуатация PostgreSQL (дни 11-13, 5 часов) - База знаний</title>
+<link rel="stylesheet" href="../kb.css">
+<script>
+  // Тему ставим до первой отрисовки, иначе на тёмной системе мигает белым.
+  try {
+    var t = localStorage.getItem("kb-theme");
+    if (!t) t = matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+    document.documentElement.setAttribute("data-theme", t);
+  } catch (e) {}
+</script>
+</head>
+<body>
+
+<header class="top">
+  <div class="top-in">
+    <a class="brand" href="../index.html">База <span>знаний</span></a>
+    <span class="grow"></span>
+    <input id="q" type="search" placeholder="Поиск по всем материалам…" autocomplete="off">
+    <button class="icon-btn" id="theme" type="button" title="Тема"></button>
+  </div>
+</header>
+
+<div id="results" hidden><div class="wrap-r"><h3></h3><div id="hits"></div></div></div>
+
+<main class="wrap">
+  <div class="doc-head">
+    <div class="crumb"><a href="../index.html#reference">Справочники</a></div>
+    <h1>🐘 Слой 4. Эксплуатация PostgreSQL (дни 11-13, 5 часов)</h1>
+    <div class="meta">498 строк · источник <code>l2code/Infra_Layer4_PostgreSQL.md</code></div>
+  </div>
+
+  <div class="layout">
+    <article class="prose"><blockquote>
+<p>📖 Слой роадмапа <strong>«Стенд с нуля»</strong>. Оглавление, срез под Сбер и календарь - в <code>Roadmap_Infra_Sept2026.md</code>.
+Каждый слой самодостаточен: 🎭 аналогия → 🗺 карта мест → 📖 теория → 🔧 практика → 💥 сломай намеренно → ✅ задание → 🌍 из жизни → ❓ вопросы с ответами.</p>
+<p>Добавлен 10.09. Прежний роадмап был чисто инфраструктурным и PostgreSQL в слоях не имел - при том, что база стоит третьим требованием у Сбера и остаётся сильнейшей стороной Ивана.</p>
+</blockquote>
+<h2 id="_1">🎭 Аналогия</h2>
+<p>Разница между водителем и механиком. Писать SQL умеет водитель: сел, поехал, доехал. Держать базу живой умеет механик - он смотрит под капот, знает, что греется, и меняет масло до поломки.</p>
+<p><strong>Вторая аналогия, для MVCC.</strong> Черновик с правками. При исправлении строки Postgres не стирает старую версию, а пишет новую и помечает старую отмершей. Пока идущие транзакции могут её видеть, она лежит. Уборщик приходит потом.</p>
+<p><strong>Третья, для планировщика.</strong> Навигатор. <code>EXPLAIN</code> показывает предполагаемый маршрут, <code>EXPLAIN ANALYZE</code> прогоняет машину и говорит, сколько заняло на самом деле. Пробки видны только во втором случае.</p>
+<h2 id="_2">🗺 Карта мест</h2>
+<p><strong>Сделать:</strong> увидеть, что в базе прямо сейчас; прочитать план запроса и ускорить его индексом; регламентный расчёт джобом; бэкап и восстановление в отдельную базу.</p>
+<p><strong>Понять:</strong> база - это процессы и файлы, как любой сервис. План запроса объясняет «почему медленно» лучше любой догадки. Три причины большинства инцидентов с базой: блокировки, раздувание таблиц без VACUUM, кончившиеся соединения.</p>
+<p><strong>Где писать:</strong> SQL и служебные запросы - в <code>psql</code>; настройки - <code>ALTER SYSTEM SET</code> или <code>postgresql.conf</code>; джобы - <code>pg_cron</code> или <code>crontab</code>; бэкап - скрипт с <code>pg_dump</code> (или pgBackRest).</p>
+<p><strong>Чем запустить:</strong> <code>psql -U пользователь -d база</code>; внутри <code>\timing on</code>, потом <code>EXPLAIN (ANALYZE, BUFFERS) запрос;</code>. После смены конфига - <code>sudo systemctl restart postgresql</code> (часть параметров - <code>SELECT pg_reload_conf();</code> без рестарта).</p>
+<p><strong>Где смотреть результат:</strong></p>
+<pre><code class="language-sql">SELECT pid, state, wait_event, query FROM pg_stat_activity WHERE state &lt;&gt; 'idle';  -- кто что делает
+SELECT * FROM pg_stat_statements ORDER BY total_exec_time DESC LIMIT 10;         -- самые тяжёлые запросы
+SELECT * FROM pg_locks WHERE NOT granted;                                          -- кто кого ждёт
+</code></pre>
+<p>Логи: <code>/var/log/postgresql/</code>. Метрики: postgres_exporter в Grafana.</p>
+<p><strong>Как понять, что получилось:</strong> один и тот же запрос в <code>EXPLAIN ANALYZE</code> до индекса - Seq Scan и сотни миллисекунд, после - Index Scan и единицы; копия, поднятая из бэкапа, отвечает на <code>SELECT count(*)</code> тем же числом, что оригинал.</p>
+<h2 id="_3">📖 Теория</h2>
+<h3 id="postgres">Как Postgres устроен внутри</h3>
+<table>
+<thead>
+<tr>
+<th>Компонент</th>
+<th>Что делает</th>
+<th>Почему это важно знать</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Backend-процесс</strong></td>
+<td>по одному на каждое соединение</td>
+<td>тысяча соединений = тысяча процессов, отсюда нужен пул</td>
+</tr>
+<tr>
+<td><strong>shared_buffers</strong></td>
+<td>кэш страниц в памяти</td>
+<td>обычно 25% ОЗУ, больше не всегда лучше</td>
+</tr>
+<tr>
+<td><strong>WAL</strong></td>
+<td>журнал упреждающей записи</td>
+<td>сначала пишем в журнал, потом в файлы данных</td>
+</tr>
+<tr>
+<td><strong>Checkpointer</strong></td>
+<td>сбрасывает грязные страницы на диск</td>
+<td>всплеск ввода-вывода в момент чекпоинта</td>
+</tr>
+<tr>
+<td><strong>Autovacuum</strong></td>
+<td>убирает мёртвые версии строк</td>
+<td>не справился - таблица распухла</td>
+</tr>
+<tr>
+<td><strong>WAL sender</strong></td>
+<td>шлёт журнал на реплики</td>
+<td>основа потоковой репликации</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Зачем WAL.</strong> Запись в журнал последовательная и быстрая, запись в файлы данных случайная и медленная. Сначала фиксируем изменение в журнале, отвечаем клиенту, а страницы сбрасываем позже. При падении база проигрывает журнал и восстанавливается. Тот же журнал уезжает на реплики и в архив для восстановления на точку времени.</p>
+<h3 id="-">Чтение плана - что смотреть по порядку</h3>
+<pre><code class="language-sql">EXPLAIN (ANALYZE, BUFFERS) SELECT ...;
+</code></pre>
+<p>⚠️ <code>ANALYZE</code> действительно выполняет запрос. Для <code>UPDATE</code> и <code>DELETE</code> оборачивать:</p>
+<pre><code class="language-sql">BEGIN; EXPLAIN ANALYZE UPDATE ...; ROLLBACK;
+</code></pre>
+<ol>
+<li><strong>Seq Scan там, где ждал Index Scan.</strong> Полный проход. Причины: индекса нет; индекс есть, но не подходит под условие; планировщик решил, что строк много и последовательное чтение дешевле.</li>
+<li><strong>Расхождение <code>rows=</code> оценённых и <code>actual rows=</code>.</strong> Мимо в разы - статистика устарела, нужен <code>ANALYZE таблица</code>. Планировщик решает по статистике, и врущая статистика даёт плохой план при живых индексах.</li>
+<li><strong>Nested Loop на больших объёмах.</strong> Для маленьких выборок норма, для больших обычно и есть тормоз.</li>
+<li><strong><code>Rows Removed by Filter</code>.</strong> Прочитали много, выкинули почти всё - явный признак недостающего индекса.</li>
+<li><strong>BUFFERS: <code>shared read</code> против <code>shared hit</code>.</strong> <code>hit</code> из кэша, <code>read</code> с диска. Много <code>read</code> означает, что данные не помещаются в память.</li>
+</ol>
+<table>
+<thead>
+<tr>
+<th>Узел</th>
+<th>Что делает</th>
+<th>Когда тревожно</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Seq Scan</code></td>
+<td>читает таблицу целиком</td>
+<td>на большой таблице с узким фильтром</td>
+</tr>
+<tr>
+<td><code>Index Scan</code></td>
+<td>по индексу, потом в таблицу</td>
+<td>норма</td>
+</tr>
+<tr>
+<td><code>Index Only Scan</code></td>
+<td>всё нужное есть в индексе</td>
+<td>лучший случай</td>
+</tr>
+<tr>
+<td><code>Bitmap Heap Scan</code></td>
+<td>битмап по индексу, потом страницы</td>
+<td>норма при средней выборке</td>
+</tr>
+<tr>
+<td><code>Nested Loop</code></td>
+<td>для каждой строки слева ищет справа</td>
+<td>плохо на больших объёмах</td>
+</tr>
+<tr>
+<td><code>Hash Join</code></td>
+<td>строит хеш-таблицу</td>
+<td>норма</td>
+</tr>
+<tr>
+<td><code>Sort</code></td>
+<td>сортирует</td>
+<td>смотреть <code>Sort Method</code>: <code>external merge Disk</code> плохо</td>
+</tr>
+</tbody>
+</table>
+<h3 id="_4">🔥 Оптимизация на конкретных примерах</h3>
+<p>Это то, что просят разобрать вслух. Каждый случай надо узнавать по симптому.</p>
+<p><strong>Случай 1. Функция на колонке убивает индекс.</strong></p>
+<pre><code class="language-sql">-- ПЛОХО: индекс по created_at не используется
+SELECT * FROM events WHERE date(created_at) = '2026-09-10';
+
+-- ХОРОШО: диапазон, индекс работает
+SELECT * FROM events
+WHERE created_at &gt;= '2026-09-10' AND created_at &lt; '2026-09-11';
+</code></pre>
+<p>Обычный индекс хранит значения колонки, а не результат функции от неё. Альтернатива - индекс по выражению: <code>CREATE INDEX ON events (date(created_at));</code></p>
+<p><strong>Случай 2. Поиск по подстроке.</strong></p>
+<pre><code class="language-sql">-- btree не работает: совпадение не с начала
+SELECT * FROM users WHERE name ILIKE '%иван%';
+</code></pre>
+<p>Решение - триграммный индекс:</p>
+<pre><code class="language-sql">CREATE EXTENSION pg_trgm;
+CREATE INDEX ON users USING gin (name gin_trgm_ops);
+</code></pre>
+<p>Для <code>ILIKE 'иван%'</code> (совпадение с начала) хватит обычного btree с классом <code>text_pattern_ops</code>.</p>
+<p><strong>Случай 3. OFFSET на глубоких страницах.</strong></p>
+<pre><code class="language-sql">-- ПЛОХО: чтобы отдать 20 строк, читает и выбрасывает 100000
+SELECT * FROM vacancies ORDER BY id LIMIT 20 OFFSET 100000;
+
+-- ХОРОШО: keyset pagination, читает ровно 20
+SELECT * FROM vacancies WHERE id &gt; 100000 ORDER BY id LIMIT 20;
+</code></pre>
+<p>Время <code>OFFSET</code> растёт линейно с номером страницы. На больших таблицах последние страницы открываются секундами.</p>
+<p><strong>Случай 4. <code>OR</code> мешает планировщику.</strong></p>
+<pre><code class="language-sql">-- ПЛОХО: часто уходит в Seq Scan
+SELECT * FROM finds WHERE employer = 'Сбер' OR name = 'DevOps';
+
+-- ХОРОШО: два индекса работают по отдельности
+SELECT * FROM finds WHERE employer = 'Сбер'
+UNION
+SELECT * FROM finds WHERE name = 'DevOps';
+</code></pre>
+<p><strong>Случай 5. <code>COUNT(*)</code> на большой таблице.</strong>
+Postgres обязан посчитать честно из-за MVCC - у разных транзакций разное число видимых строк. На миллионах это секунды.</p>
+<pre><code class="language-sql">-- приблизительно и мгновенно
+SELECT reltuples::bigint FROM pg_class WHERE relname = 'finds';
+</code></pre>
+<p>Для точного счёта на горячих таблицах держат отдельный счётчик, обновляемый триггером.</p>
+<p><strong>Случай 6. Порядок полей в составном индексе.</strong>
+Индекс <code>(a, b, c)</code> работает для условий по <code>a</code>, по <code>a, b</code>, по <code>a, b, c</code>. Для условия только по <code>b</code> он бесполезен - это <strong>правило левого префикса</strong>.</p>
+<pre><code class="language-sql">-- под запрос WHERE status = 'new' ORDER BY found_at DESC
+CREATE INDEX ON finds (status, found_at DESC);
+</code></pre>
+<p>Сначала колонка с равенством, потом колонка сортировки. Так индекс закрывает и фильтр, и <code>ORDER BY</code>.</p>
+<p><strong>Случай 7. N+1.</strong>
+Приложение делает один запрос за списком и потом по запросу на каждый элемент. Сто элементов - сто один запрос. Лечится <code>JOIN</code> или загрузкой пачкой через <code>WHERE id = ANY($1)</code>.</p>
+<p><strong>Случай 8. Частичный индекс.</strong></p>
+<pre><code class="language-sql">-- если запросы всегда с этим условием
+CREATE INDEX ON finds (found_at) WHERE status = 'new';
+</code></pre>
+<p>Меньше по размеру, быстрее, дешевле в обслуживании.</p>
+<p><strong>Чем индексы вредят.</strong> Каждый замедляет <code>INSERT</code>, <code>UPDATE</code>, <code>DELETE</code> и занимает место. Неиспользуемые надо находить:</p>
+<pre><code class="language-sql">SELECT relname, indexrelname, idx_scan, pg_size_pretty(pg_relation_size(indexrelid))
+FROM pg_stat_user_indexes
+WHERE idx_scan = 0
+ORDER BY pg_relation_size(indexrelid) DESC;
+</code></pre>
+<h3 id="_5">🕐 Джобы: регламентные расчёты</h3>
+<p>Для АСУ управления рыночными рисками это центральная тема. Расчёт риска идёт заданиями по расписанию: переоценка позиций на закрытие дня, пересчёт лимитов, стресс-тесты. Вопрос «что происходит, когда расчёт не успевает к сроку» - почти наверняка прозвучит.</p>
+<p><strong>Где живут джобы:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Механизм</th>
+<th>Где</th>
+<th>Плюсы</th>
+<th>Минусы</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>pg_cron</strong></td>
+<td>расширение внутри Postgres</td>
+<td>расписание рядом с данными, ничего не поднимать</td>
+<td>джоба падает вместе с базой, нет сложных зависимостей</td>
+</tr>
+<tr>
+<td><strong>cron ОС</strong></td>
+<td>системный планировщик</td>
+<td>просто, привычно</td>
+<td>урезанное окружение, нет зависимостей</td>
+</tr>
+<tr>
+<td><strong>systemd timer</strong></td>
+<td>системный</td>
+<td>логи в journald, зависимости, <code>Persistent</code></td>
+<td>только на одной машине</td>
+</tr>
+<tr>
+<td><strong>Airflow, Nifi</strong></td>
+<td>отдельный оркестратор</td>
+<td>графы зависимостей, повторы, история</td>
+<td>целая система в обслуживании</td>
+</tr>
+</tbody>
+</table>
+<p><strong>pg_cron на практике:</strong></p>
+<pre><code class="language-sql">CREATE EXTENSION pg_cron;
+
+-- пересчёт витрины каждую ночь в 02:00
+SELECT cron.schedule('refresh-risk', '0 2 * * *',
+                     $$ REFRESH MATERIALIZED VIEW CONCURRENTLY risk_summary $$);
+
+-- чистка старого раз в неделю
+SELECT cron.schedule('cleanup', '0 3 * * 0',
+                     $$ DELETE FROM events WHERE happened_at &lt; now() - interval '180 days' $$);
+
+-- посмотреть расписание и историю
+SELECT * FROM cron.job;
+SELECT * FROM cron.job_run_details ORDER BY start_time DESC LIMIT 20;
+
+SELECT cron.unschedule('cleanup');
+</code></pre>
+<p><strong>Пять правил джобы, которые надо назвать вслух:</strong></p>
+<ol>
+<li><strong>Идемпотентность.</strong> Повторный запуск не должен ломать и плодить. В загрузке это <code>ON CONFLICT DO NOTHING</code>, в пересчёте - полная перезапись периода вместо дописывания.</li>
+<li><strong>Защита от наложения.</strong> Джоба идёт дольше интервала - запустятся две копии. В ОС это <code>flock -n</code>, внутри базы - консультативная блокировка:
+   <code>sql
+   SELECT pg_try_advisory_lock(42);   -- false означает «уже идёт, выхожу»</code></li>
+<li><strong>Отметка о выполнении.</strong> Отдельная таблица с началом, концом, статусом и числом обработанных строк. Без неё невозможно ответить, отработала джоба или нет.</li>
+<li><strong>Пачками, а не одной транзакцией.</strong> Обновление миллиона строк одной транзакцией держит блокировки часами и раздувает таблицу. Резать на пачки по несколько тысяч с коммитом.</li>
+<li><strong>Мониторинг двух видов.</strong> Первый - «упала». Второй, который забывают, - <strong>«не запустилась»</strong>. Молчащая джоба выглядит как здоровая, пока кто-то не заметит устаревшие данные.</li>
+</ol>
+<p><strong>Таблица учёта запусков:</strong></p>
+<pre><code class="language-sql">CREATE TABLE job_runs (
+    id          bigserial PRIMARY KEY,
+    job_name    text NOT NULL,
+    started_at  timestamptz NOT NULL DEFAULT now(),
+    finished_at timestamptz,
+    status      text NOT NULL DEFAULT 'running',
+    rows_done   bigint,
+    error       text
+);
+
+-- алерт: джоба не отработала за последние сутки
+SELECT 'refresh-risk' AS job
+WHERE NOT EXISTS (
+    SELECT 1 FROM job_runs
+    WHERE job_name = 'refresh-risk'
+      AND status = 'ok'
+      AND finished_at &gt; now() - interval '25 hours'
+);
+</code></pre>
+<p><strong>Обработка пачками:</strong></p>
+<pre><code class="language-sql">DO $$
+DECLARE
+    moved integer;
+BEGIN
+    LOOP
+        WITH batch AS (
+            SELECT id FROM events
+            WHERE happened_at &lt; now() - interval '180 days'
+            LIMIT 5000
+        )
+        DELETE FROM events WHERE id IN (SELECT id FROM batch);
+        GET DIAGNOSTICS moved = ROW_COUNT;
+        EXIT WHEN moved = 0;
+        COMMIT;
+    END LOOP;
+END $$;
+</code></pre>
+<p><strong>«Что делать, когда расчёт не успевает к сроку»</strong> - готовый ответ:</p>
+<blockquote>
+<p>Сначала смотрю, это разовое отставание или тренд. Разовое - ищу, что помешало: блокировка от чужой транзакции, всплеск объёма, соседняя нагрузка. Тренд означает, что джоба переросла окно, и надо либо ускорять запрос, либо резать на части, либо переносить окно.</p>
+<p>Параллельно поднимаю вопрос про регламент: кого и когда уведомляем, есть ли деградированный режим - отдать вчерашние цифры с пометкой вместо ничего. Это решение бизнеса, но задать вопрос должен сопровождающий.</p>
+</blockquote>
+<h3 id="_6">Что происходит в базе прямо сейчас</h3>
+<pre><code class="language-sql">SELECT pid, usename, state, wait_event_type, wait_event,
+       now() - query_start AS длительность,
+       left(query, 120) AS запрос
+FROM pg_stat_activity
+WHERE state &lt;&gt; 'idle'
+ORDER BY query_start;
+</code></pre>
+<table>
+<thead>
+<tr>
+<th><code>state</code></th>
+<th>Значение</th>
+<th>Тревога</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>active</code></td>
+<td>выполняет запрос</td>
+<td>смотреть длительность</td>
+</tr>
+<tr>
+<td><code>idle</code></td>
+<td>простаивает между запросами</td>
+<td>норма</td>
+</tr>
+<tr>
+<td><code>idle in transaction</code></td>
+<td><strong>транзакция открыта, работы нет</strong></td>
+<td>держит блокировки, мешает vacuum</td>
+</tr>
+<tr>
+<td><code>idle in transaction (aborted)</code></td>
+<td>транзакция сломалась, никто не откатил</td>
+<td>то же самое</td>
+</tr>
+</tbody>
+</table>
+<p>⚠️ <code>idle in transaction</code> - причина номер один ситуации «база встала без нагрузки». Пока такая транзакция жива, autovacuum не может убирать мёртвые строки <strong>во всей базе</strong>.</p>
+<pre><code class="language-sql">-- висящие дольше пяти минут
+SELECT pid, now() - state_change AS висит, left(query, 100)
+FROM pg_stat_activity
+WHERE state LIKE 'idle in transaction%'
+  AND now() - state_change &gt; interval '5 minutes';
+
+SELECT pg_cancel_backend(pid);     -- отменить запрос, сессия жива
+SELECT pg_terminate_backend(pid);  -- закрыть соединение целиком
+</code></pre>
+<h3 id="_7">Блокировки</h3>
+<p><strong>Аналогия.</strong> Очередь в одну кабинку. Проблема не в тех, кто стоит, а в том, кто сидит внутри и не выходит.</p>
+<pre><code class="language-sql">SELECT blocked.pid    AS ждёт_pid,
+       blocked.query  AS ждёт_запрос,
+       blocking.pid   AS держит_pid,
+       blocking.query AS держит_запрос,
+       now() - blocked.query_start AS ждёт_уже
+FROM pg_stat_activity blocked
+JOIN pg_stat_activity blocking
+  ON blocking.pid = ANY(pg_blocking_pids(blocked.pid))
+WHERE blocked.wait_event_type = 'Lock';
+</code></pre>
+<p><code>pg_blocking_pids(pid)</code> сразу отдаёт список блокирующих. Знание её вместо ручного разбора <code>pg_locks</code> хорошо смотрится в ответе.</p>
+<p><strong>Что блокирует что:</strong>
+- <code>SELECT</code> берёт <code>ACCESS SHARE</code> - почти ничему не мешает;
+- <code>UPDATE</code> и <code>DELETE</code> берут <code>ROW EXCLUSIVE</code> - мешают изменению тех же строк;
+- <code>ALTER TABLE</code>, <code>VACUUM FULL</code>, <code>REINDEX</code> берут <code>ACCESS EXCLUSIVE</code> - <strong>блокируют даже чтение</strong>.</p>
+<p>⚠️ Отсюда правило релизов: миграции с <code>ALTER TABLE</code> идут в окно. Даже быстрый <code>ALTER</code> встанет в очередь за долгим <code>SELECT</code> и заблокирует всех, кто пришёл после него - очередь блокировок честная, обгонять нельзя.</p>
+<pre><code class="language-sql">SET lock_timeout = '5s';           -- не ждать блокировку дольше
+CREATE INDEX CONCURRENTLY ...;     -- строит индекс без блокировки записи
+</code></pre>
+<p><strong>Дедлок</strong> - две транзакции держат по ресурсу и просят чужой. Postgres обнаруживает сам и откатывает одну с ошибкой. Профилактика: обращаться к таблицам и строкам в одинаковом порядке во всём коде.</p>
+<h3 id="mvcc-vacuum-bloat">MVCC, VACUUM и bloat</h3>
+<ul>
+<li><strong>VACUUM</strong> помечает место от мёртвых версий свободным для повторного использования. Файл не уменьшается.</li>
+<li><strong>VACUUM FULL</strong> перестраивает таблицу и возвращает место системе, но берёт <code>ACCESS EXCLUSIVE</code> - только в окно.</li>
+<li><strong>autovacuum</strong> делает обычный VACUUM сам, по порогам изменённых строк.</li>
+</ul>
+<pre><code class="language-sql">SELECT relname,
+       n_live_tup AS живых,
+       n_dead_tup AS мёртвых,
+       round(n_dead_tup * 100.0 / NULLIF(n_live_tup + n_dead_tup, 0), 1) AS процент_мёртвых,
+       last_autovacuum, last_autoanalyze
+FROM pg_stat_user_tables
+ORDER BY n_dead_tup DESC LIMIT 20;
+</code></pre>
+<p>Больше 20 процентов мёртвых и старый <code>last_autovacuum</code> - autovacuum не справляется. Причины: мягкие пороги на горячей таблице; долгая транзакция или <code>idle in transaction</code>; реплика с <code>hot_standby_feedback</code>, удерживающая версии.</p>
+<pre><code class="language-sql">ALTER TABLE busy_table SET (autovacuum_vacuum_scale_factor = 0.02);
+</code></pre>
+<p><strong>Wraparound</strong> - счётчик транзакций 32-битный, и если vacuum не проходит очень долго, база останавливается для защиты данных. Мониторить через <code>age(datfrozenxid)</code>.</p>
+<h3 id="-_1">Индексы - типы</h3>
+<table>
+<thead>
+<tr>
+<th>Тип</th>
+<th>Для чего</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>B-tree</strong></td>
+<td>по умолчанию, сравнения и диапазоны</td>
+</tr>
+<tr>
+<td><strong>GIN</strong></td>
+<td>массивы, JSONB, полнотекстовый и триграммный поиск</td>
+</tr>
+<tr>
+<td><strong>GiST</strong></td>
+<td>геометрия, диапазоны, пересечения</td>
+</tr>
+<tr>
+<td><strong>BRIN</strong></td>
+<td>огромные физически упорядоченные таблицы, логи по времени, дёшев</td>
+</tr>
+<tr>
+<td><strong>Hash</strong></td>
+<td>только равенство, редко нужен</td>
+</tr>
+</tbody>
+</table>
+<h3 id="_8">Уровни изоляции</h3>
+<table>
+<thead>
+<tr>
+<th>Уровень</th>
+<th>Что может случиться</th>
+<th>В Postgres</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Read Uncommitted</td>
+<td>грязное чтение</td>
+<td>ведёт себя как Read Committed</td>
+</tr>
+<tr>
+<td><strong>Read Committed</strong></td>
+<td>неповторяемое чтение, фантомы</td>
+<td><strong>по умолчанию</strong></td>
+</tr>
+<tr>
+<td>Repeatable Read</td>
+<td>фантомов нет благодаря снимку</td>
+<td>доступен</td>
+</tr>
+<tr>
+<td>Serializable</td>
+<td>ничего</td>
+<td>ценой откатов при конфликте</td>
+</tr>
+</tbody>
+</table>
+<p>В Read Committed каждый оператор видит свой свежий снимок, поэтому два <code>SELECT</code> подряд в одной транзакции могут вернуть разное.</p>
+<h3 id="_9">Соединения и пул</h3>
+<p>Каждое соединение - отдельный процесс ОС со своей памятью. Тысяча соединений съест ресурсы, даже простаивая.</p>
+<p><strong>Режимы PgBouncer:</strong> <code>session</code> - соединение на всю сессию клиента; <code>transaction</code> - на одну транзакцию, самый экономный и самый частый; <code>statement</code> - на один оператор, ломает транзакции.</p>
+<h3 id="_10">Резервные копии и репликация</h3>
+<pre><code class="language-bash">pg_dump -Fc -d база &gt; база.dump      # логический дамп
+pg_restore -d база база.dump
+pg_basebackup -D /backup -Ft -z      # физическая копия кластера
+</code></pre>
+<p><strong>Логический дамп</strong> переносим между версиями, медленный на объёмах, восстановление на точку времени невозможно.
+<strong>Физическая копия плюс WAL-архив</strong> - основа восстановления на момент времени (PITR).</p>
+<p><strong>Репликация:</strong> асинхронная - мастер не ждёт реплику, при аварии возможна потеря последних транзакций. Синхронная - мастер ждёт подтверждения, потери нет, каждая запись медленнее. Выбор - компромисс между скоростью и допустимой потерей.</p>
+<pre><code class="language-sql">SELECT client_addr, state, sent_lsn, replay_lsn,
+       pg_wal_lsn_diff(sent_lsn, replay_lsn) AS отставание_байт
+FROM pg_stat_replication;
+</code></pre>
+<h3 id="_11">Что мониторить</h3>
+<pre><code class="language-sql">-- попадание в кэш, норма выше 95%
+SELECT sum(blks_hit) * 100.0 / NULLIF(sum(blks_hit + blks_read), 0) AS cache_hit_pct
+FROM pg_stat_database;
+
+-- топ тяжёлых запросов
+SELECT round(total_exec_time::numeric, 0) AS всего_мс,
+       calls, round(mean_exec_time::numeric, 1) AS среднее_мс,
+       left(query, 100)
+FROM pg_stat_statements
+ORDER BY total_exec_time DESC LIMIT 15;
+</code></pre>
+<p><code>pg_stat_statements</code> включается в <code>shared_preload_libraries</code>. Это главный инструмент поиска того, что жрёт базу - упомянуть обязательно.</p>
+<h3 id="pangolin">Про Pangolin</h3>
+<blockquote>
+<p>С Pangolin не работал, он внутри вашего контура. Это PostgreSQL, и всё, что я делал на нём, переносится: планы, блокировки, обслуживание, хранимые процедуры. Интересно, чем ваша сборка отличается от ванильной - расширения, изменения в репликации, что-то по отказоустойчивости?</p>
+</blockquote>
+<h2 id="_12">🔧 Практика на базе трекера</h2>
+<ol>
+<li><strong>Включить <code>pg_stat_statements</code></strong>, погонять трекер, найти три самых тяжёлых запроса.</li>
+<li><strong><code>EXPLAIN (ANALYZE, BUFFERS)</code> на каждом.</strong> Найти хотя бы один Seq Scan и убрать индексом. <strong>Записать время до и после</strong> - это цифра для собеседования.</li>
+<li><strong>Проверить, что индекс реально используется:</strong> после создания повторить <code>EXPLAIN</code> и увидеть смену узла.</li>
+<li><strong>Воспроизвести три случая оптимизации</strong> из списка выше на своих таблицах: функция на колонке, глубокий OFFSET, составной индекс под фильтр плюс сортировку.</li>
+<li><strong>Поставить джобу через pg_cron:</strong> ночная чистка старых находок в <code>scout.db</code>-подобной таблице трекера, с записью в <code>job_runs</code> и защитой через <code>pg_try_advisory_lock</code>.</li>
+<li><strong>Собрать в Grafana панель по базе:</strong> соединения, cache hit ratio, мёртвые строки, время последней успешной джобы.</li>
+<li><strong>Живой прогон backup/restore, добавлено 15.09 под техсобес.</strong> Теория выше (раздел «Резервные копии и репликация») без этого пункта остаётся пересказом документации, а не своим опытом:
+   - <code>pg_dump -Fc -d vacancy_tracker &gt; vacancy_tracker.dump</code> на сервере.
+   - Поднять рядом пустую базу <code>vacancy_tracker_restore_test</code>, <code>pg_restore -d vacancy_tracker_restore_test vacancy_tracker.dump</code>.
+   - Сверить <code>SELECT count(*) FROM vacancies;</code> и <code>companies</code> в обеих базах - числа обязаны сойтись.
+   - Проверить права: <code>\du</code> и <code>\dp vacancies</code> в восстановленной базе - роли переносятся дампом, но не всегда с теми же паролями.
+   - Замерить время дампа и время восстановления секундомером - это и есть RTO этого конкретного стенда на этом объёме данных. RPO - интервал между дампами, если бы это был регламент, а не разовая проверка.
+   - Записать три цифры (размер дампа, время дампа, время восстановления) сюда же в файл - готовый ответ на «как проверяли, что бэкап реально восстанавливается», без «мы делаем бэкапы» без доказательства.</li>
+</ol>
+<h2 id="_13">💥 Сломай намеренно</h2>
+<p><strong>1. <code>idle in transaction</code> своими руками.</strong> В одной сессии:</p>
+<pre><code class="language-sql">BEGIN;
+UPDATE vacancies SET priority = priority WHERE id = 1;
+-- и ничего не делать
+</code></pre>
+<p>В другой смотреть <code>pg_stat_activity</code>, увидеть состояние, посмотреть, что растёт <code>n_dead_tup</code> и autovacuum не убирает. Потом <code>ROLLBACK</code> и увидеть, как всё отпустило.</p>
+<p><strong>2. Блокировка из двух сессий.</strong> Первая: <code>BEGIN; UPDATE vacancies SET priority=1 WHERE id=1;</code> без коммита. Вторая: тот же <code>UPDATE</code> - повиснет. Найти виновника через <code>pg_blocking_pids</code>, снять <code>pg_cancel_backend</code>.</p>
+<p><strong>3. <code>ALTER TABLE</code> в очереди.</strong> Открыть долгий <code>SELECT pg_sleep(60) FROM vacancies LIMIT 1;</code>, следом <code>ALTER TABLE vacancies ADD COLUMN tmp int;</code>, следом обычный <code>SELECT</code>. Увидеть, что третий запрос встал за <code>ALTER</code>, хотя ему ничего не мешало. Это и есть причина, по которой миграции идут в окно.</p>
+<p><strong>4. Убить план индексом-который-не-работает.</strong> Сделать запрос с <code>WHERE date(created_at) = ...</code> при индексе на <code>created_at</code>, посмотреть Seq Scan. Переписать в диапазон, увидеть Index Scan.</p>
+<p><strong>5. Раздуть таблицу.</strong> Обновить разом много строк несколько раз подряд, посмотреть рост <code>n_dead_tup</code> и размер таблицы через <code>pg_total_relation_size</code>. Запустить <code>VACUUM</code> и увидеть, что размер файла не изменился, а место переиспользуется. Потом <code>VACUUM FULL</code> и увидеть, как файл ужался.</p>
+<p><strong>6. Наложить джобу саму на себя.</strong> Поставить джобу с <code>pg_sleep(120)</code> и расписанием раз в минуту, посмотреть в <code>cron.job_run_details</code>, как копятся параллельные запуски. Добавить <code>pg_try_advisory_lock</code> и увидеть, что осталась одна.</p>
+<h2 id="_14">✅ Задание</h2>
+<ul>
+<li>Таблица «было-стало» по трём запросам: план до, что изменил, план после, время в миллисекундах.</li>
+<li>Работающая джоба через pg_cron с записью в <code>job_runs</code> и защитой от наложения.</li>
+<li>Запрос-алерт «джоба не отработала за сутки», выведенный в Grafana.</li>
+<li>Можешь вслух разобрать план <code>EXPLAIN ANALYZE</code> по шагам.</li>
+</ul>
+<p><strong>Критерий готовности:</strong> показываешь замер «было-стало» по своему запросу и объясняешь, что именно изменилось в плане и почему.</p>
+<h2 id="_15">🌍 Из жизни</h2>
+<p><strong>Опыт Ивана.</strong> Хранимые процедуры на PostgreSQL и MS SQL, включая замену громоздких легаси-процедур на компактные и быстрые. Легаси-процедуры в TimeReport считались долго - переписал компактнее и с правильными индексами. Это готовая история для вопроса про оптимизацию, и она своя.</p>
+<p><strong>Про <code>idle in transaction</code> в проде.</strong> Типичный сценарий: приложение открыло транзакцию, ушло за данными во внешний сервис, сервис не отвечает, таймаута нет. Транзакция висит час. За этот час autovacuum не убирает мёртвые строки по всей базе, таблицы пухнут, запросы замедляются. Внешне выглядит как «база вдруг стала тормозить без причины».</p>
+<p><strong>Про миграции в банке.</strong> Причина, по которой <code>ALTER TABLE</code> катят ночью, не в самом <code>ALTER</code> - он часто мгновенный. Причина в очереди блокировок: он встаёт за любым долгим запросом и держит за собой всех остальных. Днём под нагрузкой это означает остановку сервиса на время самого долгого запроса.</p>
+<p><strong>Про джобы, которые «не запустились».</strong> Мониторинг обычно ловит упавшие задания и не ловит незапустившиеся: нет запуска - нет ошибки - нет алерта. Обнаруживается через день, когда кто-то замечает вчерашние цифры. Поэтому проверка «была ли успешная отработка за последние N часов» важнее проверки на ошибку.</p>
+<p><strong>Про <code>COUNT(*)</code>.</strong> Разработчики, пришедшие из MySQL с MyISAM, ждут мгновенного счёта. В Postgres из-за MVCC точный счёт означает проход по строкам, потому что видимость у каждой транзакции своя. На отчётной странице с <code>COUNT(*)</code> по миллионам строк это заметно сразу.</p>
+<h2 id="_16">❓ Вопросы с ответами</h2>
+<p><strong>Запрос стал медленным. Действия?</strong></p>
+<blockquote>
+<p><code>EXPLAIN (ANALYZE, BUFFERS)</code>. Смотрю Seq Scan там, где ждал индекс, и расхождение оценённых и фактических строк - если мимо, делаю <code>ANALYZE</code>. Дальше тип join и <code>Rows Removed by Filter</code>. Потом проверяю индекс под фильтр и под сортировку и порядок полей в составном.</p>
+</blockquote>
+<p><strong>База встала, нагрузки нет. Что смотрите?</strong></p>
+<blockquote>
+<p><code>pg_stat_activity</code> на <code>idle in transaction</code> и долгие запросы. Потом блокировки через <code>pg_blocking_pids</code>. Чаще всего висит незакрытая транзакция, которая держит блокировки и мешает autovacuum.</p>
+</blockquote>
+<p><strong>Что такое VACUUM и почему таблица растёт?</strong></p>
+<blockquote>
+<p>Postgres при обновлении пишет новую версию строки и помечает старую мёртвой. VACUUM освобождает место под повторное использование, autovacuum делает это сам. Не справляется - таблица распухает. VACUUM FULL возвращает место системе, но берёт эксклюзивную блокировку, поэтому только в окно.</p>
+</blockquote>
+<p><strong>Почему не поставить индексы на все колонки?</strong></p>
+<blockquote>
+<p>Каждый замедляет запись и занимает место, плюс планировщику дороже выбирать. Ставлю под реальные запросы и периодически чищу неиспользуемые через <code>pg_stat_user_indexes</code>.</p>
+</blockquote>
+<p><strong>Индекс есть, а запрос его не использует. Почему?</strong></p>
+<blockquote>
+<p>Обычно одно из трёх: на колонке стоит функция, и индекс по значению не подходит; условие с <code>LIKE '%...'</code> не ловится btree; или статистика устарела и планировщик считает, что вернётся слишком много строк. Проверяю <code>EXPLAIN</code>, делаю <code>ANALYZE</code>, при необходимости переписываю условие в диапазон.</p>
+</blockquote>
+<p><strong>Как сделать миграцию без простоя?</strong></p>
+<blockquote>
+<p><code>CREATE INDEX CONCURRENTLY</code> вместо обычного. <code>ALTER TABLE</code> - в окно, с <code>lock_timeout</code>, чтобы не встать в очередь за долгим запросом и не заблокировать всех позади. Добавление колонки с DEFAULT в свежих версиях не переписывает таблицу, в старых переписывает - проверяю по версии.</p>
+</blockquote>
+<p><strong>Как устроены регламентные расчёты и что с ними может пойти не так?</strong></p>
+<blockquote>
+<p>Джоба по расписанию: pg_cron внутри базы, cron или systemd timer снаружи, оркестратор при сложных зависимостях. Ломается четырьмя способами: не запустилась, упала, наложилась сама на себя, не успела в окно. Поэтому у джобы должна быть таблица учёта запусков, защита через advisory lock, обработка пачками и <strong>два алерта - на падение и на отсутствие успешной отработки</strong>.</p>
+</blockquote>
+<p><strong>Что делать, когда расчёт не успевает к сроку?</strong></p>
+<blockquote>
+<p>Сначала понять, разовое это или тренд. Разовое - искать помеху: блокировка, всплеск объёма, соседняя нагрузка. Тренд - джоба переросла окно, надо ускорять запрос, резать на части или переносить окно. Параллельно уточнить регламент: кого уведомляем и есть ли деградированный режим, когда лучше отдать вчерашние цифры с пометкой, чем ничего.</p>
+</blockquote>
+<p><strong>Какой уровень изоляции по умолчанию?</strong></p>
+<blockquote>
+<p>Read Committed. Каждый оператор видит свой свежий снимок, поэтому два <code>SELECT</code> в одной транзакции могут вернуть разное. Нужна стабильная картина - Repeatable Read.</p>
+</blockquote>
+<p><strong>Чем синхронная репликация отличается от асинхронной?</strong></p>
+<blockquote>
+<p>Асинхронная: мастер не ждёт реплику, быстро, но при аварии можно потерять последние транзакции. Синхронная: мастер ждёт подтверждения, потери нет, каждая запись медленнее. Выбор - это решение о допустимой потере, а не техническое предпочтение.</p>
+</blockquote>
+<p><strong>Зачем нужен PgBouncer, если приложение и так открывает соединения?</strong> <em>(добавлено 15.09)</em></p>
+<blockquote>
+<p>Каждое соединение Postgres - процесс ОС, тысяча простаивающих клиентов держат тысячу процессов и память под них. PgBouncer терминирует клиентские соединения сам и держит к базе маленький пул реальных. Симптом без пула: <code>FATAL: too many connections</code>, рост <code>pg_stat_activity</code> без роста полезной работы, память сервера уходит на holding, а не на кэш. Резать в проде себе не давал - объяснил бы принцип и разницу режимов, дальше поднял бы <code>transaction</code> pooling в Docker рядом с трекером, если бы дали 20 минут на живом стенде.</p>
+</blockquote>
+<p><strong>Реплика упала. Что делаете - просто переключаете трафик?</strong></p>
+<blockquote>
+<p>Нет, failover - это процедура, а не тумблер. Сначала подтвердить, что мастер действительно недоступен, а не просто медленно отвечает - ложный failover хуже простоя. Дальше поднять реплику в роль мастера (<code>pg_ctl promote</code> или через Patroni, если он есть), переключить приложения на новый адрес - через DNS, VIP или сервис-дискавери, не руками в конфиге каждого клиента. После - поднять новую реплику взамен старой, иначе кластер живёт без резерва. Автоматический failover без карантина на «split brain» - когда старый мастер ожил и оба принимают запись - опаснее ручного с задержкой в минуту.</p>
+</blockquote></article>
+    <aside class="aside">
+      <strong>В этом документе</strong>
+      <div class="toc"><div class="toc">
+<ul>
+<li><a href="#_1">🎭 Аналогия</a></li>
+<li><a href="#_2">🗺 Карта мест</a></li>
+<li><a href="#_3">📖 Теория</a><ul>
+<li><a href="#postgres">Как Postgres устроен внутри</a></li>
+<li><a href="#-">Чтение плана - что смотреть по порядку</a></li>
+<li><a href="#_4">🔥 Оптимизация на конкретных примерах</a></li>
+<li><a href="#_5">🕐 Джобы: регламентные расчёты</a></li>
+<li><a href="#_6">Что происходит в базе прямо сейчас</a></li>
+<li><a href="#_7">Блокировки</a></li>
+<li><a href="#mvcc-vacuum-bloat">MVCC, VACUUM и bloat</a></li>
+<li><a href="#-_1">Индексы - типы</a></li>
+<li><a href="#_8">Уровни изоляции</a></li>
+<li><a href="#_9">Соединения и пул</a></li>
+<li><a href="#_10">Резервные копии и репликация</a></li>
+<li><a href="#_11">Что мониторить</a></li>
+<li><a href="#pangolin">Про Pangolin</a></li>
+</ul>
+</li>
+<li><a href="#_12">🔧 Практика на базе трекера</a></li>
+<li><a href="#_13">💥 Сломай намеренно</a></li>
+<li><a href="#_14">✅ Задание</a></li>
+<li><a href="#_15">🌍 Из жизни</a></li>
+<li><a href="#_16">❓ Вопросы с ответами</a></li>
+</ul>
+</div>
+</div>
+    </aside>
+  </div>
+</main>
+
+
+<script>
+const ROOT = "..";
+
+// ---- тема
+const themeBtn = document.getElementById("theme");
+const paint = () => {
+  const dark = document.documentElement.getAttribute("data-theme") === "dark";
+  themeBtn.textContent = dark ? "☀" : "☾";
+};
+paint();
+themeBtn.addEventListener("click", () => {
+  const next = document.documentElement.getAttribute("data-theme") === "dark" ? "light" : "dark";
+  document.documentElement.setAttribute("data-theme", next);
+  try { localStorage.setItem("kb-theme", next); } catch (e) {}
+  paint();
+});
+
+// ---- поиск
+let index = null;
+const box = document.getElementById("results");
+const hits = document.getElementById("hits");
+const head = box.querySelector("h3");
+const input = document.getElementById("q");
+
+async function ensureIndex() {
+  if (index) return index;
+  const res = await fetch(ROOT + "/search-index.json");
+  index = await res.json();
+  return index;
+}
+
+const esc = (s) => (s || "").replace(/[&<>]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
+
+function hi(text, query) {
+  const i = text.toLowerCase().indexOf(query);
+  if (i < 0) return esc(text);
+  return esc(text.slice(0, i)) + "<mark>" + esc(text.slice(i, i + query.length)) + "</mark>" + esc(text.slice(i + query.length));
+}
+
+input.addEventListener("input", async () => {
+  const q = input.value.trim().toLowerCase();
+  if (q.length < 2) { box.hidden = true; return; }
+  const data = await ensureIndex();
+  const found = [];
+  for (const d of data) {
+    const inTitle = d.title.toLowerCase().includes(q);
+    const inSum = (d.summary || "").toLowerCase().includes(q);
+    const heads = (d.heads || []).filter(h => h.toLowerCase().includes(q));
+    if (inTitle || inSum || heads.length) {
+      found.push({ d, heads, rank: inTitle ? 0 : heads.length ? 1 : 2 });
+    }
+  }
+  found.sort((a, b) => a.rank - b.rank);
+  head.textContent = found.length ? `Нашлось: ${found.length}` : "Ничего не нашлось";
+  hits.innerHTML = found.slice(0, 40).map(({ d, heads }) =>
+    `<a class="hit" href="${ROOT}/d/${d.slug}.html">
+       <b>${hi(d.title, q)}</b>
+       <span>${heads.length ? "→ " + heads.slice(0, 3).map(h => hi(h, q)).join(" · ") : esc(d.summary || "")}</span>
+     </a>`).join("");
+  box.hidden = false;
+});
+
+input.addEventListener("keydown", (e) => { if (e.key === "Escape") { input.value = ""; box.hidden = true; input.blur(); } });
+document.addEventListener("keydown", (e) => {
+  if (e.key === "/" && document.activeElement !== input) { e.preventDefault(); input.focus(); }
+});
+</script>
+</body>
+</html>

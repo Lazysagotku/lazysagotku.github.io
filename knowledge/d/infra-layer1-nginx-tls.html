@@ -1,0 +1,529 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>🌐 Слой 1. Nginx и TLS (дни 2-3, 3 часа) - База знаний</title>
+<link rel="stylesheet" href="../kb.css">
+<script>
+  // Тему ставим до первой отрисовки, иначе на тёмной системе мигает белым.
+  try {
+    var t = localStorage.getItem("kb-theme");
+    if (!t) t = matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+    document.documentElement.setAttribute("data-theme", t);
+  } catch (e) {}
+</script>
+</head>
+<body>
+
+<header class="top">
+  <div class="top-in">
+    <a class="brand" href="../index.html">База <span>знаний</span></a>
+    <span class="grow"></span>
+    <input id="q" type="search" placeholder="Поиск по всем материалам…" autocomplete="off">
+    <button class="icon-btn" id="theme" type="button" title="Тема"></button>
+  </div>
+</header>
+
+<div id="results" hidden><div class="wrap-r"><h3></h3><div id="hits"></div></div></div>
+
+<main class="wrap">
+  <div class="doc-head">
+    <div class="crumb"><a href="../index.html#reference">Справочники</a></div>
+    <h1>🌐 Слой 1. Nginx и TLS (дни 2-3, 3 часа)</h1>
+    <div class="meta">392 строк · источник <code>l2code/Infra_Layer1_Nginx_TLS.md</code></div>
+  </div>
+
+  <div class="layout">
+    <article class="prose"><blockquote>
+<p>📖 Слой роадмапа <strong>«Стенд с нуля»</strong>. Оглавление, срез под Сбер и календарь - в <code>Roadmap_Infra_Sept2026.md</code>.
+Каждый слой самодостаточен: 🎭 аналогия → 🗺 карта мест → 📖 теория → 🔧 практика → 💥 сломай намеренно → 🧪 проверь себя → ✅ задание → 🌍 из жизни → ❓ вопросы с ответами.</p>
+</blockquote>
+<h2 id="_1">🎭 Аналогия</h2>
+<p>Ресепшн в бизнес-центре. Посетитель не бегает по этажам в поисках нужной компании - он говорит на ресепшене, кого ему надо, и его направляют. Клиент видит одну дверь, за ней может быть что угодно.</p>
+<h2 id="_2">🗺 Карта мест</h2>
+<p><strong>Сделать:</strong> поставить nginx перед сервисом <code>hello</code> из слоя 0, дать серверу имя (sslip.io, без покупки домена), выпустить сертификат Let's Encrypt, настроить логи с полезным форматом.</p>
+<p><strong>Понять:</strong> nginx - единственная дверь снаружи. Клиент стучится в 443, nginx проверяет TLS и передаёт запрос сервису, который слушает только <code>127.0.0.1:8000</code>. Сертификат живёт на nginx, приложение о HTTPS не знает.</p>
+<p><strong>Где писать:</strong> <code>/etc/nginx/sites-available/hello</code> и симлинк в <code>sites-enabled/</code>; формат логов - в <code>/etc/nginx/nginx.conf</code>; сертификат - командой <code>certbot</code>, файлы кладутся в <code>/etc/letsencrypt/</code>.</p>
+<p><strong>Чем запустить:</strong> <code>sudo nginx -t &amp;&amp; sudo systemctl reload nginx</code> - сначала проверка синтаксиса, потом перечитать конфиг без обрыва соединений. Сертификат: <code>sudo certbot --nginx -d домен</code>.</p>
+<p><strong>Где смотреть результат:</strong></p>
+<pre><code class="language-bash">curl -I https://домен            # код ответа и заголовки через HTTPS
+curl -I http://домен             # должен быть 301 на https
+sudo tail -f /var/log/nginx/access.log /var/log/nginx/error.log
+systemctl status nginx
+sudo certbot certificates        # срок действия сертификата
+</code></pre>
+<p><strong>Как понять, что получилось:</strong> в браузере замок без предупреждений; остановил <code>hello</code> - nginx отдаёт 502, а в error.log написано, почему; <code>curl</code> по http уходит на https.</p>
+<h2 id="_3">📖 Теория</h2>
+<h3 id="forward-reverse">Forward против reverse</h3>
+<blockquote>
+<p>О чём: forward proxy прячет клиента, reverse proxy прячет серверы; nginx перед приложением - второе.</p>
+</blockquote>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>Forward proxy</th>
+<th>Reverse proxy</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Кого прячет</td>
+<td>клиента от сервера</td>
+<td>сервер от клиента</td>
+</tr>
+<tr>
+<td>Кто настраивает</td>
+<td>клиент у себя</td>
+<td>владелец сервиса</td>
+</tr>
+<tr>
+<td>Пример</td>
+<td>корпоративный прокси, VPN</td>
+<td>nginx перед приложением</td>
+</tr>
+<tr>
+<td>Знает ли клиент</td>
+<td>да, он его прописал</td>
+<td>нет, для него это и есть сайт</td>
+</tr>
+</tbody>
+</table>
+<p>⚠️ Их путают чаще всего. Вопрос звучит буквально: «чем forward отличается от reverse». Отвечать через направление: forward защищает того, кто ходит, reverse защищает того, к кому ходят.</p>
+<p><strong>Зачем reverse proxy нужен:</strong>
+- один вход на 80 и 443, за ним сколько угодно приложений;
+- TLS терминируется в одном месте;
+- балансировка между экземплярами;
+- отдача статики без участия приложения - nginx делает это в разы быстрее;
+- ограничение скорости и защита от медленных клиентов;
+- единая точка логирования всех запросов.</p>
+<h3 id="_4">Иерархия конфига</h3>
+<blockquote>
+<p>О чём: http → server → location: настройка наследуется вниз и переопределяется на месте.</p>
+</blockquote>
+<pre><code class="language-nginx">http {                      # общие настройки
+    upstream tracker {      # группа бэкендов
+        server 127.0.0.1:8000;
+        server 127.0.0.1:8001;
+    }
+    server {                # виртуальный хост
+        listen 443 ssl;
+        server_name tracker.example.ru;
+        location / {        # правило для группы путей
+            proxy_pass http://tracker;
+        }
+    }
+}
+</code></pre>
+<p><strong>Как выбирается <code>server</code>:</strong> по паре «порт + <code>server_name</code>». Если ни один не подошёл - первый с <code>default_server</code> или просто первый. Отсюда «открываю по IP, а показывается чужой сайт».</p>
+<p><strong>Как выбирается <code>location</code></strong> - по приоритету, а не по порядку в файле:</p>
+<ol>
+<li><code>location = /path</code> - точное совпадение, побеждает сразу;</li>
+<li><code>location ^~ /path</code> - префикс, отключает проверку регулярок;</li>
+<li><code>location ~ регулярка</code> и <code>~*</code> - регулярки, первая совпавшая по порядку;</li>
+<li><code>location /path</code> - самый длинный совпавший префикс.</li>
+</ol>
+<p>Ключевое: регулярки проверяются <strong>после</strong> префиксов, но при совпадении побеждают их.</p>
+<h3 id="-">Заголовки - почему это отдельный вопрос</h3>
+<blockquote>
+<p>О чём: за прокси приложение видит адрес nginx, а не клиента; X-Real-IP и X-Forwarded-For это чинят.</p>
+</blockquote>
+<p>Без <code>proxy_set_header</code> приложение видит IP прокси вместо IP клиента. Все логи заполняются адресом <code>127.0.0.1</code>, блокировки по IP не работают, геолокация врёт.</p>
+<table>
+<thead>
+<tr>
+<th>Заголовок</th>
+<th>Что несёт</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Host</code></td>
+<td>какое имя запросил клиент</td>
+</tr>
+<tr>
+<td><code>X-Real-IP</code></td>
+<td>адрес клиента одной строкой</td>
+</tr>
+<tr>
+<td><code>X-Forwarded-For</code></td>
+<td>цепочка всех прокси по пути</td>
+</tr>
+<tr>
+<td><code>X-Forwarded-Proto</code></td>
+<td>http или https, иначе приложение построит ссылки на http</td>
+</tr>
+</tbody>
+</table>
+<p>⚠️ <code>X-Forwarded-For</code> подделывается клиентом. Доверять ему можно только для прокси из своего контура - директива <code>set_real_ip_from</code>.</p>
+<h3 id="tls-certbot">TLS и certbot</h3>
+<blockquote>
+<p>О чём: сертификат выдаётся на имя, живёт 90 дней, продлевается сам; TLS заканчивается на nginx.</p>
+</blockquote>
+<p><strong>Аналогия.</strong> Нотариально заверенный паспорт. Ключ доказывает, что домен твой, а подпись центра сертификации - что паспорт настоящий.</p>
+<p>Сертификат Let's Encrypt живёт 90 дней, продление автоматическое за 30 дней до конца.</p>
+<p><strong>Как проходит проверка владения (HTTP-01):</strong> certbot кладёт файл в <code>/.well-known/acme-challenge/</code>, центр сертификации ходит за ним по 80 порту. Отсюда правило: <strong>80 порт нельзя закрывать целиком</strong>, иначе продление отвалится. Редирект на https не мешает, полное закрытие мешает.</p>
+<h3 id="_5">Балансировка</h3>
+<blockquote>
+<p>О чём: upstream с несколькими серверами и проверка живости - как nginx выводит упавший из ротации.</p>
+</blockquote>
+<table>
+<thead>
+<tr>
+<th>Директива</th>
+<th>Как раздаёт</th>
+<th>Когда нужна</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>по умолчанию</td>
+<td>round-robin, по кругу</td>
+<td>одинаковые бэкенды без состояния</td>
+</tr>
+<tr>
+<td><code>least_conn;</code></td>
+<td>тому, у кого меньше активных</td>
+<td>запросы разной длительности</td>
+</tr>
+<tr>
+<td><code>ip_hash;</code></td>
+<td>один клиент всегда на один бэкенд</td>
+<td>липкие сессии в памяти приложения</td>
+</tr>
+<tr>
+<td><code>hash $request_uri;</code></td>
+<td>по ключу</td>
+<td>кэширование по пути</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Пассивные проверки</strong> есть в бесплатной версии: <code>max_fails=3 fail_timeout=30s</code>. Три неудачи подряд - бэкенд выводится из ротации на 30 секунд.</p>
+<p>⚠️ Активные health checks есть только в коммерческом Nginx Plus. Знание границы - хороший ответ.</p>
+<h3 id="-_1">Коды ответа - разбор по причинам</h3>
+<blockquote>
+<p>О чём: 502 - за nginx никого, 504 - есть, но молчит, 499 - клиент не дождался; по коду видно слой проблемы.</p>
+</blockquote>
+<p><strong>502 Bad Gateway.</strong> Nginx достучался до бэкенда и получил мусор либо не достучался вовсе.
+Проверять: жив ли сервис, слушает ли порт, отвечает ли <code>curl localhost</code>, что в <code>error.log</code>.
+Типичные причины: приложение упало; слушает не на том адресе; опечатка в порту <code>proxy_pass</code>.</p>
+<p><strong>504 Gateway Timeout.</strong> Бэкенд жив, но не ответил за таймаут.
+Причины: тяжёлый запрос к базе, блокировка, внешний вызов без таймаута, нехватка воркеров.
+Лечится <strong>не</strong> повышением <code>proxy_read_timeout</code> - это прячет симптом, очередь растёт дальше. Сначала найти медленный запрос.</p>
+<p><strong>499.</strong> Клиент закрыл соединение, не дождавшись. Код придуман nginx. Много 499 означает, что пользователи устают ждать - фактически тот же 504 со стороны клиента.</p>
+<p><strong>413.</strong> <code>client_max_body_size</code> меньше загружаемого файла. По умолчанию 1 мегабайт.</p>
+<p><strong>403 и 404 на статике.</strong> Права либо путаница <code>root</code> и <code>alias</code>:</p>
+<pre><code class="language-nginx">location /static/ { root  /opt/tracker; }          # ищет /opt/tracker/static/file
+location /static/ { alias /opt/tracker/assets/; }  # ищет /opt/tracker/assets/file
+</code></pre>
+<p><code>root</code> дописывает путь из запроса, <code>alias</code> заменяет совпавший префикс.</p>
+<h2 id="_6">🔧 Практика</h2>
+<p><strong>Предпосылки.</strong> Слой 0 закрыт: файрвол пропускает 22, 80 и 443, сервис <code>hello</code> из слоя 0 слушает <code>127.0.0.1:8000</code>. Он и будет «приложением за nginx» - трекер приедет в слое 2, и конфиг для него отличается одной строкой. Каждый шаг: что делаем → команды с комментариями → что должно показаться.</p>
+<h3 id="1-nginx">1. Поставить nginx и понять, где он живёт</h3>
+<pre><code class="language-bash">sudo apt update &amp;&amp; sudo apt install -y nginx   # поставить из репозитория Ubuntu
+systemctl status nginx                          # уже запущен: active (running)
+ss -tlnp | grep nginx                           # слушает 0.0.0.0:80 - весь мир
+curl -I localhost                               # HTTP/1.1 200 OK и заголовок Server: nginx
+</code></pre>
+<p>С компа открой <code>http://сервер</code> в браузере - страница «Welcome to nginx». Это дефолтный сайт, его сейчас заменим.</p>
+<p>Где что лежит:</p>
+<pre><code class="language-bash">ls /etc/nginx/                    # nginx.conf - главный конфиг, он подключает всё остальное
+ls /etc/nginx/sites-available/    # здесь лежат конфиги сайтов - все, включая выключенные
+ls -l /etc/nginx/sites-enabled/   # здесь символические ссылки на включённые; default - тот самый Welcome
+ls /var/log/nginx/                # access.log - каждый запрос, error.log - проблемы
+</code></pre>
+<p>Логика папок: конфиг пишется в <code>sites-available</code>, включается ссылкой в <code>sites-enabled</code>. Выключить сайт - удалить ссылку, файл остаётся.</p>
+<h3 id="2-nginx-hello">2. Первый конфиг: nginx перед <code>hello</code></h3>
+<p><strong>Что делаем.</strong> Снаружи стучатся в nginx на 80, он передаёт запрос сервису на <code>127.0.0.1:8000</code> и возвращает ответ. Это и есть reverse proxy.</p>
+<pre><code class="language-bash">sudo nano /etc/nginx/sites-available/hello
+</code></pre>
+<pre><code class="language-nginx">server {
+    listen 80;                          # на каком порту принимать
+    server_name _;                      # для какого имени; _ означает «любое», домена пока нет
+
+    access_log /var/log/nginx/hello_access.log;   # свои логи, чтобы не искать в общих
+    error_log  /var/log/nginx/hello_error.log warn;
+
+    location / {                        # все пути
+        proxy_pass http://127.0.0.1:8000;          # куда передавать - наш сервис
+        proxy_set_header Host $host;                # передать сервису, к какому имени обращались
+        proxy_set_header X-Real-IP $remote_addr;    # и настоящий адрес клиента - иначе сервис видит 127.0.0.1
+        proxy_connect_timeout 5s;                   # сколько ждать соединения с сервисом
+        proxy_read_timeout 60s;                     # сколько ждать ответа
+    }
+}
+</code></pre>
+<p>Включить свой сайт, выключить дефолтный, проверить, применить:</p>
+<pre><code class="language-bash">sudo ln -s /etc/nginx/sites-available/hello /etc/nginx/sites-enabled/hello   # ln -s - символическая ссылка
+sudo rm /etc/nginx/sites-enabled/default                                    # убрать Welcome
+sudo nginx -t                    # проверить синтаксис: syntax is ok, test is successful
+sudo systemctl reload nginx      # перечитать конфиг без разрыва соединений
+</code></pre>
+<p><strong>Всегда <code>-t</code> перед <code>reload</code>.</strong> Битый конфиг при <code>restart</code> уронит сайт, при <code>reload</code> nginx откажется применять и оставит старый рабочий.</p>
+<p>Окно результата:</p>
+<pre><code class="language-bash">curl localhost                              # «стенд живой» - ответ hello пришёл через nginx
+sudo tail -3 /var/log/nginx/hello_access.log   # твой запрос записан: адрес, путь, код 200
+</code></pre>
+<p>С компа: <code>http://сервер</code> в браузере показывает «стенд живой». Сервис при этом слушает только 127.0.0.1 - снаружи к нему попасть можно только через nginx, ровно как задумано.</p>
+<h3 id="3">3. Имя и сертификат</h3>
+<p><strong>Что делаем.</strong> HTTPS нужен сертификат, сертификат выдаётся на имя, а не на IP. Домен покупать не обязательно: сервис sslip.io превращает IP в имя - <code>104-171-139-80.sslip.io</code> резолвится в <code>104.171.139.80</code> сам, без регистрации. Let's Encrypt такие имена подписывает. Купишь домен - заменишь имя в одной строке.</p>
+<pre><code class="language-bash">nslookup 104-171-139-80.sslip.io     # подставь свой IP через дефисы; ответ - твой адрес
+</code></pre>
+<p>В конфиге <code>server_name _;</code> заменить на своё имя:</p>
+<pre><code class="language-nginx">    server_name 104-171-139-80.sslip.io;
+</code></pre>
+<pre><code class="language-bash">sudo nginx -t &amp;&amp; sudo systemctl reload nginx
+</code></pre>
+<p>Сертификат выпускает certbot: он сам проверит, что имя ведёт на этот сервер, сам получит сертификат и сам допишет в конфиг блок для 443:</p>
+<pre><code class="language-bash">sudo apt install -y certbot python3-certbot-nginx
+sudo certbot --nginx -d 104-171-139-80.sslip.io   # спросит почту и согласие; на вопрос про редирект - 2 (redirect)
+sudo cat /etc/nginx/sites-available/hello           # посмотри, что certbot дописал: listen 443 ssl, пути к ключам, редирект с 80
+sudo certbot renew --dry-run                        # проверка, что автопродление сработает через 90 дней
+</code></pre>
+<p>Окно результата:</p>
+<pre><code class="language-bash">curl -I http://104-171-139-80.sslip.io      # 301 - редирект на https
+curl -I https://104-171-139-80.sslip.io     # 200 - через HTTPS
+sudo certbot certificates                   # имя, срок действия, пути
+</code></pre>
+<p>В браузере - замок без предупреждений.</p>
+<h3 id="4">4. Логи с полезным форматом</h3>
+<p><strong>Что делаем.</strong> Стандартный формат лога не показывает, сколько времени занял запрос и сколько из него думал сервис. Добавляем свой формат - это первое, что нужно при разборе «сайт тормозит».</p>
+<p>В <code>/etc/nginx/nginx.conf</code>, внутри блока <code>http { ... }</code>, до строки <code>include /etc/nginx/sites-enabled/*;</code>:</p>
+<pre><code class="language-nginx">    log_format detailed '$remote_addr - $host &quot;$request&quot; '
+                        '$status $body_bytes_sent '
+                        'rt=$request_time urt=$upstream_response_time '
+                        '&quot;$http_user_agent&quot;';
+</code></pre>
+<p>В конфиге сайта строку <code>access_log</code> дополнить именем формата:</p>
+<pre><code class="language-nginx">    access_log /var/log/nginx/hello_access.log detailed;
+</code></pre>
+<pre><code class="language-bash">sudo nginx -t &amp;&amp; sudo systemctl reload nginx
+curl -s https://104-171-139-80.sslip.io &gt; /dev/null
+sudo tail -1 /var/log/nginx/hello_access.log     # в конце строки rt=0.002 urt=0.001
+</code></pre>
+<p><code>rt</code> - весь запрос от клиента до ответа, <code>urt</code> - сколько думал сервис за nginx. Большая разница между ними означает, что время ушло в самом nginx или на медленного клиента, а не в приложении.</p>
+<h3 id="5">5. Четыре однострочника разбора логов</h3>
+<p>Учить наизусть - на собеседовании просят написать на доске. Каждая - конвейер: взять колонку → отсортировать → посчитать одинаковые → отсортировать по числу.</p>
+<pre><code class="language-bash">awk '{print $9}' hello_access.log | sort | uniq -c | sort -rn          # коды ответа: сколько 200, сколько 502
+awk '{print $7}' hello_access.log | sort | uniq -c | sort -rn | head   # самые частые URL
+awk '{print $1}' hello_access.log | sort | uniq -c | sort -rn | head   # самые активные IP - кто долбит
+grep -oP 'rt=\K[0-9.]+' hello_access.log | sort -rn | head             # самые медленные запросы
+</code></pre>
+<p><code>awk '{print $N}'</code> - взять N-ю колонку, <code>uniq -c</code> - схлопнуть одинаковые соседние строки и посчитать, <code>sort -rn</code> - по числу, по убыванию. Номера колонок зависят от формата лога: в <code>detailed</code> код ответа стоит седьмым, посчитай по своей строке.</p>
+<p>Сгенерируй себе материал: <code>for i in $(seq 1 50); do curl -s -o /dev/null https://104-171-139-80.sslip.io/page$((i % 5)); done</code> - и прогони четыре команды.</p>
+<h3 id="6">6. Когда приедет трекер</h3>
+<p>В слое 2 конфиг для трекера - копия этого файла с другим именем сервера и той же строкой <code>proxy_pass http://127.0.0.1:8000</code>. Балансировка на два экземпляра через <code>upstream</code> - в теории слоя, на стенде это лишнее до появления второго экземпляра.</p>
+<h2 id="_7">💥 Сломай намеренно</h2>
+<p><strong>Предпосылки:</strong> nginx с сертификатом отдаёт <code>hello</code>, логи в формате <code>detailed</code>. Ломаем - смотрим, как выглядит - чиним.</p>
+<p><strong>1. Получить 502 своими руками:</strong></p>
+<pre><code class="language-bash">sudo systemctl stop hello
+curl -I https://104-171-139-80.sslip.io           # 502 Bad Gateway
+sudo tail -3 /var/log/nginx/hello_error.log       # connect() failed (111: Connection refused) while connecting to upstream
+sudo systemctl start hello
+</code></pre>
+<p>Запомни эту строку в error.log: 502 всегда означает «nginx жив, за ним никого нет».</p>
+<p><strong>2. Получить 504.</strong> В конфиге сайта поставить <code>proxy_read_timeout 2s;</code>, применить. Сервис <code>hello</code> не умеет спать, поэтому сымитируй медленный бэкенд: <code>sudo systemctl stop hello</code>, потом в отдельном окне <code>python3 -c "import socket,time; s=socket.socket(); s.bind(('127.0.0.1',8000)); s.listen(1); c,_=s.accept(); time.sleep(10)"</code> - сервер принимает соединение и молчит. <code>curl -I https://...</code> через две секунды даст 504 Gateway Time-out. Вернуть таймаут, запустить <code>hello</code>.</p>
+<p><strong>3. Убрать строку <code>X-Real-IP</code></strong>, применить, и посмотреть в <code>journalctl -u hello -n 3</code>: сервис видит <code>127.0.0.1</code> вместо твоего адреса. Вернуть.</p>
+<p><strong>4. Сломать конфиг:</strong> убрать точку с запятой в любой строке, <code>sudo nginx -t</code> - текст ошибки с номером строки. Заметь: сайт при этом продолжает работать на старом конфиге. Вернуть.</p>
+<p><strong>5. Закрыть 443 в файрволе:</strong> <code>sudo ufw deny 443/tcp</code>, <code>curl -I https://...</code> с компа висит и падает по таймауту, а <code>curl -I http://...</code> отвечает 301. Так выглядит «сертификат в порядке, а сайт недоступен» - проблема не в nginx. <code>sudo ufw allow 443/tcp</code>.</p>
+<p><strong>6. Уронить nginx целиком:</strong> <code>sudo systemctl stop nginx</code>, <code>curl -I http://...</code> - Connection refused, без кода ответа вообще. Разница между «refused» (никто не слушает) и 502 (слушает nginx, а за ним пусто) - вопрос на любом собеседовании по эксплуатации.</p>
+<h2 id="_8">🧪 Проверь себя</h2>
+<p><strong>1. <code>curl -I https://сайт</code> отвечает 502. Что это значит?</strong>
+- [ ] сертификат просрочен
+- [ ] nginx не запущен
+- [x] nginx жив, а приложение за ним не отвечает на соединение
+- [ ] клиент закрыл соединение</p>
+<blockquote>
+<p>Почему: 502 Bad Gateway - nginx не смог соединиться с upstream. В error.log будет <code>connect() failed ... upstream</code>.</p>
+</blockquote>
+<p><strong>2. Чем 504 отличается от 502?</strong>
+- [x] при 504 приложение соединение приняло, но не ответило за <code>proxy_read_timeout</code>
+- [ ] 504 - это ошибка сертификата
+- [ ] ничем, оба про недоступный бэкенд
+- [ ] 504 возвращает клиент, 502 - сервер</p>
+<blockquote>
+<p>Почему: 502 - за nginx никого, 504 - есть, но молчит. Лечится по-разному: перезапуск против поиска медленного запроса.</p>
+</blockquote>
+<p><strong>3. Почему <code>nginx -t</code> надо делать перед <code>reload</code>, если reload и так не применит битый конфиг?</strong>
+- [ ] потому что reload применяет всё без проверки
+- [x] чтобы прочитать ошибку с номером строки сразу, а не искать её в error.log после
+- [ ] потому что без -t reload зависает
+- [ ] это требование certbot</p>
+<blockquote>
+<p>Почему: reload при ошибке откажет и оставит старый конфиг. <code>-t</code> показывает, что именно не так, и делает это до того, как ты что-то тронул.</p>
+</blockquote>
+<p><strong>4. Приложение за nginx пишет в логи адрес 127.0.0.1 у всех клиентов. Что не так?</strong>
+- [ ] приложение слушает не тот порт
+- [x] в location нет <code>proxy_set_header X-Real-IP $remote_addr</code>
+- [ ] nginx не может определить адрес клиента через TLS
+- [ ] так и должно быть за прокси</p>
+<blockquote>
+<p>Почему: для приложения клиентом является nginx. Настоящий адрес передаётся заголовком, его надо добавить руками.</p>
+</blockquote>
+<p><strong>5. В логах много 499. Что происходит?</strong>
+- [ ] nginx не может отдать статику
+- [ ] сертификат не доверен клиентам
+- [x] клиенты закрывают соединение, не дождавшись ответа - сайт медленный
+- [ ] превышен <code>client_max_body_size</code></p>
+<blockquote>
+<p>Почему: 499 придумал nginx для «клиент ушёл раньше ответа». Это 504 глазами пользователя: смотреть <code>urt</code> в логах.</p>
+</blockquote>
+<h2 id="_9">✅ Задание</h2>
+<p><strong>Задание</strong>
+1. Поставь nginx перед <code>hello</code>, выключи дефолтный сайт, проверь ответ через <code>curl localhost</code>.
+2. Дай серверу имя через sslip.io, выпусти сертификат certbot, проверь редирект с http.
+3. Включи формат логов <code>detailed</code>, сделай 50 запросов и прогони четыре однострочника.
+4. Пройди шесть «сломай намеренно», для каждого запиши код или текст ошибки и где он был виден.</p>
+<p><strong>Что должно получиться</strong>
+- <code>curl -I http://имя</code> → 301, <code>curl -I https://имя</code> → 200, в браузере замок.
+- <code>sudo certbot renew --dry-run</code> проходит без ошибок.
+- В <code>hello_access.log</code> строки с <code>rt=</code> и <code>urt=</code>.
+- В <code>journalctl -u hello</code> виден твой настоящий IP, а не 127.0.0.1.
+- В тетради: каждая строка конфига одной фразой, плюс таблица «код - что значит - где смотреть» для 502, 504, 499, Connection refused.</p>
+<p><strong>Как сдать</strong>
+В поле ниже - что попробовал, что сработало, где застрял. Отдельно напиши, чем 502 отличается от 504 своими словами, без подглядывания.</p>
+<p><strong>Критерий готовности:</strong> объясняешь каждую строку своего конфига и знаешь, чем 502 отличается от 504 на уровне причины.</p>
+<h2 id="_10">🌍 Из жизни</h2>
+<p><strong>Про закрытый 80 порт.</strong> Классическая история: команда закрывает 80 «для безопасности», через три месяца сертификат истекает, сайт падает. Причину ищут часами, потому что связь между закрытым портом и сертификатом неочевидна.</p>
+<p><strong>Про <code>reload</code> вместо <code>restart</code>.</strong> На проде под трафиком <code>restart</code> рвёт все активные соединения. Пользователи видят обрыв загрузки. <code>reload</code> поднимает новые воркеры с новым конфигом и даёт старым доработать текущие запросы. Разница слышна на собеседовании сразу.</p>
+<p><strong>Про повышение таймаута.</strong> Самое частое «лечение» 504 - поднять <code>proxy_read_timeout</code> до 300 секунд. Симптом уходит, а очередь растёт: медленный запрос теперь держит соединение впятеро дольше, и при нагрузке всё встаёт целиком. Правильный ответ на собеседовании - «сначала нахожу, что медленно, таймаут поднимаю осознанно».</p>
+<h2 id="_11">❓ Вопросы с ответами</h2>
+<p><strong>Чем forward отличается от reverse?</strong></p>
+<blockquote>
+<p>Направлением защиты. Forward прячет клиента и настраивается на его стороне. Reverse прячет сервер, стоит перед приложением и настраивается владельцем сервиса.</p>
+</blockquote>
+<p><strong>Клиент получает 502. Ваши действия?</strong></p>
+<blockquote>
+<p>Смотрю <code>error.log</code> nginx - там причина одной строкой. Параллельно: жив ли сервис, слушает ли порт, отвечает ли <code>curl localhost</code>. Если локально отвечает, а через nginx нет - смотрю адрес в <code>proxy_pass</code> и права на соединение.</p>
+</blockquote>
+<p><strong>Чем 502 отличается от 504?</strong></p>
+<blockquote>
+<p>502 - бэкенд не ответил или ответил мусором. 504 - ответил бы, но не успел за таймаут. Первое чинится подъёмом сервиса, второе - ускорением запроса.</p>
+</blockquote>
+<p><strong>Как настроить балансировку?</strong></p>
+<blockquote>
+<p>Блок <code>upstream</code>, по умолчанию round-robin. <code>least_conn</code> для запросов разной длительности, <code>ip_hash</code> если нужны липкие сессии. Пассивные проверки через <code>max_fails</code> и <code>fail_timeout</code>.</p>
+</blockquote>
+<p><strong>Зачем <code>X-Forwarded-For</code>?</strong></p>
+<blockquote>
+<p>Чтобы приложение видело настоящий IP клиента. Без него все логи забиты адресом прокси, а блокировки по IP не работают.</p>
+</blockquote>
+<p><strong>Как перезагрузить конфиг без разрыва соединений?</strong></p>
+<blockquote>
+<p><code>nginx -t</code>, потом <code>systemctl reload nginx</code>. Reload поднимает новые воркеры и даёт старым доработать текущие запросы.</p>
+</blockquote>
+<p><strong>Что будет, если закрыть 80 при работающем https?</strong></p>
+<blockquote>
+<p>Перестанет продлеваться сертификат Let's Encrypt - проверка владения ходит по 80. Редирект держать можно, закрывать порт нельзя.</p>
+</blockquote>
+<p><strong>Как понять, тормозит бэкенд или сам nginx?</strong></p>
+<blockquote>
+<p>Сравниваю <code>$request_time</code> и <code>$upstream_response_time</code> в логе. Близки - время съел бэкенд. <code>request_time</code> заметно больше - дело в nginx или в медленном клиенте.</p>
+</blockquote></article>
+    <aside class="aside">
+      <strong>В этом документе</strong>
+      <div class="toc"><div class="toc">
+<ul>
+<li><a href="#_1">🎭 Аналогия</a></li>
+<li><a href="#_2">🗺 Карта мест</a></li>
+<li><a href="#_3">📖 Теория</a><ul>
+<li><a href="#forward-reverse">Forward против reverse</a></li>
+<li><a href="#_4">Иерархия конфига</a></li>
+<li><a href="#-">Заголовки - почему это отдельный вопрос</a></li>
+<li><a href="#tls-certbot">TLS и certbot</a></li>
+<li><a href="#_5">Балансировка</a></li>
+<li><a href="#-_1">Коды ответа - разбор по причинам</a></li>
+</ul>
+</li>
+<li><a href="#_6">🔧 Практика</a><ul>
+<li><a href="#1-nginx">1. Поставить nginx и понять, где он живёт</a></li>
+<li><a href="#2-nginx-hello">2. Первый конфиг: nginx перед hello</a></li>
+<li><a href="#3">3. Имя и сертификат</a></li>
+<li><a href="#4">4. Логи с полезным форматом</a></li>
+<li><a href="#5">5. Четыре однострочника разбора логов</a></li>
+<li><a href="#6">6. Когда приедет трекер</a></li>
+</ul>
+</li>
+<li><a href="#_7">💥 Сломай намеренно</a></li>
+<li><a href="#_8">🧪 Проверь себя</a></li>
+<li><a href="#_9">✅ Задание</a></li>
+<li><a href="#_10">🌍 Из жизни</a></li>
+<li><a href="#_11">❓ Вопросы с ответами</a></li>
+</ul>
+</div>
+</div>
+    </aside>
+  </div>
+</main>
+
+
+<script>
+const ROOT = "..";
+
+// ---- тема
+const themeBtn = document.getElementById("theme");
+const paint = () => {
+  const dark = document.documentElement.getAttribute("data-theme") === "dark";
+  themeBtn.textContent = dark ? "☀" : "☾";
+};
+paint();
+themeBtn.addEventListener("click", () => {
+  const next = document.documentElement.getAttribute("data-theme") === "dark" ? "light" : "dark";
+  document.documentElement.setAttribute("data-theme", next);
+  try { localStorage.setItem("kb-theme", next); } catch (e) {}
+  paint();
+});
+
+// ---- поиск
+let index = null;
+const box = document.getElementById("results");
+const hits = document.getElementById("hits");
+const head = box.querySelector("h3");
+const input = document.getElementById("q");
+
+async function ensureIndex() {
+  if (index) return index;
+  const res = await fetch(ROOT + "/search-index.json");
+  index = await res.json();
+  return index;
+}
+
+const esc = (s) => (s || "").replace(/[&<>]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
+
+function hi(text, query) {
+  const i = text.toLowerCase().indexOf(query);
+  if (i < 0) return esc(text);
+  return esc(text.slice(0, i)) + "<mark>" + esc(text.slice(i, i + query.length)) + "</mark>" + esc(text.slice(i + query.length));
+}
+
+input.addEventListener("input", async () => {
+  const q = input.value.trim().toLowerCase();
+  if (q.length < 2) { box.hidden = true; return; }
+  const data = await ensureIndex();
+  const found = [];
+  for (const d of data) {
+    const inTitle = d.title.toLowerCase().includes(q);
+    const inSum = (d.summary || "").toLowerCase().includes(q);
+    const heads = (d.heads || []).filter(h => h.toLowerCase().includes(q));
+    if (inTitle || inSum || heads.length) {
+      found.push({ d, heads, rank: inTitle ? 0 : heads.length ? 1 : 2 });
+    }
+  }
+  found.sort((a, b) => a.rank - b.rank);
+  head.textContent = found.length ? `Нашлось: ${found.length}` : "Ничего не нашлось";
+  hits.innerHTML = found.slice(0, 40).map(({ d, heads }) =>
+    `<a class="hit" href="${ROOT}/d/${d.slug}.html">
+       <b>${hi(d.title, q)}</b>
+       <span>${heads.length ? "→ " + heads.slice(0, 3).map(h => hi(h, q)).join(" · ") : esc(d.summary || "")}</span>
+     </a>`).join("");
+  box.hidden = false;
+});
+
+input.addEventListener("keydown", (e) => { if (e.key === "Escape") { input.value = ""; box.hidden = true; input.blur(); } });
+document.addEventListener("keydown", (e) => {
+  if (e.key === "/" && document.activeElement !== input) { e.preventDefault(); input.focus(); }
+});
+</script>
+</body>
+</html>

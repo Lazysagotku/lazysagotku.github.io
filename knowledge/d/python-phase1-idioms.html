@@ -1,0 +1,386 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>🔵 Фаза 1. Идиомы и продвинутый Python (6 часов) - База знаний</title>
+<link rel="stylesheet" href="../kb.css">
+<script>
+  // Тему ставим до первой отрисовки, иначе на тёмной системе мигает белым.
+  try {
+    var t = localStorage.getItem("kb-theme");
+    if (!t) t = matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+    document.documentElement.setAttribute("data-theme", t);
+  } catch (e) {}
+</script>
+</head>
+<body>
+
+<header class="top">
+  <div class="top-in">
+    <a class="brand" href="../index.html">База <span>знаний</span></a>
+    <span class="grow"></span>
+    <input id="q" type="search" placeholder="Поиск по всем материалам…" autocomplete="off">
+    <button class="icon-btn" id="theme" type="button" title="Тема"></button>
+  </div>
+</header>
+
+<div id="results" hidden><div class="wrap-r"><h3></h3><div id="hits"></div></div></div>
+
+<main class="wrap">
+  <div class="doc-head">
+    <div class="crumb"><a href="../index.html#reference">Справочники</a></div>
+    <h1>🔵 Фаза 1. Идиомы и продвинутый Python (6 часов)</h1>
+    <div class="meta">282 строк · источник <code>l2code/Python_Phase1_Idioms.md</code></div>
+  </div>
+
+  <div class="layout">
+    <article class="prose"><blockquote>
+<p>📖 Фаза роадмапа <strong>«Python Backend»</strong>. Оглавление и статус - в <code>PythonBackend_Roadmap.md</code>.
+Каждая фаза самодостаточна: 🎭 аналогия → 📖 теория → 🔧 практика → 💥 сломай намеренно → ✅ задание → 🌍 из жизни → ❓ вопросы с ответами.</p>
+<p>Цель: писать на Python его собственными идиомами, а не как на C# с другим синтаксисом.</p>
+</blockquote>
+<h2 id="_1">🎭 Аналогия</h2>
+<p>Человек, выучивший язык по словарю, говорит грамматически верно и звучит чужим. Не потому что ошибается, а потому что строит фразы по правилам родного языка. С кодом так же: цикл с индексом вместо comprehension понятен, но выдаёт человека из другой экосистемы.</p>
+<h2 id="_2">📖 Теория</h2>
+<h3 id="_3">Изменяемое и неизменяемое</h3>
+<table>
+<thead>
+<tr>
+<th>Неизменяемые</th>
+<th>Изменяемые</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>int</code>, <code>float</code>, <code>str</code>, <code>tuple</code>, <code>frozenset</code>, <code>bytes</code></td>
+<td><code>list</code>, <code>dict</code>, <code>set</code>, объекты классов</td>
+</tr>
+</tbody>
+</table>
+<p>Присвоение в Python копирует ссылку, а не значение. Это источник самой известной ловушки языка:</p>
+<pre><code class="language-python">def add(item, target=[]):     # ЛОВУШКА: список создаётся один раз при определении
+    target.append(item)
+    return target
+
+add(1)   # [1]
+add(2)   # [1, 2] - тот же список
+</code></pre>
+<p>Правильно:</p>
+<pre><code class="language-python">def add(item, target=None):
+    if target is None:
+        target = []
+    target.append(item)
+    return target
+</code></pre>
+<p>⚠️ Значения по умолчанию вычисляются один раз при определении функции. Это спрашивают почти на каждом собеседовании по Python.</p>
+<p><strong>Мелкая и глубокая копия:</strong></p>
+<pre><code class="language-python">import copy
+shallow = copy.copy(data)       # вложенные объекты общие
+deep    = copy.deepcopy(data)   # всё скопировано
+</code></pre>
+<h3 id="comprehensions">Comprehensions</h3>
+<pre><code class="language-python">names = [v.name for v in finds if v.score &gt; 60]
+by_id = {v.id: v for v in finds}
+tracks = {v.track for v in finds if v.track}
+</code></pre>
+<p>Когда идиоматично: одно преобразование плюс фильтр. Когда усложняет: два вложенных <code>for</code> с условиями - там обычный цикл читается лучше.</p>
+<p><strong>Генераторное выражение вместо списка</strong> там, где список не нужен целиком:</p>
+<pre><code class="language-python">total = sum(v.score for v in finds)          # не строит промежуточный список
+first = next((v for v in finds if v.remote), None)
+</code></pre>
+<h3 id="args-kwargs"><code>*args</code> и <code>**kwargs</code></h3>
+<pre><code class="language-python">def score(*parts, **weights):
+    &quot;&quot;&quot;parts - позиционные, weights - именованные.&quot;&quot;&quot;
+    return sum(p * weights.get(&quot;k&quot;, 1) for p in parts)
+
+score(10, 20, k=2)
+</code></pre>
+<p>Развёртывание при вызове:</p>
+<pre><code class="language-python">args = (10, 20)
+opts = {&quot;k&quot;: 2}
+score(*args, **opts)
+</code></pre>
+<p><strong>Только именованные параметры</strong> - через <code>*</code>:</p>
+<pre><code class="language-python">def publish(text, *, dry_run=False):   # dry_run нельзя передать позиционно
+    ...
+</code></pre>
+<p>Это защищает от <code>publish("текст", True)</code>, где непонятно, что означает <code>True</code>.</p>
+<h3 id="_4">Итераторы и генераторы</h3>
+<p>Мост от C#: <code>yield</code> здесь работает как <code>yield return</code> в <code>IEnumerable</code>.</p>
+<pre><code class="language-python">def read_lines(path):
+    &quot;&quot;&quot;Читает лог построчно. Файл в гигабайты не влезет в память целиком.&quot;&quot;&quot;
+    with open(path, encoding=&quot;utf-8&quot;, errors=&quot;replace&quot;) as f:
+        for line in f:
+            yield line.rstrip(&quot;\n&quot;)
+</code></pre>
+<p>Генератор считает по одному элементу за раз и не держит всё в памяти. Разница на большом файле - между работой и <code>MemoryError</code>.</p>
+<p><strong><code>itertools</code></strong> - то, что стоит знать:</p>
+<pre><code class="language-python">from itertools import islice, groupby, chain, batched
+islice(gen, 100)                    # первые 100 без материализации
+batched(items, 1000)                # пачками, Python 3.12+
+chain(list_a, list_b)               # склеить итерируемые
+</code></pre>
+<h3 id="_5">Декораторы</h3>
+<p>Мост от C#: атрибуты плюс обёртки, только выполняются во время исполнения.</p>
+<pre><code class="language-python">import functools, time, logging
+
+def timed(fn):
+    @functools.wraps(fn)              # сохраняет имя и docstring
+    def wrapper(*args, **kwargs):
+        start = time.perf_counter()
+        try:
+            return fn(*args, **kwargs)
+        finally:
+            logging.info(&quot;%s заняло %.2f с&quot;, fn.__name__, time.perf_counter() - start)
+    return wrapper
+
+@timed
+def collect(query): ...
+</code></pre>
+<p>⚠️ Без <code>functools.wraps</code> у обёрнутой функции пропадают <code>__name__</code> и <code>__doc__</code>. Отладка превращается в набор функций с именем <code>wrapper</code>.</p>
+<p><strong>Параметризованный декоратор</strong> - три уровня вложенности:</p>
+<pre><code class="language-python">def retry(times=3, delay=1.0):
+    def decorator(fn):
+        @functools.wraps(fn)
+        def wrapper(*args, **kwargs):
+            for attempt in range(times):
+                try:
+                    return fn(*args, **kwargs)
+                except OSError:
+                    if attempt == times - 1:
+                        raise
+                    time.sleep(delay * (2 ** attempt))   # экспоненциальная пауза
+        return wrapper
+    return decorator
+
+@retry(times=5, delay=0.5)
+def fetch(url): ...
+</code></pre>
+<h3 id="_6">Контекстные менеджеры</h3>
+<p>Мост от C#: <code>using</code> и <code>IDisposable</code>.</p>
+<pre><code class="language-python">from contextlib import contextmanager
+
+@contextmanager
+def timing(label):
+    start = time.perf_counter()
+    try:
+        yield
+    finally:
+        print(f&quot;{label}: {time.perf_counter() - start:.2f} с&quot;)
+
+with timing(&quot;сбор вакансий&quot;):
+    collect()
+</code></pre>
+<p>Гарантия в <code>finally</code>: ресурс освободится даже при исключении. Именно поэтому файлы и соединения открывают через <code>with</code>, а не вручную.</p>
+<p><strong>Несколько сразу:</strong></p>
+<pre><code class="language-python">with open(src) as fin, open(dst, &quot;w&quot;) as fout:
+    ...
+</code></pre>
+<h3 id="dunder-">ООП и dunder-методы</h3>
+<pre><code class="language-python">from dataclasses import dataclass, field
+
+@dataclass(frozen=True, slots=True)
+class Find:
+    id: str
+    name: str
+    score: int = 0
+    tags: tuple[str, ...] = ()
+
+    def __str__(self) -&gt; str:
+        return f&quot;{self.name} ({self.score})&quot;
+</code></pre>
+<table>
+<thead>
+<tr>
+<th>Что даёт</th>
+<th>Как</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>__eq__</code> и <code>__hash__</code></td>
+<td><code>@dataclass</code> пишет сам, <code>frozen=True</code> делает объект хешируемым</td>
+</tr>
+<tr>
+<td><code>__repr__</code></td>
+<td>тоже пишет сам, видно в отладчике</td>
+</tr>
+<tr>
+<td>экономия памяти</td>
+<td><code>slots=True</code> убирает <code>__dict__</code> у экземпляра</td>
+</tr>
+<tr>
+<td>вычисляемое поле</td>
+<td><code>@property</code></td>
+</tr>
+<tr>
+<td>изменяемое значение по умолчанию</td>
+<td><code>field(default_factory=list)</code>, никогда <code>= []</code></td>
+</tr>
+</tbody>
+</table>
+<p><strong><code>__repr__</code> против <code>__str__</code>:</strong> первый для разработчика и отладки, второй для пользователя. Если написан только <code>__repr__</code>, <code>str()</code> возьмёт его.</p>
+<h3 id="_7">Типизация</h3>
+<pre><code class="language-python">from typing import Iterable, Protocol
+
+def top(finds: Iterable[Find], limit: int = 10) -&gt; list[Find]:
+    return sorted(finds, key=lambda f: -f.score)[:limit]
+
+class Storage(Protocol):
+    &quot;&quot;&quot;Структурная типизация: подходит любой объект с такими методами.&quot;&quot;&quot;
+    def save(self, item: Find) -&gt; None: ...
+</code></pre>
+<p>С 3.10: <code>int | None</code> вместо <code>Optional[int]</code>, <code>list[str]</code> вместо <code>List[str]</code>.</p>
+<p>⚠️ Аннотации не проверяются во время выполнения. Проверку даёт mypy:</p>
+<pre><code class="language-bash">mypy scout/ --strict
+</code></pre>
+<h2 id="_8">🔧 Практика</h2>
+<p><strong>На разведчике:</strong>
+1. Переписать чтение находок из SQLite через генератор, чтобы не грузить всё в память.
+2. Заменить словари, описывающие находку, на <code>@dataclass(frozen=True, slots=True)</code>.
+3. Обернуть сбор в декоратор <code>@timed</code>, писать длительность в лог.
+4. Добавить <code>@retry</code> на сетевые вызовы с экспоненциальной паузой.
+5. Прогнать <code>mypy scout/</code> и починить, что найдётся.</p>
+<p><strong>На трекере:</strong>
+6. Контекстный менеджер для сессии базы, если его ещё нет.
+7. Аннотировать сигнатуры в <code>crud.py</code> целиком.</p>
+<h2 id="_9">💥 Сломай намеренно</h2>
+<ol>
+<li><strong>Изменяемое значение по умолчанию.</strong> Написать функцию с <code>def add(x, target=[])</code>, вызвать трижды, посмотреть на накопление.</li>
+<li><strong>Убрать <code>functools.wraps</code></strong> из декоратора, посмотреть <code>fn.__name__</code> и на трассировку исключения.</li>
+<li><strong>Изменить <code>frozen=True</code> датакласс</strong> - получить <code>FrozenInstanceError</code>.</li>
+<li><strong>Положить <code>field(default=[])</code></strong> в датакласс - получить <code>ValueError</code> прямо при определении класса. Python здесь защищает, в обычных функциях не защищает.</li>
+<li><strong>Прочитать большой файл через <code>f.read()</code></strong> вместо построчного цикла, посмотреть на память в <code>top</code>.</li>
+<li><strong>Соврать в аннотации</strong> - написать <code>-&gt; int</code>, вернуть строку. Убедиться, что во время выполнения ничего не произошло, а mypy поймал.</li>
+</ol>
+<h2 id="_10">✅ Задание</h2>
+<p>Разведчик работает на датаклассах вместо словарей, читает находки генератором, сетевые вызовы обёрнуты <code>@retry</code>, <code>mypy scout/</code> проходит без ошибок. В коммите видно, что изменилось.</p>
+<p><strong>Критерий:</strong> можешь объяснить, почему <code>mypy</code> нашёл то, что нашёл, и почему генератор здесь лучше списка.</p>
+<h2 id="_11">🌍 Из жизни</h2>
+<p><strong>Про изменяемые значения по умолчанию.</strong> Это баг, который живёт годами: функция работает правильно при каждом отдельном вызове и накапливает мусор при повторных. Ловится обычно тогда, когда кто-то замечает, что список растёт между запросами.</p>
+<p><strong>Про генераторы и память.</strong> Разбор лога на десять гигабайт через <code>read()</code> съедает десять гигабайт оперативной. На сервере с четырьмя это <code>MemoryError</code> или OOM killer. Построчный цикл занимает килобайты.</p>
+<p><strong>Про mypy на живом коде.</strong> Первый запуск <code>--strict</code> на существующем проекте даёт сотни ошибок и желание всё выключить. Рабочий путь: включить без <code>--strict</code>, починить, потом добавлять строгость по одному флагу.</p>
+<h2 id="_12">❓ Вопросы с ответами</h2>
+<p><strong>Чем изменяемые типы отличаются от неизменяемых и почему это важно?</strong></p>
+<blockquote>
+<p>Присвоение копирует ссылку. Изменяемый объект, переданный в функцию, меняется у всех, кто на него ссылается. Самая известная ловушка - изменяемое значение по умолчанию: оно вычисляется один раз при определении функции и живёт между вызовами. Пишу <code>None</code> и создаю внутри.</p>
+</blockquote>
+<p><strong>Что такое генератор и когда он нужен?</strong></p>
+<blockquote>
+<p>Функция с <code>yield</code>, отдающая элементы по одному без материализации. Нужен, когда данных больше, чем памяти, или когда достаточно первых нескольких элементов. В C# это тот же <code>yield return</code> у <code>IEnumerable</code>.</p>
+</blockquote>
+<p><strong>Зачем <code>functools.wraps</code>?</strong></p>
+<blockquote>
+<p>Переносит имя, docstring и аннотации с исходной функции на обёртку. Без него все декорированные функции превращаются в <code>wrapper</code>, и отладка становится мучением.</p>
+</blockquote>
+<p><strong>Что такое контекстный менеджер?</strong></p>
+<blockquote>
+<p>Объект с <code>__enter__</code> и <code>__exit__</code>, гарантирующий освобождение ресурса даже при исключении. Аналог <code>using</code> с <code>IDisposable</code> в C#. Свой пишу через <code>@contextmanager</code> и <code>try/finally</code> вокруг <code>yield</code>.</p>
+</blockquote>
+<p><strong>Чем dataclass лучше словаря?</strong></p>
+<blockquote>
+<p>Явная структура, автоматические <code>__eq__</code> и <code>__repr__</code>, проверка типов через mypy, автодополнение в редакторе. <code>frozen=True</code> делает объект неизменяемым и хешируемым, <code>slots=True</code> экономит память.</p>
+</blockquote>
+<p><strong>Аннотации типов что-то проверяют во время выполнения?</strong></p>
+<blockquote>
+<p>Нет, интерпретатор их игнорирует. Проверку даёт mypy на этапе разработки или в CI. Плюс аннотации читает FastAPI и Pydantic - там они превращаются в реальную валидацию.</p>
+</blockquote></article>
+    <aside class="aside">
+      <strong>В этом документе</strong>
+      <div class="toc"><div class="toc">
+<ul>
+<li><a href="#_1">🎭 Аналогия</a></li>
+<li><a href="#_2">📖 Теория</a><ul>
+<li><a href="#_3">Изменяемое и неизменяемое</a></li>
+<li><a href="#comprehensions">Comprehensions</a></li>
+<li><a href="#args-kwargs">*args и **kwargs</a></li>
+<li><a href="#_4">Итераторы и генераторы</a></li>
+<li><a href="#_5">Декораторы</a></li>
+<li><a href="#_6">Контекстные менеджеры</a></li>
+<li><a href="#dunder-">ООП и dunder-методы</a></li>
+<li><a href="#_7">Типизация</a></li>
+</ul>
+</li>
+<li><a href="#_8">🔧 Практика</a></li>
+<li><a href="#_9">💥 Сломай намеренно</a></li>
+<li><a href="#_10">✅ Задание</a></li>
+<li><a href="#_11">🌍 Из жизни</a></li>
+<li><a href="#_12">❓ Вопросы с ответами</a></li>
+</ul>
+</div>
+</div>
+    </aside>
+  </div>
+</main>
+
+
+<script>
+const ROOT = "..";
+
+// ---- тема
+const themeBtn = document.getElementById("theme");
+const paint = () => {
+  const dark = document.documentElement.getAttribute("data-theme") === "dark";
+  themeBtn.textContent = dark ? "☀" : "☾";
+};
+paint();
+themeBtn.addEventListener("click", () => {
+  const next = document.documentElement.getAttribute("data-theme") === "dark" ? "light" : "dark";
+  document.documentElement.setAttribute("data-theme", next);
+  try { localStorage.setItem("kb-theme", next); } catch (e) {}
+  paint();
+});
+
+// ---- поиск
+let index = null;
+const box = document.getElementById("results");
+const hits = document.getElementById("hits");
+const head = box.querySelector("h3");
+const input = document.getElementById("q");
+
+async function ensureIndex() {
+  if (index) return index;
+  const res = await fetch(ROOT + "/search-index.json");
+  index = await res.json();
+  return index;
+}
+
+const esc = (s) => (s || "").replace(/[&<>]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
+
+function hi(text, query) {
+  const i = text.toLowerCase().indexOf(query);
+  if (i < 0) return esc(text);
+  return esc(text.slice(0, i)) + "<mark>" + esc(text.slice(i, i + query.length)) + "</mark>" + esc(text.slice(i + query.length));
+}
+
+input.addEventListener("input", async () => {
+  const q = input.value.trim().toLowerCase();
+  if (q.length < 2) { box.hidden = true; return; }
+  const data = await ensureIndex();
+  const found = [];
+  for (const d of data) {
+    const inTitle = d.title.toLowerCase().includes(q);
+    const inSum = (d.summary || "").toLowerCase().includes(q);
+    const heads = (d.heads || []).filter(h => h.toLowerCase().includes(q));
+    if (inTitle || inSum || heads.length) {
+      found.push({ d, heads, rank: inTitle ? 0 : heads.length ? 1 : 2 });
+    }
+  }
+  found.sort((a, b) => a.rank - b.rank);
+  head.textContent = found.length ? `Нашлось: ${found.length}` : "Ничего не нашлось";
+  hits.innerHTML = found.slice(0, 40).map(({ d, heads }) =>
+    `<a class="hit" href="${ROOT}/d/${d.slug}.html">
+       <b>${hi(d.title, q)}</b>
+       <span>${heads.length ? "→ " + heads.slice(0, 3).map(h => hi(h, q)).join(" · ") : esc(d.summary || "")}</span>
+     </a>`).join("");
+  box.hidden = false;
+});
+
+input.addEventListener("keydown", (e) => { if (e.key === "Escape") { input.value = ""; box.hidden = true; input.blur(); } });
+document.addEventListener("keydown", (e) => {
+  if (e.key === "/" && document.activeElement !== input) { e.preventDefault(); input.focus(); }
+});
+</script>
+</body>
+</html>

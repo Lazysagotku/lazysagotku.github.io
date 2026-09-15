@@ -1,0 +1,194 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>📈 Слой 7. ClickHouse обзорно (день 26, 2 часа) - База знаний</title>
+<link rel="stylesheet" href="../kb.css">
+<script>
+  // Тему ставим до первой отрисовки, иначе на тёмной системе мигает белым.
+  try {
+    var t = localStorage.getItem("kb-theme");
+    if (!t) t = matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+    document.documentElement.setAttribute("data-theme", t);
+  } catch (e) {}
+</script>
+</head>
+<body>
+
+<header class="top">
+  <div class="top-in">
+    <a class="brand" href="../index.html">База <span>знаний</span></a>
+    <span class="grow"></span>
+    <input id="q" type="search" placeholder="Поиск по всем материалам…" autocomplete="off">
+    <button class="icon-btn" id="theme" type="button" title="Тема"></button>
+  </div>
+</header>
+
+<div id="results" hidden><div class="wrap-r"><h3></h3><div id="hits"></div></div></div>
+
+<main class="wrap">
+  <div class="doc-head">
+    <div class="crumb"><a href="../index.html#reference">Справочники</a></div>
+    <h1>📈 Слой 7. ClickHouse обзорно (день 26, 2 часа)</h1>
+    <div class="meta">65 строк · источник <code>l2code/Infra_Layer7_ClickHouse.md</code></div>
+  </div>
+
+  <div class="layout">
+    <article class="prose"><blockquote>
+<p>📖 Слой роадмапа <strong>«Стенд с нуля»</strong>. Оглавление, срез под Сбер и календарь - в <code>Roadmap_Infra_Sept2026.md</code>.
+Каждый слой самодостаточен: 🎭 аналогия → 🗺 карта мест → 📖 теория → 🔧 практика → 💥 сломай намеренно → ✅ задание → 🌍 из жизни → ❓ вопросы с ответами.</p>
+</blockquote>
+<h2 id="_1">🎭 Аналогия</h2>
+<p>Библиотека против картотеки. PostgreSQL хранит книги по полкам - удобно взять одну книгу целиком. ClickHouse хранит картотеку по признакам - неудобно собрать одну книгу, зато мгновенно ответит «сколько книг издано в 1998 году».</p>
+<h2 id="_2">🗺 Карта мест</h2>
+<p><strong>Сделать:</strong> поднять ClickHouse в докере, залить данные трекера, выполнить один и тот же агрегирующий запрос здесь и в PostgreSQL, записать цифры.</p>
+<p><strong>Понять:</strong> колоночное хранение: считать по столбцам - мгновенно, менять одну строку - дорого. Это витрина для аналитики рядом с PostgreSQL, а не его замена.</p>
+<p><strong>Где писать:</strong> <code>docker-compose.yml</code> с clickhouse-server; SQL - в <code>clickhouse-client</code>.</p>
+<p><strong>Чем запустить:</strong> <code>docker compose up -d</code>; <code>docker exec -it clickhouse clickhouse-client</code>.</p>
+<p><strong>Где смотреть результат:</strong> время выполнения в выводе <code>clickhouse-client</code> и <code>\timing</code> в <code>psql</code> рядом; <code>system.query_log</code> в ClickHouse - история запросов с длительностью.</p>
+<p><strong>Как понять, что получилось:</strong> у тебя есть табличка «запрос: PostgreSQL X мс, ClickHouse Y мс» и своими словами объяснение, почему так - на собеседовании собственный замер звучит совсем иначе, чем статья.</p>
+<h2 id="40">📖 Теория (40 минут)</h2>
+<p><strong>Колоночное хранение.</strong> Строчная СУБД кладёт рядом все поля одной записи, колоночная - все значения одной колонки. Аналитический запрос читает две колонки из тридцати, и колоночная прочитает только их. Отсюда разница в разы на агрегатах.</p>
+<p><strong>Почему точечные обновления плохие.</strong> Данные лежат сжатыми блоками по колонкам. Изменить одну строку означает переписать блоки. ClickHouse умеет <code>ALTER TABLE ... UPDATE</code>, но это тяжёлая асинхронная операция, а не обычный UPDATE.</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>PostgreSQL</th>
+<th>ClickHouse</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Хранение</td>
+<td>по строкам</td>
+<td>по колонкам</td>
+</tr>
+<tr>
+<td>Сильная сторона</td>
+<td>точечные операции, транзакции</td>
+<td>агрегаты по большим объёмам</td>
+</tr>
+<tr>
+<td>Слабая сторона</td>
+<td>агрегаты по десяткам миллионов</td>
+<td>точечные обновления, JOIN'ы</td>
+</tr>
+<tr>
+<td>Транзакции</td>
+<td>полноценные</td>
+<td>практически нет</td>
+</tr>
+<tr>
+<td>Когда выбирать</td>
+<td>бизнес-логика, деньги, учёт</td>
+<td>логи, метрики, аналитика</td>
+</tr>
+</tbody>
+</table>
+<p><strong>MergeTree</strong> - основной движок. Данные пишутся кусками, фоном сливаются. Партиционирование обычно по месяцу, сортировка по ключу, по которому фильтруют.</p>
+<h2 id="_3">🔧 Практика</h2>
+<p><strong>1. Поднять ClickHouse в докере:</strong></p>
+<pre><code class="language-bash">docker run -d --name ch -p 8123:8123 -p 9000:9000 clickhouse/clickhouse-server
+</code></pre>
+<p><strong>2. Залить данные из трекера</strong> - выгрузить таблицу находок или событий и загрузить в ClickHouse.</p>
+<p><strong>3. Сравнить агрегирующий запрос с PostgreSQL и записать цифры.</strong> На собеседовании собственный замер звучит совсем иначе, чем статья.</p>
+<h2 id="_4">💥 Сломай намеренно</h2>
+<p><strong>1. Сделать точечный <code>UPDATE</code> одной строки</strong> и посмотреть, во что это превращается - <code>ALTER TABLE ... UPDATE</code> идёт асинхронно и переписывает блоки.</p>
+<p><strong>2. Соединить две большие таблицы через JOIN</strong> и сравнить время с тем же запросом в PostgreSQL.</p>
+<h2 id="_5">✅ Задание</h2>
+<p>Таблица с замерами: один и тот же агрегирующий запрос в PostgreSQL и в ClickHouse, объём данных, время.</p>
+<h2 id="_6">❓ Вопросы с ответами</h2>
+<p><strong>Когда выберете ClickHouse, а когда останетесь на PostgreSQL?</strong></p>
+<blockquote>
+<p>ClickHouse - когда нужны агрегаты по большим объёмам и данные пишутся один раз: логи, метрики, аналитика. PostgreSQL - когда нужны транзакции, точечные операции и связи. У меня был замер на своих данных: [цифра] против [цифра] на одном и том же агрегате.</p>
+</blockquote></article>
+    <aside class="aside">
+      <strong>В этом документе</strong>
+      <div class="toc"><div class="toc">
+<ul>
+<li><a href="#_1">🎭 Аналогия</a></li>
+<li><a href="#_2">🗺 Карта мест</a></li>
+<li><a href="#40">📖 Теория (40 минут)</a></li>
+<li><a href="#_3">🔧 Практика</a></li>
+<li><a href="#_4">💥 Сломай намеренно</a></li>
+<li><a href="#_5">✅ Задание</a></li>
+<li><a href="#_6">❓ Вопросы с ответами</a></li>
+</ul>
+</div>
+</div>
+    </aside>
+  </div>
+</main>
+
+
+<script>
+const ROOT = "..";
+
+// ---- тема
+const themeBtn = document.getElementById("theme");
+const paint = () => {
+  const dark = document.documentElement.getAttribute("data-theme") === "dark";
+  themeBtn.textContent = dark ? "☀" : "☾";
+};
+paint();
+themeBtn.addEventListener("click", () => {
+  const next = document.documentElement.getAttribute("data-theme") === "dark" ? "light" : "dark";
+  document.documentElement.setAttribute("data-theme", next);
+  try { localStorage.setItem("kb-theme", next); } catch (e) {}
+  paint();
+});
+
+// ---- поиск
+let index = null;
+const box = document.getElementById("results");
+const hits = document.getElementById("hits");
+const head = box.querySelector("h3");
+const input = document.getElementById("q");
+
+async function ensureIndex() {
+  if (index) return index;
+  const res = await fetch(ROOT + "/search-index.json");
+  index = await res.json();
+  return index;
+}
+
+const esc = (s) => (s || "").replace(/[&<>]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
+
+function hi(text, query) {
+  const i = text.toLowerCase().indexOf(query);
+  if (i < 0) return esc(text);
+  return esc(text.slice(0, i)) + "<mark>" + esc(text.slice(i, i + query.length)) + "</mark>" + esc(text.slice(i + query.length));
+}
+
+input.addEventListener("input", async () => {
+  const q = input.value.trim().toLowerCase();
+  if (q.length < 2) { box.hidden = true; return; }
+  const data = await ensureIndex();
+  const found = [];
+  for (const d of data) {
+    const inTitle = d.title.toLowerCase().includes(q);
+    const inSum = (d.summary || "").toLowerCase().includes(q);
+    const heads = (d.heads || []).filter(h => h.toLowerCase().includes(q));
+    if (inTitle || inSum || heads.length) {
+      found.push({ d, heads, rank: inTitle ? 0 : heads.length ? 1 : 2 });
+    }
+  }
+  found.sort((a, b) => a.rank - b.rank);
+  head.textContent = found.length ? `Нашлось: ${found.length}` : "Ничего не нашлось";
+  hits.innerHTML = found.slice(0, 40).map(({ d, heads }) =>
+    `<a class="hit" href="${ROOT}/d/${d.slug}.html">
+       <b>${hi(d.title, q)}</b>
+       <span>${heads.length ? "→ " + heads.slice(0, 3).map(h => hi(h, q)).join(" · ") : esc(d.summary || "")}</span>
+     </a>`).join("");
+  box.hidden = false;
+});
+
+input.addEventListener("keydown", (e) => { if (e.key === "Escape") { input.value = ""; box.hidden = true; input.blur(); } });
+document.addEventListener("keydown", (e) => {
+  if (e.key === "/" && document.activeElement !== input) { e.preventDefault(); input.focus(); }
+});
+</script>
+</body>
+</html>

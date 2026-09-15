@@ -1,0 +1,650 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>🖥 Слой 0. Стенд и Linux-база (день 1, 2 часа) - База знаний</title>
+<link rel="stylesheet" href="../kb.css">
+<script>
+  // Тему ставим до первой отрисовки, иначе на тёмной системе мигает белым.
+  try {
+    var t = localStorage.getItem("kb-theme");
+    if (!t) t = matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+    document.documentElement.setAttribute("data-theme", t);
+  } catch (e) {}
+</script>
+</head>
+<body>
+
+<header class="top">
+  <div class="top-in">
+    <a class="brand" href="../index.html">База <span>знаний</span></a>
+    <span class="grow"></span>
+    <input id="q" type="search" placeholder="Поиск по всем материалам…" autocomplete="off">
+    <button class="icon-btn" id="theme" type="button" title="Тема"></button>
+  </div>
+</header>
+
+<div id="results" hidden><div class="wrap-r"><h3></h3><div id="hits"></div></div></div>
+
+<main class="wrap">
+  <div class="doc-head">
+    <div class="crumb"><a href="../index.html#reference">Справочники</a></div>
+    <h1>🖥 Слой 0. Стенд и Linux-база (день 1, 2 часа)</h1>
+    <div class="meta">527 строк · источник <code>l2code/Infra_Layer0_Linux_Stand.md</code></div>
+  </div>
+
+  <div class="layout">
+    <article class="prose"><blockquote>
+<p>📖 Слой роадмапа <strong>«Стенд с нуля»</strong>. Оглавление, срез под Сбер и календарь - в <code>Roadmap_Infra_Sept2026.md</code>.
+Каждый слой самодостаточен: 🎭 аналогия → 🗺 карта мест → 📖 теория → 🔧 практика → 💥 сломай намеренно → 🧪 проверь себя → ✅ задание → 🌍 из жизни → ❓ вопросы с ответами.</p>
+</blockquote>
+<h2 id="_1">🎭 Аналогия</h2>
+<p>Пустая квартира после ремонта: стены есть, розетки есть, мебели нет. Прежде чем завозить технику, нужно поставить дверь с замком и понять, где щиток.</p>
+<h2 id="_2">🗺 Карта мест</h2>
+<p><strong>Сделать:</strong> закрыть вход root-ом и по паролю, включить файрвол, поставить Docker и поднять PostgreSQL через compose, оформить тестовый сервис <code>hello</code> под systemd. Трекер приедет в слое 2.</p>
+<p><strong>Понять:</strong> сервер - это процессы под управлением systemd. Всё, что ты делаешь, - либо команда в терминале (выполнилась сразу), либо файл конфига в <code>/etc</code> (это appsettings.json сервера: поменял, перезапустил сервис, заработало иначе). Результат виден только через три вещи: статус сервиса, его логи, открытые порты.</p>
+<p><strong>Где писать:</strong> команды - терминал под <code>ivan</code>; конфиги - <code>/etc/ssh/sshd_config.d/*.conf</code>, <code>/etc/systemd/system/*.service</code>; файрвол - командами <code>ufw</code>. Удобнее всего из VS Code: Remote-SSH → <code>ivan@сервер</code> → открыть <code>/etc</code>. Слева файлы, внизу терминал - как проект на C#.</p>
+<p><strong>Чем запустить:</strong> <code>sudo systemctl reload ssh</code>, <code>sudo systemctl daemon-reload &amp;&amp; sudo systemctl enable --now имя</code>, <code>sudo ufw enable</code>. Это «пересобрать и перезапустить».</p>
+<p><strong>Где смотреть результат:</strong></p>
+<pre><code class="language-bash">sudo sshd -T | grep -iE &quot;permitrootlogin|passwordauthentication&quot;   # что реально действует в SSH
+sudo ufw status verbose        # что открыто снаружи
+systemctl status имя           # жив ли сервис: active (running)
+journalctl -u имя -n 30        # его последние 30 строк логов - Console.WriteLine сервера
+ss -tlnp                       # кто на каких портах слушает
+docker ps                      # какие контейнеры живы
+</code></pre>
+<p><strong>Как понять, что получилось:</strong> <code>ssh root@сервер</code> с компа отвечает <code>Permission denied (publickey)</code>; <code>docker compose ps</code> показывает PostgreSQL живым; <code>systemctl status hello</code> зелёный, а <code>curl localhost:8000</code> отвечает «стенд живой».</p>
+<h2 id="_3">📖 Теория</h2>
+<h3 id="-0109">Про площадку - решено 01.09</h3>
+<p>Берём <strong>облачный VPS</strong>. Разница с домашней машиной принципиальная: домашний стенд видит только сам Иван, а VPS с белым IP можно показать работающим - дать ссылку на собственный трекер за nginx с настоящим сертификатом, на Grafana с живыми метриками. На собеседовании «вот, откройте» работает совсем не так, как «у меня локально поднято».</p>
+<p>⚠️ Облако здесь - <strong>инструмент</strong>. Поднимать своё облако на OpenStack или Proxmox не надо: это отдельная профессия, и ни в одной из разобранных вакансий её не спрашивали.</p>
+<h3 id="-11092026">💳 Что купить - сверено 11.09.2026</h3>
+<p><strong>Timeweb Cloud, тариф MSK 50, линейка Premium 3.3 ГГц, локация Москва.</strong></p>
+<table>
+<thead>
+<tr>
+<th>Тариф</th>
+<th>Цена</th>
+<th>Процессор</th>
+<th>Память</th>
+<th>Диск</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>MSK 40</td>
+<td>900 ₽/мес</td>
+<td>2 × 3.3 ГГц</td>
+<td>2 ГБ</td>
+<td>40 ГБ NVMe</td>
+</tr>
+<tr>
+<td><strong>MSK 50</strong> ← берём</td>
+<td><strong>1 080 ₽/мес</strong></td>
+<td>2 × 3.3 ГГц</td>
+<td><strong>4 ГБ</strong></td>
+<td>50 ГБ NVMe</td>
+</tr>
+<tr>
+<td>MSK 80</td>
+<td>1 800 ₽/мес</td>
+<td>4 × 3.3 ГГц</td>
+<td>8 ГБ</td>
+<td>80 ГБ</td>
+</tr>
+<tr>
+<td>MSK 100</td>
+<td>2 790 ₽/мес</td>
+<td>8 × 3.3 ГГц</td>
+<td>12 ГБ</td>
+<td>100 ГБ</td>
+</tr>
+</tbody>
+</table>
+<p>⚠️ <strong>IPv4 у Timeweb платный</strong> и добавляется отдельной строкой к тарифу. IPv6 бесплатный, но для показа сайта с сертификатом нужен именно IPv4. Итог по деньгам выходит около 1 250-1 300 ₽ в месяц.</p>
+<p>⚠️ <strong>Брать период «1 месяц без скидки».</strong> Скидки за 3, 6 и 12 месяцев (5, 7 и 10 процентов) означают предоплату и убивают главное преимущество - почасовую тарификацию. Со стендом она нужна: сломал, пересоздал, потерял рубли вместо месяца.</p>
+<p><strong>Почему сразу 4 ГБ.</strong> До слоя 6 хватает двух, но k3s с мониторингом требует около трёх, а на ClickHouse двух не хватит точно. Разница за первые десять дней около 60 рублей, а пересоздание в середине работы стоит дороже. Тариф можно поднять в любой момент, <strong>опустить обратно нельзя</strong> - это правило Timeweb.</p>
+<p>Образ: <strong>Ubuntu 24.04 LTS</strong>. Стабильно, документации больше всех, совпадает с тем, что стоит в большинстве компаний.</p>
+<p><strong>Пошаговая инструкция по покупке</strong> - в разделе 🔧 Практика ниже.</p>
+<h3 id="ssh">SSH: почему ключ вместо пароля</h3>
+<blockquote>
+<p>О чём: пароль подбирают, ключ - нет; приватная половина живёт только на твоём компе, сервер знает лишь публичную.</p>
+</blockquote>
+<p>Пароль подбирают перебором. Ключ - пара из двух файлов: приватный остаётся у тебя, публичный кладётся на сервер. Сервер задаёт задачу, которую можно решить только приватным ключом, и подбор здесь бесполезен.</p>
+<p>Открытый в интернет сервер получает <strong>тысячи попыток входа в сутки</strong> с первого же часа жизни. Это не преувеличение - в <code>/var/log/auth.log</code> это видно глазами.</p>
+<h3 id="sudo-root">sudo: почему не работать под root</h3>
+<blockquote>
+<p>О чём: под root одна опечатка стоит сервера, и в логах нет виноватого; sudo даёт права на одну команду и оставляет след.</p>
+</blockquote>
+<p>Под root любая опечатка выполняется без вопросов. <code>rm -rf /</code> не переспросит. Плюс в логах не видно, кто именно сделал: root - это все сразу.</p>
+<p><code>sudo</code> даёт разовое повышение и оставляет запись в <code>/var/log/auth.log</code> с именем пользователя.</p>
+<h3 id="ufw">ufw: политика «всё закрыто»</h3>
+<blockquote>
+<p>О чём: снаружи закрыто всё, кроме того, что разрешил явно; порядок «сначала 22, потом enable» - вопрос выживания.</p>
+</blockquote>
+<p>Правильный подход - запретить всё входящее и открыть точечно то, что нужно. Обратный порядок («открыто всё, закрываем опасное») ошибочен: перечислить всё опасное заранее невозможно.</p>
+<h3 id="systemd">systemd: что это и зачем</h3>
+<blockquote>
+<p>О чём: менеджер сервисов: поднимает после перезагрузки, перезапускает после падения, собирает логи в journal.</p>
+</blockquote>
+<p>Система инициализации. Отвечает на четыре вопроса: что запускать при загрузке, в каком порядке, что делать при падении, куда писать логи.</p>
+<p><strong>Аналогия для systemd.</strong> Завхоз здания: следит, чтобы нужное было включено, включает при старте, перезапускает то, что вырубилось.</p>
+<h3 id="docker">Docker: контейнер против виртуальной машины</h3>
+<blockquote>
+<p>О чём: контейнер - изолированный процесс с чужими библиотеками на общем ядре; поднимается за секунду, а не за минуту.</p>
+</blockquote>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>Виртуальная машина</th>
+<th>Контейнер</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Что виртуализирует</td>
+<td>железо целиком</td>
+<td>процессы поверх общего ядра</td>
+</tr>
+<tr>
+<td>Своё ядро ОС</td>
+<td>да</td>
+<td>нет, ядро хозяина</td>
+</tr>
+<tr>
+<td>Вес</td>
+<td>гигабайты</td>
+<td>мегабайты</td>
+</tr>
+<tr>
+<td>Старт</td>
+<td>минуты</td>
+<td>секунды</td>
+</tr>
+<tr>
+<td>Изоляция</td>
+<td>сильная</td>
+<td>слабее, общее ядро</td>
+</tr>
+</tbody>
+</table>
+<p>Три элемента: <strong>образ</strong> (шаблон, только чтение), <strong>контейнер</strong> (запущенный экземпляр образа), <strong>реестр</strong> (хранилище образов).</p>
+<p>⚠️ Ключевая мысль для собеседования: контейнер использует ядро хозяина. Отсюда следует, что Linux-контейнер не запустится на Windows без прослойки, и что уязвимость в ядре пробивает изоляцию всех контейнеров сразу.</p>
+<h2 id="_4">🔧 Практика</h2>
+<p><strong>Как читать этот раздел.</strong> Каждый шаг устроен одинаково: что делаем и зачем → команды, у каждой в комментарии что она делает → что должно показаться на экране. В тетрадь пишется левая колонка: команда и одна фраза, что она делает. Весь слой - около двух часов за один-два вечера; ритм «по 20 минут в день» относится к слою 9, здесь его нет.</p>
+<h3 id="0">0. Как вообще создать файл на сервере</h3>
+<p>Три способа, от простого к удобному. Первый нужен всегда, третий - для длинных файлов.</p>
+<p><strong>Редактор nano</strong> - открыть файл, вставить текст, сохранить:</p>
+<pre><code class="language-bash">sudo nano /etc/systemd/system/hello.service   # sudo - файл в системной папке, писать туда может только root
+# вставить текст правой кнопкой мыши или Shift+Insert
+# Ctrl+O, Enter - сохранить; Ctrl+X - выйти
+cat /etc/systemd/system/hello.service         # cat - показать содержимое, проверить, что записалось
+</code></pre>
+<p><strong>tee с heredoc</strong> - когда текст уже есть в буфере и хочется одной командой:</p>
+<pre><code class="language-bash">sudo tee /etc/systemd/system/hello.service &gt; /dev/null &lt;&lt;'EOF'
+текст файла
+EOF
+</code></pre>
+<p><code>tee</code> читает то, что ему подали на вход, и пишет в файл; <code>&lt;&lt;'EOF'</code> означает «всё до строки EOF - это вход»; <code>&gt; /dev/null</code> глушит эхо на экран.</p>
+<p><strong>VS Code через Remote-SSH</strong> - для файлов длиннее десяти строк. Подключиться к <code>ivan@сервер</code>, открыть папку <code>/etc/systemd/system</code>, править как обычный проект. Сохранение файла в системной папке попросит пароль sudo - это нормально.</p>
+<p>⚠️ <strong>Ловушка, в которую попадают все:</strong></p>
+<pre><code class="language-bash">sudo echo &quot;текст&quot; &gt; /etc/systemd/system/hello.service     # НЕ РАБОТАЕТ
+</code></pre>
+<p><code>sudo</code> относится только к <code>echo</code>. Стрелку <code>&gt;</code> выполняет твоя оболочка, уже без sudo, от имени <code>ivan</code> - и получает «Permission denied». А если путь относительный, как <code>&gt; hello.service</code>, файл молча создаётся в текущей папке (обычно в домашней <code>~</code>), и в <code>/etc/systemd/system</code> его, конечно, нет. Правило: писать в системные папки только через <code>sudo nano</code> или <code>sudo tee</code>. Пути в командах писать полные, от корня <code>/</code>.</p>
+<p>Проверить, где ты и что где лежит:</p>
+<pre><code class="language-bash">pwd                          # в какой папке я сейчас
+ls -l /etc/systemd/system/   # что лежит в папке, с правами и владельцем
+ls -l ~                      # домашняя папка - сюда падают файлы без полного пути
+</code></pre>
+<h3 id="1-root">1. Пользователь и закрытие root</h3>
+<p><strong>Что делаем.</strong> Работать под root нельзя: одна опечатка в <code>rm</code> - и сервера нет, и в логах не видно, кто это сделал. Заводим обычного пользователя с правом временно становиться root через <code>sudo</code>, а вход root-ом снаружи закрываем.</p>
+<pre><code class="language-bash">sudo adduser ivan              # создать пользователя с домашней папкой и паролем (adduser задаёт вопросы, useradd - нет)
+sudo usermod -aG sudo ivan     # добавить (-a) в группу (-G) sudo - право выполнять команды от root
+groups ivan                    # проверить: в списке должно быть sudo
+</code></pre>
+<p>Дальше запрещаем вход root-ом и вход по паролю. В Ubuntu 24.04 главный конфиг <code>/etc/ssh/sshd_config</code> перекрывается файлами из папки <code>sshd_config.d/</code>, поэтому свои настройки кладём отдельным файлом - главный не трогаем, обновления его не затрут:</p>
+<pre><code class="language-bash">sudo nano /etc/ssh/sshd_config.d/10-hardening.conf
+</code></pre>
+<p>Содержимое:</p>
+<pre><code>PermitRootLogin no
+PasswordAuthentication no
+</code></pre>
+<p>Применить и проверить:</p>
+<pre><code class="language-bash">sudo sshd -t                                   # проверка синтаксиса: молчит - значит ок
+sudo systemctl reload ssh                      # перечитать конфиг без обрыва текущих сессий
+sudo sshd -T | grep -iE &quot;permitrootlogin|passwordauthentication&quot;   # -T печатает, что реально действует
+</code></pre>
+<p>Ожидаешь: <code>permitrootlogin no</code> и <code>passwordauthentication no</code>. Если пароль остался <code>yes</code> - его перебивает другой файл в той же папке, посмотри <code>ls /etc/ssh/sshd_config.d/</code> и загляни в <code>50-cloud-init.conf</code>.</p>
+<p>⚠️ <strong>Порядок важен:</strong> держи второе окно с открытой сессией, пока не убедился, что новое окно под <code>ivan</code> заходит по ключу. Иначе останешься снаружи.</p>
+<p>Проверка снаружи, с компа: <code>ssh root@сервер</code> → <code>Permission denied (publickey)</code>. Это и есть результат.</p>
+<h3 id="2">2. Ключ</h3>
+<p><strong>Что делаем.</strong> Пароль можно подобрать, ключ - нет. Пара ключей: приватный остаётся на компе, публичный кладётся на сервер в <code>~/.ssh/authorized_keys</code>. При входе сервер проверяет, что у тебя есть приватная половина.</p>
+<pre><code class="language-bash"># на своём компе
+ssh-keygen -t ed25519 -C &quot;ivan@stand&quot;   # создать пару; -t ed25519 - современный алгоритм, -C - подпись, чтобы отличать ключи
+ssh-copy-id ivan@сервер                 # положить публичный ключ на сервер (спросит пароль ivan в последний раз)
+
+# на сервере
+ls -l ~/.ssh/                           # должен быть authorized_keys
+chmod 700 ~/.ssh                        # папка: доступ только владельцу - иначе sshd откажется читать ключ
+chmod 600 ~/.ssh/authorized_keys        # файл: читать и писать только владельцу
+</code></pre>
+<p><code>chmod 700</code> и <code>600</code> - права в восьмеричной записи: 7 = читать+писать+выполнять, 6 = читать+писать, 0 = ничего. Три цифры - владелец, группа, остальные. sshd специально отказывается работать с «слишком открытыми» ключами.</p>
+<h3 id="3">3. Файрвол</h3>
+<p><strong>Что делаем.</strong> По умолчанию сервер отвечает на всё, что слушает. Файрвол переворачивает логику: снаружи закрыто всё, кроме явно разрешённого. <code>ufw</code> - обёртка над iptables с человеческими командами.</p>
+<pre><code class="language-bash">sudo ufw default deny incoming    # входящие: запрещено всё
+sudo ufw default allow outgoing   # исходящие: разрешено всё - серверу надо ходить за обновлениями
+sudo ufw allow 22/tcp             # SSH - СНАЧАЛА, иначе следующей командой отрежешь себя
+sudo ufw allow 80/tcp             # HTTP - для nginx в слое 1
+sudo ufw allow 443/tcp            # HTTPS
+sudo ufw enable                   # включить; спросит подтверждение
+sudo ufw status verbose           # результат: Default: deny (incoming), три строки ALLOW
+</code></pre>
+<p>Проверка снаружи, с компа: <code>ssh ivan@сервер</code> заходит; <code>curl -m 5 http://сервер:8000</code> висит и отваливается по таймауту - порт 8000 закрыт, так и задумано.</p>
+<h3 id="4-docker">4. Docker</h3>
+<p><strong>Что это здесь.</strong> Docker запускает программу в контейнере - изолированной коробке со своими библиотеками. Три слова, которые надо различать:
+- <strong>образ</strong> (image) - шаблон, скачивается с реестра, у него есть тег-версия: <code>postgres:16</code>, <code>nginx:1.27</code>. Управление версиями - это выбор тега; <code>latest</code> в проде не используют, потому что завтра он другой.
+- <strong>контейнер</strong> - запущенный экземпляр образа. Один образ - сколько угодно контейнеров.
+- <strong>compose</strong> - файл <code>compose.yml</code>, где описано несколько контейнеров разом: какие образы, какие порты, какие папки примонтировать. Одна команда поднимает всё. В слое 2 так поедут трекер и PostgreSQL.</p>
+<p>Установка:</p>
+<pre><code class="language-bash">curl -fsSL https://get.docker.com | sudo sh   # официальный скрипт установки
+sudo usermod -aG docker ivan                  # группа docker = право управлять контейнерами без sudo
+</code></pre>
+<p>⚠️ Членство в группе применяется при входе. После <code>usermod</code> выйди (<code>exit</code>) и зайди заново, потом проверь: <code>groups</code> - в списке должен появиться <code>docker</code>. Хочешь без перезахода - <code>newgrp docker</code> откроет новую оболочку с группой уже внутри. Пока группы нет, <code>docker ps</code> ответит «permission denied» - это не поломка.</p>
+<p>Первый запуск и «окно результата»:</p>
+<pre><code class="language-bash">docker run hello-world     # скачать крошечный образ и запустить: напечатает Hello from Docker!
+docker ps                  # что работает сейчас (пусто - hello-world уже завершился)
+docker ps -a               # включая завершённые
+docker images              # какие образы скачаны и каких версий
+</code></pre>
+<p>Compose руками - первый свой файл. Создай папку и файл:</p>
+<pre><code class="language-bash">mkdir -p ~/stand/db &amp;&amp; cd ~/stand/db
+nano compose.yml
+</code></pre>
+<p>Содержимое:</p>
+<pre><code class="language-yaml">services:
+  db:
+    image: postgres:16            # образ и версия - здесь управляют версиями
+    environment:
+      POSTGRES_PASSWORD: stand    # пароль суперпользователя базы
+    ports:
+      - &quot;127.0.0.1:5432:5432&quot;     # снаружи не видно, только с самого сервера
+    volumes:
+      - pgdata:/var/lib/postgresql/data   # данные живут вне контейнера, иначе пропадут при пересоздании
+volumes:
+  pgdata:
+</code></pre>
+<p>Запуск и проверка:</p>
+<pre><code class="language-bash">docker compose up -d           # -d - в фоне; скачает postgres:16 и запустит
+docker compose ps              # состояние контейнеров этого файла
+docker compose logs -f db      # логи базы вживую; Ctrl+C - выйти из просмотра, база продолжит работать
+ss -tlnp | grep 5432           # порт слушается на 127.0.0.1
+docker compose exec db psql -U postgres -c &quot;select version();&quot;   # зайти внутрь и спросить базу
+docker compose down            # остановить и удалить контейнеры; данные в pgdata останутся
+</code></pre>
+<p>Это и есть «как заполнять докер»: файл описывает, что поднять; команды поднимают и показывают.</p>
+<h3 id="5-systemd-">5. Свой systemd-сервис</h3>
+<p><strong>Что делаем.</strong> Всё, что должно работать само - подниматься после перезагрузки, перезапускаться после падения, писать логи в одно место, - оформляется как сервис systemd. Трекера на сервере ещё нет, он приедет в слое 2 через CI/CD, поэтому тренируемся на крошечном сервисе: встроенный веб-сервер Python, который отдаёт содержимое папки.</p>
+<pre><code class="language-bash">sudo mkdir -p /opt/hello                                 # /opt - место для своих программ
+echo &quot;стенд живой&quot; | sudo tee /opt/hello/index.html      # файл, который будет отдавать сервер
+sudo chown -R ivan:ivan /opt/hello                       # владелец - ivan, сервис будет работать от него
+</code></pre>
+<p>Unit-файл - описание сервиса для systemd:</p>
+<pre><code class="language-bash">sudo nano /etc/systemd/system/hello.service
+</code></pre>
+<pre><code class="language-ini">[Unit]
+Description=Тестовый веб-сервер стенда
+After=network.target                 # стартовать после того, как поднялась сеть
+
+[Service]
+Type=simple                          # процесс живёт, пока живёт сервис
+User=ivan                            # от кого запускать - не от root
+WorkingDirectory=/opt/hello          # в какой папке
+ExecStart=/usr/bin/python3 -m http.server 8000 --bind 127.0.0.1   # что запускать; путь полный
+Restart=always                       # упал - поднять
+RestartSec=5                         # через пять секунд
+
+[Install]
+WantedBy=multi-user.target           # включать при обычной загрузке системы
+</code></pre>
+<p>Запуск и «окно результата»:</p>
+<pre><code class="language-bash">sudo systemctl daemon-reload         # systemd перечитывает unit-файлы - после любой правки
+sudo systemctl enable --now hello    # enable - автозапуск при загрузке, --now - и запустить сейчас
+systemctl status hello               # active (running) зелёным, ниже - последние строки лога
+journalctl -u hello -n 20            # логи сервиса: каждый запрос будет тут
+ss -tlnp | grep 8000                 # порт слушается python3
+curl localhost:8000                  # ответ: «стенд живой»
+</code></pre>
+<p>Перезагрузи сервер (<code>sudo reboot</code>), зайди, <code>systemctl status hello</code> - снова running. Это и значит «переживает reboot».</p>
+<p>Когда в слое 2 приедет трекер, его unit будет отличаться двумя строками: <code>WorkingDirectory=/opt/tracker</code> и <code>ExecStart=/opt/tracker/.venv/bin/uvicorn app.main:app --host 127.0.0.1 --port 8000</code>. Всё остальное - то же самое.</p>
+<h3 id="_5">Диагностика: три команды за тридцать секунд</h3>
+<pre><code class="language-bash">uptime          # сколько работает и три числа load average
+free -h         # память и своп
+df -h           # место на дисках
+</code></pre>
+<p><strong><code>uptime</code>.</strong> Три числа - средняя нагрузка за 1, 5 и 15 минут. Сравнивать с числом ядер: <code>nproc</code>. Направление важнее значения: если 1-минутное больше 15-минутного, проблема нарастает прямо сейчас.</p>
+<p>⚠️ В Linux load average считает не только процессы, ждущие процессор, но и застрявшие в ожидании диска (состояние <code>D</code>). Высокий load при простаивающем процессоре означает диск. Это любят спрашивать.</p>
+<p><strong><code>free -h</code>.</strong> Смотреть на <code>available</code>, а не на <code>free</code>. Linux забирает свободную память под кэш файловой системы, поэтому <code>free</code> почти всегда маленький - это норма, а не утечка.</p>
+<p><strong><code>df -h</code>.</strong> Самая частая причина «всё встало» в проде. Отдельно проверять <code>df -i</code> - инoды. Место может быть, а инoды кончиться, если наплодили миллионы мелких файлов.</p>
+<h3 id="_6">Дальше по трём веткам</h3>
+<p><strong>Процессор:</strong></p>
+<pre><code class="language-bash">top                       # нажать P - сортировка по CPU
+ps aux --sort=-%cpu | head -15
+</code></pre>
+<p>В строке <code>%Cpu(s)</code>: <code>us</code> пользовательские процессы, <code>sy</code> ядро, <strong><code>wa</code> iowait - ждём диск</strong>, <code>st</code> steal time (на VPS означает шумного соседа).</p>
+<p><strong>Память:</strong></p>
+<pre><code class="language-bash">ps aux --sort=-%mem | head -15
+dmesg -T | grep -i &quot;out of memory&quot;
+</code></pre>
+<p><strong>OOM killer</strong> - когда память кончилась, ядро выбирает самого жирного и убивает. В логах приложения при этом пусто: процесс не падал, его застрелили.</p>
+<p><strong>Диск:</strong></p>
+<pre><code class="language-bash">df -h &amp;&amp; df -i
+du -h / --max-depth=1 2&gt;/dev/null | sort -rh | head -20
+find /var -type f -size +500M -exec ls -lh {} \; 2&gt;/dev/null
+iostat -x 1 5             # смотреть %util и await
+</code></pre>
+<h3 id="stat">Процессы: колонка STAT</h3>
+<table>
+<thead>
+<tr>
+<th>Буква</th>
+<th>Значение</th>
+<th>Когда тревожно</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>R</code></td>
+<td>выполняется или готов</td>
+<td>норма</td>
+</tr>
+<tr>
+<td><code>S</code></td>
+<td>спит, ждёт события</td>
+<td>норма</td>
+</tr>
+<tr>
+<td><code>D</code></td>
+<td><strong>непрерываемый сон</strong>, ждёт диск</td>
+<td>много таких - проблема с диском</td>
+</tr>
+<tr>
+<td><code>Z</code></td>
+<td>зомби, родитель не забрал статус</td>
+<td>много зомби - баг в приложении</td>
+</tr>
+<tr>
+<td><code>T</code></td>
+<td>остановлен сигналом</td>
+<td>кто-то нажал Ctrl+Z</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Сигналы:</strong></p>
+<pre><code class="language-bash">kill &lt;PID&gt;        # SIGTERM 15 - вежливо, дать закрыть файлы
+kill -9 &lt;PID&gt;     # SIGKILL - убить, данные могут потеряться
+kill -HUP &lt;PID&gt;   # многие демоны перечитывают конфиг
+</code></pre>
+<p>Порядок правильный: сначала <code>TERM</code>, подождать, потом <code>KILL</code>. Начинать с <code>-9</code> - признак человека, который не разбирается.</p>
+<p>⚠️ Процесс в состоянии <code>D</code> нельзя убить даже <code>kill -9</code>. Он ждёт ядро и получит сигнал только после завершения операции.</p>
+<h3 id="_7">Логи</h3>
+<pre><code class="language-bash">journalctl -u tracker                          # лог сервиса
+journalctl -u tracker -f                       # вживую
+journalctl -u tracker --since &quot;10:00&quot; --until &quot;10:30&quot;
+journalctl -p err --since today                # только ошибки
+journalctl --disk-usage
+tail -f /var/log/nginx/error.log
+grep -n &quot;ERROR&quot; app.log | head -1              # ПЕРВАЯ ошибка
+</code></pre>
+<p><strong>Метод.</strong> Сначала сузить окно по времени, потом искать по тексту. На файле в гигабайты обратный порядок займёт минуты. И смотреть <strong>первую</strong> ошибку: она обычно причина, последующие - следствия.</p>
+<h2 id="_8">💥 Сломай намеренно</h2>
+<p><strong>Предпосылки:</strong> сервис <code>hello</code> из шага 5 работает, файрвол включён, ты под <code>ivan</code> с двумя открытыми окнами. Каждый пункт - сломать, посмотреть, как это выглядит в «окне результата», починить.</p>
+<p><strong>1. Забить диск и увидеть последствия:</strong></p>
+<pre><code class="language-bash">fallocate -l 5G /tmp/big        # мгновенно создать файл на 5 ГБ - диск заполнится
+df -h                           # смотреть колонку Use%: сколько осталось
+sudo journalctl -u hello -n 5   # журнал ещё пишется? при 100% - начнёт терять записи
+rm /tmp/big                     # починить
+df -h                           # место вернулось
+</code></pre>
+<p><strong>2. Удалённый, но открытый файл</strong> - классика, которую спрашивают:</p>
+<pre><code class="language-bash">fallocate -l 1G /tmp/app.log    # «лог», который кто-то держит открытым
+tail -f /tmp/app.log &amp;          # процесс держит файл открытым, &amp; - в фоне
+rm /tmp/app.log                 # удалить файл
+df -h /tmp                      # место всё ещё занято
+ls /tmp                         # а файла нет
+sudo lsof | grep deleted        # вот кто его держит: tail
+kill %1                         # убить фоновую задачу - место вернулось
+</code></pre>
+<p><strong>Почему так.</strong> Запись в каталоге исчезла, но процесс держит дескриптор, и данные на диске живут, пока он открыт. Лечение в проде: перезапустить процесс или обнулить файл через <code>: &gt; /proc/&lt;PID&gt;/fd/&lt;N&gt;</code>.</p>
+<p><strong>3. Убить процесс по памяти:</strong></p>
+<pre><code class="language-bash">python3 -c &quot;a = bytearray(8 * 1024**3)&quot;   # попросить 8 ГБ на сервере с 4 - ядро убьёт процесс
+sudo dmesg -T | grep -i &quot;killed process&quot;   # запись OOM killer с именем жертвы
+</code></pre>
+<p>Так выглядит смерть от памяти: в логах приложения пусто, процесс не падал - его застрелило ядро.</p>
+<p><strong>4. Остановить сервис и посмотреть, как выглядит упавший:</strong></p>
+<pre><code class="language-bash">sudo systemctl stop hello
+systemctl status hello            # inactive (dead) - запомнить вид
+curl localhost:8000               # Connection refused - так выглядит «сервис недоступен» снаружи
+systemctl list-units --failed     # список упавших; остановленный руками сюда не попадает
+sudo systemctl start hello
+</code></pre>
+<p><strong>5. Сломать unit-файл:</strong></p>
+<pre><code class="language-bash">sudo nano /etc/systemd/system/hello.service   # убрать строку ExecStart, сохранить
+sudo systemctl daemon-reload
+sudo systemctl restart hello
+systemctl status hello                        # failed, и внизу написано, чего не хватает
+journalctl -u hello -n 20                     # та же причина словами
+# вернуть строку, daemon-reload, restart - снова running
+</code></pre>
+<p><strong>6. Убить процесс сервиса и увидеть, как systemd его поднимает:</strong></p>
+<pre><code class="language-bash">systemctl show hello -p MainPID     # PID процесса
+sudo kill &lt;PID&gt;                     # SIGTERM
+sleep 6 &amp;&amp; systemctl status hello   # через RestartSec=5 - снова running, с новым PID
+</code></pre>
+<h2 id="_9">🧪 Проверь себя</h2>
+<p><strong>1. Команда <code>sudo echo "text" &gt; /etc/systemd/system/x.service</code> ответила «Permission denied». Почему?</strong>
+- [ ] sudo не умеет работать с systemd
+- [x] sudo относится только к echo, а стрелку <code>&gt;</code> выполняет оболочка без прав root
+- [ ] файл уже существует и защищён
+- [ ] echo не умеет писать в файлы</p>
+<blockquote>
+<p>Почему: перенаправление делает твоя оболочка от имени ivan. Писать в системную папку - <code>sudo tee</code> или <code>sudo nano</code>.</p>
+</blockquote>
+<p><strong>2. <code>free -h</code> показывает <code>free</code> почти ноль. Это утечка памяти?</strong>
+- [ ] да, надо срочно перезапускать сервисы
+- [ ] да, если это длится больше часа
+- [x] нет, смотреть надо на <code>available</code>: Linux забирает свободную память под кэш файлов
+- [ ] нет, <code>free</code> показывает только своп</p>
+<blockquote>
+<p>Почему: кэш отдаётся приложениям по первому требованию. Тревога - когда мал <code>available</code>.</p>
+</blockquote>
+<p><strong>3. Load average высокий, а CPU почти простаивает. Куда смотреть?</strong>
+- [ ] в память - это OOM
+- [x] в диск - процессы в состоянии D ждут ввод-вывод и тоже считаются в load
+- [ ] в сеть - это DDoS
+- [ ] никуда, это норма для VPS</p>
+<blockquote>
+<p>Почему: в Linux load считает и ждущих диск. <code>top</code> покажет высокий <code>wa</code>, <code>ps</code> - процессы в <code>D</code>.</p>
+</blockquote>
+<p><strong>4. Диск заполнен, <code>du</code> не видит больших файлов. Что случилось?</strong>
+- [ ] <code>du</code> сломан, нужен <code>df</code>
+- [x] файл удалён, но процесс держит его открытым - место не освободилось
+- [ ] заполнены иноды, а не место
+- [ ] это резерв под root в 5%</p>
+<blockquote>
+<p>Почему: <code>lsof | grep deleted</code> покажет процесс. Перезапустить его или обнулить через <code>/proc/&lt;PID&gt;/fd/&lt;N&gt;</code>.</p>
+</blockquote>
+<p><strong>5. Сервис упал, а systemd его не поднял. Какой строки скорее всего не хватает в unit-файле?</strong>
+- [ ] <code>After=network.target</code>
+- [ ] <code>WantedBy=multi-user.target</code>
+- [x] <code>Restart=always</code>
+- [ ] <code>Type=simple</code></p>
+<blockquote>
+<p>Почему: без <code>Restart</code> systemd только запускает и наблюдает. <code>WantedBy</code> отвечает за автозапуск при загрузке, не за перезапуск.</p>
+</blockquote>
+<h2 id="_10">✅ Задание</h2>
+<p><strong>Задание</strong>
+1. Закрой вход root-ом и по паролю, проверь из третьего окна: <code>ssh root@сервер</code> → <code>Permission denied</code>.
+2. Включи файрвол так, чтобы снаружи отвечали только 22, 80 и 443.
+3. Подними PostgreSQL через свой <code>compose.yml</code>, зайди в него через <code>psql</code> и спроси версию.
+4. Оформи <code>hello</code> как systemd-сервис, перезагрузи сервер, убедись, что он поднялся сам.
+5. Пройди все шесть «сломай намеренно» и для каждого запиши одну строку: как выглядела поломка и чем починил.</p>
+<p><strong>Что должно получиться</strong>
+- <code>sudo sshd -T | grep -iE "permitrootlogin|passwordauthentication"</code> показывает оба <code>no</code>.
+- <code>sudo ufw status verbose</code> показывает <code>deny (incoming)</code> и три ALLOW.
+- <code>docker compose ps</code> показывает <code>db</code> со статусом running.
+- <code>systemctl status hello</code> после <code>reboot</code> - <code>active (running)</code>, <code>curl localhost:8000</code> отвечает.
+- В тетради: каждая команда слоя одной строкой - что делает, и шесть строк по поломкам.</p>
+<p><strong>Как сдать</strong>
+В поле ниже напиши своими словами, что попробовал, что сработало с первого раза, где застрял и как выбрался. Оценивается факт выполнения, а не красота.</p>
+<p><strong>Критерий готовности:</strong> объясняешь каждую строку unit-файла <code>hello</code> и за тридцать секунд говоришь про незнакомый сервер, здоров он или нет.</p>
+<h2 id="_11">🌍 Из жизни</h2>
+<p><strong>Про тысячи попыток входа.</strong> Свежий сервер с белым IP начинают перебирать в течение часа после появления в сети. Ботнеты сканируют весь диапазон IPv4 непрерывно. Отсюда правило: отключать вход по паролю сразу, не «когда-нибудь потом».</p>
+<p><strong>Про место на диске.</strong> По опыту Ивана самая частая причина «всё встало» - именно диск, забитый логами. Поэтому в его мониторинге всегда стоял отдельный алерт на заполнение. Это готовый ответ на «что мониторите в первую очередь».</p>
+<p><strong>Про <code>docker</code> в группе пользователя.</strong> Добавление в группу <code>docker</code> фактически равно правам root: через контейнер с примонтированным <code>/</code> можно сделать что угодно с хозяином. На собеседовании по безопасности это спрашивают, и правильный ответ - «знаю, на проде так не делают, там sudo с конкретными правилами».</p>
+<p><strong>Про steal time.</strong> На дешёвых VPS <code>st</code> в <code>top</code> показывает, сколько времени у тебя отобрал гипервизор ради соседей. Устойчивые 10-20 процентов означают перепроданный хост. Это причина, по которой замеры производительности на дешёвом VPS плавают.</p>
+<h2 id="_12">❓ Вопросы с ответами</h2>
+<p><strong>Что смотришь первым делом на незнакомом сервере?</strong></p>
+<blockquote>
+<p><code>uptime</code>, <code>free -h</code>, <code>df -h</code> - нагрузка, память, место. Потом <code>systemctl list-units --failed</code> и <code>journalctl -p err --since today</code>. За минуту становится понятно, здоров он или нет.</p>
+</blockquote>
+<p><strong>Как понять, что тормозит из-за диска, а не из-за процессора?</strong></p>
+<blockquote>
+<p><code>top</code>, колонка <code>wa</code> в строке <code>%Cpu(s)</code>. Высокий iowait означает, что процессор простаивает в ожидании диска. Подтверждаю через <code>iostat -x</code>: смотрю <code>%util</code> и <code>await</code>.</p>
+</blockquote>
+<p><strong>Место кончилось, а <code>du</code> показывает мало. Почему?</strong></p>
+<blockquote>
+<p>Файл удалили, а живой процесс держит дескриптор. <code>lsof | grep deleted</code>, дальше перезапуск процесса или обнуление через <code>/proc/&lt;PID&gt;/fd</code>.</p>
+</blockquote>
+<p><strong>Приложение исчезло, логов нет.</strong></p>
+<blockquote>
+<p>Проверяю <code>dmesg -T | grep -i "out of memory"</code>. Если OOM killer - процесс не падал сам, его убило ядро при нехватке памяти.</p>
+</blockquote>
+<p><strong><code>kill -9</code> не убивает процесс. Что происходит?</strong></p>
+<blockquote>
+<p>Процесс в состоянии <code>D</code>, непрерываемый сон - ждёт ввод-вывод. Сигналы обработаются после завершения операции. Смотрю, что за операция: обычно зависший диск или сетевая файловая система.</p>
+</blockquote>
+<p><strong>Чем контейнер отличается от виртуальной машины?</strong></p>
+<blockquote>
+<p>ВМ виртуализирует железо и несёт своё ядро. Контейнер - это изолированные процессы поверх ядра хозяина. Отсюда разница в весе и скорости старта, и отсюда же более слабая изоляция.</p>
+</blockquote>
+<p><strong>Что происходит, когда ты заходишь по SSH?</strong></p>
+<blockquote>
+<p>Клиент и сервер согласуют версию протокола и алгоритмы, обмениваются ключами и поднимают шифрованный канал. Дальше аутентификация: сервер проверяет, что у меня есть приватный ключ к одному из публичных в <code>authorized_keys</code>. После этого запускается оболочка.</p>
+</blockquote>
+<p><strong>Зачем менять порт SSH с 22?</strong></p>
+<blockquote>
+<p>Убирает основную массу автоматического перебора - боты по умолчанию стучатся в 22. Это гигиена, а не защита: направленное сканирование найдёт порт всё равно. Настоящая защита - ключи вместо паролей и fail2ban.</p>
+</blockquote></article>
+    <aside class="aside">
+      <strong>В этом документе</strong>
+      <div class="toc"><div class="toc">
+<ul>
+<li><a href="#_1">🎭 Аналогия</a></li>
+<li><a href="#_2">🗺 Карта мест</a></li>
+<li><a href="#_3">📖 Теория</a><ul>
+<li><a href="#-0109">Про площадку - решено 01.09</a></li>
+<li><a href="#-11092026">💳 Что купить - сверено 11.09.2026</a></li>
+<li><a href="#ssh">SSH: почему ключ вместо пароля</a></li>
+<li><a href="#sudo-root">sudo: почему не работать под root</a></li>
+<li><a href="#ufw">ufw: политика «всё закрыто»</a></li>
+<li><a href="#systemd">systemd: что это и зачем</a></li>
+<li><a href="#docker">Docker: контейнер против виртуальной машины</a></li>
+</ul>
+</li>
+<li><a href="#_4">🔧 Практика</a><ul>
+<li><a href="#0">0. Как вообще создать файл на сервере</a></li>
+<li><a href="#1-root">1. Пользователь и закрытие root</a></li>
+<li><a href="#2">2. Ключ</a></li>
+<li><a href="#3">3. Файрвол</a></li>
+<li><a href="#4-docker">4. Docker</a></li>
+<li><a href="#5-systemd-">5. Свой systemd-сервис</a></li>
+<li><a href="#_5">Диагностика: три команды за тридцать секунд</a></li>
+<li><a href="#_6">Дальше по трём веткам</a></li>
+<li><a href="#stat">Процессы: колонка STAT</a></li>
+<li><a href="#_7">Логи</a></li>
+</ul>
+</li>
+<li><a href="#_8">💥 Сломай намеренно</a></li>
+<li><a href="#_9">🧪 Проверь себя</a></li>
+<li><a href="#_10">✅ Задание</a></li>
+<li><a href="#_11">🌍 Из жизни</a></li>
+<li><a href="#_12">❓ Вопросы с ответами</a></li>
+</ul>
+</div>
+</div>
+    </aside>
+  </div>
+</main>
+
+
+<script>
+const ROOT = "..";
+
+// ---- тема
+const themeBtn = document.getElementById("theme");
+const paint = () => {
+  const dark = document.documentElement.getAttribute("data-theme") === "dark";
+  themeBtn.textContent = dark ? "☀" : "☾";
+};
+paint();
+themeBtn.addEventListener("click", () => {
+  const next = document.documentElement.getAttribute("data-theme") === "dark" ? "light" : "dark";
+  document.documentElement.setAttribute("data-theme", next);
+  try { localStorage.setItem("kb-theme", next); } catch (e) {}
+  paint();
+});
+
+// ---- поиск
+let index = null;
+const box = document.getElementById("results");
+const hits = document.getElementById("hits");
+const head = box.querySelector("h3");
+const input = document.getElementById("q");
+
+async function ensureIndex() {
+  if (index) return index;
+  const res = await fetch(ROOT + "/search-index.json");
+  index = await res.json();
+  return index;
+}
+
+const esc = (s) => (s || "").replace(/[&<>]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
+
+function hi(text, query) {
+  const i = text.toLowerCase().indexOf(query);
+  if (i < 0) return esc(text);
+  return esc(text.slice(0, i)) + "<mark>" + esc(text.slice(i, i + query.length)) + "</mark>" + esc(text.slice(i + query.length));
+}
+
+input.addEventListener("input", async () => {
+  const q = input.value.trim().toLowerCase();
+  if (q.length < 2) { box.hidden = true; return; }
+  const data = await ensureIndex();
+  const found = [];
+  for (const d of data) {
+    const inTitle = d.title.toLowerCase().includes(q);
+    const inSum = (d.summary || "").toLowerCase().includes(q);
+    const heads = (d.heads || []).filter(h => h.toLowerCase().includes(q));
+    if (inTitle || inSum || heads.length) {
+      found.push({ d, heads, rank: inTitle ? 0 : heads.length ? 1 : 2 });
+    }
+  }
+  found.sort((a, b) => a.rank - b.rank);
+  head.textContent = found.length ? `Нашлось: ${found.length}` : "Ничего не нашлось";
+  hits.innerHTML = found.slice(0, 40).map(({ d, heads }) =>
+    `<a class="hit" href="${ROOT}/d/${d.slug}.html">
+       <b>${hi(d.title, q)}</b>
+       <span>${heads.length ? "→ " + heads.slice(0, 3).map(h => hi(h, q)).join(" · ") : esc(d.summary || "")}</span>
+     </a>`).join("");
+  box.hidden = false;
+});
+
+input.addEventListener("keydown", (e) => { if (e.key === "Escape") { input.value = ""; box.hidden = true; input.blur(); } });
+document.addEventListener("keydown", (e) => {
+  if (e.key === "/" && document.activeElement !== input) { e.preventDefault(); input.focus(); }
+});
+</script>
+</body>
+</html>

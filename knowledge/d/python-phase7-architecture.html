@@ -1,0 +1,318 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>🏛️ Фаза 7. Архитектура и продакшен-паттерны (5 часов) - База знаний</title>
+<link rel="stylesheet" href="../kb.css">
+<script>
+  // Тему ставим до первой отрисовки, иначе на тёмной системе мигает белым.
+  try {
+    var t = localStorage.getItem("kb-theme");
+    if (!t) t = matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+    document.documentElement.setAttribute("data-theme", t);
+  } catch (e) {}
+</script>
+</head>
+<body>
+
+<header class="top">
+  <div class="top-in">
+    <a class="brand" href="../index.html">База <span>знаний</span></a>
+    <span class="grow"></span>
+    <input id="q" type="search" placeholder="Поиск по всем материалам…" autocomplete="off">
+    <button class="icon-btn" id="theme" type="button" title="Тема"></button>
+  </div>
+</header>
+
+<div id="results" hidden><div class="wrap-r"><h3></h3><div id="hits"></div></div></div>
+
+<main class="wrap">
+  <div class="doc-head">
+    <div class="crumb"><a href="../index.html#reference">Справочники</a></div>
+    <h1>🏛️ Фаза 7. Архитектура и продакшен-паттерны (5 часов)</h1>
+    <div class="meta">158 строк · источник <code>l2code/Python_Phase7_Architecture.md</code></div>
+  </div>
+
+  <div class="layout">
+    <article class="prose"><blockquote>
+<p>📖 Фаза роадмапа <strong>«Python Backend»</strong>. Оглавление и статус - в <code>PythonBackend_Roadmap.md</code>.
+Каждая фаза самодостаточна: 🎭 аналогия → 📖 теория → 🔧 практика → 💥 сломай намеренно → ✅ задание → 🌍 из жизни → ❓ вопросы с ответами.</p>
+</blockquote>
+<h2 id="_1">🎭 Аналогия</h2>
+<p>Планировка квартиры. Кухня отдельно от спальни не потому, что так красивее, а потому, что запахи и шум. Слои в приложении разделяют по той же причине: чтобы изменение в одном не тянуло за собой остальные.</p>
+<h2 id="_2">📖 Теория</h2>
+<h3 id="_3">Слои</h3>
+<pre><code>Домен          сущности и правила, ничего не знает о базе и вебе
+Приложение     сценарии: «создать вакансию», «сменить статус»
+Инфраструктура база, HTTP-клиенты, очереди
+Интерфейс      маршруты FastAPI, CLI
+</code></pre>
+<p><strong>Правило зависимостей:</strong> стрелки внутрь. Домен не импортирует SQLAlchemy. Проверяется просто - <code>grep -r "sqlalchemy" domain/</code> должен быть пуст.</p>
+<p>⚠️ Чистая архитектура в маленьком проекте даёт больше папок, чем пользы. Для трекера трёх слоёв достаточно: маршруты, сервисы, доступ к данным. Умение сказать, где она избыточна, ценится не меньше, чем умение её построить.</p>
+<h3 id="repository-unit-of-work">Repository и Unit of Work</h3>
+<pre><code class="language-python">class VacancyRepo:
+    def __init__(self, session: Session):
+        self._session = session
+
+    def get(self, vid: int) -&gt; Vacancy | None:
+        return self._session.get(Vacancy, vid)
+
+    def by_status(self, status: Status) -&gt; list[Vacancy]:
+        return list(self._session.scalars(
+            select(Vacancy).where(Vacancy.status == status)
+        ))
+</code></pre>
+<p>Repository прячет способ хранения. Unit of Work - это сессия SQLAlchemy: она уже держит транзакцию на группу изменений, отдельный класс поверх обычно не нужен.</p>
+<h3 id="_4">Очереди</h3>
+<pre><code class="language-python">from celery import Celery
+
+app = Celery(&quot;tracker&quot;, broker=&quot;redis://localhost:6379/0&quot;)
+
+@app.task(bind=True, max_retries=3, autoretry_for=(OSError,), retry_backoff=True)
+def send_digest(self, user_id: int):
+    ...
+</code></pre>
+<table>
+<thead>
+<tr>
+<th>Инструмент</th>
+<th>Когда</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>BackgroundTasks</code></td>
+<td>мелочь, потеря не страшна</td>
+</tr>
+<tr>
+<td>RQ</td>
+<td>простые задачи, Redis уже есть</td>
+</tr>
+<tr>
+<td>Celery</td>
+<td>расписание, повторы, цепочки, мониторинг</td>
+</tr>
+<tr>
+<td>Таблица заданий в базе</td>
+<td>задач мало, лишний сервис не нужен</td>
+</tr>
+</tbody>
+</table>
+<p>⚠️ Задача обязана быть идемпотентной: при повторе она выполнится ещё раз. Тот же принцип, что у джоб в слое 4 инфра-роадмапа.</p>
+<h3 id="_5">Кэш</h3>
+<pre><code class="language-python">import redis, json
+
+r = redis.Redis(decode_responses=True)
+
+def top_vacancies(limit: int = 20) -&gt; list[dict]:
+    key = f&quot;top:{limit}&quot;
+    if (cached := r.get(key)):
+        return json.loads(cached)
+    data = compute_top(limit)
+    r.setex(key, 300, json.dumps(data, ensure_ascii=False))
+    return data
+</code></pre>
+<p><strong>Три вопроса к любому кэшу:</strong>
+1. Сколько живёт запись.
+2. Что происходит при изменении данных - сбрасываем или ждём истечения.
+3. Что будет при недоступности Redis - приложение падает или работает медленнее.</p>
+<p>Третий вопрос забывают чаще всего. Правильный ответ: кэш - ускоритель, приложение обязано работать без него.</p>
+<p><strong>Cache stampede:</strong> запись истекла, сто запросов одновременно пошли считать заново. Лечится блокировкой на пересчёт или разбросом времени жизни.</p>
+<h3 id="_6">Отказоустойчивость</h3>
+<table>
+<thead>
+<tr>
+<th>Приём</th>
+<th>Что делает</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Таймаут</td>
+<td>ограничивает ожидание внешнего вызова</td>
+</tr>
+<tr>
+<td>Повтор с ростом паузы</td>
+<td>переживает кратковременный сбой</td>
+</tr>
+<tr>
+<td>Джиттер</td>
+<td>разводит одновременные повторы</td>
+</tr>
+<tr>
+<td>Circuit breaker</td>
+<td>перестаёт звонить в мёртвый сервис</td>
+</tr>
+<tr>
+<td>Деградация</td>
+<td>отдаёт часть данных вместо ошибки</td>
+</tr>
+</tbody>
+</table>
+<p>⚠️ Повтор без ограничения одновременности превращает мелкий сбой в лавину: сервис прилёг на секунду, все клиенты ретраятся разом, он ложится совсем.</p>
+<h3 id="_7">Выбор фреймворка</h3>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>Когда брать</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>FastAPI</strong></td>
+<td>новое API, async, автодокументация</td>
+</tr>
+<tr>
+<td><strong>Django</strong></td>
+<td>админка из коробки, ORM, готовая аутентификация, CMS-подобное</td>
+</tr>
+<tr>
+<td><strong>Flask</strong></td>
+<td>маленький сервис, полный контроль, готовое окружение</td>
+</tr>
+</tbody>
+</table>
+<p>У Ивана реальный опыт с Flask и Django, и это надо называть: выбор осознанный, а не единственный знакомый вариант.</p>
+<h2 id="_8">🔧 Практика</h2>
+<ol>
+<li>Вынести бизнес-логику трекера из маршрутов в сервисный слой, маршруты оставить тонкими.</li>
+<li>Repository для вакансий и событий.</li>
+<li>Проверить правило зависимостей: <code>grep -r "fastapi\|sqlalchemy" services/</code> должен быть пуст.</li>
+<li>Кэш на тяжёлую выборку разведчика с временем жизни и корректной работой при выключенном Redis.</li>
+<li>Обёртка <code>@retry</code> с экспоненциальной паузой и джиттером на сетевые вызовы разведчика.</li>
+<li>Написать в <code>docs/ARCHITECTURE.md</code> схему слоёв трекера с обоснованием, почему выбраны три, а не четыре.</li>
+</ol>
+<h2 id="_9">💥 Сломай намеренно</h2>
+<ol>
+<li><strong>Выключить Redis</strong> и проверить, что трекер работает медленнее, а не падает. Если падает - починить.</li>
+<li><strong>Убрать время жизни у кэша</strong> и посмотреть, как страница показывает устаревшее.</li>
+<li><strong>Сделать повтор без ограничения</strong> и запустить сто задач против отвечающего с ошибкой сервиса.</li>
+<li><strong>Импортировать SQLAlchemy в сервисный слой</strong> и убедиться, что проверка <code>grep</code> это ловит.</li>
+<li><strong>Сделать задачу неидемпотентной</strong> и запустить дважды - получить дубли.</li>
+</ol>
+<h2 id="_10">✅ Задание</h2>
+<p>Трекер с разделёнными слоями, тонкими маршрутами, репозиториями и кэшем, который переживает недоступность Redis. <code>docs/ARCHITECTURE.md</code> объясняет решения, включая то, где чистая архитектура была бы избыточна.</p>
+<p><strong>Критерий:</strong> можешь провести по схеме от HTTP-запроса до строки в базе и назвать, что придётся менять при замене PostgreSQL на другую базу.</p>
+<h2 id="_11">🌍 Из жизни</h2>
+<p><strong>Про архитектуру ради архитектуры.</strong> Проект на триста строк с пятью слоями, интерфейсами на каждый репозиторий и контейнером зависимостей. Читать его дольше, чем переписать. Признак зрелости - умение назвать, где слои избыточны.</p>
+<p><strong>Про кэш, который роняет приложение.</strong> Redis лёг, а приложение перестало отвечать целиком, потому что обращение к кэшу не обёрнуто. Кэш - ускоритель, и падать вместе с ним нельзя.</p>
+<p><strong>Про лавину повторов.</strong> Известный сценарий каскадного отказа: сервис прилёг на секунду, тысяча клиентов начала ретраиться одновременно, он не встал вообще. Джиттер и ограничение одновременности стоят двух строк кода.</p>
+<h2 id="_12">❓ Вопросы с ответами</h2>
+<p><strong>Как организуете код в проекте?</strong></p>
+<blockquote>
+<p>Слоями: маршруты только принимают и отдают, сервисы держат логику, слой данных знает про базу. Зависимости идут внутрь: сервисы не импортируют FastAPI, домен не импортирует SQLAlchemy. В маленьком проекте трёх слоёв хватает, полная чистая архитектура там даёт больше папок, чем пользы.</p>
+</blockquote>
+<p><strong>Когда нужна очередь, а когда хватит фоновой задачи?</strong></p>
+<blockquote>
+<p><code>BackgroundTasks</code> для мелочи, потеря которой не страшна: она живёт в процессе и исчезает при перезапуске. Очередь нужна, когда задачу нельзя потерять, нужны повторы, расписание или видимость статуса.</p>
+</blockquote>
+<p><strong>Как кэшируете?</strong></p>
+<blockquote>
+<p>С явным временем жизни и сбросом при изменении данных. Главное правило - приложение обязано работать при недоступности кэша, медленнее, но работать. Плюс защита от одновременного пересчёта после истечения.</p>
+</blockquote>
+<p><strong>Как защищаетесь от отказов внешних сервисов?</strong></p>
+<blockquote>
+<p>Таймаут на каждый вызов, повтор с растущей паузой и джиттером, ограничение одновременности. Для часто отказывающего - размыкатель, чтобы не звонить в мёртвый сервис. И деградация: отдать часть данных с пометкой лучше, чем ошибку.</p>
+</blockquote>
+<p><strong>FastAPI, Django или Flask - как выбираете?</strong></p>
+<blockquote>
+<p>По задаче. FastAPI для нового API с async и автодокументацией. Django, когда нужны админка, ORM и аутентификация из коробки. Flask для маленького сервиса с полным контролем. Работал с Flask и Django на реальных задачах, поэтому выбор осознанный.</p>
+</blockquote></article>
+    <aside class="aside">
+      <strong>В этом документе</strong>
+      <div class="toc"><div class="toc">
+<ul>
+<li><a href="#_1">🎭 Аналогия</a></li>
+<li><a href="#_2">📖 Теория</a><ul>
+<li><a href="#_3">Слои</a></li>
+<li><a href="#repository-unit-of-work">Repository и Unit of Work</a></li>
+<li><a href="#_4">Очереди</a></li>
+<li><a href="#_5">Кэш</a></li>
+<li><a href="#_6">Отказоустойчивость</a></li>
+<li><a href="#_7">Выбор фреймворка</a></li>
+</ul>
+</li>
+<li><a href="#_8">🔧 Практика</a></li>
+<li><a href="#_9">💥 Сломай намеренно</a></li>
+<li><a href="#_10">✅ Задание</a></li>
+<li><a href="#_11">🌍 Из жизни</a></li>
+<li><a href="#_12">❓ Вопросы с ответами</a></li>
+</ul>
+</div>
+</div>
+    </aside>
+  </div>
+</main>
+
+
+<script>
+const ROOT = "..";
+
+// ---- тема
+const themeBtn = document.getElementById("theme");
+const paint = () => {
+  const dark = document.documentElement.getAttribute("data-theme") === "dark";
+  themeBtn.textContent = dark ? "☀" : "☾";
+};
+paint();
+themeBtn.addEventListener("click", () => {
+  const next = document.documentElement.getAttribute("data-theme") === "dark" ? "light" : "dark";
+  document.documentElement.setAttribute("data-theme", next);
+  try { localStorage.setItem("kb-theme", next); } catch (e) {}
+  paint();
+});
+
+// ---- поиск
+let index = null;
+const box = document.getElementById("results");
+const hits = document.getElementById("hits");
+const head = box.querySelector("h3");
+const input = document.getElementById("q");
+
+async function ensureIndex() {
+  if (index) return index;
+  const res = await fetch(ROOT + "/search-index.json");
+  index = await res.json();
+  return index;
+}
+
+const esc = (s) => (s || "").replace(/[&<>]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
+
+function hi(text, query) {
+  const i = text.toLowerCase().indexOf(query);
+  if (i < 0) return esc(text);
+  return esc(text.slice(0, i)) + "<mark>" + esc(text.slice(i, i + query.length)) + "</mark>" + esc(text.slice(i + query.length));
+}
+
+input.addEventListener("input", async () => {
+  const q = input.value.trim().toLowerCase();
+  if (q.length < 2) { box.hidden = true; return; }
+  const data = await ensureIndex();
+  const found = [];
+  for (const d of data) {
+    const inTitle = d.title.toLowerCase().includes(q);
+    const inSum = (d.summary || "").toLowerCase().includes(q);
+    const heads = (d.heads || []).filter(h => h.toLowerCase().includes(q));
+    if (inTitle || inSum || heads.length) {
+      found.push({ d, heads, rank: inTitle ? 0 : heads.length ? 1 : 2 });
+    }
+  }
+  found.sort((a, b) => a.rank - b.rank);
+  head.textContent = found.length ? `Нашлось: ${found.length}` : "Ничего не нашлось";
+  hits.innerHTML = found.slice(0, 40).map(({ d, heads }) =>
+    `<a class="hit" href="${ROOT}/d/${d.slug}.html">
+       <b>${hi(d.title, q)}</b>
+       <span>${heads.length ? "→ " + heads.slice(0, 3).map(h => hi(h, q)).join(" · ") : esc(d.summary || "")}</span>
+     </a>`).join("");
+  box.hidden = false;
+});
+
+input.addEventListener("keydown", (e) => { if (e.key === "Escape") { input.value = ""; box.hidden = true; input.blur(); } });
+document.addEventListener("keydown", (e) => {
+  if (e.key === "/" && document.activeElement !== input) { e.preventDefault(); input.focus(); }
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,213 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>l2code - навигатор по фазам - База знаний</title>
+<link rel="stylesheet" href="../kb.css">
+<script>
+  // Тему ставим до первой отрисовки, иначе на тёмной системе мигает белым.
+  try {
+    var t = localStorage.getItem("kb-theme");
+    if (!t) t = matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+    document.documentElement.setAttribute("data-theme", t);
+  } catch (e) {}
+</script>
+</head>
+<body>
+
+<header class="top">
+  <div class="top-in">
+    <a class="brand" href="../index.html">База <span>знаний</span></a>
+    <span class="grow"></span>
+    <input id="q" type="search" placeholder="Поиск по всем материалам…" autocomplete="off">
+    <button class="icon-btn" id="theme" type="button" title="Тема"></button>
+  </div>
+</header>
+
+<div id="results" hidden><div class="wrap-r"><h3></h3><div id="hits"></div></div></div>
+
+<main class="wrap">
+  <div class="doc-head">
+    <div class="crumb"><a href="../index.html#phases">Фазы C#</a></div>
+    <h1>l2code - навигатор по фазам</h1>
+    <div class="meta">35 строк · источник <code>l2code/PHASES.md</code></div>
+  </div>
+
+  <div class="layout">
+    <article class="prose"><blockquote>
+<p>Один файл = одна фаза. Открыл, прошёл, закрыл. Оглавления и статус - в файлах <code>*_Roadmap*.md</code>.</p>
+</blockquote>
+<table>
+<thead>
+<tr>
+<th>Направление</th>
+<th>Оглавление</th>
+<th>Файлы фаз</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>🖥 Стенд с нуля</td>
+<td><code>Roadmap_Infra_Sept2026.md</code></td>
+<td><code>Infra_Layer0_Linux_Stand.md</code>, <code>Infra_Layer1_Nginx_TLS.md</code>, <code>Infra_Layer2_CICD.md</code>, <code>Infra_Layer3_Monitoring.md</code>, <code>Infra_Layer4_PostgreSQL.md</code>, <code>Infra_Layer5_Releases_PSI.md</code>, <code>Infra_Layer6_Kubernetes.md</code>, <code>Infra_Layer7_ClickHouse.md</code>, <code>Infra_Layer8_Python_Automation.md</code>, <code>Infra_Layer9_Linux_Background.md</code></td>
+</tr>
+<tr>
+<td>🐍 Python Backend</td>
+<td><code>PythonBackend_Roadmap.md</code></td>
+<td><code>Python_Phase1_Idioms.md</code>, <code>Python_Phase2_Async.md</code>, <code>Python_Phase3_FastAPI.md</code>, <code>Python_Phase4_SQLAlchemy_Alembic.md</code>, <code>Python_Phase5_Testing.md</code>, <code>Python_Phase6_Packaging_Ops.md</code>, <code>Python_Phase7_Architecture.md</code></td>
+</tr>
+<tr>
+<td>🤖 AI Product Engineer</td>
+<td><code>AIEngineer_Roadmap.md</code></td>
+<td><code>AI_Phase1_LLM_Fundamentals.md</code>, <code>AI_Phase2_LLM_API.md</code>, <code>AI_Phase3_RAG.md</code>, <code>AI_Phase4_Agents_MCP.md</code>, <code>AI_Phase5_Production.md</code>, <code>AI_Phase6_Project.md</code></td>
+</tr>
+<tr>
+<td>🟣 C# Backend</td>
+<td><code>CSharp_Roadmap_Software.md</code></td>
+<td><code>Phase1_CSharp_Fundamentals.md</code>, <code>Phase1_QuickReview.md</code>, <code>Phase2_OOP.md</code>, <code>Phase2_QuickReview.md</code>, <code>Phase3_Advanced.md</code>, <code>Phase3_QuickReview.md</code></td>
+</tr>
+</tbody>
+</table>
+<h2 id="_1">Под собеседование</h2>
+<table>
+<thead>
+<tr>
+<th>Файл</th>
+<th>Что</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Sber_Interview_Prep.md</code></td>
+<td>техсобес Сбера 16.09: вопросы, ответы, вопросы работодателю</td>
+</tr>
+<tr>
+<td><code>Interview_Questions_Infra.md</code></td>
+<td>вопросы по слоям стенда с разметкой «из практики / теорией / не закрывается»</td>
+</tr>
+<tr>
+<td><code>CSharp_Interview_Questions.md</code></td>
+<td>банк вопросов по C#</td>
+</tr>
+</tbody>
+</table>
+<h2 id="companion">Справочники (companion)</h2>
+<table>
+<thead>
+<tr>
+<th>Файл</th>
+<th>Что</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>PostgreSQL_Companion.md</code></td>
+<td>SQL, процедуры, партиционирование, раздел «Эксплуатация»</td>
+</tr>
+<tr>
+<td><code>Docker_Companion.md</code>, <code>Kubernetes_Companion.md</code></td>
+<td>контейнеры и кластер</td>
+</tr>
+<tr>
+<td><code>Networking_DevOps_Companion.md</code></td>
+<td>сети, OSI, протоколы, виртуализация</td>
+</tr>
+<tr>
+<td><code>SystemDesign_Companion.md</code>, <code>Algorithms_Companion.md</code></td>
+<td>системный дизайн, алгоритмы</td>
+</tr>
+<tr>
+<td><code>Python_Backend_Crash_Course.md</code>, <code>FastAPI_Reference_10min.md</code></td>
+<td>быстрый вход в FastAPI</td>
+</tr>
+</tbody>
+</table>
+<h2 id="_2">Копилка ссылок</h2>
+<p><code>Learning_Links.md</code> - живой список каналов, курсов и статей с пояснением «зачем», без привязки к конкретной фазе. Пополнять по мере находок.</p>
+<hr>
+<p><em>Навигатор собран 11.09.2026 при разбиении роадмапов на файлы фаз.</em></p></article>
+    <aside class="aside">
+      <strong>В этом документе</strong>
+      <div class="toc"><div class="toc">
+<ul>
+<li><a href="#_1">Под собеседование</a></li>
+<li><a href="#companion">Справочники (companion)</a></li>
+<li><a href="#_2">Копилка ссылок</a></li>
+</ul>
+</div>
+</div>
+    </aside>
+  </div>
+</main>
+
+
+<script>
+const ROOT = "..";
+
+// ---- тема
+const themeBtn = document.getElementById("theme");
+const paint = () => {
+  const dark = document.documentElement.getAttribute("data-theme") === "dark";
+  themeBtn.textContent = dark ? "☀" : "☾";
+};
+paint();
+themeBtn.addEventListener("click", () => {
+  const next = document.documentElement.getAttribute("data-theme") === "dark" ? "light" : "dark";
+  document.documentElement.setAttribute("data-theme", next);
+  try { localStorage.setItem("kb-theme", next); } catch (e) {}
+  paint();
+});
+
+// ---- поиск
+let index = null;
+const box = document.getElementById("results");
+const hits = document.getElementById("hits");
+const head = box.querySelector("h3");
+const input = document.getElementById("q");
+
+async function ensureIndex() {
+  if (index) return index;
+  const res = await fetch(ROOT + "/search-index.json");
+  index = await res.json();
+  return index;
+}
+
+const esc = (s) => (s || "").replace(/[&<>]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
+
+function hi(text, query) {
+  const i = text.toLowerCase().indexOf(query);
+  if (i < 0) return esc(text);
+  return esc(text.slice(0, i)) + "<mark>" + esc(text.slice(i, i + query.length)) + "</mark>" + esc(text.slice(i + query.length));
+}
+
+input.addEventListener("input", async () => {
+  const q = input.value.trim().toLowerCase();
+  if (q.length < 2) { box.hidden = true; return; }
+  const data = await ensureIndex();
+  const found = [];
+  for (const d of data) {
+    const inTitle = d.title.toLowerCase().includes(q);
+    const inSum = (d.summary || "").toLowerCase().includes(q);
+    const heads = (d.heads || []).filter(h => h.toLowerCase().includes(q));
+    if (inTitle || inSum || heads.length) {
+      found.push({ d, heads, rank: inTitle ? 0 : heads.length ? 1 : 2 });
+    }
+  }
+  found.sort((a, b) => a.rank - b.rank);
+  head.textContent = found.length ? `Нашлось: ${found.length}` : "Ничего не нашлось";
+  hits.innerHTML = found.slice(0, 40).map(({ d, heads }) =>
+    `<a class="hit" href="${ROOT}/d/${d.slug}.html">
+       <b>${hi(d.title, q)}</b>
+       <span>${heads.length ? "→ " + heads.slice(0, 3).map(h => hi(h, q)).join(" · ") : esc(d.summary || "")}</span>
+     </a>`).join("");
+  box.hidden = false;
+});
+
+input.addEventListener("keydown", (e) => { if (e.key === "Escape") { input.value = ""; box.hidden = true; input.blur(); } });
+document.addEventListener("keydown", (e) => {
+  if (e.key === "/" && document.activeElement !== input) { e.preventDefault(); input.focus(); }
+});
+</script>
+</body>
+</html>
