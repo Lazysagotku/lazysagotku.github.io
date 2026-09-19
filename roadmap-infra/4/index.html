@@ -1,4 +1,4 @@
-<!doctype html><html lang="ru"><head><meta charset="utf-8"><script>(()=>{let s=null;try{s=localStorage.getItem("theme")}catch(e){}document.documentElement.dataset.theme=s||(matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light")})();</script><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="robots" content="noindex"><title>Слой 4. Эксплуатация PostgreSQL - Стенд с нуля</title><meta name="description" content="Стенд с нуля: слой 4, Эксплуатация PostgreSQL"><link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%23a8741a'/%3E%3Ctext x='32' y='43' font-family='Georgia,serif' font-weight='700' font-size='30' fill='white' text-anchor='middle'%3EИА%3C/text%3E%3C/svg%3E"><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bitter:wght@600;700&family=Source+Sans+3:wght@400;600&family=JetBrains+Mono:wght@400;700&display=swap"><style>
+<!doctype html><html lang="ru"><head><meta charset="utf-8"><script>(()=>{let s=null;try{s=localStorage.getItem("theme")}catch(e){}document.documentElement.dataset.theme=s||(matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light")})();</script><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="robots" content="noindex"><title>Слой 4. Эксплуатация PostgreSQL: от connection до query plan - Infrastructure Engineer L2-L3</title><meta name="description" content="Infrastructure Engineer L2-L3: слой 4, Эксплуатация PostgreSQL: от connection до query plan"><link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%23a8741a'/%3E%3Ctext x='32' y='43' font-family='Georgia,serif' font-weight='700' font-size='30' fill='white' text-anchor='middle'%3EИА%3C/text%3E%3C/svg%3E"><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bitter:wght@600;700&family=Source+Sans+3:wght@400;600&family=JetBrains+Mono:wght@400;700&display=swap"><style>
 :root {
   --ground:#e8eaee; --surface:#fff; --sunken:#f1f3f6; --ink:#1a1d24; --muted:#626b78; --faint:#8b939f;
   --line:#d2d7de; --accent:#a8741a; --accent-soft:#f5ead6; --done:#2f6f56; --done-soft:#dfeee7; --break:#97452f;
@@ -187,21 +187,21 @@ blockquote.about p { margin:0; }
 </style></head><body data-phase="4">
 <div class="layout">
   <aside class="side">
-    <a class="back" href="../">← Стенд с нуля</a>
-    <h2>🖥 Стенд с нуля</h2>
+    <a class="back" href="../">← Infrastructure Engineer L2-L3</a>
+    <h2>🖥 Infrastructure Engineer L2-L3</h2>
     <div class="prog">пройдено <span id="pct">0%</span> · <span id="steps-done">0</span>/<span id="steps-all">0</span> шагов</div>
     <div class="bar" data-total><span></span></div>
     <nav><b>В этом слое</b><a href="#analogy"><span class="i">🎭</span>Аналогия</a><a href="#map"><span class="i">🗺</span>Карта мест</a><a href="#theory"><span class="i">📖</span>Теория</a><a href="#practice"><span class="i">🔧</span>Практика</a><a href="#break"><span class="i">💥</span>Сломай намеренно</a><a href="#task"><span class="i">✅</span>Задание</a><a href="#life"><span class="i">🌍</span>Из жизни</a><a href="#questions"><span class="i">❓</span>Вопросы с ответами</a></nav>
-    <nav class="-siblings"><b>Слои</b><a href="../0/" class="" data-phase="0"><span class="n">00</span>Стенд и Linux-база</a><a href="../1/" class="" data-phase="1"><span class="n">01</span>Nginx и TLS</a><a href="../2/" class="" data-phase="2"><span class="n">02</span>CI/CD</a><a href="../3/" class="" data-phase="3"><span class="n">03</span>Мониторинг с нуля</a><a href="../4/" class="-cur" data-phase="4"><span class="n">04</span>Эксплуатация PostgreSQL</a><a href="../5/" class="" data-phase="5"><span class="n">05</span>Релизы, тестирование ППО и приёмка</a><a href="../6/" class="" data-phase="6"><span class="n">06</span>Kubernetes</a><a href="../7/" class="" data-phase="7"><span class="n">07</span>ClickHouse обзорно</a><a href="../8/" class="" data-phase="8"><span class="n">08</span>Python и автоматизация</a><a href="../9/" class="" data-phase="9"><span class="n">09</span>Linux фоном</a></nav>
+    <nav class="-siblings"><b>Слои</b><a href="../0/" class="" data-phase="0"><span class="n">00</span>Стенд и Linux-база</a><a href="../1/" class="" data-phase="1"><span class="n">01</span>Network, DNS, TLS и web path</a><a href="../2/" class="" data-phase="2"><span class="n">02</span>Services, systemd и Docker diagnosis</a><a href="../3/" class="" data-phase="3"><span class="n">03</span>Monitoring: alert как начало расследования</a><a href="../4/" class="-cur" data-phase="4"><span class="n">04</span>Эксплуатация PostgreSQL: от connection до query plan</a><a href="../5/" class="" data-phase="5"><span class="n">05</span>PostgreSQL backup, restore и recovery</a><a href="../6/" class="" data-phase="6"><span class="n">06</span>Windows Server, AD, DNS, DHCP и GPO</a><a href="../7/" class="" data-phase="7"><span class="n">07</span>Virtualization: Hyper-V и zVirt foundation</a><a href="../8/" class="" data-phase="8"><span class="n">08</span>Security baseline, logs и safe automation</a><a href="../9/" class="" data-phase="9"><span class="n">09</span>Incident lab: от L1 к L3</a></nav>
   </aside>
   <main class="content">
-    <div class="topbar"><b>Слой 4. Эксплуатация PostgreSQL</b><span><span id="cur-done">0</span> из <span id="cur-all">12</span> шагов пройдено</span></div>
-    <h1>Эксплуатация PostgreSQL</h1>
-    <p class="lead">дни 11-13, 5 часов · пн 14.09</p>
+    <div class="topbar"><b>Слой 4. Эксплуатация PostgreSQL: от connection до query plan</b><span><span id="cur-done">0</span> из <span id="cur-all">14</span> шагов пройдено</span></div>
+    <h1>Эксплуатация PostgreSQL: от connection до query plan</h1>
+    <p class="lead">дни 11-13, 10-12 часов</p>
     <section class="sec -analogy" id="analogy"><h2><span class="i">🎭</span>Аналогия</h2><div class="text"><p>Разница между водителем и механиком. Писать SQL умеет водитель: сел, поехал, доехал. Держать базу живой умеет механик - он смотрит под капот, знает, что греется, и меняет масло до поломки.</p>
 <p><strong>Вторая аналогия, для MVCC.</strong> Черновик с правками. При исправлении строки Postgres не стирает старую версию, а пишет новую и помечает старую отмершей. Пока идущие транзакции могут её видеть, она лежит. Уборщик приходит потом.</p>
 <p><strong>Третья, для планировщика.</strong> Навигатор. <code>EXPLAIN</code> показывает предполагаемый маршрут, <code>EXPLAIN ANALYZE</code> прогоняет машину и говорит, сколько заняло на самом деле. Пробки видны только во втором случае.</p></div></section><section class="sec -map" id="map"><h2><span class="i">🗺</span>Карта мест</h2><div class="text"><p><strong>Сделать:</strong> увидеть, что в базе прямо сейчас; прочитать план запроса и ускорить его индексом; регламентный расчёт джобом; бэкап и восстановление в отдельную базу.</p>
-<p><strong>Понять:</strong> база - это процессы и файлы, как любой сервис. План запроса объясняет «почему медленно» лучше любой догадки. Три причины большинства инцидентов с базой: блокировки, раздувание таблиц без VACUUM, кончившиеся соединения.</p>
+<p><strong>Понять:</strong> база - это процессы и файлы, как любой сервис. Доступность БД идёт по цепочке host → process → port → network → <code>pg_hba.conf</code> → authentication → capacity → database/schema → application pool. Медленный запрос - по цепочке host resources → wait/locks → transaction age → query plan → statistics/index → vacuum/bloat → pool saturation. План запроса объясняет «почему медленно» лучше любой догадки. Три причины большинства инцидентов с базой: блокировки, раздувание таблиц без VACUUM, кончившиеся соединения.</p>
 <p><strong>Где писать:</strong> SQL и служебные запросы - в <code>psql</code>; настройки - <code>ALTER SYSTEM SET</code> или <code>postgresql.conf</code>; джобы - <code>pg_cron</code> или <code>crontab</code>; бэкап - скрипт с <code>pg_dump</code> (или pgBackRest).</p>
 <p><strong>Чем запустить:</strong> <code>psql -U пользователь -d база</code>; внутри <code>\timing on</code>, потом <code>EXPLAIN (ANALYZE, BUFFERS) запрос;</code>. После смены конфига - <code>sudo systemctl restart postgresql</code> (часть параметров - <code>SELECT pg_reload_conf();</code> без рестарта).</p>
 <p><strong>Где смотреть результат:</strong></p>
@@ -253,6 +253,134 @@ SELECT * FROM pg_locks WHERE NOT granted;                                       
 </tbody>
 </table>
 <p><strong>Зачем WAL.</strong> Запись в журнал последовательная и быстрая, запись в файлы данных случайная и медленная. Сначала фиксируем изменение в журнале, отвечаем клиенту, а страницы сбрасываем позже. При падении база проигрывает журнал и восстанавливается. Тот же журнал уезжает на реплики и в архив для восстановления на точку времени.</p>
+<h3>Diagnostic tree: приложение не может подключиться</h3>
+<pre><code class="language-text">PostgreSQL process active?
+→ port listening on expected address?
+→ client can reach network/port?
+→ pg_hba.conf rule matches client/user/db/TLS?
+→ authentication/password/certificate valid?
+→ max_connections and pool capacity available?
+→ database and role exist with CONNECT privilege?
+→ PostgreSQL and application logs explain rejection?
+</code></pre>
+<table>
+<thead>
+<tr>
+<th>Symptom</th>
+<th>Hypothesis</th>
+<th>Check</th>
+<th>Interpretation</th>
+<th>Next</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>refused</td>
+<td>server/port absent</td>
+<td>status + <code>ss</code></td>
+<td>no listener</td>
+<td>service/config</td>
+</tr>
+<tr>
+<td>timeout</td>
+<td>network/filter</td>
+<td>client curl/nc + capture</td>
+<td>SYN lacks reply</td>
+<td>firewall/route</td>
+</tr>
+<tr>
+<td><code>no pg_hba.conf entry</code></td>
+<td>access rule</td>
+<td>server log + file</td>
+<td>rule absent/mismatch</td>
+<td>approved hba change/reload</td>
+</tr>
+<tr>
+<td>password failed</td>
+<td>credential</td>
+<td>log/user source</td>
+<td>wrong/expired secret</td>
+<td>credential process</td>
+</tr>
+<tr>
+<td>too many connections</td>
+<td>saturation/leak</td>
+<td>activity + max</td>
+<td>sessions near cap</td>
+<td>pool/idle clients</td>
+</tr>
+<tr>
+<td>database does not exist</td>
+<td>config/deploy</td>
+<td><code>\l</code>, app config</td>
+<td>target mismatch</td>
+<td>correct config/change</td>
+</tr>
+</tbody>
+</table>
+<h3>Diagnostic tree: PostgreSQL медленный</h3>
+<table>
+<thead>
+<tr>
+<th>Order</th>
+<th>Hypothesis</th>
+<th>Check</th>
+<th>What matters</th>
+<th>Next</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>host saturated</td>
+<td>CPU/RAM/disk metrics</td>
+<td>saturation or I/O wait</td>
+<td>host/process branch</td>
+</tr>
+<tr>
+<td>2</td>
+<td>blocked work</td>
+<td>activity + blockers</td>
+<td><code>wait_event=Lock</code></td>
+<td>blocker transaction</td>
+</tr>
+<tr>
+<td>3</td>
+<td>old transaction</td>
+<td><code>idle in transaction</code>, age</td>
+<td>holds locks/snapshot</td>
+<td>owner/cancel policy</td>
+</tr>
+<tr>
+<td>4</td>
+<td>one slow query</td>
+<td>activity/statement stats</td>
+<td>duration/calls/total time</td>
+<td><code>EXPLAIN</code></td>
+</tr>
+<tr>
+<td>5</td>
+<td>poor plan</td>
+<td><code>EXPLAIN (ANALYZE, BUFFERS)</code></td>
+<td>actual vs estimated rows, scan, disk sort</td>
+<td>statistics/index/query</td>
+</tr>
+<tr>
+<td>6</td>
+<td>maintenance debt</td>
+<td>dead tuples/vacuum age</td>
+<td>bloat/autovacuum lag</td>
+<td>vacuum policy/long tx</td>
+</tr>
+<tr>
+<td>7</td>
+<td>connection pool pressure</td>
+<td>sessions/pool queue</td>
+<td>useful work vs idle clients</td>
+<td>pool/config</td>
+</tr>
+</tbody>
+</table>
 <h3>Чтение плана - что смотреть по порядку</h3>
 <pre><code class="language-sql">EXPLAIN (ANALYZE, BUFFERS) SELECT ...;
 </code></pre>
@@ -261,7 +389,7 @@ SELECT * FROM pg_locks WHERE NOT granted;                                       
 </code></pre>
 <ol>
 <li><strong>Seq Scan там, где ждал Index Scan.</strong> Полный проход. Причины: индекса нет; индекс есть, но не подходит под условие; планировщик решил, что строк много и последовательное чтение дешевле.</li>
-<li><strong>Расхождение <code>rows=</code> оценённых и <code>actual rows=</code>.</strong> Мимо в разы - статистика устарела, нужен <code>ANALYZE таблица</code>. Планировщик решает по статистике, и врущая статистика даёт плохой план при живых индексах.</li>
+<li><strong>Расхождение <code>rows=</code> оценённых и <code>actual rows=</code>.</strong> Мимо в разы - статистика устарела, нужен <code>ANALYZE таблица</code>.</li>
 <li><strong>Nested Loop на больших объёмах.</strong> Для маленьких выборок норма, для больших обычно и есть тормоз.</li>
 <li><strong><code>Rows Removed by Filter</code>.</strong> Прочитали много, выкинули почти всё - явный признак недостающего индекса.</li>
 <li><strong>BUFFERS: <code>shared read</code> против <code>shared hit</code>.</strong> <code>hit</code> из кэша, <code>read</code> с диска. Много <code>read</code> означает, что данные не помещаются в память.</li>
@@ -331,7 +459,7 @@ SELECT * FROM users WHERE name ILIKE '%иван%';
 <pre><code class="language-sql">CREATE EXTENSION pg_trgm;
 CREATE INDEX ON users USING gin (name gin_trgm_ops);
 </code></pre>
-<p>Для <code>ILIKE 'иван%'</code> (совпадение с начала) хватит обычного btree с классом <code>text_pattern_ops</code>.</p>
+<p>Для <code>ILIKE 'иван%'</code> (совпадение с начала) хватит обычного btree с классом <code>text_pattern_ops</code>. Ровно этот случай встречается в реальном коде <code>vacancy-tracker</code> - см. <code>Fullstack_Phase2_Async_PostgreSQL.md</code>, <code>lower(title) LIKE '%...%'</code>.</p>
 <p><strong>Случай 3. OFFSET на глубоких страницах.</strong></p>
 <pre><code class="language-sql">-- ПЛОХО: чтобы отдать 20 строк, читает и выбрасывает 100000
 SELECT * FROM vacancies ORDER BY id LIMIT 20 OFFSET 100000;
@@ -342,10 +470,10 @@ SELECT * FROM vacancies WHERE id &gt; 100000 ORDER BY id LIMIT 20;
 <p>Время <code>OFFSET</code> растёт линейно с номером страницы. На больших таблицах последние страницы открываются секундами.</p>
 <p><strong>Случай 4. <code>OR</code> мешает планировщику.</strong></p>
 <pre><code class="language-sql">-- ПЛОХО: часто уходит в Seq Scan
-SELECT * FROM finds WHERE employer = 'Сбер' OR name = 'DevOps';
+SELECT * FROM finds WHERE employer = 'работодатель' OR name = 'DevOps';
 
 -- ХОРОШО: два индекса работают по отдельности
-SELECT * FROM finds WHERE employer = 'Сбер'
+SELECT * FROM finds WHERE employer = 'работодатель'
 UNION
 SELECT * FROM finds WHERE name = 'DevOps';
 </code></pre>
@@ -667,7 +795,32 @@ ORDER BY total_exec_time DESC LIMIT 15;
 <h3>Про Pangolin</h3>
 <blockquote>
 <p>С Pangolin не работал, он внутри вашего контура. Это PostgreSQL, и всё, что я делал на нём, переносится: планы, блокировки, обслуживание, хранимые процедуры. Интересно, чем ваша сборка отличается от ванильной - расширения, изменения в репликации, что-то по отказоустойчивости?</p>
-</blockquote></div></section><section class="sec -practice" id="practice"><h2><span class="i">🔧</span>Практика</h2><ul class="steps"><li class="step" data-step="4-practice-1"><input type="checkbox" id="s-4-practice-1"><span class="box"></span><span class="txt"><strong>Включить <code>pg_stat_statements</code></strong>, погонять трекер, найти три самых тяжёлых запроса.</span></li><li class="step" data-step="4-practice-2"><input type="checkbox" id="s-4-practice-2"><span class="box"></span><span class="txt"><strong><code>EXPLAIN (ANALYZE, BUFFERS)</code> на каждом.</strong> Найти хотя бы один Seq Scan и убрать индексом. <strong>Записать время до и после</strong> - это цифра для собеседования.</span></li><li class="step" data-step="4-practice-3"><input type="checkbox" id="s-4-practice-3"><span class="box"></span><span class="txt"><strong>Проверить, что индекс реально используется</strong> после создания повторить <code>EXPLAIN</code> и увидеть смену узла.</span></li><li class="step" data-step="4-practice-4"><input type="checkbox" id="s-4-practice-4"><span class="box"></span><span class="txt"><strong>Воспроизвести три случая оптимизации</strong> из списка выше на своих таблицах: функция на колонке, глубокий OFFSET, составной индекс под фильтр плюс сортировку.</span></li><li class="step" data-step="4-practice-5"><input type="checkbox" id="s-4-practice-5"><span class="box"></span><span class="txt"><strong>Поставить джобу через pg_cron</strong> ночная чистка старых находок в <code>scout.db</code>-подобной таблице трекера, с записью в <code>job_runs</code> и защитой через <code>pg_try_advisory_lock</code>.</span></li><li class="step" data-step="4-practice-6"><input type="checkbox" id="s-4-practice-6"><span class="box"></span><span class="txt"><strong>Собрать в Grafana панель по базе</strong> соединения, cache hit ratio, мёртвые строки, время последней успешной джобы.</span></li></ul></section><section class="sec -break" id="break"><h2><span class="i">💥</span>Сломай намеренно</h2><ul class="steps"><li class="step -break" data-step="4-break-1"><input type="checkbox" id="s-4-break-1"><span class="box"></span><span class="txt"><strong><code>idle in transaction</code> своими руками.</strong> В одной сессии</span><span class="more">подробнее</span></li><li class="step-body"><pre><code class="language-sql">BEGIN;
+</blockquote>
+<h3>SQL audit cookbook - две проверки, которых не было ни в одной версии</h3>
+<blockquote>
+<p>Дополнение по прямому запросу Ивана (19.09, сверка с
+<code>Инфра_Стенд_рабочий_конспект_v5...docx</code>). Остальные read-only проверки
+(текущие подключения, долгие запросы, блокировки, размеры) уже разобраны
+выше подробнее, чем в docx - повторно не дублирую. Формат: COMMAND →
+SYNTAX → EVERY IMPORTANT CLAUSE → EXPECTED OUTPUT → WHAT TO LOOK AT →
+INTERPRETATION → NEXT INFERENCE → INCIDENT/INTERVIEW USE.</p>
+</blockquote>
+<p><strong>Базовая проверка окружения:</strong></p>
+<pre><code class="language-sql">SELECT current_database(), current_user, version();
+</code></pre>
+<p>Syntax/clauses: три системные функции без <code>FROM</code> - не читают ни одной таблицы. Expected output: одна строка - имя БД, роль, версия сервера. What to look at: совпадает ли с тем, что собирались проверять. Interpretation: это защита от «диагностировал не ту БД/не под той ролью» - самая дешёвая и самая пропускаемая проверка. Next inference: если не те - переподключиться, прежде чем делать выводы дальше. Incident/interview use: первый шаг <strong>любой</strong> диагностики PostgreSQL, до вопроса про её симптом.</p>
+<p><strong>Проверка ролей и прав:</strong></p>
+<pre><code class="language-sql">SELECT rolname, rolsuper, rolcreaterole, rolcreatedb, rolcanlogin
+FROM pg_roles ORDER BY rolname;
+</code></pre>
+<p>Syntax/clauses: <code>pg_roles</code> - системный каталог ролей кластера. What to look at: <code>rolcanlogin</code> (может ли роль вообще логиниться), <code>rolsuper</code>/<code>rolcreaterole</code>/<code>rolcreatedb</code> (повышенные привилегии). Interpretation: приложение работает под ролью с <code>rolsuper = true</code> - избыточные права для сервисного аккаунта, находка для security review; для конкретных прав на объект (не на роль целиком) нужна отдельная проверка <code>GRANT</code>/<code>information_schema.role_table_grants</code>. Next inference: найдена лишняя привилегия → сузить роль под принцип least privilege, тот же, что уже применён к <code>codex-ro</code> на уровне ОС (<code>Agent_Access_Lab.md</code>). Incident/interview use: ответ на «как проверить права доступа в PostgreSQL» без выдумывания - конкретный каталог, конкретные колонки.</p></div></section><section class="sec -practice" id="practice"><h2><span class="i">🔧</span>Практика</h2><ul class="steps"><li class="step" data-step="4-practice-1"><input type="checkbox" id="s-4-practice-1"><span class="box"></span><span class="txt"><strong>Включить <code>pg_stat_statements</code></strong>, погонять трекер, найти три самых тяжёлых запроса.</span></li><li class="step" data-step="4-practice-2"><input type="checkbox" id="s-4-practice-2"><span class="box"></span><span class="txt"><strong><code>EXPLAIN (ANALYZE, BUFFERS)</code> на каждом.</strong> Найти хотя бы один Seq Scan и убрать индексом. <strong>Записать время до и после</strong> - это цифра для собеседования.</span></li><li class="step" data-step="4-practice-3"><input type="checkbox" id="s-4-practice-3"><span class="box"></span><span class="txt"><strong>Проверить, что индекс реально используется</strong> после создания повторить <code>EXPLAIN</code> и увидеть смену узла.</span></li><li class="step" data-step="4-practice-4"><input type="checkbox" id="s-4-practice-4"><span class="box"></span><span class="txt"><strong>Воспроизвести три случая оптимизации</strong> из списка выше на своих таблицах: функция на колонке, глубокий OFFSET, составной индекс под фильтр плюс сортировку.</span></li><li class="step" data-step="4-practice-5"><input type="checkbox" id="s-4-practice-5"><span class="box"></span><span class="txt"><strong>Поставить джобу через pg_cron</strong> ночная чистка старых находок в таблице трекера, с записью в <code>job_runs</code> и защитой через <code>pg_try_advisory_lock</code>.</span></li><li class="step" data-step="4-practice-6"><input type="checkbox" id="s-4-practice-6"><span class="box"></span><span class="txt"><strong>Собрать в Grafana панель по базе</strong> соединения, cache hit ratio, мёртвые строки, время последней успешной джобы.</span></li><li class="step" data-step="4-practice-7"><input type="checkbox" id="s-4-practice-7"><span class="box"></span><span class="txt"><strong>Живой прогон backup/restore, добавлено 15.09 под техсобес.</strong> Теория выше (раздел «Резервные копии и репликация») без этого пункта остаётся пересказом документации, а не своим опытом</span><span class="more">подробнее</span></li><li class="step-body"><ul>
+<li><code>pg_dump -Fc -d vacancy_tracker &gt; vacancy_tracker.dump</code> на сервере.</li>
+<li>Поднять рядом пустую базу <code>vacancy_tracker_restore_test</code>, <code>pg_restore -d vacancy_tracker_restore_test vacancy_tracker.dump</code>.</li>
+<li>Сверить <code>SELECT count(*) FROM vacancies;</code> и <code>companies</code> в обеих базах - числа обязаны сойтись.</li>
+<li>Проверить права: <code>\du</code> и <code>\dp vacancies</code> в восстановленной базе - роли переносятся дампом, но не всегда с теми же паролями.</li>
+<li>Замерить время дампа и время восстановления секундомером - это и есть RTO этого конкретного стенда на этом объёме данных. RPO - интервал между дампами, если бы это был регламент, а не разовая проверка.</li>
+<li>Записать три цифры (размер дампа, время дампа, время восстановления) сюда же в файл - готовый ответ на «как проверяли, что бэкап реально восстанавливается», без «мы делаем бэкапы» без доказательства.</li>
+</ul></li><li class="step" data-step="4-practice-8"><input type="checkbox" id="s-4-practice-8"><span class="box"></span><span class="txt"><strong>PostgreSQL теперь реален на стенде</strong> (Docker-контейнер, <code>compose.yml</code> из слоя 0, поднят 19.09) - все запросы этого раздела и cookbook выше выполнимы прямо сейчас, не гипотетически.</span></li></ul></section><section class="sec -break" id="break"><h2><span class="i">💥</span>Сломай намеренно</h2><ul class="steps"><li class="step -break" data-step="4-break-1"><input type="checkbox" id="s-4-break-1"><span class="box"></span><span class="txt"><strong><code>idle in transaction</code> своими руками.</strong> В одной сессии</span><span class="more">подробнее</span></li><li class="step-body"><pre><code class="language-sql">BEGIN;
 UPDATE vacancies SET priority = priority WHERE id = 1;
 -- и ничего не делать
 </code></pre>
@@ -720,15 +873,27 @@ UPDATE vacancies SET priority = priority WHERE id = 1;
 <p><strong>Чем синхронная репликация отличается от асинхронной?</strong></p>
 <blockquote>
 <p>Асинхронная: мастер не ждёт реплику, быстро, но при аварии можно потерять последние транзакции. Синхронная: мастер ждёт подтверждения, потери нет, каждая запись медленнее. Выбор - это решение о допустимой потере, а не техническое предпочтение.</p>
+</blockquote>
+<p><strong>Зачем нужен PgBouncer, если приложение и так открывает соединения?</strong> <em>(добавлено 15.09)</em></p>
+<blockquote>
+<p>Каждое соединение Postgres - процесс ОС, тысяча простаивающих клиентов держат тысячу процессов и память под них. PgBouncer терминирует клиентские соединения сам и держит к базе маленький пул реальных. Симптом без пула: <code>FATAL: too many connections</code>, рост <code>pg_stat_activity</code> без роста полезной работы, память сервера уходит на holding, а не на кэш. Резать в проде себе не давал - объяснил бы принцип и разницу режимов, дальше поднял бы <code>transaction</code> pooling в Docker рядом с трекером, если бы дали 20 минут на живом стенде.</p>
+</blockquote>
+<p><strong>Реплика упала. Что делаете - просто переключаете трафик?</strong></p>
+<blockquote>
+<p>Нет, failover - это процедура, а не тумблер. Сначала подтвердить, что мастер действительно недоступен, а не просто медленно отвечает - ложный failover хуже простоя. Дальше поднять реплику в роль мастера (<code>pg_ctl promote</code> или через Patroni, если он есть), переключить приложения на новый адрес - через DNS, VIP или сервис-дискавери, не руками в конфиге каждого клиента. После - поднять новую реплику взамен старой, иначе кластер живёт без резерва. Автоматический failover без карантина на «split brain» - когда старый мастер ожил и оба принимают запись - опаснее ручного с задержкой в минуту.</p>
+</blockquote>
+<p><strong>PITR и replication уже покрыты?</strong></p>
+<blockquote>
+<p>Да, выше в разделе «Резервные копии и репликация» - PITR через base backup + WAL, репликация синхронная/асинхронная. Отдельное упражнение с полным сценарием failover - следующий слой, здесь важно понимать механизм и уметь объяснить компромисс.</p>
 </blockquote></div></section>
     <p class="src">Исходник: <a href="https://github.com/Lazysagotku/l2code/blob/main/Infra_Layer4_PostgreSQL.md" target="_blank" rel="noopener">Infra_Layer4_PostgreSQL.md</a></p>
-    <nav class="pager"><a href="../3/">← 03 Мониторинг с нуля</a><a class="r" href="../5/">05 Релизы, тестирование ППО и приёмка →</a></nav>
+    <nav class="pager"><a href="../3/">← 03 Monitoring: alert как начало расследования</a><a class="r" href="../5/">05 PostgreSQL backup, restore и recovery →</a></nav>
   </main>
 </div><script>
 (() => {
   const KEY = "rm-progress-infra";
-  const DEADLINE = "2026-09-16";
-  const PHASES = {"0": {"total": 6, "baseline": 0, "status": "", "hours": 2.0}, "1": {"total": 6, "baseline": 0, "status": "", "hours": 3.0}, "2": {"total": 8, "baseline": 0, "status": "", "hours": 4.0}, "3": {"total": 12, "baseline": 0, "status": "", "hours": 5.0}, "4": {"total": 12, "baseline": 0, "status": "", "hours": 5.0}, "5": {"total": 11, "baseline": 0, "status": "", "hours": 4.0}, "6": {"total": 15, "baseline": 0, "status": "", "hours": 10.0}, "7": {"total": 5, "baseline": 0, "status": "", "hours": 2.0}, "8": {"total": 10, "baseline": 0, "status": "", "hours": 6.0}, "9": {"total": 9, "baseline": 0, "status": "", "hours": 0.0}};
+  const DEADLINE = "";
+  const PHASES = {"0": {"total": 6, "baseline": 0, "status": "", "hours": 2.0}, "1": {"total": 8, "baseline": 0, "status": "", "hours": 8.0}, "2": {"total": 8, "baseline": 0, "status": "", "hours": 8.0}, "3": {"total": 8, "baseline": 0, "status": "", "hours": 6.0}, "4": {"total": 14, "baseline": 0, "status": "", "hours": 12.0}, "5": {"total": 8, "baseline": 0, "status": "", "hours": 8.0}, "6": {"total": 7, "baseline": 0, "status": "", "hours": 8.0}, "7": {"total": 4, "baseline": 0, "status": "", "hours": 5.0}, "8": {"total": 7, "baseline": 0, "status": "", "hours": 8.0}, "9": {"total": 12, "baseline": 0, "status": "", "hours": 0.0}};
   const load = () => { try { return JSON.parse(localStorage.getItem(KEY)) || {}; } catch (e) { return {}; } };
   const save = (s) => { try { localStorage.setItem(KEY, JSON.stringify(s)); } catch (e) {} };
   let state = load();
