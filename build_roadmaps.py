@@ -68,8 +68,8 @@ class Track:
 
 
 TRACKS = {
-    "infra": Track("infra", "Стенд с нуля",
-                   "Чистый VPS, десять слоёв обвязки. Каждый слой проверяется руками и ломается намеренно.",
+    "infra": Track("infra", "Infrastructure Engineer L2-L3",
+                   "Практический маршрут: симптом → диагностика → root cause → восстановление. Linux, сеть, сервисы, PostgreSQL и эксплуатация.",
                    "roadmap-infra", "Roadmap_Infra_Sept2026.md", "Infra_Layer*.md", "Слой", "Слои", "слоёв", "🖥", "закрыт", "слой", "этом слое"),
     "python": Track("python", "Python Backend",
                     "Бэкенд-паттерны и идиомы поверх живого языка. Полигон - трекер и разведчик, написанные Claude.",
@@ -80,13 +80,17 @@ TRACKS = {
     "csharp": Track("csharp", "C# Backend",
                     "Фоновый трек с 1 сентября. Закрывает вопрос «читаете ли код разработчиков» и доводит Life Notes.",
                     "roadmap", "CSharp_Roadmap_Software.md", "", "Фаза", "Фазы", "фаз", "🟣", "закрыта", "фазу", "этой фазе"),
+    "fullstack": Track("fullstack", "Fullstack Python-first (ФизЭл)",
+                       "Python/FastAPI/PostgreSQL ядро, architecture track, agent-coding и AI-терминология, high-load/real-time, Go survival последним.",
+                       "roadmap-fullstack", "FizEl_Fullstack_Roadmap.md", "Fullstack_Phase*.md", "Фаза", "Фазы", "фаз", "🚀", "закрыта", "фазу", "этой фазе"),
 }
 
 SIBLINGS = {
-    "infra": [("python", "/roadmap-python/"), ("ai", "/roadmap-ai/"), ("csharp", "/roadmap/")],
-    "python": [("infra", "/roadmap-infra/"), ("ai", "/roadmap-ai/"), ("csharp", "/roadmap/")],
-    "ai": [("infra", "/roadmap-infra/"), ("python", "/roadmap-python/"), ("csharp", "/roadmap/")],
-    "csharp": [("infra", "/roadmap-infra/"), ("python", "/roadmap-python/"), ("ai", "/roadmap-ai/")],
+    "infra": [("python", "/roadmap-python/"), ("ai", "/roadmap-ai/"), ("csharp", "/roadmap/"), ("fullstack", "/roadmap-fullstack/")],
+    "python": [("infra", "/roadmap-infra/"), ("ai", "/roadmap-ai/"), ("csharp", "/roadmap/"), ("fullstack", "/roadmap-fullstack/")],
+    "ai": [("infra", "/roadmap-infra/"), ("python", "/roadmap-python/"), ("csharp", "/roadmap/"), ("fullstack", "/roadmap-fullstack/")],
+    "csharp": [("infra", "/roadmap-infra/"), ("python", "/roadmap-python/"), ("ai", "/roadmap-ai/"), ("fullstack", "/roadmap-fullstack/")],
+    "fullstack": [("infra", "/roadmap-infra/"), ("python", "/roadmap-python/"), ("ai", "/roadmap-ai/"), ("csharp", "/roadmap/")],
 }
 
 
@@ -752,6 +756,7 @@ def render_index(track: Track, intro_html: str, phases: list[Phase], meta: dict)
 
     countdown = (f'<div class="countdown"><div class="num" id="days">—</div><div class="cap">дней {html.escape(dl_label)}</div></div>'
                  if deadline else "")
+    countdown_markup = f"\n    {countdown}" if countdown else ""
     hours_meter = (f'<div class="meter"><span class="val" id="hours-left">{total_hours:g}</span><span class="lbl">часов осталось</span></div>'
                    if total_hours else "")
     sib = " · ".join(f'<a href="{u}">{TRACKS[k].title}</a>' for k, u in SIBLINGS[track.key])
@@ -765,7 +770,7 @@ def render_index(track: Track, intro_html: str, phases: list[Phase], meta: dict)
       <h1>{html.escape(track.title)}</h1>
       <p class="sub">{html.escape(track.lead)}</p>
     </div>
-    {countdown}
+{countdown_markup}
   </header>
 
   <section class="summary">
@@ -786,7 +791,7 @@ def render_index(track: Track, intro_html: str, phases: list[Phase], meta: dict)
   <p class="section-label">{track.unit_pl} по порядку</p>
   <div class="stack">{"".join(cards)}</div>
 
-  <details class="layer"><summary><span class="idx">▪</span><span class="headline"><h2>Про этот роадмап</h2><span class="meta">зачем, прицел, срез, календарь</span></span><span></span></summary>
+  <details class="layer"><summary><span class="idx">▪</span><span class="headline"><h2>Про этот роадмап</h2><span class="meta">цель, алгоритм и глубина</span></span><span></span></summary>
     <div class="body"><div class="note">{intro_html}</div></div>
   </details>
 
