@@ -43,6 +43,12 @@ hr { border:0; border-top:1px solid var(--line); margin:1.2rem 0; }
 .masthead h1 { font-weight:700; font-size:clamp(30px,5vw,42px); letter-spacing:-.015em; }
 .masthead .sub { margin-top:6px; color:var(--muted); max-width:46ch; }
 .masthead .back { font-size:.9rem; text-decoration:none; color:var(--muted); }
+.version-switch { display:inline-block; margin-top:10px; font-family:"JetBrains Mono",monospace; font-size:12px; letter-spacing:.04em; text-decoration:none; color:var(--accent); border:1px solid var(--accent); border-radius:3px; padding:6px 12px; background:var(--accent-soft); }
+.version-switch:hover { background:var(--accent); color:#fff; }
+.side .version-switch { display:block; text-align:center; margin-bottom:16px; }
+.version-banner { background:var(--accent-soft); border:1px solid var(--accent); border-left:4px solid var(--accent); border-radius:3px; padding:16px 20px; margin-bottom:4px; font-size:14.5px; }
+.version-banner p+p { margin-top:.5rem; }
+.version-banner ul { margin:.4rem 0; }
 .countdown { font-family:"JetBrains Mono",monospace; text-align:right; line-height:1.25; }
 .countdown .num { font-size:34px; font-weight:700; color:var(--accent); font-variant-numeric:tabular-nums; }
 .countdown .cap { font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:var(--muted); }
@@ -189,10 +195,11 @@ blockquote.about p { margin:0; }
   <aside class="side">
     <a class="back" href="../">← Fullstack Python-first (ФизЭл)</a>
     <h2>🚀 Fullstack Python-first (ФизЭл)</h2>
+    
     <div class="prog">пройдено <span id="pct">0%</span> · <span id="steps-done">0</span>/<span id="steps-all">0</span> шагов</div>
     <div class="bar" data-total><span></span></div>
     <nav><b>В этой фазе</b><a href="#analogy"><span class="i">🎭</span>Аналогия</a><a href="#theory"><span class="i">📖</span>Теория</a><a href="#practice"><span class="i">🔧</span>Практика</a><a href="#break"><span class="i">💥</span>Сломай намеренно</a><a href="#task"><span class="i">✅</span>Задание</a><a href="#life"><span class="i">🌍</span>Из жизни</a><a href="#questions"><span class="i">❓</span>Вопросы с ответами</a></nav>
-    <nav class="-siblings"><b>Фазы</b><a href="../1/" class="" data-phase="1"><span class="n">01</span>HTTP, REST, FastAPI, Pydantic, DI</a><a href="../2/" class="" data-phase="2"><span class="n">02</span>async/await, PostgreSQL, SQLAlchemy</a><a href="../3/" class="" data-phase="3"><span class="n">03</span>Backend-архитектура: слои, ошибки, логи, тесты</a><a href="../4/" class="" data-phase="4"><span class="n">04</span>Architecture track: от client до failure boundaries</a><a href="../5/" class="-cur" data-phase="5"><span class="n">05</span>Agent-coding и AI-терминология</a><a href="../6/" class="" data-phase="6"><span class="n">06</span>React, observability, security</a><a href="../7/" class="" data-phase="7"><span class="n">07</span>Distributed systems, high-load, real-time</a><a href="../8/" class="" data-phase="8"><span class="n">08</span>РЛС, Telemetry и Go survival</a></nav>
+    <nav class="-siblings"><b>Фазы</b><a href="../1/" class="" data-phase="1"><span class="n">01</span>HTTP, REST, FastAPI, Pydantic, DI</a><a href="../2/" class="" data-phase="2"><span class="n">02</span>async/await, PostgreSQL, SQLAlchemy</a><a href="../3/" class="" data-phase="3"><span class="n">03</span>Backend-архитектура: слои, ошибки, логи, тесты</a><a href="../4/" class="" data-phase="4"><span class="n">04</span>Architecture track: от client до failure boundaries</a><a href="../5/" class="-cur" data-phase="5"><span class="n">05</span>Agent-coding и AI-терминология</a><a href="../6/" class="" data-phase="6"><span class="n">06</span>React, observability, security</a><a href="../7/" class="" data-phase="7"><span class="n">07</span>Distributed systems, high-load, real-time</a><a href="../8/" class="" data-phase="8"><span class="n">08</span>РЛС, Telemetry и Go survival</a><a href="../9/" class="" data-phase="9"><span class="n">09</span>30-минутная стратегия звонка ФизЭл</a></nav>
   </aside>
   <main class="content">
     <div class="topbar"><b>Фаза 5. Agent-coding и AI-терминология</b><span><span id="cur-done">0</span> из <span id="cur-all">6</span> шагов пройдено</span></div>
@@ -375,6 +382,87 @@ shared artifacts/context:
   → workflow engine/LangGraph - только когда сложность оркестрации этого потребует (пока не потребовала - Иван справляется вручную)
 </code></pre>
 <p>Ключевое наблюдение: каждый следующий шаг эволюции добавлялся <strong>по факту возникшей проблемы</strong> (например, <code>codex-ro</code> появился, когда понадобился реальный доступ к серверу, а не «на будущее»), а не заранее «на всякий случай». Это и есть правильный порядок принятия архитектурных решений в agent-системах - совпадает с trade-off-мышлением из Фазы 4.</p>
+<h3>Hydra - полная цепочка одного цикла (готовый interview case)</h3>
+<pre><code>task → context → plan → implementation → independent review
+  → tests → evidence → human decision → commit
+</code></pre>
+<p><strong>Реальный проход этой цепочки в этом же проекте</strong> (реставрация учебных
+материалов, 19-20.09 - не гипотетический пример):</p>
+<table>
+<thead>
+<tr>
+<th>Шаг</th>
+<th>Что происходило</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Task</td>
+<td>Иван просит вписать пояснения из внешнего конспекта в уже существующий сайт, явно уточняя - совпадение темы не повод считать материал дублем</td>
+</tr>
+<tr>
+<td>Context</td>
+<td>Claude читает текущее состояние файлов, независимый review внешнего агента (ChatGPT) по этому же вопросу уже зафиксирован в общем <code>OPEN_LOOPS.md</code></td>
+</tr>
+<tr>
+<td>Plan</td>
+<td>Claude предлагает конкретный план (восстановить старое из git-истории и дополнить, а не переписывать заново) и явно спрашивает подтверждение, а не действует по умолчанию</td>
+</tr>
+<tr>
+<td>Implementation</td>
+<td>Claude пишет объединённый материал; отдельный внешний агент независимо собирает доказательную базу по смежному вопросу (реальный сервер)</td>
+</tr>
+<tr>
+<td>Independent review</td>
+<td>Второй агент (ChatGPT) параллельно анализирует ту же тему по своим источникам - два независимых взгляда сходятся на одном выводе, что и стало доп. подтверждением</td>
+</tr>
+<tr>
+<td>Tests</td>
+<td>Автоматический сканер утечек (<code>knowledge-base/scanner.py</code>) прогоняется на каждый новый/изменённый файл перед публикацией - не «на глаз»</td>
+</tr>
+<tr>
+<td>Evidence</td>
+<td><code>git diff --stat</code>, рендер в браузере перед коммитом, явный список изменённых файлов</td>
+</tr>
+<tr>
+<td>Human decision</td>
+<td>Иван выбирает между вариантами явно (через структурированный вопрос с трейд-оффами), не через молчаливое допущение агента</td>
+</tr>
+<tr>
+<td>Commit</td>
+<td>Публикация только после решения, с сообщением коммита, объясняющим, что решено и почему</td>
+</tr>
+</tbody>
+</table>
+<p>Это не единичный случай - тот же цикл повторился несколько раз подряд в
+этом проекте (для разных материалов, разных решений) - воспроизводимый
+паттерн, а не разовая удача.</p>
+<h3>Разбор чужой методологии agent-coding (видео) - критически, не как догма</h3>
+<p>Схема автора: опрос требований → specification → plan → tests before
+implementation → implementation/test feedback loop → orchestrator →
+parallel workers → git worktree isolation.</p>
+<p><strong>Что подтверждается и совпадает с уже устоявшейся практикой:</strong></p>
+<ul>
+<li>Агенту нужны acceptance/validation criteria - да, это ровно колонки Context/Plan в таблице workflow выше.</li>
+<li>Контекст должен сохраняться между этапами - да, это буквально то, зачем существуют <code>SESSION_CONTEXT.md</code>/<code>OPEN_LOOPS.md</code>/<code>PROJECT_MAP.md</code> в Hydra.</li>
+<li>«Готово, всё работает» - не evidence - да, полностью совпадает с шагом Evidence в цепочке выше и с дисциплиной leak-scanner/git diff перед публикацией в этом проекте.</li>
+</ul>
+<p><strong>Что не принимается как догма, с обоснованием:</strong></p>
+<ul>
+<li><strong>«Tests всегда до implementation» - нет, зависит от фазы работы.</strong> TDD-first оправдан, когда поведение уже понятно и стабильно - багфиксы, известный API-контракт, рефакторинг с сохранением поведения. Для exploration/прототипа - наоборот: тесты, написанные до того, как форма решения устоялась, фиксируют форму, которую скорее всего выбросят - дороже, чем спайк сначала и тесты после стабилизации. Пример из этого же проекта: <code>vacancy-tracker</code> месяцами не имел ни одного теста, оставаясь реальным работающим инструментом (Фаза 3) - первые тесты имело смысл писать только когда форма API устоялась, не раньше.</li>
+<li><strong>Parallel workers через git worktree isolation - реальная и полезная техника, но не бесплатная.</strong> Плюс - избегает конфликтов при переключении веток, позволяет агентам работать в изолированных чекаутах одновременно. Минусы: overhead координации растёт с числом воркеров, нагрузка на review растёт пропорционально, контекст приходится дублировать или синхронизировать между воркерами. Race/conflict/integration - два агента, трогающие пересекающиеся файлы или схему данных, нуждаются в явном шаге интеграции с тестами как гейтом, иначе либо merge-конфликт, либо (хуже) тихий логический конфликт, который тесты не поймают, если написаны порознь.</li>
+<li><strong>Multi-agent реально полезен, когда задача действительно декомпозируется</strong> на независимые куски (разные модули, разные сервисы) - не для тесно связанных мелких правок, где последовательная работа с обзором дешевле и надёжнее.</li>
+<li><strong>Context/security/secrets - видео (по пересказу) не заостряет на этом внимание, а зря.</strong> Как только воркеры получают полуавтономность, это становится вопросом номер один: узкие, а не общие права у каждой identity - ровно то, что уже реализовано в Hydra через <code>codex-ro</code> (<code>Agent_Access_Lab.md</code>) - forced command, без sudo, без Docker-группы.</li>
+<li><strong>Human review не отменяется никаким уровнем автоматизации.</strong> Ни один шаг схемы автора формально не заменяет человека, принимающего решение - в Hydra это явный шаг Human decision, не подразумеваемый.</li>
+</ul>
+<p><strong>Честное сравнение с Hydra:</strong> сегодняшняя Hydra ближе к «последовательный
+пайплайн со специализацией ролей плюс независимый cross-review» (Claude
+реализует, Codex расследует в своей зоне, ChatGPT проверяет независимо), чем
+к «один orchestrator, декомпозирующий одну задачу на параллельно
+работающих воркеров в изолированных git worktree». Это не пробел, а
+следствие того же принципа «по факту возникшей проблемы, не заранее» -
+параллельные изолированные воркеры имеет смысл вводить, когда появится
+реально декомпозируемая параллельная задача, не раньше.</p>
 <h3>Audit: lavish-axi - INSTALL / PILOT / SKIP</h3>
 <p><code>lavish-axi</code> (github.com/kunchenguid/lavish-axi) - skill, превращающий HTML-вывод агента (план, диаграмма, сравнение, код-дифф) в аннотируемую страницу в браузере: пользователь кликает/выделяет, фидбек уходит агенту через long-polling. Запускается через <code>npx -y lavish-axi</code> - живой Express-сервер на localhost, состояние сессии - в <code>.lavish-axi/</code> внутри рабочей директории.</p>
 <table>
@@ -442,6 +530,14 @@ shared artifacts/context:
 <p><strong>Как ты оцениваешь, устанавливать ли новый агентский инструмент?</strong></p>
 <blockquote>
 <p>По конкретным критериям: какую проблему решает, зависимости и способ их получения (пиннинг версий), permissions и network access, telemetry, где остаются артефакты, пересечение с уже работающим процессом, и реальная (не гипотетическая) польза прямо сейчас. Пример - разбор <code>lavish-axi</code>: вердикт PILOT, не INSTALL, с конкретными причинами, не «нравится/не нравится».</p>
+</blockquote>
+<p><strong>Нужно ли всегда писать тесты до реализации?</strong></p>
+<blockquote>
+<p>Нет, зависит от фазы работы. Если поведение уже понятно и стабильно (багфикс, известный API-контракт, рефакторинг с сохранением поведения) - тесты до кода оправданы и дёшевы. Если форма решения ещё не устоялась (exploration, прототип) - тесты, написанные заранее, фиксируют форму, которую вероятно выбросят; дешевле сделать спайк, а тесты писать после стабилизации. Реальный пример - <code>vacancy-tracker</code> месяцами не имел тестов, оставаясь рабочим инструментом; первые тесты написаны только когда форма API устоялась.</p>
+</blockquote>
+<p><strong>Когда параллельные AI-агенты (multi-agent) реально оправданы?</strong></p>
+<blockquote>
+<p>Когда задача действительно декомпозируется на независимые куски - разные модули, разные сервисы. Тогда git worktree isolation - рабочая техника: каждый агент в своём чекауте, без конфликтов веток. Для тесно связанных мелких правок overhead координации и review не окупается - последовательная работа с одним исполнителем дешевле. Наша Hydra сегодня - это специализация ролей в последовательности с независимым cross-review, не параллельные воркеры на одной задаче, и это осознанный выбор под текущий объём работы, не пробел.</p>
 </blockquote></div></section>
     <p class="src">Исходник: <a href="https://github.com/Lazysagotku/l2code/blob/main/Fullstack_Phase5_AgentCoding_AI.md" target="_blank" rel="noopener">Fullstack_Phase5_AgentCoding_AI.md</a></p>
     <nav class="pager"><a href="../4/">← 04 Architecture track: от client до failure boundaries</a><a class="r" href="../6/">06 React, observability, security →</a></nav>
@@ -450,7 +546,7 @@ shared artifacts/context:
 (() => {
   const KEY = "rm-progress-fullstack";
   const DEADLINE = "2026-09-21";
-  const PHASES = {"1": {"total": 7, "baseline": 0, "status": "", "hours": 0.0}, "2": {"total": 7, "baseline": 0, "status": "", "hours": 0.0}, "3": {"total": 7, "baseline": 0, "status": "", "hours": 0.0}, "4": {"total": 7, "baseline": 0, "status": "", "hours": 0.0}, "5": {"total": 6, "baseline": 0, "status": "", "hours": 0.0}, "6": {"total": 6, "baseline": 0, "status": "", "hours": 0.0}, "7": {"total": 5, "baseline": 0, "status": "", "hours": 0.0}, "8": {"total": 5, "baseline": 0, "status": "", "hours": 0.0}};
+  const PHASES = {"1": {"total": 7, "baseline": 0, "status": "", "hours": 0.0}, "2": {"total": 7, "baseline": 0, "status": "", "hours": 0.0}, "3": {"total": 7, "baseline": 0, "status": "", "hours": 0.0}, "4": {"total": 7, "baseline": 0, "status": "", "hours": 0.0}, "5": {"total": 6, "baseline": 0, "status": "", "hours": 0.0}, "6": {"total": 6, "baseline": 0, "status": "", "hours": 0.0}, "7": {"total": 5, "baseline": 0, "status": "", "hours": 0.0}, "8": {"total": 5, "baseline": 0, "status": "", "hours": 0.0}, "9": {"total": 6, "baseline": 0, "status": "", "hours": 0.0}};
   const load = () => { try { return JSON.parse(localStorage.getItem(KEY)) || {}; } catch (e) { return {}; } };
   const save = (s) => { try { localStorage.setItem(KEY, JSON.stringify(s)); } catch (e) {} };
   let state = load();

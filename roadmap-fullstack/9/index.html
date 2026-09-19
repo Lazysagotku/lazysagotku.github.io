@@ -1,4 +1,4 @@
-<!doctype html><html lang="ru"><head><meta charset="utf-8"><script>(()=>{let s=null;try{s=localStorage.getItem("theme")}catch(e){}document.documentElement.dataset.theme=s||(matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light")})();</script><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="robots" content="noindex"><title>Фаза 8. РЛС, Telemetry и Go survival - Fullstack Python-first (ФизЭл)</title><meta name="description" content="Fullstack Python-first (ФизЭл): фаза 8, РЛС, Telemetry и Go survival"><link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%23a8741a'/%3E%3Ctext x='32' y='43' font-family='Georgia,serif' font-weight='700' font-size='30' fill='white' text-anchor='middle'%3EИА%3C/text%3E%3C/svg%3E"><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bitter:wght@600;700&family=Source+Sans+3:wght@400;600&family=JetBrains+Mono:wght@400;700&display=swap"><style>
+<!doctype html><html lang="ru"><head><meta charset="utf-8"><script>(()=>{let s=null;try{s=localStorage.getItem("theme")}catch(e){}document.documentElement.dataset.theme=s||(matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light")})();</script><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="robots" content="noindex"><title>Фаза 9. 30-минутная стратегия звонка ФизЭл - Fullstack Python-first (ФизЭл)</title><meta name="description" content="Fullstack Python-first (ФизЭл): фаза 9, 30-минутная стратегия звонка ФизЭл"><link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%23a8741a'/%3E%3Ctext x='32' y='43' font-family='Georgia,serif' font-weight='700' font-size='30' fill='white' text-anchor='middle'%3EИА%3C/text%3E%3C/svg%3E"><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bitter:wght@600;700&family=Source+Sans+3:wght@400;600&family=JetBrains+Mono:wght@400;700&display=swap"><style>
 :root {
   --ground:#e8eaee; --surface:#fff; --sunken:#f1f3f6; --ink:#1a1d24; --muted:#626b78; --faint:#8b939f;
   --line:#d2d7de; --accent:#a8741a; --accent-soft:#f5ead6; --done:#2f6f56; --done-soft:#dfeee7; --break:#97452f;
@@ -190,7 +190,7 @@ blockquote.about p { margin:0; }
   .countdown { text-align:left; }
 }
 @media (prefers-reduced-motion:reduce) { * { transition-duration:.01ms !important; } }
-</style></head><body data-phase="8">
+</style></head><body data-phase="9">
 <div class="layout">
   <aside class="side">
     <a class="back" href="../">← Fullstack Python-first (ФизЭл)</a>
@@ -199,117 +199,81 @@ blockquote.about p { margin:0; }
     <div class="prog">пройдено <span id="pct">0%</span> · <span id="steps-done">0</span>/<span id="steps-all">0</span> шагов</div>
     <div class="bar" data-total><span></span></div>
     <nav><b>В этой фазе</b><a href="#analogy"><span class="i">🎭</span>Аналогия</a><a href="#theory"><span class="i">📖</span>Теория</a><a href="#practice"><span class="i">🔧</span>Практика</a><a href="#break"><span class="i">💥</span>Сломай намеренно</a><a href="#task"><span class="i">✅</span>Задание</a><a href="#life"><span class="i">🌍</span>Из жизни</a><a href="#questions"><span class="i">❓</span>Вопросы с ответами</a></nav>
-    <nav class="-siblings"><b>Фазы</b><a href="../1/" class="" data-phase="1"><span class="n">01</span>HTTP, REST, FastAPI, Pydantic, DI</a><a href="../2/" class="" data-phase="2"><span class="n">02</span>async/await, PostgreSQL, SQLAlchemy</a><a href="../3/" class="" data-phase="3"><span class="n">03</span>Backend-архитектура: слои, ошибки, логи, тесты</a><a href="../4/" class="" data-phase="4"><span class="n">04</span>Architecture track: от client до failure boundaries</a><a href="../5/" class="" data-phase="5"><span class="n">05</span>Agent-coding и AI-терминология</a><a href="../6/" class="" data-phase="6"><span class="n">06</span>React, observability, security</a><a href="../7/" class="" data-phase="7"><span class="n">07</span>Distributed systems, high-load, real-time</a><a href="../8/" class="-cur" data-phase="8"><span class="n">08</span>РЛС, Telemetry и Go survival</a><a href="../9/" class="" data-phase="9"><span class="n">09</span>30-минутная стратегия звонка ФизЭл</a></nav>
+    <nav class="-siblings"><b>Фазы</b><a href="../1/" class="" data-phase="1"><span class="n">01</span>HTTP, REST, FastAPI, Pydantic, DI</a><a href="../2/" class="" data-phase="2"><span class="n">02</span>async/await, PostgreSQL, SQLAlchemy</a><a href="../3/" class="" data-phase="3"><span class="n">03</span>Backend-архитектура: слои, ошибки, логи, тесты</a><a href="../4/" class="" data-phase="4"><span class="n">04</span>Architecture track: от client до failure boundaries</a><a href="../5/" class="" data-phase="5"><span class="n">05</span>Agent-coding и AI-терминология</a><a href="../6/" class="" data-phase="6"><span class="n">06</span>React, observability, security</a><a href="../7/" class="" data-phase="7"><span class="n">07</span>Distributed systems, high-load, real-time</a><a href="../8/" class="" data-phase="8"><span class="n">08</span>РЛС, Telemetry и Go survival</a><a href="../9/" class="-cur" data-phase="9"><span class="n">09</span>30-минутная стратегия звонка ФизЭл</a></nav>
   </aside>
   <main class="content">
-    <div class="topbar"><b>Фаза 8. РЛС, Telemetry и Go survival</b><span><span id="cur-done">0</span> из <span id="cur-all">5</span> шагов пройдено</span></div>
-    <h1>РЛС, Telemetry и Go survival</h1>
-    <p class="lead">P2-P3, намеренно последняя</p>
-    <section class="sec -analogy" id="analogy"><h2><span class="i">🎭</span>Аналогия</h2><div class="text"><p>РЛС и телеметрия - разговор с объектом, который не ждёт ответа: он просто постоянно сообщает, где находится. Задача системы - не потерять ни одного сообщения, разложить их по времени правильно и не перепутать порядок, даже если сообщения приходят не по порядку.</p></div></section><section class="sec -theory" id="theory"><h2><span class="i">📖</span>Теория</h2><div class="text"><h3>Telemetry и RLS - минимальный контекст вакансии</h3>
-<p>Telemetry - поток измерений/состояний от объектов. Типичные вопросы для системы, принимающей телеметрию: timestamp, ordering (что делать, если событие пришло не по порядку), duplicates, late events (события, пришедшие с опозданием), buffering, storage, retention, streaming, visualization.</p>
-<p>RLS (если речь о Row-Level Security PostgreSQL) - политика на уровне строк, ограничивающая, какие строки видит/меняет конкретная роль/контекст. <strong>Не путать</strong> с обычной фильтрацией <code>WHERE</code> в коде приложения - RLS работает на уровне самой БД, действует даже если приложение забыло добавить фильтр.</p>
-<h3>Домен ФизЭл - ликбез, не экспертиза</h3>
+    <div class="topbar"><b>Фаза 9. 30-минутная стратегия звонка ФизЭл</b><span><span id="cur-done">0</span> из <span id="cur-all">6</span> шагов пройдено</span></div>
+    <h1>30-минутная стратегия звонка ФизЭл</h1>
+    <p class="lead">капстоун</p>
+    <section class="sec -analogy" id="analogy"><h2><span class="i">🎭</span>Аналогия</h2><div class="text"><p>30 минут - это не укороченный часовой техсобес, а другой жанр разговора: как питчинг инвестору вместо защиты диплома. Задача не показать всё, что знаешь, а за короткое время дать три вещи - кто ты, что реально делал, и можешь ли внятно объяснить сложное просто.</p></div></section><section class="sec -theory" id="theory"><h2><span class="i">📖</span>Теория</h2><div class="text"><h3>Что говорят внешние источники про формат 2026 года</h3>
+<p>Независимое web-исследование (сентябрь 2026), не пересказ ГПТеха:</p>
 <ul>
-<li>Что такое РЛС и что она физически измеряет - дальность, азимут, высота.</li>
-<li>Телеметрия воздушного судна - какие параметры передаются и как часто.</li>
-<li>Зачем геоинформационной системе real-time координаты - диспетчеризация, разделение эшелонов, конфликты траекторий.</li>
-<li>Цель - не молчать, когда прозвучит термин, не изображать эксперта в авиационных системах.</li>
+<li><strong>30-минутный слот с пометкой «переговор с разработчиками»</strong> по описанию совпадает с форматом screening/qualification call - 20-30 минут, разговор про бэкграунд, мотивацию и общую квалификацию, а не глубокий coding/system-design раунд. Источник: обзоры процессов найма (Formation, arc.dev, отчёты кандидатов о screening-звонках в крупных компаниях).</li>
+<li><strong>FastAPI-специфика 2026:</strong> «главный» вопрос, который решает раунд - <code>def</code> vs <code>async def</code>, event loop, что такое blocking call внутри async-эндпоинта. Дальше по частоте - Dependency Injection (<code>Depends</code>, scoping, override для тестов), Pydantic-валидация (что изменилось в v2), production-темы (background tasks, middleware, lifespan, воркеры), тестирование (<code>TestClient</code>, async-тесты). Источники: актуальные гайды по FastAPI-собеседованиям (InterviewBit, DataCamp, GeeksforGeeks, 2026).</li>
+<li><strong>Agentic AI / agent-coding интервью 2025-2026</strong> сместились от «что агенты могли бы делать» к «что вы реально запустили в проде и на каких компромиссах». Для позиций уровня Senior Agentic AI Engineer в AI-нативных компаниях фигурируют LangGraph/CrewAI/AutoGen, human-in-the-loop чекпоинты, оценка по траекториям, а не только по финальному ответу. <strong>Важная оговорка:</strong> это профиль вакансий, где сам продукт - AI-агенты. У ФизЭл agent-coding в вакансии выглядит как «использование AI-агентов в инженерном процессе разработки», а не «создание агентных продуктов» - две разные вещи. Не стоит готовиться к вопросам про LangGraph-фреймворки как к вероятным - вероятнее вопрос в духе «как ты используешь Claude/Copilot/подобное в работе и как проверяешь результат».</li>
+<li><strong>Про саму компанию ФизЭл/PhysEl - источников не нашлось.</strong> Ни отзывов о собеседованиях, ни описания процесса найма в открытом доступе не обнаружено (проверено по общим и специализированным запросам). Выводов из отсутствующих данных не делаю - только явно фиксирую, что предположение о формате звонка строится на общих паттернах индустрии, не на конкретных отзывах о ФизЭл.</li>
 </ul>
-<h3>Go - survival, только необходимое</h3>
-<pre><code class="language-go">type Task struct {
-    ID   int    `json:&quot;id&quot;`
-    Name string `json:&quot;name&quot;`
-}
-
-func handler(w http.ResponseWriter, r *http.Request) {
-    ctx := r.Context()
-    _ = ctx
-    w.Header().Set(&quot;Content-Type&quot;, &quot;application/json&quot;)
-    json.NewEncoder(w).Encode(Task{ID: 1, Name: &quot;demo&quot;})
-}
-</code></pre>
-<pre><code>type Task struct {
-     │      └ имя типа - аналог Pydantic-модели/dataclass
-     └ объявление структуры данных
-
-    ID   int    `json:&quot;id&quot;`
-     │    │        └ struct tag - как поле сериализуется в JSON
-     │    └ тип поля
-     └ имя поля
-
-func handler(w http.ResponseWriter, r *http.Request) {
-        │       │                     └ указатель на входящий запрос
-        │       └ интерфейс для записи ответа - аналог Response в FastAPI
-        └ имя функции-обработчика
-
-ctx := r.Context()
-   │       └ context запроса - cancellation/deadline/request scope
-   └ := объявляет и присваивает переменную одновременно
-</code></pre>
+<h3>Что это значит для 30 минут - выводы</h3>
 <table>
 <thead>
 <tr>
-<th>Go</th>
-<th>Что понимать</th>
+<th>Поднять</th>
+<th>Понизить</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td>package/import</td>
-<td>организация кода</td>
+<td>Уверенный, короткий self-intro без запинок</td>
+<td>Глубина LangGraph/CrewAI/AutoGen - не тот профиль вакансии</td>
 </tr>
 <tr>
-<td>struct</td>
-<td>структура данных</td>
+<td>async/await на конкретном примере (<code>def</code> vs <code>async def</code>, blocking-ошибка) - see Фаза 2</td>
+<td>Deep dive в distributed systems/high-load специфику - см. Фазу 7</td>
 </tr>
 <tr>
-<td>method</td>
-<td>функция с receiver</td>
+<td>Одна готовая история про реальный проект (<code>vacancy-tracker</code>)</td>
+<td>Go - уже P3, не поднимать самому</td>
 </tr>
 <tr>
-<td>interface</td>
-<td>набор методов; implicit implementation</td>
+<td>Одна готовая история про agent-coding/Hydra - что реально запускал и как проверял</td>
+<td>Архитектурные детали сверх того, что реально спросят - лучше плотный ответ, чем лекция</td>
 </tr>
 <tr>
-<td>pointer</td>
-<td>передача адреса/изменение объекта</td>
-</tr>
-<tr>
-<td>error</td>
-<td>обычное значение; <code>if err != nil</code></td>
-</tr>
-<tr>
-<td>defer</td>
-<td>выполнить при выходе из функции</td>
-</tr>
-<tr>
-<td>goroutine</td>
-<td>лёгкая конкурентная функция: <code>go f()</code></td>
-</tr>
-<tr>
-<td>channel</td>
-<td>передача значений между goroutines</td>
-</tr>
-<tr>
-<td>context</td>
-<td>cancellation/deadline/request scope</td>
-</tr>
-<tr>
-<td><code>database/sql</code></td>
-<td>DB API, pool abstraction</td>
+<td>1-2 точных вопроса к ним (см. <code>FizEl_Interview_Prep.md</code>)</td>
+<td>Пять вопросов - явно не влезут в 30 минут</td>
 </tr>
 </tbody>
 </table>
-<p>На интервью лучше честно разобрать незнакомый Go-фрагмент вслух (называя аналоги из Python/FastAPI по ходу), чем заявлять уверенное владение, которого нет.</p></div></section><section class="sec -practice" id="practice"><h2><span class="i">🔧</span>Практика</h2><ul class="steps"><li class="step" data-step="8-practice-1"><input type="checkbox" id="s-8-practice-1"><span class="box"></span><span class="txt">Прочитать Go-фрагмент выше вслух, для каждой строки назвать Python/FastAPI-аналог (<code>struct</code> ≈ Pydantic-модель, <code>http.ResponseWriter</code>/<code>*http.Request</code> ≈ <code>Response</code>/<code>Request</code>, <code>context.Context</code> ≈ то, что скрыто под капотом ASGI в FastAPI).</span></li><li class="step" data-step="8-practice-2"><input type="checkbox" id="s-8-practice-2"><span class="box"></span><span class="txt">Сформулировать вслух три вопроса, которые задал бы про телеметрийную систему на интервью (например: как система отличает late event от дубликата; что происходит при потере связи с объектом на N секунд).</span></li><li class="step" data-step="8-practice-3"><input type="checkbox" id="s-8-practice-3"><span class="box"></span><span class="txt">Проговорить формулировку позиции по Go из <code>FizEl_Interview_Prep.md</code> без запинки, своими словами, не читая с листа.</span></li></ul></section><section class="sec -break" id="break"><h2><span class="i">💥</span>Сломай намеренно</h2><ul class="steps"><li class="step -break" data-step="8-break-1"><input type="checkbox" id="s-8-break-1"><span class="box"></span><span class="txt">Прочитать незнакомый Go-фрагмент (взять любой пример из открытой документации <code>net/http</code>) без подготовки - зафиксировать, что понятно сразу, а что требует уточнения у интервьюера.</span></li><li class="step -break" data-step="8-break-2"><input type="checkbox" id="s-8-break-2"><span class="box"></span><span class="txt">Спутать RLS PostgreSQL с фильтрацией <code>WHERE</code> в коде приложения на словах - затем явно исправиться и объяснить разницу (RLS работает на уровне БД независимо от кода приложения).</span></li></ul></section><section class="sec -task" id="task"><h2><span class="i">✅</span>Задание</h2><div class="text"><p>Можешь прочитать и объяснить незнакомый Go HTTP-хендлер построчно с аналогиями из Python, назвать минимум три вопроса про телеметрийную систему, и произнести позицию по Go спокойно, без оправданий и без преувеличения.</p><div class="hw" data-hw="8"><label class="hw-l">Что получилось - своими словами: что попробовал, что сработало, где застрял</label><textarea class="hw-text" rows="5" placeholder="Свободный ответ. Хранится в этом браузере, как и прогресс."></textarea><label class="hw-done"><input type="checkbox"> Сдано</label></div></div></section><section class="sec -life" id="life"><h2><span class="i">🌍</span>Из жизни</h2><div class="text"><p>Формулировка позиции, решённая 18.09 и записанная в <code>FizEl_Interview_Prep.md</code>: «Go для меня новый production language, но backend development, PostgreSQL, API, architecture и agent-coding - не новые. Если Go потребуется в работе, буду системно углублять его так же, как в своё время закрывал остальной стек». Это не отговорка, а честная и сильная позиция при полностью закрытых Фазах 1-5.</p></div></section><section class="sec -questions" id="questions"><h2><span class="i">❓</span>Вопросы с ответами</h2><div class="text"><p><strong>Что ты реально знаешь в Go и как закроешь gap?</strong></p>
+<h3>60-секундная самопрезентация</h3>
 <blockquote>
-<p>Синтаксис, базовые конструкции (<code>struct</code>, <code>interface</code>, <code>error</code>, <code>goroutine</code>, <code>channel</code>, <code>context</code>) читаю и понимаю, продакшн-опыта нет. Backend, PostgreSQL, API, архитектура и agent-coding переносятся на любой язык - именно они и есть настоящая база. Gap закрывается системно на реальных задачах, если Go в работе потребуется.</p>
+<p>Опыт - в технической поддержке и сопровождении сложных систем: находил причину в коде, не только фиксировал обращение. Из инструментов - Python и PostgreSQL сильнее всего, FastAPI использую регулярно, agent-coding - ежедневный рабочий инструмент, не эпизод. Go для меня новый production language, но backend, API, архитектура и работа с AI-агентами в разработке - не новые, поэтому язык беру быстро, если понадобится. Вакансия зацепила именно сочетанием fullstack и agent-coding - это ровно то направление, куда сам иду.</p>
 </blockquote>
-<p><strong>В чём разница между RLS и обычной фильтрацией в коде?</strong></p>
+<p>Проговорить вслух с секундомером - если больше 70 секунд, резать с конца, не с начала (начало - самое важное, конец можно сжать до одной фразы).</p>
+<h3>2-минутная история про проект (vacancy-tracker)</h3>
 <blockquote>
-<p>RLS - политика на уровне БД, применяется независимо от того, вспомнил ли код приложения добавить <code>WHERE</code>-условие. Обычная фильтрация - логика в коде, которую легко забыть добавить в новом endpoint - именно поэтому RLS считается более надёжной защитой для многотенантных/ролевых систем.</p>
+<p>У меня есть реальный работающий инструмент - трекер откликов на FastAPI и PostgreSQL, которым я веду свой собственный поиск работы. Запрос идёт от браузера на FastAPI-эндпоинт, оттуда в слой с бизнес-логикой, дальше в PostgreSQL через SQLAlchemy, и обратно JSON. Написан через agent-coding - я ставил задачи, разбирал результат, тестировал и эксплуатирую сам. Например, у него не было ни одного теста - я недавно написал первые, на конкретный кейс 404 при запросе несуществующей вакансии. Там же нашёл честный пробел - liveness есть, а readiness с проверкой БД нет - и могу объяснить разницу и почему это важно.</p>
+</blockquote>
+<p><strong>Короче, для запасного варианта на 45 секунд:</strong> «Собрал и веду реальный FastAPI+PostgreSQL сервис через agent-coding - трекер вакансий. Разбираю его request path и архитектуру на собеседованиях, потому что это не выдуманный пример, а живой код с реальными данными».</p>
+<h3>2-минутная история про agent-coding/Hydra</h3>
+<blockquote>
+<p>Я работаю с несколькими AI-инструментами не по отдельности, а как с системой ролей: один агент реализует код в глубоком рабочем контексте, другой собирает техническую evidence по инфраструктуре - с ограниченным, проверяемым доступом к серверу, третий - независимый ревьюер архитектурных решений. Общее состояние - в текстовых артефактах, не в головах: что сделано, что открыто, что решено. Цикл всегда один и тот же: задача → контекст → план → реализация → независимый обзор → тесты/проверка → доказательства → решение человека → коммит. «Готово, работает» я не считаю доказательством - смотрю на diff, на тесты, на рендер, если это web. Я специально не тащу в это готовые фреймворки вроде LangGraph, пока сложность оркестрации их реально не требует - сейчас текстовых артефактов и explicit review достаточно.</p>
+</blockquote>
+<p><strong>Если спросят «а как проверяешь, что агент не наврал»:</strong> «Diff построчно, тесты/линт, и отдельно - независимый второй агент/ревьюер на архитектурные решения, не тот же самый, что писал код».</p>
+<h3>Architecture case - если спросят «нарисуй систему»</h3>
+<p>Путь по памяти, без бумаги: <code>Client/React → HTTP → routing → validation (Pydantic) → service/business layer → repository → PostgreSQL → response</code>. Для каждого звена - одна фраза, что может сломаться и как заметишь (полный разбор - Фаза 4): validation - <code>422</code> до бизнес-логики; service - тестируем без HTTP; PostgreSQL - locks/connection pool; failure boundary - timeout + circuit breaker на внешние вызовы. Если спросят про geo/РЛС-специфику - честно: «домен новый, разобрался в базовых терминах, детали архитектуры системы обработки телеметрии - было бы интересно узнать от вас» (это же и повод для вопроса к ним).</p></div></section><section class="sec -practice" id="practice"><h2><span class="i">🔧</span>Практика</h2><ul class="steps"><li class="step" data-step="9-practice-1"><input type="checkbox" id="s-9-practice-1"><span class="box"></span><span class="txt">Засечь время самопрезентации - должна укладываться в 60-70 секунд без чтения с листа.</span></li><li class="step" data-step="9-practice-2"><input type="checkbox" id="s-9-practice-2"><span class="box"></span><span class="txt">Прогнать обе 2-минутные истории вслух подряд - вместе с self-intro это уже 5 минут из тридцати, оставшиеся 20-25 минут отданы их вопросам.</span></li><li class="step" data-step="9-practice-3"><input type="checkbox" id="s-9-practice-3"><span class="box"></span><span class="txt">Провести мини-собес с таймером ровно на 30 минут (не 45-60, как в общем плане Фазы 1-8) - партнёр по ролям или запись голоса на себя.</span></li><li class="step" data-step="9-practice-4"><input type="checkbox" id="s-9-practice-4"><span class="box"></span><span class="txt">Выбрать 1-2 вопроса к HR из <code>FizEl_Interview_Prep.md</code> заранее - не выбирать по ходу разговора.</span></li></ul></section><section class="sec -break" id="break"><h2><span class="i">💥</span>Сломай намеренно</h2><ul class="steps"><li class="step -break" data-step="9-break-1"><input type="checkbox" id="s-9-break-1"><span class="box"></span><span class="txt">Прогнать self-intro без секундомера - обычно оказывается на 30-50% длиннее, чем кажется. Замерить реально, не на глаз.</span></li><li class="step -break" data-step="9-break-2"><input type="checkbox" id="s-9-break-2"><span class="box"></span><span class="txt">Начать architecture case с «а давайте я расскажу про весь стек» вместо прямого ответа на конкретный вопрос - заметить, как это съедает время без сигнала интервьюеру.</span></li></ul></section><section class="sec -task" id="task"><h2><span class="i">✅</span>Задание</h2><div class="text"><p>Можешь произнести self-intro и обе 2-минутные истории без бумажки, уложиться в объявленный тайминг, и с ходу назвать 2 темы, которые сознательно НЕ поднимаешь первым (LangGraph-детали, глубокий high-load) если разговор сам к ним не подведёт.</p><div class="hw" data-hw="9"><label class="hw-l">Что получилось - своими словами: что попробовал, что сработало, где застрял</label><textarea class="hw-text" rows="5" placeholder="Свободный ответ. Хранится в этом браузере, как и прогресс."></textarea><label class="hw-done"><input type="checkbox"> Сдано</label></div></div></section><section class="sec -life" id="life"><h2><span class="i">🌍</span>Из жизни</h2><div class="text"><p>Реальный источник этого капстоуна - календарное приглашение, полученное 19.09: «Архипов ИК», 21.09 15:00-15:30, организатор - HR, формат «переговор с разработчиками», двое приглашённых. Первоначальный план недели готовился под гипотезу «час, полноценный техсобес» - реальность оказалась короче, и план пришлось пересчитать по минутам, а не просто «постараться уложиться». Это тоже честный кусок для истории про Hydra: план строился на предположении, предположение проверили фактом (скриншотом календаря), план пересчитали - ровно тот cycle, который описан в Фазе 5.</p></div></section><section class="sec -questions" id="questions"><h2><span class="i">❓</span>Вопросы с ответами</h2><div class="text"><p><strong>Почему звонок всего 30 минут - это плохой знак?</strong></p>
+<blockquote>
+<p>Не обязательно. По внешним данным о процессах найма 20-30-минутный слот с пометкой «разработчики» типично соответствует screening-формату - оценка общей квалификации и мотивации перед более глубоким этапом, не замена полноценному техническому интервью. Готовлюсь содержательно, но не жду, что успеем разобрать всё.</p>
+</blockquote>
+<p><strong>Что если спросят про LangGraph/CrewAI/AutoGen?</strong></p>
+<blockquote>
+<p>Отвечаю честно - не использовал эти фреймворки, наша практика agent-coding построена на текстовых shared-артефактах и явном human review, без workflow-движка, потому что сложность оркестрации пока этого не требовала. Если добавлю, что понимаю, когда такой инструмент был бы оправдан (не по умолчанию, а по факту сложности) - показывает не пробел, а осознанный выбор.</p>
+</blockquote>
+<p><strong>Как уложить architecture case в короткий ответ?</strong></p>
+<blockquote>
+<p>Начинать с одного предложения - весь путь запроса целиком одной фразой, - и только потом, если попросят подробнее, разворачивать конкретное звено. Не начинать с самого глубокого уровня детализации сразу.</p>
 </blockquote></div></section>
-    <p class="src">Исходник: <a href="https://github.com/Lazysagotku/l2code/blob/main/Fullstack_Phase8_RLS_Telemetry_Go.md" target="_blank" rel="noopener">Fullstack_Phase8_RLS_Telemetry_Go.md</a></p>
-    <nav class="pager"><a href="../7/">← 07 Distributed systems, high-load, real-time</a><a class="r" href="../9/">09 30-минутная стратегия звонка ФизЭл →</a></nav>
+    <p class="src">Исходник: <a href="https://github.com/Lazysagotku/l2code/blob/main/Fullstack_Phase9_Interview_Strategy.md" target="_blank" rel="noopener">Fullstack_Phase9_Interview_Strategy.md</a></p>
+    <nav class="pager"><a href="../8/">← 08 РЛС, Telemetry и Go survival</a><span></span></nav>
   </main>
 </div><script>
 (() => {

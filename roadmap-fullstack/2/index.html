@@ -43,6 +43,12 @@ hr { border:0; border-top:1px solid var(--line); margin:1.2rem 0; }
 .masthead h1 { font-weight:700; font-size:clamp(30px,5vw,42px); letter-spacing:-.015em; }
 .masthead .sub { margin-top:6px; color:var(--muted); max-width:46ch; }
 .masthead .back { font-size:.9rem; text-decoration:none; color:var(--muted); }
+.version-switch { display:inline-block; margin-top:10px; font-family:"JetBrains Mono",monospace; font-size:12px; letter-spacing:.04em; text-decoration:none; color:var(--accent); border:1px solid var(--accent); border-radius:3px; padding:6px 12px; background:var(--accent-soft); }
+.version-switch:hover { background:var(--accent); color:#fff; }
+.side .version-switch { display:block; text-align:center; margin-bottom:16px; }
+.version-banner { background:var(--accent-soft); border:1px solid var(--accent); border-left:4px solid var(--accent); border-radius:3px; padding:16px 20px; margin-bottom:4px; font-size:14.5px; }
+.version-banner p+p { margin-top:.5rem; }
+.version-banner ul { margin:.4rem 0; }
 .countdown { font-family:"JetBrains Mono",monospace; text-align:right; line-height:1.25; }
 .countdown .num { font-size:34px; font-weight:700; color:var(--accent); font-variant-numeric:tabular-nums; }
 .countdown .cap { font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:var(--muted); }
@@ -189,10 +195,11 @@ blockquote.about p { margin:0; }
   <aside class="side">
     <a class="back" href="../">← Fullstack Python-first (ФизЭл)</a>
     <h2>🚀 Fullstack Python-first (ФизЭл)</h2>
+    
     <div class="prog">пройдено <span id="pct">0%</span> · <span id="steps-done">0</span>/<span id="steps-all">0</span> шагов</div>
     <div class="bar" data-total><span></span></div>
     <nav><b>В этой фазе</b><a href="#analogy"><span class="i">🎭</span>Аналогия</a><a href="#theory"><span class="i">📖</span>Теория</a><a href="#practice"><span class="i">🔧</span>Практика</a><a href="#break"><span class="i">💥</span>Сломай намеренно</a><a href="#task"><span class="i">✅</span>Задание</a><a href="#life"><span class="i">🌍</span>Из жизни</a><a href="#questions"><span class="i">❓</span>Вопросы с ответами</a></nav>
-    <nav class="-siblings"><b>Фазы</b><a href="../1/" class="" data-phase="1"><span class="n">01</span>HTTP, REST, FastAPI, Pydantic, DI</a><a href="../2/" class="-cur" data-phase="2"><span class="n">02</span>async/await, PostgreSQL, SQLAlchemy</a><a href="../3/" class="" data-phase="3"><span class="n">03</span>Backend-архитектура: слои, ошибки, логи, тесты</a><a href="../4/" class="" data-phase="4"><span class="n">04</span>Architecture track: от client до failure boundaries</a><a href="../5/" class="" data-phase="5"><span class="n">05</span>Agent-coding и AI-терминология</a><a href="../6/" class="" data-phase="6"><span class="n">06</span>React, observability, security</a><a href="../7/" class="" data-phase="7"><span class="n">07</span>Distributed systems, high-load, real-time</a><a href="../8/" class="" data-phase="8"><span class="n">08</span>РЛС, Telemetry и Go survival</a></nav>
+    <nav class="-siblings"><b>Фазы</b><a href="../1/" class="" data-phase="1"><span class="n">01</span>HTTP, REST, FastAPI, Pydantic, DI</a><a href="../2/" class="-cur" data-phase="2"><span class="n">02</span>async/await, PostgreSQL, SQLAlchemy</a><a href="../3/" class="" data-phase="3"><span class="n">03</span>Backend-архитектура: слои, ошибки, логи, тесты</a><a href="../4/" class="" data-phase="4"><span class="n">04</span>Architecture track: от client до failure boundaries</a><a href="../5/" class="" data-phase="5"><span class="n">05</span>Agent-coding и AI-терминология</a><a href="../6/" class="" data-phase="6"><span class="n">06</span>React, observability, security</a><a href="../7/" class="" data-phase="7"><span class="n">07</span>Distributed systems, high-load, real-time</a><a href="../8/" class="" data-phase="8"><span class="n">08</span>РЛС, Telemetry и Go survival</a><a href="../9/" class="" data-phase="9"><span class="n">09</span>30-минутная стратегия звонка ФизЭл</a></nav>
   </aside>
   <main class="content">
     <div class="topbar"><b>Фаза 2. async/await, PostgreSQL, SQLAlchemy</b><span><span id="cur-done">0</span> из <span id="cur-all">7</span> шагов пройдено</span></div>
@@ -350,7 +357,7 @@ ORDER BY query_start;
 (() => {
   const KEY = "rm-progress-fullstack";
   const DEADLINE = "2026-09-21";
-  const PHASES = {"1": {"total": 7, "baseline": 0, "status": "", "hours": 0.0}, "2": {"total": 7, "baseline": 0, "status": "", "hours": 0.0}, "3": {"total": 7, "baseline": 0, "status": "", "hours": 0.0}, "4": {"total": 7, "baseline": 0, "status": "", "hours": 0.0}, "5": {"total": 6, "baseline": 0, "status": "", "hours": 0.0}, "6": {"total": 6, "baseline": 0, "status": "", "hours": 0.0}, "7": {"total": 5, "baseline": 0, "status": "", "hours": 0.0}, "8": {"total": 5, "baseline": 0, "status": "", "hours": 0.0}};
+  const PHASES = {"1": {"total": 7, "baseline": 0, "status": "", "hours": 0.0}, "2": {"total": 7, "baseline": 0, "status": "", "hours": 0.0}, "3": {"total": 7, "baseline": 0, "status": "", "hours": 0.0}, "4": {"total": 7, "baseline": 0, "status": "", "hours": 0.0}, "5": {"total": 6, "baseline": 0, "status": "", "hours": 0.0}, "6": {"total": 6, "baseline": 0, "status": "", "hours": 0.0}, "7": {"total": 5, "baseline": 0, "status": "", "hours": 0.0}, "8": {"total": 5, "baseline": 0, "status": "", "hours": 0.0}, "9": {"total": 6, "baseline": 0, "status": "", "hours": 0.0}};
   const load = () => { try { return JSON.parse(localStorage.getItem(KEY)) || {}; } catch (e) { return {}; } };
   const save = (s) => { try { localStorage.setItem(KEY, JSON.stringify(s)); } catch (e) {} };
   let state = load();
