@@ -1,0 +1,722 @@
+<!doctype html><html lang="ru"><head><meta charset="utf-8"><script>(()=>{let s=null;try{s=localStorage.getItem("theme")}catch(e){}document.documentElement.dataset.theme=s||(matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light")})();</script><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="robots" content="noindex"><title>Слой 0. Linux: факты, ресурсы и базовые команды - Infrastructure Engineer L2-L3 - версия 2 (слои 0 и 4)</title><meta name="description" content="Infrastructure Engineer L2-L3 - версия 2 (слои 0 и 4): слой 0, Linux: факты, ресурсы и базовые команды"><link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%23a8741a'/%3E%3Ctext x='32' y='43' font-family='Georgia,serif' font-weight='700' font-size='30' fill='white' text-anchor='middle'%3EИА%3C/text%3E%3C/svg%3E"><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bitter:wght@600;700&family=Source+Sans+3:wght@400;600&family=JetBrains+Mono:wght@400;700&display=swap"><style>
+:root {
+  --ground:#e8eaee; --surface:#fff; --sunken:#f1f3f6; --ink:#1a1d24; --muted:#626b78; --faint:#8b939f;
+  --line:#d2d7de; --accent:#a8741a; --accent-soft:#f5ead6; --done:#2f6f56; --done-soft:#dfeee7; --break:#97452f;
+  --code-bg:#1a1d24; --code-ink:#e6e9ee;
+  --shadow:0 1px 2px rgba(26,29,36,.06),0 4px 12px rgba(26,29,36,.05);
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --ground:#131519; --surface:#1b1e24; --sunken:#22262d; --ink:#e6e9ee; --muted:#9aa3b0; --faint:#6d7684;
+  --line:#2e333c; --accent:#d9a440; --accent-soft:#35291453; --done:#5aab86; --done-soft:#1d3a2e5c; --break:#d0785e;
+  --code-bg:#0f1114; --code-ink:#dfe3e8; --shadow:0 1px 2px rgba(0,0,0,.3),0 4px 14px rgba(0,0,0,.25); color-scheme: dark;
+} }
+:root[data-theme="dark"] {
+  --ground:#131519; --surface:#1b1e24; --sunken:#22262d; --ink:#e6e9ee; --muted:#9aa3b0; --faint:#6d7684;
+  --line:#2e333c; --accent:#d9a440; --accent-soft:#35291453; --done:#5aab86; --done-soft:#1d3a2e5c; --break:#d0785e;
+  --code-bg:#0f1114; --code-ink:#dfe3e8; --shadow:0 1px 2px rgba(0,0,0,.3),0 4px 14px rgba(0,0,0,.25); color-scheme: dark;
+}
+* { box-sizing:border-box; }
+body { margin:0; background:var(--ground); color:var(--ink); font-family:"Source Sans 3",system-ui,sans-serif; font-size:16px; line-height:1.55; -webkit-font-smoothing:antialiased; }
+a { color:var(--accent); text-underline-offset:3px; }
+h1,h2,h3,h4 { font-family:Bitter,Georgia,serif; margin:0; text-wrap:balance; }
+p { margin:0; }
+code { font-family:"JetBrains Mono",ui-monospace,monospace; font-size:.88em; background:var(--sunken); padding:.08em .35em; border-radius:3px; }
+pre { background:var(--code-bg); color:var(--code-ink); padding:.85rem 1rem; border-radius:4px; overflow-x:auto; font-size:.85rem; line-height:1.5; margin:.7rem 0; }
+pre code { background:none; padding:0; color:inherit; font-size:inherit; }
+table { border-collapse:collapse; font-size:.92rem; margin:.7rem 0; display:block; overflow-x:auto; max-width:100%; }
+th,td { text-align:left; padding:.42rem .6rem; border-bottom:1px solid var(--line); vertical-align:top; }
+th { font-family:"JetBrains Mono",monospace; font-size:.72rem; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); font-weight:400; }
+blockquote { margin:.5rem 0; padding:.6rem .95rem; border-left:3px solid var(--accent); background:var(--accent-soft); border-radius:0 4px 4px 0; }
+blockquote p+p { margin-top:.45rem; }
+ul,ol { padding-left:1.3rem; margin:.45rem 0; }
+li+li { margin-top:.2rem; }
+hr { border:0; border-top:1px solid var(--line); margin:1.2rem 0; }
+.eyebrow { font-family:"JetBrains Mono",monospace; font-size:11px; letter-spacing:.16em; text-transform:uppercase; color:var(--muted); margin:0 0 6px; }
+.wrap { max-width:940px; margin:0 auto; padding:28px 20px 72px; display:flex; flex-direction:column; gap:26px; }
+
+.theme-switch { position:fixed; top:1rem; right:1rem; z-index:200; width:2.5rem; height:2.5rem; border-radius:50%; border:1px solid var(--line); background:var(--surface); color:var(--ink); font-size:1.05rem; cursor:pointer; display:grid; place-items:center; box-shadow:var(--shadow); }
+.theme-switch:hover { border-color:var(--accent); }
+
+/* ---------- главная ---------- */
+.masthead { display:flex; flex-wrap:wrap; gap:24px; align-items:flex-end; justify-content:space-between; padding-bottom:20px; border-bottom:2px solid var(--ink); }
+.masthead h1 { font-weight:700; font-size:clamp(30px,5vw,42px); letter-spacing:-.015em; }
+.masthead .sub { margin-top:6px; color:var(--muted); max-width:46ch; }
+.masthead .back { font-size:.9rem; text-decoration:none; color:var(--muted); }
+.version-switch { display:inline-block; margin-top:10px; font-family:"JetBrains Mono",monospace; font-size:12px; letter-spacing:.04em; text-decoration:none; color:var(--accent); border:1px solid var(--accent); border-radius:3px; padding:6px 12px; background:var(--accent-soft); }
+.version-switch:hover { background:var(--accent); color:#fff; }
+.side .version-switch { display:block; text-align:center; margin-bottom:16px; }
+.version-banner { background:var(--accent-soft); border:1px solid var(--accent); border-left:4px solid var(--accent); border-radius:3px; padding:16px 20px; margin-bottom:4px; font-size:14.5px; }
+.version-banner p+p { margin-top:.5rem; }
+.version-banner ul { margin:.4rem 0; }
+.countdown { font-family:"JetBrains Mono",monospace; text-align:right; line-height:1.25; }
+.countdown .num { font-size:34px; font-weight:700; color:var(--accent); font-variant-numeric:tabular-nums; }
+.countdown .cap { font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:var(--muted); }
+.summary { background:var(--surface); border:1px solid var(--line); border-radius:3px; box-shadow:var(--shadow); padding:20px 22px; display:flex; flex-direction:column; gap:16px; }
+.meters { display:flex; flex-wrap:wrap; gap:28px 40px; }
+.meter { display:flex; flex-direction:column; gap:2px; }
+.meter .val { font-family:"JetBrains Mono",monospace; font-size:26px; font-weight:700; font-variant-numeric:tabular-nums; line-height:1.1; }
+.meter .lbl { font-family:"JetBrains Mono",monospace; font-size:11px; letter-spacing:.12em; text-transform:uppercase; color:var(--muted); }
+.meter.-done .val { color:var(--done); }
+.bar { height:10px; background:var(--sunken); border:1px solid var(--line); border-radius:2px; overflow:hidden; }
+.bar>span { display:block; height:100%; width:0; background:repeating-linear-gradient(135deg,var(--accent) 0 6px,color-mix(in srgb,var(--accent) 78%,#000) 6px 12px); transition:width .55s cubic-bezier(.22,1,.36,1); }
+.bar.-full>span { background:var(--done); }
+.tools { display:flex; flex-wrap:wrap; gap:8px; }
+.tools button,.tools label { font:inherit; font-size:13px; color:var(--muted); background:none; border:1px solid var(--line); border-radius:2px; padding:5px 11px; cursor:pointer; }
+.tools button:hover,.tools label:hover { color:var(--ink); border-color:var(--faint); }
+.tools .danger { margin-left:auto; }
+.tools input[type=file] { display:none; }
+.section-label { font-family:"JetBrains Mono",monospace; font-size:11px; letter-spacing:.16em; text-transform:uppercase; color:var(--muted); display:flex; align-items:center; gap:12px; margin:0; }
+.section-label::after { content:""; flex:1; height:1px; background:var(--line); }
+.stack { display:flex; flex-direction:column; gap:10px; }
+.layer { background:var(--surface); border:1px solid var(--line); border-left:4px solid var(--line); border-radius:3px; transition:border-left-color .35s,background .35s; }
+.layer.-active { border-left-color:var(--accent); }
+.layer.-complete { border-left-color:var(--done); background:var(--sunken); }
+.layer.-skipped { opacity:.65; }
+.layer>summary { list-style:none; cursor:pointer; padding:14px 18px; display:grid; grid-template-columns:44px 1fr auto; gap:14px; align-items:center; }
+.layer>summary::-webkit-details-marker { display:none; }
+.idx { font-family:"JetBrains Mono",monospace; font-size:22px; font-weight:700; color:var(--faint); font-variant-numeric:tabular-nums; text-align:center; }
+.layer.-complete .idx { color:var(--done); }
+.layer.-active .idx { color:var(--accent); }
+.headline h2 { font-size:18px; font-weight:600; letter-spacing:-.01em; }
+.headline .meta { font-family:"JetBrains Mono",monospace; font-size:11.5px; color:var(--muted); margin-top:3px; display:flex; flex-wrap:wrap; gap:10px; align-items:center; }
+.tag { font-size:10px; letter-spacing:.1em; text-transform:uppercase; padding:2px 7px; border-radius:2px; border:1px solid currentColor; }
+.tag.-when { color:var(--accent); background:var(--accent-soft); }
+.gauge { display:flex; align-items:center; gap:10px; }
+.gauge .frac { font-family:"JetBrains Mono",monospace; font-size:12.5px; color:var(--muted); font-variant-numeric:tabular-nums; white-space:nowrap; }
+.ring { width:30px; height:30px; flex:none; transform:rotate(-90deg); }
+.ring circle { fill:none; stroke-width:4; }
+.ring .track { stroke:var(--line); }
+.ring .fill { stroke:var(--accent); stroke-linecap:round; transition:stroke-dashoffset .55s cubic-bezier(.22,1,.36,1),stroke .3s; }
+.layer.-complete .ring .fill { stroke:var(--done); }
+.body { padding:0 18px 18px 62px; display:flex; flex-direction:column; gap:14px; }
+.note { font-size:14.5px; color:var(--muted); border-left:2px solid var(--line); padding-left:12px; }
+.note p+p { margin-top:.4rem; }
+.open-phase { align-self:flex-start; font-family:"JetBrains Mono",monospace; font-size:12px; letter-spacing:.06em; text-transform:uppercase; text-decoration:none; color:var(--ink); border:1px solid var(--ink); padding:7px 12px; border-radius:2px; }
+.open-phase:hover { background:var(--ink); color:var(--surface); }
+.criterion { background:var(--sunken); border:1px dashed var(--line); border-radius:2px; padding:11px 14px; font-size:14.5px; }
+.criterion b { font-family:"JetBrains Mono",monospace; font-size:10.5px; letter-spacing:.12em; text-transform:uppercase; color:var(--muted); display:block; margin-bottom:3px; font-weight:400; }
+.criterion p+p { margin-top:.4rem; }
+.base { font-family:"JetBrains Mono",monospace; font-size:11px; color:var(--muted); }
+
+/* ---------- шаги ---------- */
+.steps { list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:1px; }
+.steps .h { font-family:"JetBrains Mono",monospace; font-size:10.5px; letter-spacing:.12em; text-transform:uppercase; color:var(--muted); padding:8px 8px 2px; }
+.step { display:flex; gap:11px; align-items:flex-start; padding:6px 8px; border-radius:2px; }
+.step:hover { background:var(--sunken); }
+.step input { position:absolute; opacity:0; width:0; height:0; }
+.box { flex:none; width:17px; height:17px; margin-top:3px; border:1.5px solid var(--faint); border-radius:2px; background:var(--surface); position:relative; transition:border-color .2s,background .2s; cursor:pointer; }
+.box::after { content:""; position:absolute; left:4.5px; top:1px; width:5px; height:9px; border:solid var(--surface); border-width:0 2px 2px 0; transform:rotate(45deg) scale(0); transform-origin:center; transition:transform .22s cubic-bezier(.34,1.56,.64,1); }
+.step.-on .box { background:var(--done); border-color:var(--done); }
+.step.-on .box::after { transform:rotate(45deg) scale(1); }
+.step .txt { font-size:15px; flex:1; cursor:pointer; }
+.step.-on .txt { color:var(--faint); text-decoration:line-through; text-decoration-thickness:1px; }
+.step.-break .txt::before { content:"сломать"; font-family:"JetBrains Mono",monospace; font-size:9.5px; letter-spacing:.1em; text-transform:uppercase; color:var(--break); border:1px solid currentColor; border-radius:2px; padding:1px 5px; margin-right:8px; vertical-align:2px; }
+.step .more { flex:none; font-family:"JetBrains Mono",monospace; font-size:11px; color:var(--muted); cursor:pointer; padding-top:4px; }
+.step-body { display:none; padding:2px 8px 10px 36px; font-size:14px; }
+.step-body.-open { display:block; }
+.step-body pre { font-size:.82rem; }
+.interlude { font-size:14.5px; padding:6px 8px; }
+.interlude h3 { font-size:15px; margin:10px 0 4px; }
+.interlude p+p { margin-top:.4rem; }
+
+/* ---------- страница фазы ---------- */
+.layout { display:grid; grid-template-columns:250px minmax(0,1fr); gap:0; min-height:100vh; }
+.side { background:var(--surface); border-right:1px solid var(--line); padding:26px 18px 40px; position:sticky; top:0; height:100vh; overflow-y:auto; font-size:14px; }
+.side .back { display:block; font-size:13px; color:var(--muted); text-decoration:none; margin-bottom:10px; }
+.side .back:hover { color:var(--ink); }
+.side h2 { font-size:16px; font-weight:700; margin-bottom:4px; }
+.side .prog { font-family:"JetBrains Mono",monospace; font-size:11.5px; color:var(--muted); margin-bottom:6px; font-variant-numeric:tabular-nums; }
+.side .bar { height:6px; margin-bottom:22px; }
+.side nav { margin-bottom:22px; }
+.side nav b { display:block; font-family:"JetBrains Mono",monospace; font-size:10.5px; letter-spacing:.12em; text-transform:uppercase; color:var(--muted); font-weight:400; margin-bottom:6px; }
+.side nav a { display:flex; gap:8px; align-items:baseline; padding:5px 8px; margin:0 -8px; border-radius:2px; color:var(--ink); text-decoration:none; }
+.side nav a:hover { background:var(--sunken); }
+.side nav a.-cur { background:var(--accent-soft); color:var(--accent); font-weight:600; }
+.side nav a.-done { color:var(--faint); }
+.side nav a .n { font-family:"JetBrains Mono",monospace; font-size:11px; color:var(--faint); width:22px; flex:none; }
+.side nav a .i { width:18px; flex:none; text-align:center; }
+.content { padding:28px clamp(20px,5vw,56px) 80px; max-width:820px; }
+.topbar { display:flex; flex-wrap:wrap; gap:8px 20px; align-items:baseline; font-family:"JetBrains Mono",monospace; font-size:12px; color:var(--muted); padding-bottom:12px; border-bottom:1px solid var(--line); margin-bottom:26px; }
+.topbar b { color:var(--ink); font-weight:600; }
+.content h1 { font-size:clamp(26px,4vw,34px); font-weight:700; letter-spacing:-.015em; margin-bottom:6px; }
+.content .lead { color:var(--muted); font-family:"JetBrains Mono",monospace; font-size:12px; margin-bottom:28px; }
+.sec { margin-top:34px; scroll-margin-top:20px; }
+.sec>h2 { font-family:"JetBrains Mono",monospace; font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:var(--muted); display:flex; align-items:center; gap:8px; margin-bottom:12px; font-weight:400; }
+.sec>h2 .i { font-size:15px; }
+.sec .text h3 { font-size:17px; margin:20px 0 6px; }
+.sec .text h4 { font-size:15.5px; margin:14px 0 4px; }
+.sec .text p+p { margin-top:.55rem; }
+.sec .text>p:first-child { margin-top:0; }
+.sec.-analogy .text { background:var(--surface); border:1px solid var(--line); border-radius:3px; padding:14px 18px; }
+.sec.-task .text { background:var(--sunken); border:1px dashed var(--line); border-radius:3px; padding:12px 16px; }
+/* Карта мест - конспект слоя на полстраницы: где писать, чем запустить, где смотреть. Выделена, чтобы читалась первой */
+.sec.-map .text { background:var(--sunken); border-left:3px solid var(--accent); border-radius:0 3px 3px 0; padding:14px 18px; }
+.sec.-map .text p { margin:.55em 0; }
+/* «О чём:» - строка-резюме под заголовком темы, как в курсах Stepik */
+blockquote.about { border-left:3px solid var(--accent); background:var(--sunken); margin:.4em 0 1em; padding:8px 14px; border-radius:0 3px 3px 0; }
+blockquote.about p { margin:0; }
+/* Проверь себя */
+.quiz .q { background:var(--surface); border:1px solid var(--line); border-radius:3px; padding:14px 18px; margin-bottom:12px; }
+.quiz .qt { margin:0 0 8px; font-weight:600; }
+.quiz .opt { display:flex; gap:10px; align-items:flex-start; padding:6px 8px; border-radius:3px; cursor:pointer; }
+.quiz .opt:hover { background:var(--sunken); }
+.quiz .q.-done .opt { cursor:default; }
+.quiz .opt.-right { background:color-mix(in oklab, #2f8f4e 14%, transparent); }
+.quiz .opt.-wrong { background:color-mix(in oklab, #c0392b 14%, transparent); }
+.quiz .why { display:none; margin-top:8px; padding:8px 12px; border-left:3px solid var(--accent); color:var(--muted); font-size:14px; }
+.quiz .why.-open { display:block; }
+.quiz-score { font-family:"JetBrains Mono",monospace; font-size:12px; color:var(--muted); }
+/* Домашнее задание */
+.hw { margin-top:16px; border-top:1px dashed var(--line); padding-top:12px; }
+.hw-l { display:block; font-size:13px; color:var(--muted); margin-bottom:6px; }
+.hw-text { width:100%; box-sizing:border-box; font:inherit; font-size:14px; padding:8px 10px; border:1px solid var(--line); border-radius:3px; background:var(--surface); color:inherit; resize:vertical; }
+.hw-done { display:inline-flex; gap:8px; align-items:center; margin-top:8px; cursor:pointer; }
+.hw.-done { border-top-color:var(--accent); }
+.sec.-questions .text>p>strong { display:block; margin-top:1rem; font-family:Bitter,Georgia,serif; font-size:16px; }
+.sec .steps { background:var(--surface); border:1px solid var(--line); border-radius:3px; padding:6px; }
+.pager { display:flex; justify-content:space-between; gap:16px; margin-top:48px; padding-top:20px; border-top:1px solid var(--line); font-size:14px; }
+.pager a { text-decoration:none; color:var(--ink); }
+.pager a:hover { color:var(--accent); }
+.pager .r { text-align:right; }
+.src { font-family:"JetBrains Mono",monospace; font-size:11px; color:var(--muted); margin-top:28px; }
+@media (max-width:820px) {
+  .layout { grid-template-columns:1fr; }
+  .side { position:static; height:auto; border-right:0; border-bottom:1px solid var(--line); }
+  .side nav.-siblings { display:none; }
+  .body { padding-left:18px; }
+  .layer>summary { grid-template-columns:32px 1fr; gap:10px; }
+  .gauge { grid-column:1/-1; justify-content:flex-start; padding-left:42px; }
+  .countdown { text-align:left; }
+}
+@media (prefers-reduced-motion:reduce) { * { transition-duration:.01ms !important; } }
+</style></head><body data-phase="0">
+<div class="layout">
+  <aside class="side">
+    <a class="back" href="../">← Infrastructure Engineer L2-L3 - версия 2 (слои 0 и 4)</a>
+    <h2>🖥 Infrastructure Engineer L2-L3 - версия 2 (слои 0 и 4)</h2>
+    <a class="version-switch" href="/roadmap-infra/">🔀 Версия 1 - полная (истории, кейсы, все 10 слоёв)</a>
+    <div class="prog">пройдено <span id="pct">0%</span> · <span id="steps-done">0</span>/<span id="steps-all">0</span> шагов</div>
+    <div class="bar" data-total><span></span></div>
+    <nav><b>В этом слое</b><a href="#analogy"><span class="i">🎭</span>Аналогия</a><a href="#map"><span class="i">🗺</span>Карта мест</a><a href="#theory"><span class="i">📖</span>Теория</a><a href="#theory"><span class="i">📖</span>Теория</a><a href="#practice"><span class="i">🔧</span>Практика</a><a href="#break"><span class="i">💥</span>Сломай намеренно</a><a href="#task"><span class="i">✅</span>Задание</a><a href="#questions"><span class="i">❓</span>Вопросы с ответами</a></nav>
+    <nav class="-siblings"><b>Слои</b><a href="../0/" class="-cur" data-phase="0"><span class="n">00</span>Linux: факты, ресурсы и базовые команды</a><a href="../4/" class="" data-phase="4"><span class="n">04</span>PostgreSQL: diagnosis from connection to query plan</a></nav>
+  </aside>
+  <main class="content">
+    <div class="topbar"><b>Слой 0. Linux: факты, ресурсы и базовые команды</b><span><span id="cur-done">0</span> из <span id="cur-all">9</span> шагов пройдено</span></div>
+    <h1>Linux: факты, ресурсы и базовые команды</h1>
+    <p class="lead">6-8 часов</p>
+    <section class="sec -analogy" id="analogy"><h2><span class="i">🎭</span>Аналогия</h2><div class="text"><p>Сервер похож на диспетчерскую: прежде чем чинить отдельный прибор, диспетчер сверяет питание, температуру, список работающих систем и журнал событий. Команда без вопроса - шум; факт с timestamp - начало диагностики.</p></div></section><section class="sec -map" id="map"><h2><span class="i">🗺</span>Карта мест</h2><div class="text"><p><strong>Сделать:</strong> создать отдельного администратора, закрыть прямой root-login, настроить ключ SSH и firewall, собрать <code>baseline.txt</code> с состоянием CPU/RAM/disk/network/services.</p>
+<p><strong>Понять:</strong> Linux-диагностика идёт от симптома к наблюдаемому факту. Сервис, процесс, сокет, файловая система и сеть - разные слои с разными инструментами.</p>
+<p><strong>Где смотреть:</strong> <code>/etc</code> - конфигурация; <code>systemctl</code> - lifecycle; journal - события; <code>/proc</code> и <code>ps</code> - процессы; <code>df</code>/<code>lsblk</code> - storage; <code>ip</code>/<code>ss</code> - сеть; <code>/var/log</code> - файловые логи приложения.</p>
+<p><strong>Критерий:</strong> можешь объяснить, почему проверил именно эту команду, что в выводе норма и какой следующий дешёвый тест сделаешь.</p></div></section><section class="sec -theory" id="theory"><h2><span class="i">📖</span>Теория</h2><div class="text"><table>
+<thead>
+<tr>
+<th>Вопрос</th>
+<th>Первый факт</th>
+<th>Норма</th>
+<th>Симптом</th>
+<th>Дальше</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Хост жив?</td>
+<td><code>uptime</code>, <code>date</code></td>
+<td>есть ответ, load сопоставим с CPU</td>
+<td>load быстро растёт</td>
+<td>процессы, I/O, память</td>
+</tr>
+<tr>
+<td>Хватает RAM?</td>
+<td><code>free -h</code></td>
+<td>есть <code>available</code>, swap стабилен</td>
+<td>available низкий, swap растёт</td>
+<td>top, logs, limits</td>
+</tr>
+<tr>
+<td>Хватает диска?</td>
+<td><code>df -hT</code>, <code>df -ih</code></td>
+<td>volume и inode &lt; порога</td>
+<td>100% или inode 100%</td>
+<td><code>du</code>, logs, cleanup policy</td>
+</tr>
+<tr>
+<td>Сервис жив?</td>
+<td><code>systemctl status unit</code></td>
+<td>active (running)</td>
+<td>failed/inactive/restarting</td>
+<td>journal, config, dependency</td>
+</tr>
+<tr>
+<td>Процесс жив?</td>
+<td><code>ps</code>, <code>pgrep</code></td>
+<td>ожидаемый PID</td>
+<td>PID нет/завис</td>
+<td>logs, exit code, restart</td>
+</tr>
+<tr>
+<td>Есть socket?</td>
+<td><code>ss -ltnp</code></td>
+<td>process слушает expected IP:port</td>
+<td>socket отсутствует</td>
+<td>service/config/firewall</td>
+</tr>
+</tbody>
+</table></div></section><section class="sec -theory" id="theory"><h2><span class="i">📖</span>Теория</h2><div class="text"><p>Эти команды надо знать уверенно и без поиска. Полный построчный разбор с флагами - в подразделе ниже.</p>
+<table>
+<thead>
+<tr>
+<th>Команда</th>
+<th>Что делает и flags</th>
+<th>Когда применять</th>
+<th>Что смотреть → следующий шаг</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>systemctl status NAME</code></td>
+<td>состояние systemd unit</td>
+<td>сервис недоступен</td>
+<td><code>Active</code>, <code>Main PID</code>, exit code → <code>journalctl</code></td>
+</tr>
+<tr>
+<td><code>journalctl -u NAME -n 100 --since '15 min ago'</code></td>
+<td>журнал unit; <code>-f</code> follow</td>
+<td>restart/error</td>
+<td>first error и timestamp → config/dependency</td>
+</tr>
+<tr>
+<td><code>ps aux --sort=-%cpu</code></td>
+<td>процессы; сортировка CPU</td>
+<td>host slow</td>
+<td>top consumers → owner/logs/limits</td>
+</tr>
+<tr>
+<td><code>top</code> / <code>htop</code></td>
+<td>live CPU/RAM/load</td>
+<td>моментный pressure</td>
+<td><code>%CPU</code>, <code>%MEM</code>, load, state → disk/network/process</td>
+</tr>
+<tr>
+<td><code>free -h</code></td>
+<td>RAM/cache/swap</td>
+<td>OOM/slowdown</td>
+<td><code>available</code>, swap → process/limits</td>
+</tr>
+<tr>
+<td><code>df -hT</code>; <code>df -ih</code></td>
+<td>space/type; inodes</td>
+<td>write failure</td>
+<td>volume/inode 100% → <code>du</code>, deleted-open files</td>
+</tr>
+<tr>
+<td><code>du -xhd1 PATH</code></td>
+<td>sizes under one filesystem</td>
+<td>disk full</td>
+<td>largest directory → drill down safely</td>
+</tr>
+<tr>
+<td><code>ss -ltnp</code>; <code>ss -tanp</code></td>
+<td>listening and TCP sessions</td>
+<td>port/network issue</td>
+<td>Local Address, State, PID → service/firewall</td>
+</tr>
+<tr>
+<td><code>lsof -i :PORT</code>; <code>lsof +L1</code></td>
+<td>port owner; deleted-open files</td>
+<td>conflict/disk mismatch</td>
+<td>PID → process restart or owner decision</td>
+</tr>
+<tr>
+<td><code>dmesg -T \| tail -n 80</code></td>
+<td>kernel events</td>
+<td>OOM/I/O/NIC issue</td>
+<td>OOM, filesystem, device errors → escalate/storage</td>
+</tr>
+</tbody>
+</table>
+<h3>Команды второго ряда</h3>
+<table>
+<thead>
+<tr>
+<th>Команда</th>
+<th>Практическая роль</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>ping -c 3 HOST</code></td>
+<td>ICMP reachability, только один сигнал: успешный ping не доказывает TCP/HTTP.</td>
+</tr>
+<tr>
+<td><code>dig +short NAME</code></td>
+<td>конкретный DNS answer; сравнить resolver и expected IP.</td>
+</tr>
+<tr>
+<td><code>tracepath HOST</code> / <code>traceroute HOST</code></td>
+<td>маршрут и MTU signal; применять после route/DNS fact.</td>
+</tr>
+<tr>
+<td><code>sudo tcpdump -ni any 'host IP and tcp port 443'</code></td>
+<td>увидеть packets; собирать коротко и с понятным фильтром.</td>
+</tr>
+<tr>
+<td><code>find PATH -xdev -type f -mtime +30</code></td>
+<td>поиск старых файлов внутри filesystem; сначала dry-run.</td>
+</tr>
+<tr>
+<td><code>awk</code> / <code>sed</code></td>
+<td>извлечь columns или безопасно показать sample; сохранять исходный log.</td>
+</tr>
+<tr>
+<td><code>chmod</code>, <code>chown</code></td>
+<td>права/owner; сверять expected user/group перед изменением.</td>
+</tr>
+<tr>
+<td><code>kill -TERM PID</code>, затем <code>kill -KILL PID</code></td>
+<td>graceful stop, затем last resort; зафиксировать owner и impact.</td>
+</tr>
+</tbody>
+</table>
+<h3>Термины, которые легче перепутать вслух, чем на бумаге</h3>
+<table>
+<thead>
+<tr>
+<th>Термин</th>
+<th>Расшифровка</th>
+<th>Что это</th>
+<th>Как произносится</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>I/O</strong></td>
+<td>Input/Output</td>
+<td>операции обмена данными между программой и внешним устройством (диск, сеть, терминал)</td>
+<td>по буквам: «ай-оу», не «ио» слитно</td>
+</tr>
+<tr>
+<td><strong>TCP</strong></td>
+<td>Transmission Control Protocol</td>
+<td>протокол с установлением соединения, гарантированной и упорядоченной доставкой</td>
+<td>по буквам: «ти-си-пи»</td>
+</tr>
+<tr>
+<td><strong>UDP</strong></td>
+<td>User Datagram Protocol</td>
+<td>протокол без соединения, без гарантии доставки и порядка, зато быстрее</td>
+<td>по буквам: «ю-ди-пи»</td>
+</tr>
+<tr>
+<td><strong>PID</strong></td>
+<td>Process ID</td>
+<td>уникальный номер, который ядро присваивает каждому запущенному процессу</td>
+<td>целиком «пид» или по буквам «пи-ай-ди» - по буквам однозначнее</td>
+</tr>
+</tbody>
+</table>
+<h3>Команды строка за строкой - синтаксис, флаги, интерпретация</h3>
+<blockquote>
+<p>То же самое ядро команд без сокращений, для самодостаточности сайта.</p>
+</blockquote>
+<p><strong><code>systemctl status &lt;unit&gt;</code></strong></p>
+<ul>
+<li><strong>Syntax:</strong> <code>systemctl &lt;verb&gt; &lt;unit&gt;</code> - управление и опрос systemd-юнитов.</li>
+<li><strong>Флаги/verbs:</strong> <code>status</code> - состояние (active/failed, PID, последние строки журнала, без изменения состояния); <code>start</code>/<code>stop</code>/<code>restart</code> - запустить/остановить/перезапустить; <code>enable</code>/<code>disable</code> - вкл/выкл автозапуск при загрузке; <code>--failed</code> - показать все упавшие юниты сразу; <code>--no-pager</code> - не открывать вывод через pager.</li>
+<li><strong>Expected output:</strong> блок <code>● name.service - description</code>, строка <code>Active: active (running) since ...</code> или <code>failed (Result: exit-code)</code>, <code>Main PID: NNNN</code>, последние 5-10 строк журнала внизу.</li>
+<li><strong>What to look at:</strong> слово после <code>Active:</code>, <code>Main PID</code> (есть ли вообще), timestamp последнего изменения, exit code в скобках при failed.</li>
+<li><strong>Interpretation:</strong> <code>active (running)</code> - процесс жив с точки зрения systemd (не гарантирует, что порт слушает или приложение отвечает - см. <code>ss</code>); <code>failed</code> - юнит завершился с ошибкой и не перезапускается сам; <code>activating</code> - висит дольше ожидаемого.</li>
+<li><strong>Next inference:</strong> <code>failed</code> → <code>journalctl -u &lt;unit&gt; -n 100</code>; <code>active</code>, но приложение не отвечает → <code>ss -ltnp</code> → логи приложения.</li>
+<li><strong>Incident/interview use:</strong> «сервис недоступен» начинается именно отсюда - первый факт, до чтения логов и до сети.</li>
+</ul>
+<p><strong><code>journalctl -u &lt;unit&gt; -n 100 --since "15 min ago"</code></strong></p>
+<ul>
+<li><strong>Syntax:</strong> <code>journalctl [опции]</code> - чтение systemd journal.</li>
+<li><strong>Флаги:</strong> <code>-u &lt;unit&gt;</code> - только события юнита; <code>-n N</code> - последние N записей; <code>-f</code> - follow; <code>-p err</code> - только error и выше; <code>--since</code>/<code>--until</code> - временное окно; <code>-b</code> - только текущая загрузка; <code>-x</code> - пояснения к сообщениям, где есть; <code>--no-pager</code>.</li>
+<li><strong>Expected output:</strong> хронологические строки <code>&lt;timestamp&gt; &lt;hostname&gt; &lt;unit&gt;[PID]: &lt;message&gt;</code>.</li>
+<li><strong>What to look at:</strong> первая строка с ошибкой (не последняя - от неё считать назад), timestamp относительно инцидента, повторяющийся ли паттерн.</li>
+<li><strong>Interpretation:</strong> одиночная ошибка при старте - вероятно конфигурация/зависимость; повторяющаяся с равным интервалом - retry-цикл, не может восстановиться; нет новых строк при <code>-f</code> - процесс не пишет в journal.</li>
+<li><strong>Next inference:</strong> нашли конкретную ошибку (например <code>bind: address already in use</code>) → <code>ss -ltnp</code> на этот порт.</li>
+<li><strong>Incident/interview use:</strong> ответ на «где смотреть, почему сервис не стартует» - читать с первой ошибки после <code>--since</code>, не листать весь журнал.</li>
+</ul>
+<p><strong><code>ps aux --sort=-%cpu</code></strong></p>
+<ul>
+<li><strong>Syntax:</strong> <code>ps &lt;опции&gt;</code> - снимок процессов на момент вызова (не live, в отличие от <code>top</code>).</li>
+<li><strong>Флаги:</strong> <code>aux</code> - <code>a</code> процессы всех пользователей с терминалом, <code>u</code> - user-oriented формат, <code>x</code> - процессы без терминала (демоны), BSD-стиль без дефиса; <code>--sort=-%cpu</code> - сортировка по убыванию; <code>-ef</code> - System V full-format с PID/PPID.</li>
+<li><strong>Expected output:</strong> таблица <code>USER PID %CPU %MEM VSZ RSS TTY STAT START TIME COMMAND</code>.</li>
+<li><strong>What to look at:</strong> верхние строки после сортировки, колонка <code>STAT</code> (<code>R</code> running, <code>S</code> sleeping, <code>D</code> uninterruptible sleep - I/O, <code>Z</code> zombie, <code>T</code> stopped).</li>
+<li><strong>Interpretation:</strong> один процесс стабильно с высоким <code>%CPU</code> - runaway process; много процессов в <code>D</code> - I/O bottleneck, не CPU; <code>Z</code> сам по себе CPU не жрёт, но означает, что родитель не собрал exit status.</li>
+<li><strong>Next inference:</strong> нашли PID → <code>top -p PID</code> или <code>lsof -p PID</code> прежде чем <code>kill</code>.</li>
+<li><strong>Incident/interview use:</strong> идёт сразу после <code>uptime</code>, до любых предположений о причине.</li>
+</ul>
+<p><strong><code>free -h</code></strong></p>
+<ul>
+<li><strong>Syntax:</strong> <code>free [опции]</code>.</li>
+<li><strong>Флаги:</strong> <code>-h</code> human-readable; <code>-m</code>/<code>-g</code> принудительно MiB/GiB; <code>-s N</code> повторять каждые N секунд.</li>
+<li><strong>Expected output:</strong> строки <code>Mem:</code> и <code>Swap:</code> со столбцами <code>total used free shared buff/cache available</code>.</li>
+<li><strong>What to look at:</strong> столбец <code>available</code> (не <code>free</code>!), тренд <code>Swap: used</code>.</li>
+<li><strong>Interpretation:</strong> низкий <code>free</code>, но нормальный <code>available</code> - Linux использует свободную память под файловый кэш, норма; низкий именно <code>available</code> - реальный memory pressure; растущий <code>Swap used</code> - активный своп.</li>
+<li><strong>Next inference:</strong> pressure подтверждён → <code>ps aux --sort=-%mem</code> → <code>dmesg -T | grep -i oom</code>.</li>
+<li><strong>Incident/interview use:</strong> классический вопрос «почему free показывает мало свободной памяти», см. также ❓ ниже.</li>
+</ul>
+<p><strong><code>df -hT</code> и <code>df -ih</code></strong></p>
+<ul>
+<li><strong>Syntax:</strong> <code>df [опции] [путь]</code>.</li>
+<li><strong>Флаги:</strong> <code>-h</code> human-readable; <code>-T</code> тип файловой системы; <code>-i</code> inode usage вместо байтов.</li>
+<li><strong>Expected output:</strong> таблица <code>Filesystem Type Size Used Avail Use% Mounted on</code> или <code>Inodes IUsed IFree IUse% Mounted on</code>.</li>
+<li><strong>What to look at:</strong> <code>Use%</code>/<code>IUse%</code> для нужного mountpoint - не путать переполнение по месту с переполнением по inode.</li>
+<li><strong>Interpretation:</strong> <code>Use% = 100</code> - место кончилось, <code>write</code> падает; <code>IUse% = 100</code> при свободном месте - кончились inode, новые файлы создать нельзя.</li>
+<li><strong>Next inference:</strong> <code>Use%</code> высокий → <code>du -xhd1</code> на этот mount; <code>IUse%</code> высокий → искать директорию с огромным числом мелких файлов.</li>
+<li><strong>Incident/interview use:</strong> «диск полон, но <code>du</code> показывает мало» - см. <code>lsof +L1</code> ниже и ❓.</li>
+</ul>
+<p><strong><code>du -xhd1 &lt;path&gt;</code></strong></p>
+<ul>
+<li><strong>Syntax:</strong> <code>du [опции] [путь]</code>.</li>
+<li><strong>Флаги:</strong> <code>-x</code> не пересекать границу FS; <code>-h</code> human-readable; <code>-d1</code>/<code>--max-depth=1</code> только один уровень; <code>-s</code> только итог по пути.</li>
+<li><strong>Expected output:</strong> список <code>&lt;размер&gt;\t&lt;путь&gt;</code> по поддиректориям первого уровня.</li>
+<li><strong>What to look at:</strong> самая крупная строка - с неё начинать спуск глубже.</li>
+<li><strong>Interpretation:</strong> явный «тяжеловес» среди подпапок - конкретный источник роста; равномерное распределение - органический рост, не аномалия.</li>
+<li><strong>Next inference:</strong> найден источник → проверить retention-политику до удаления, не удалять активные логи/файлы БД вслепую.</li>
+<li><strong>Incident/interview use:</strong> связка <code>df → df -i → du</code> - ожидаемый порядок диагностики disk full.</li>
+</ul>
+<p><strong><code>ss -ltnp</code></strong></p>
+<ul>
+<li><strong>Syntax:</strong> <code>ss [опции]</code> - современная замена <code>netstat</code>.</li>
+<li><strong>Флаги:</strong> <code>-l</code> listening; <code>-t</code> TCP; <code>-u</code> UDP; <code>-n</code> numeric, не резолвить в имена; <code>-p</code> PID/имя процесса (может требовать sudo); <code>-a</code> все сокеты; <code>-i</code> внутренняя TCP-информация. Короткие флаги комбинируются: <code>ss -lntp</code> = <code>-l -n -t -p</code>.</li>
+<li><strong>Expected output:</strong> таблица <code>State Recv-Q Send-Q Local Address:Port Peer Address:Port Process</code>.</li>
+<li><strong>What to look at:</strong> <code>Local Address:Port</code> - какой интерфейс (<code>0.0.0.0</code>/<code>*</code> все, <code>127.0.0.1</code> только локально, конкретный IP - только он); <code>Process</code> - какой PID держит порт.</li>
+<li><strong>Interpretation:</strong> порт отсутствует - сервис не слушает вообще; порт на <code>127.0.0.1</code>, а стучимся снаружи - архитектурное решение или ошибка биндинга, не firewall; порт на <code>0.0.0.0</code> слушает широко, что само по себе не значит «доступен снаружи» - firewall может блокировать.</li>
+<li><strong>Next inference:</strong> порта нет → <code>systemctl status</code>/<code>journalctl</code>; порт есть, снаружи не достучаться → <code>ufw status</code>/<code>iptables -L</code>.</li>
+<li><strong>Incident/interview use:</strong> «порт не слушается» - <code>ss -lntp</code> даёт первый факт, до <code>tcpdump</code> и предположений про firewall.</li>
+</ul>
+<p><strong><code>dmesg -T | tail -n 80</code></strong></p>
+<ul>
+<li><strong>Syntax:</strong> <code>dmesg [опции]</code> - сообщения кольцевого буфера ядра.</li>
+<li><strong>Флаги:</strong> <code>-T</code> человекочитаемые timestamp; <code>-w</code> follow; <code>--level=err,warn</code> фильтр severity.</li>
+<li><strong>Expected output:</strong> строки ядра с меткой времени и подсистемой (<code>Out of memory</code>, <code>Killed process</code>, <code>I/O error</code>, <code>link up</code>/<code>down</code>).</li>
+<li><strong>What to look at:</strong> строки <code>Out of memory</code>/<code>Killed process</code> (OOM killer), <code>I/O error</code>/<code>filesystem error</code>, смена состояния линка.</li>
+<li><strong>Interpretation:</strong> OOM killer в логе - процесс принудительно завершён ядром из-за нехватки памяти; I/O errors - аппаратная/драйверная проблема, не проблема приложения.</li>
+<li><strong>Next inference:</strong> OOM → сопоставить время с <code>free -h</code>/логами, пересмотреть лимиты памяти; I/O errors → эскалация на storage.</li>
+<li><strong>Incident/interview use:</strong> «сервис исчез без ошибки в своих логах» - <code>dmesg</code> часто единственное место, где видно, что убил не он сам.</li>
+</ul>
+<p><strong><code>lsof +L1</code> и <code>lsof -i :PORT</code></strong></p>
+<ul>
+<li><strong>Syntax:</strong> <code>lsof [опции]</code>.</li>
+<li><strong>Флаги:</strong> <code>-p PID</code> файлы процесса; <code>-i</code> только сетевые сокеты; <code>-i :PORT</code> кто использует порт; <code>+L1</code> файлы с link count &lt; 1 - удалённые, но открытые файлы, которые держат место на диске, невидимое <code>du</code>.</li>
+<li><strong>Expected output:</strong> таблица <code>COMMAND PID USER FD TYPE DEVICE SIZE/OFF NODE NAME</code>, для <code>+L1</code> в <code>NAME</code> пометка <code>(deleted)</code>.</li>
+<li><strong>What to look at:</strong> <code>SIZE/OFF</code> - сколько места держит удалённый файл; <code>PID</code>/<code>COMMAND</code> - кто держит.</li>
+<li><strong>Incident/interview use:</strong> прямой ответ на «<code>df</code> полон, <code>du</code> не находит крупных файлов» - см. ❓ и практику ниже.</li>
+</ul>
+<h3>Как читать структуру docker-compose.yml (и любого декларативного документа)</h3>
+<pre><code class="language-yaml">services:                           # верхний уровень - список контейнеров, которыми управляет этот файл
+  db:                                # имя сервиса - произвольная метка, по ней контейнеры видят друг друга по DNS
+    image: postgres:16               # образ:тег - откуда взять контейнер и зафиксированная версия
+    environment:                     # переменные окружения, которые увидит процесс внутри контейнера
+      POSTGRES_PASSWORD: stand       # пароль суперпользователя базы - переменная конкретного образа postgres
+    ports:                           # проброс портов host:container
+      - &quot;127.0.0.1:5432:5432&quot;        # биндинг только на loopback - снаружи хоста порт не виден, осознанный выбор
+    volumes:                         # точки монтирования постоянного хранилища
+      - pgdata:/var/lib/postgresql/data   # именованный volume : путь внутри контейнера - данные переживут пересоздание
+volumes:                             # верхний уровень - объявление именованных volume, на которые ссылались выше
+  pgdata:                            # имя volume - управляется Docker, физически живёт вне контейнера
+</code></pre>
+<ul>
+<li><strong>Как читать:</strong> найти верхний уровень секций (карта документа) → внутри секции понять, значение это, список или вложенная секция (отступ = вложенность, как в Python) → искать перекрёстные ссылки между секциями (<code>pgdata</code> в <code>volumes</code> внутри <code>services.db</code> ссылается на <code>pgdata</code> в верхнем <code>volumes</code>).</li>
+<li><strong>Что про безопасность:</strong> без явного <code>127.0.0.1</code> в <code>ports:</code> Docker по умолчанию биндит на <code>0.0.0.0</code> - тот же вопрос, что с Zabbix на 10050, только на уровне синтаксиса Compose.</li>
+<li><strong>Применимо и к nginx.conf/Prometheus:</strong> та же логика секций/вложенности/перекрёстных ссылок (<code>upstream</code> ↔ <code>proxy_pass</code> в nginx; <code>job_name</code> в <code>scrape_configs</code> ↔ Grafana datasource).</li>
+</ul></div></section><section class="sec -practice" id="practice"><h2><span class="i">🔧</span>Практика</h2><ul class="steps"><li class="step" data-step="0-practice-1"><input type="checkbox" id="s-0-practice-1"><span class="box"></span><span class="txt">Создай обычного администратора, добавь в <code>sudo</code>, проверь <code>sudo -v</code>.</span></li><li class="step" data-step="0-practice-2"><input type="checkbox" id="s-0-practice-2"><span class="box"></span><span class="txt">Настрой SSH key. Открой вторую сессию и только после успешного входа запрети password/root login. Проверь <code>sshd -t</code> до <code>systemctl reload ssh</code>.</span></li><li class="step" data-step="0-practice-3"><input type="checkbox" id="s-0-practice-3"><span class="box"></span><span class="txt">Включи firewall c allow только для SSH и требуемых web ports. С внешней машины проверь SSH и закрытый тестовый port.</span></li><li class="step" data-step="0-practice-4"><input type="checkbox" id="s-0-practice-4"><span class="box"></span><span class="txt">Выполни и сохрани baseline: <code>date; uptime; free -h; df -hT; df -ih; lsblk -f; ip -br a; ip route; ss -ltnp; systemctl --failed</code>.</span></li><li class="step" data-step="0-practice-5"><input type="checkbox" id="s-0-practice-5"><span class="box"></span><span class="txt">Создай unit <code>hello.service</code>, проверь <code>daemon-reload</code>, <code>enable --now</code>, status, journal и socket.</span></li><li class="step" data-step="0-practice-6"><input type="checkbox" id="s-0-practice-6"><span class="box"></span><span class="txt">Подними PostgreSQL через <code>compose.yml</code> (структура разобрана выше), зайди в него через <code>psql -c "select version();"</code>.</span></li></ul></section><section class="sec -break" id="break"><h2><span class="i">💥</span>Сломай намеренно</h2><ul class="steps"><li class="step -break" data-step="0-break-1"><input type="checkbox" id="s-0-break-1"><span class="box"></span><span class="txt">Останови <code>hello.service</code>. Пройди <code>status → journal → start → curl/ss</code>; запиши exit code и recovery proof.</span></li><li class="step -break" data-step="0-break-2"><input type="checkbox" id="s-0-break-2"><span class="box"></span><span class="txt">Создай большой тестовый файл в отдельной временной filesystem или Docker volume. Найди его через <code>df → du</code>; очисти и повтори <code>df</code>.</span></li><li class="step -break" data-step="0-break-3"><input type="checkbox" id="s-0-break-3"><span class="box"></span><span class="txt">Запусти CPU-bound test process с низким приоритетом. Найди PID через <code>top</code> и <code>ps</code>; останови через <code>TERM</code>, проверь отсутствие PID.</span></li></ul></section><section class="sec -task" id="task"><h2><span class="i">✅</span>Задание</h2><div class="text"><h3>Сервер стал медленным</h3>
+<p><strong>Симптом:</strong> latency выросла, alert CPU/RAM/load.</p>
+<table>
+<thead>
+<tr>
+<th>Проверка</th>
+<th>Норма</th>
+<th>Аномалия</th>
+<th>Следующий шаг</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>uptime</code></td>
+<td>load соразмерен CPU</td>
+<td>load устойчиво выше CPU</td>
+<td><code>top</code>/<code>ps</code></td>
+</tr>
+<tr>
+<td><code>top</code></td>
+<td>no single runaway</td>
+<td>CPU consumer, D-state, swap</td>
+<td>process или I/O branch</td>
+</tr>
+<tr>
+<td><code>free -h</code></td>
+<td><code>available</code> есть, swap stable</td>
+<td>swap/OOM pressure</td>
+<td>top + <code>dmesg</code></td>
+</tr>
+<tr>
+<td><code>df -hT</code></td>
+<td>enough free</td>
+<td>full volume</td>
+<td>disk incident</td>
+</tr>
+<tr>
+<td><code>dmesg -T</code></td>
+<td>без OOM/I/O errors</td>
+<td>OOM or device errors</td>
+<td>limits/restart or storage escalation</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Гипотезы:</strong> runaway process, memory pressure, disk I/O, external dependency. <strong>Первый дешёвый тест:</strong> read-only <code>uptime</code>, <code>free</code>, <code>df</code>, <code>top</code>. <strong>Fix:</strong> изменить только подтверждённую причину. <strong>Verification:</strong> metric вернулась, request latency normal, logs без новых errors.</p>
+<h3>Disk full</h3>
+<p><strong>Симптом:</strong> <code>No space left on device</code>, DB/service write error.</p>
+<p><code>df -hT</code> и <code>df -ih</code> → определить space или inode → <code>du -xhd1 /mount</code> → largest path → <code>lsof +L1</code> для deleted-open files → cleanup по retention/runbook → повторить <code>df</code>, service write и alert.</p>
+<p>Нельзя удалять файлы вслепую. Удаление active database/WAL/log без политики превращает capacity incident в data incident.</p>
+<h3>SSH unavailable</h3>
+<p><strong>Симптом:</strong> client timeout/refused/auth failed.</p>
+<p><code>ssh -vvv user@host</code> фиксирует класс ошибки → консоль/monitoring проверяет host and <code>systemctl status ssh</code> → <code>ss -ltnp | grep :22</code> → firewall/security group → <code>journalctl -u ssh</code>.</p>
+<ul>
+<li><code>Permission denied</code> - сеть дошла, проверять key/user/permissions/sshd config.</li>
+<li><code>Connection refused</code> - host reachable, listener отсутствует или reject rule.</li>
+<li>timeout - route/firewall/security group/host availability.</li>
+</ul><div class="hw" data-hw="0"><label class="hw-l">Что получилось - своими словами: что попробовал, что сработало, где застрял</label><textarea class="hw-text" rows="5" placeholder="Свободный ответ. Хранится в этом браузере, как и прогресс."></textarea><label class="hw-done"><input type="checkbox"> Сдано</label></div></div></section><section class="sec -questions" id="questions"><h2><span class="i">❓</span>Вопросы с ответами</h2><div class="text"><p><strong>Почему <code>free</code> показывает мало free memory?</strong></p>
+<blockquote>
+<p>Linux использует свободную RAM для cache. Для capacity важнее поле <code>available</code>, swap trend и OOM events.</p>
+</blockquote>
+<p><strong><code>df</code> показывает полный disk, а <code>du</code> мало. Почему?</strong></p>
+<blockquote>
+<p>Процесс может держать удалённый файл. <code>lsof +L1</code> показывает такой PID; место вернётся после controlled restart/close.</p>
+</blockquote>
+<p><strong>Когда L1 эскалирует?</strong></p>
+<blockquote>
+<p>После фиксации impact, timestamps, status, relevant logs and metrics, если known procedure не восстановила сервис или change выходит за разрешённый runbook.</p>
+</blockquote></div></section>
+    <p class="src">Исходник: <a href="https://github.com/Lazysagotku/l2code/blob/main/InfraV2_Layer0_Linux_Stand.md" target="_blank" rel="noopener">InfraV2_Layer0_Linux_Stand.md</a></p>
+    <nav class="pager"><span></span><a class="r" href="../4/">04 PostgreSQL: diagnosis from connection to query plan →</a></nav>
+  </main>
+</div><script>
+(() => {
+  const KEY = "rm-progress-infra-v2";
+  const DEADLINE = "";
+  const PHASES = {"0": {"total": 9, "baseline": 0, "status": "", "hours": 8.0}, "4": {"total": 9, "baseline": 0, "status": "", "hours": 12.0}};
+  const load = () => { try { return JSON.parse(localStorage.getItem(KEY)) || {}; } catch (e) { return {}; } };
+  const save = (s) => { try { localStorage.setItem(KEY, JSON.stringify(s)); } catch (e) {} };
+  let state = load();
+  const C = 2 * Math.PI * 12;
+
+  function phasePct(n, done) {
+    const p = PHASES[n];
+    if (p.status === "done") return 1;
+    if (p.status === "skipped") return 0;
+    const byChecks = p.total ? done / p.total : 0;
+    return Math.max(byChecks, p.baseline / 100);
+  }
+
+  function paint() {
+    const doneBy = {};
+    document.querySelectorAll(".step[data-step]").forEach(st => {
+      const on = !!state[st.dataset.step];
+      st.classList.toggle("-on", on);
+      const box = st.querySelector("input"); if (box) box.checked = on;
+      const n = st.dataset.step.split("-")[0];
+      doneBy[n] = (doneBy[n] || 0) + (on ? 1 : 0);
+    });
+    Object.keys(PHASES).forEach(n => {
+      if (doneBy[n] === undefined) doneBy[n] = Object.keys(state).filter(k => k.startsWith(n + "-")).length;
+    });
+
+    let sumPct = 0, count = 0, stepsDone = 0, stepsAll = 0, hoursLeft = 0, closed = 0;
+    Object.keys(PHASES).forEach(n => {
+      const p = PHASES[n];
+      if (p.status === "skipped") return;
+      const pct = phasePct(n, doneBy[n]);
+      sumPct += pct; count++;
+      stepsDone += Math.min(doneBy[n], p.total); stepsAll += p.total;
+      if (pct >= 1) closed++; else hoursLeft += p.hours;
+      const card = document.querySelector('[data-phase="' + n + '"]');
+      if (card) {
+        card.classList.toggle("-complete", pct >= 1);
+        card.classList.toggle("-active", pct > 0 && pct < 1);
+        const frac = card.querySelector(".frac");
+        if (frac) frac.textContent = p.total ? (doneBy[n] + "/" + p.total) : Math.round(pct * 100) + "%";
+        const fill = card.querySelector(".ring .fill");
+        if (fill) fill.setAttribute("stroke-dashoffset", (C * (1 - pct)).toFixed(2));
+      }
+      const side = document.querySelector('.side a[data-phase="' + n + '"]');
+      if (side) side.classList.toggle("-done", pct >= 1);
+    });
+    const total = count ? sumPct / count : 0;
+    const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+    set("pct", Math.round(total * 100) + "%");
+    set("steps-done", stepsDone); set("steps-all", stepsAll);
+    set("hours-left", Math.round(hoursLeft * 10) / 10);
+    set("layers-done", closed + "/" + count);
+    document.querySelectorAll(".bar[data-total]").forEach(b => {
+      b.firstElementChild.style.width = (total * 100) + "%";
+      b.classList.toggle("-full", total >= 1);
+    });
+    const cur = document.body.dataset.phase;
+    if (cur !== undefined && PHASES[cur]) { set("cur-done", doneBy[cur]); set("cur-all", PHASES[cur].total); }
+  }
+
+  document.querySelectorAll(".step[data-step]").forEach(st => {
+    const toggle = () => { if (state[st.dataset.step]) delete state[st.dataset.step]; else state[st.dataset.step] = 1; save(state); paint(); };
+    st.querySelector(".box").addEventListener("click", toggle);
+    st.querySelector(".txt").addEventListener("click", toggle);
+    const more = st.querySelector(".more");
+    if (more) more.addEventListener("click", (e) => { e.stopPropagation(); const b = st.nextElementSibling; if (b && b.classList.contains("step-body")) b.classList.toggle("-open"); });
+  });
+
+  const $ = (id) => document.getElementById(id);
+  if ($("reset")) $("reset").addEventListener("click", () => { if (!confirm("Сбросить весь прогресс по этому роадмапу?")) return; state = {}; save(state); paint(); });
+  if ($("export")) $("export").addEventListener("click", () => {
+    const blob = new Blob([JSON.stringify({ key: KEY, at: new Date().toISOString(), state }, null, 2)], { type: "application/json" });
+    const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = KEY + ".json"; a.click(); URL.revokeObjectURL(a.href);
+  });
+  if ($("import")) $("import").addEventListener("change", (e) => {
+    const f = e.target.files[0]; if (!f) return;
+    f.text().then(t => { try { const d = JSON.parse(t); state = d.state || d; save(state); paint(); } catch (err) { alert("Файл не похож на сохранённый прогресс."); } });
+    e.target.value = "";
+  });
+  if (DEADLINE && $("days")) {
+    const today = new Date(); today.setHours(0, 0, 0, 0);
+    const left = Math.round((new Date(DEADLINE) - today) / 86400000);
+    $("days").textContent = left > 0 ? left : (left === 0 ? "сегодня" : "—");
+  }
+  // Проверь себя: выбрал вариант - увидел, прав или нет, и почему. Хранится как q:<фаза>-<номер>.
+  document.querySelectorAll(".quiz .q").forEach(q => {
+    const id = "q:" + q.dataset.q;
+    const opts = [...q.querySelectorAll(".opt")];
+    const show = (picked) => {
+      opts.forEach(o => { o.classList.toggle("-right", o.dataset.ok === "1"); o.classList.toggle("-wrong", o === picked && o.dataset.ok !== "1"); });
+      const why = q.querySelector(".why"); if (why) why.classList.add("-open");
+      q.classList.add("-done");
+    };
+    opts.forEach((o, i) => o.querySelector("input").addEventListener("change", () => {
+      state[id] = { pick: i, ok: o.dataset.ok === "1" ? 1 : 0 }; save(state); show(o); score();
+    }));
+    const saved = state[id];
+    if (saved && opts[saved.pick]) { opts[saved.pick].querySelector("input").checked = true; show(opts[saved.pick]); }
+  });
+  function score() {
+    document.querySelectorAll(".quiz-score").forEach(sc => {
+      const quiz = sc.closest(".quiz");
+      const ok = [...quiz.querySelectorAll(".q")].filter(q => (state["q:" + q.dataset.q] || {}).ok).length;
+      sc.querySelector("b").textContent = ok;
+    });
+  }
+  score();
+  // Домашнее задание: свободный ответ и отметка «сдано». Хранится как hw:<фаза>.
+  document.querySelectorAll(".hw").forEach(hw => {
+    const id = "hw:" + hw.dataset.hw, ta = hw.querySelector(".hw-text"), done = hw.querySelector(".hw-done input");
+    const saved = state[id] || {};
+    ta.value = saved.text || ""; done.checked = !!saved.done; hw.classList.toggle("-done", !!saved.done);
+    const put = () => { state[id] = { text: ta.value, done: done.checked ? 1 : 0 }; save(state); hw.classList.toggle("-done", done.checked); };
+    ta.addEventListener("input", put); done.addEventListener("change", put);
+  });
+  paint();
+  const first = [...document.querySelectorAll(".layer[data-phase]")].find(l => !l.classList.contains("-complete") && !l.classList.contains("-skipped"));
+  if (first) first.open = true;
+})();
+</script><script src="/theme.js?v=2"></script></body></html>

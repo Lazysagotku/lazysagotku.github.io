@@ -43,6 +43,12 @@ hr { border:0; border-top:1px solid var(--line); margin:1.2rem 0; }
 .masthead h1 { font-weight:700; font-size:clamp(30px,5vw,42px); letter-spacing:-.015em; }
 .masthead .sub { margin-top:6px; color:var(--muted); max-width:46ch; }
 .masthead .back { font-size:.9rem; text-decoration:none; color:var(--muted); }
+.version-switch { display:inline-block; margin-top:10px; font-family:"JetBrains Mono",monospace; font-size:12px; letter-spacing:.04em; text-decoration:none; color:var(--accent); border:1px solid var(--accent); border-radius:3px; padding:6px 12px; background:var(--accent-soft); }
+.version-switch:hover { background:var(--accent); color:#fff; }
+.side .version-switch { display:block; text-align:center; margin-bottom:16px; }
+.version-banner { background:var(--accent-soft); border:1px solid var(--accent); border-left:4px solid var(--accent); border-radius:3px; padding:16px 20px; margin-bottom:4px; font-size:14.5px; }
+.version-banner p+p { margin-top:.5rem; }
+.version-banner ul { margin:.4rem 0; }
 .countdown { font-family:"JetBrains Mono",monospace; text-align:right; line-height:1.25; }
 .countdown .num { font-size:34px; font-weight:700; color:var(--accent); font-variant-numeric:tabular-nums; }
 .countdown .cap { font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:var(--muted); }
@@ -189,6 +195,7 @@ blockquote.about p { margin:0; }
   <aside class="side">
     <a class="back" href="../">← Infrastructure Engineer L2-L3</a>
     <h2>🖥 Infrastructure Engineer L2-L3</h2>
+    <a class="version-switch" href="/roadmap-infra-v2/">🔀 Версия 2 - компакт (слои 0 и 4)</a>
     <div class="prog">пройдено <span id="pct">0%</span> · <span id="steps-done">0</span>/<span id="steps-all">0</span> шагов</div>
     <div class="bar" data-total><span></span></div>
     <nav><b>В этом слое</b><a href="#analogy"><span class="i">🎭</span>Аналогия</a><a href="#map"><span class="i">🗺</span>Карта мест</a><a href="#theory"><span class="i">📖</span>Теория</a><a href="#practice"><span class="i">🔧</span>Практика</a><a href="#break"><span class="i">💥</span>Сломай намеренно</a><a href="#quiz"><span class="i">🧪</span>Проверь себя</a><a href="#task"><span class="i">✅</span>Задание</a><a href="#life"><span class="i">🌍</span>Из жизни</a><a href="#questions"><span class="i">❓</span>Вопросы с ответами</a></nav>
@@ -502,33 +509,142 @@ docker ps                      # какие контейнеры живы
 </tr>
 </tbody>
 </table>
+<h3>Термины, которые легче перепутать вслух, чем на бумаге</h3>
+<blockquote>
+<p>Расшифровка важна, но произношение вслух на собеседовании - не меньше:
+ошибиться в том, как это звучит, выдаёт неуверенность быстрее, чем пробел
+в знаниях.</p>
+</blockquote>
+<table>
+<thead>
+<tr>
+<th>Термин</th>
+<th>Расшифровка</th>
+<th>Что это</th>
+<th>Как произносится</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>I/O</strong></td>
+<td>Input/Output</td>
+<td>операции обмена данными между программой и внешним устройством (диск, сеть, терминал)</td>
+<td>по буквам: «ай-оу», не «ио» слитно</td>
+</tr>
+<tr>
+<td><strong>TCP</strong></td>
+<td>Transmission Control Protocol</td>
+<td>протокол с установлением соединения, гарантированной и упорядоченной доставкой (подтверждения, повторная отправка)</td>
+<td>по буквам: «ти-си-пи»</td>
+</tr>
+<tr>
+<td><strong>UDP</strong></td>
+<td>User Datagram Protocol</td>
+<td>протокол без соединения, без гарантии доставки и порядка, зато быстрее и дешевле по накладным расходам</td>
+<td>по буквам: «ю-ди-пи»</td>
+</tr>
+<tr>
+<td><strong>PID</strong></td>
+<td>Process ID</td>
+<td>уникальный номер, который ядро присваивает каждому запущенному процессу</td>
+<td>целиком как слово «пид» или по буквам «пи-ай-ди» - оба варианта нормальны, по буквам однозначнее</td>
+</tr>
+</tbody>
+</table>
 <h3>Команды строка за строкой - синтаксис, флаги, интерпретация</h3>
 <blockquote>
 <p>Дополнение по прямому запросу Ивана (19.09, сверка с <code>Инфра_Стенд_рабочий_конспект_v4/v5...docx</code>):
 таблицы выше дают быстрый справочник, здесь - то же самое ядро команд без
-сокращений, так чтобы сайт был самодостаточным без обращения к DOCX.
-Формат каждой команды: COMMAND → SYNTAX → EVERY IMPORTANT FLAG → EXPECTED
-OUTPUT → WHAT TO LOOK AT → INTERPRETATION → NEXT INFERENCE → INCIDENT/
-INTERVIEW USE.</p>
+сокращений, так чтобы сайт был самодостаточным без обращения к DOCX.</p>
 </blockquote>
 <p><strong><code>systemctl status &lt;unit&gt;</code></strong></p>
-<p>Syntax: <code>systemctl &lt;verb&gt; &lt;unit&gt;</code> - управление и опрос systemd-юнитов. Флаги/verbs: <code>status</code> - состояние (active/failed, PID, последние строки журнала, без изменения состояния); <code>start</code>/<code>stop</code>/<code>restart</code> - запустить/остановить/перезапустить; <code>enable</code>/<code>disable</code> - вкл/выкл автозапуск при загрузке; <code>--failed</code> - показать все упавшие юниты сразу; <code>--no-pager</code> - не открывать вывод через pager (удобно при копировании в отчёт). Expected output: блок <code>● name.service - description</code>, строка <code>Active: active (running) since ...</code> или <code>failed (Result: exit-code)</code>, <code>Main PID: NNNN</code>, последние 5-10 строк журнала внизу. What to look at: слово после <code>Active:</code>, <code>Main PID</code> (есть ли вообще), timestamp последнего изменения, exit code в скобках при failed. Interpretation: <code>active (running)</code> - процесс жив с точки зрения systemd (не гарантирует, что порт слушает или приложение отвечает - см. <code>ss</code>); <code>failed</code> - юнит завершился с ошибкой и не перезапускается сам (если не настроен <code>Restart=</code>); <code>activating</code> - висит дольше ожидаемого - смотреть, на чём завис (обычно <code>ExecStartPre</code>/зависимость). Next inference: <code>failed</code> → <code>journalctl -u &lt;unit&gt; -n 100</code>; <code>active</code>, но приложение не отвечает → <code>ss -ltnp</code> → логи приложения. Incident/interview use: «сервис недоступен» начинается именно отсюда - первый факт, до чтения логов и до сети.</p>
+<ul>
+<li><strong>Syntax:</strong> <code>systemctl &lt;verb&gt; &lt;unit&gt;</code> - управление и опрос systemd-юнитов.</li>
+<li><strong>Флаги/verbs:</strong> <code>status</code> - состояние (active/failed, PID, последние строки журнала, без изменения состояния); <code>start</code>/<code>stop</code>/<code>restart</code> - запустить/остановить/перезапустить; <code>enable</code>/<code>disable</code> - вкл/выкл автозапуск при загрузке; <code>--failed</code> - показать все упавшие юниты сразу; <code>--no-pager</code> - не открывать вывод через pager.</li>
+<li><strong>Expected output:</strong> блок <code>● name.service - description</code>, строка <code>Active: active (running) since ...</code> или <code>failed (Result: exit-code)</code>, <code>Main PID: NNNN</code>, последние 5-10 строк журнала внизу.</li>
+<li><strong>What to look at:</strong> слово после <code>Active:</code>, <code>Main PID</code> (есть ли вообще), timestamp последнего изменения, exit code в скобках при failed.</li>
+<li><strong>Interpretation:</strong> <code>active (running)</code> - процесс жив с точки зрения systemd (не гарантирует, что порт слушает или приложение отвечает - см. <code>ss</code>); <code>failed</code> - юнит завершился с ошибкой и не перезапускается сам (если не настроен <code>Restart=</code>); <code>activating</code> - висит дольше ожидаемого - смотреть, на чём завис.</li>
+<li><strong>Next inference:</strong> <code>failed</code> → <code>journalctl -u &lt;unit&gt; -n 100</code>; <code>active</code>, но приложение не отвечает → <code>ss -ltnp</code> → логи приложения.</li>
+<li><strong>Incident/interview use:</strong> «сервис недоступен» начинается именно отсюда - первый факт, до чтения логов и до сети.</li>
+</ul>
 <p><strong><code>journalctl -u &lt;unit&gt; -n 100 --since "15 min ago"</code></strong></p>
-<p>Syntax: <code>journalctl [опции]</code> - чтение systemd journal. Флаги: <code>-u &lt;unit&gt;</code> - только события юнита; <code>-n N</code> - последние N записей; <code>-f</code> - follow; <code>-p err</code> - только error и выше; <code>--since</code>/<code>--until</code> - временное окно; <code>-b</code> - только текущая загрузка; <code>-x</code> - пояснения к сообщениям, где есть; <code>--no-pager</code>. Expected output: хронологические строки <code>&lt;timestamp&gt; &lt;hostname&gt; &lt;unit&gt;[PID]: &lt;message&gt;</code>. What to look at: первая строка с ошибкой (не последняя - от неё считать назад), timestamp относительно инцидента, повторяющийся ли паттерн. Interpretation: одиночная ошибка при старте - вероятно конфигурация/зависимость; повторяющаяся с равным интервалом - retry-цикл, не может восстановиться; нет новых строк при <code>-f</code> - процесс не пишет в journal (мёртв или логирует в другое место). Next inference: нашли конкретную ошибку (например <code>bind: address already in use</code>) → <code>ss -ltnp</code> на этот порт. Incident/interview use: ответ на «где смотреть, почему сервис не стартует», с уточнением - читать с первой ошибки после <code>--since</code>, не листать весь журнал.</p>
+<ul>
+<li><strong>Syntax:</strong> <code>journalctl [опции]</code> - чтение systemd journal.</li>
+<li><strong>Флаги:</strong> <code>-u &lt;unit&gt;</code> - только события юнита; <code>-n N</code> - последние N записей; <code>-f</code> - follow; <code>-p err</code> - только error и выше; <code>--since</code>/<code>--until</code> - временное окно; <code>-b</code> - только текущая загрузка; <code>-x</code> - пояснения к сообщениям, где есть; <code>--no-pager</code>.</li>
+<li><strong>Expected output:</strong> хронологические строки <code>&lt;timestamp&gt; &lt;hostname&gt; &lt;unit&gt;[PID]: &lt;message&gt;</code>.</li>
+<li><strong>What to look at:</strong> первая строка с ошибкой (не последняя - от неё считать назад), timestamp относительно инцидента, повторяющийся ли паттерн.</li>
+<li><strong>Interpretation:</strong> одиночная ошибка при старте - вероятно конфигурация/зависимость; повторяющаяся с равным интервалом - retry-цикл, не может восстановиться; нет новых строк при <code>-f</code> - процесс не пишет в journal.</li>
+<li><strong>Next inference:</strong> нашли конкретную ошибку (например <code>bind: address already in use</code>) → <code>ss -ltnp</code> на этот порт.</li>
+<li><strong>Incident/interview use:</strong> ответ на «где смотреть, почему сервис не стартует» - читать с первой ошибки после <code>--since</code>, не листать весь журнал.</li>
+</ul>
 <p><strong><code>ps aux --sort=-%cpu</code></strong></p>
-<p>Syntax: <code>ps &lt;опции&gt;</code> - снимок процессов на момент вызова (не live, в отличие от <code>top</code>). Флаги: <code>aux</code> - <code>a</code> процессы всех пользователей с терминалом, <code>u</code> - user-oriented формат, <code>x</code> - процессы без терминала (демоны), BSD-стиль без дефиса; <code>--sort=-%cpu</code> - сортировка по убыванию (минус = descending); <code>-ef</code> - System V full-format с PID/PPID. Expected output: таблица <code>USER PID %CPU %MEM VSZ RSS TTY STAT START TIME COMMAND</code>. What to look at: верхние строки после сортировки, колонка <code>STAT</code> (<code>R</code> running, <code>S</code> sleeping, <code>D</code> uninterruptible sleep - I/O, <code>Z</code> zombie, <code>T</code> stopped). Interpretation: один процесс стабильно с высоким <code>%CPU</code> - runaway process; много процессов в <code>D</code> - I/O bottleneck, не CPU; <code>Z</code> сам по себе CPU не жрёт, но означает, что родитель не собрал exit status. Next inference: нашли PID → <code>top -p PID</code> или <code>lsof -p PID</code> прежде чем <code>kill</code>. Incident/interview use: идёт сразу после <code>uptime</code>, до любых предположений о причине.</p>
+<ul>
+<li><strong>Syntax:</strong> <code>ps &lt;опции&gt;</code> - снимок процессов на момент вызова (не live, в отличие от <code>top</code>).</li>
+<li><strong>Флаги:</strong> <code>aux</code> - <code>a</code> процессы всех пользователей с терминалом, <code>u</code> - user-oriented формат, <code>x</code> - процессы без терминала (демоны), BSD-стиль без дефиса; <code>--sort=-%cpu</code> - сортировка по убыванию; <code>-ef</code> - System V full-format с PID/PPID.</li>
+<li><strong>Expected output:</strong> таблица <code>USER PID %CPU %MEM VSZ RSS TTY STAT START TIME COMMAND</code>.</li>
+<li><strong>What to look at:</strong> верхние строки после сортировки, колонка <code>STAT</code> (<code>R</code> running, <code>S</code> sleeping, <code>D</code> uninterruptible sleep - I/O, <code>Z</code> zombie, <code>T</code> stopped).</li>
+<li><strong>Interpretation:</strong> один процесс стабильно с высоким <code>%CPU</code> - runaway process; много процессов в <code>D</code> - I/O bottleneck, не CPU; <code>Z</code> сам по себе CPU не жрёт, но означает, что родитель не собрал exit status.</li>
+<li><strong>Next inference:</strong> нашли PID → <code>top -p PID</code> или <code>lsof -p PID</code> прежде чем <code>kill</code>.</li>
+<li><strong>Incident/interview use:</strong> идёт сразу после <code>uptime</code>, до любых предположений о причине.</li>
+</ul>
 <p><strong><code>free -h</code></strong></p>
-<p>Syntax: <code>free [опции]</code>. Флаги: <code>-h</code> human-readable; <code>-m</code>/<code>-g</code> принудительно MiB/GiB; <code>-s N</code> повторять каждые N секунд. Expected output: строки <code>Mem:</code> и <code>Swap:</code> со столбцами <code>total used free shared buff/cache available</code>. What to look at: столбец <code>available</code> (не <code>free</code>!), тренд <code>Swap: used</code>. Interpretation: низкий <code>free</code>, но нормальный <code>available</code> - Linux использует свободную память под файловый кэш, норма; низкий именно <code>available</code> - реальный memory pressure; растущий <code>Swap used</code> - активный своп, деградация даже до нуля <code>available</code>. Next inference: pressure подтверждён → <code>ps aux --sort=-%mem</code> → <code>dmesg -T | grep -i oom</code>. Incident/interview use: классический вопрос «почему free показывает мало свободной памяти», см. также ❓ ниже.</p>
+<ul>
+<li><strong>Syntax:</strong> <code>free [опции]</code>.</li>
+<li><strong>Флаги:</strong> <code>-h</code> human-readable; <code>-m</code>/<code>-g</code> принудительно MiB/GiB; <code>-s N</code> повторять каждые N секунд.</li>
+<li><strong>Expected output:</strong> строки <code>Mem:</code> и <code>Swap:</code> со столбцами <code>total used free shared buff/cache available</code>.</li>
+<li><strong>What to look at:</strong> столбец <code>available</code> (не <code>free</code>!), тренд <code>Swap: used</code>.</li>
+<li><strong>Interpretation:</strong> низкий <code>free</code>, но нормальный <code>available</code> - Linux использует свободную память под файловый кэш, норма; низкий именно <code>available</code> - реальный memory pressure; растущий <code>Swap used</code> - активный своп.</li>
+<li><strong>Next inference:</strong> pressure подтверждён → <code>ps aux --sort=-%mem</code> → <code>dmesg -T | grep -i oom</code>.</li>
+<li><strong>Incident/interview use:</strong> классический вопрос «почему free показывает мало свободной памяти», см. также ❓ ниже.</li>
+</ul>
 <p><strong><code>df -hT</code> и <code>df -ih</code></strong></p>
-<p>Syntax: <code>df [опции] [путь]</code>. Флаги: <code>-h</code> human-readable; <code>-T</code> тип файловой системы; <code>-i</code> inode usage вместо байтов. Expected output: таблица <code>Filesystem Type Size Used Avail Use% Mounted on</code> или <code>Inodes IUsed IFree IUse% Mounted on</code>. What to look at: <code>Use%</code>/<code>IUse%</code> для нужного mountpoint - не путать переполнение по месту с переполнением по inode. Interpretation: <code>Use% = 100</code> - место кончилось, <code>write</code> падает; <code>IUse% = 100</code> при свободном месте - кончились inode (обычно множество мелких файлов), новые файлы создать нельзя. Next inference: <code>Use%</code> высокий → <code>du -xhd1</code> на этот mount; <code>IUse%</code> высокий → искать директорию с огромным числом мелких файлов. Incident/interview use: «диск полон, но <code>du</code> показывает мало» - см. <code>lsof +L1</code> ниже и ❓.</p>
+<ul>
+<li><strong>Syntax:</strong> <code>df [опции] [путь]</code>.</li>
+<li><strong>Флаги:</strong> <code>-h</code> human-readable; <code>-T</code> тип файловой системы; <code>-i</code> inode usage вместо байтов.</li>
+<li><strong>Expected output:</strong> таблица <code>Filesystem Type Size Used Avail Use% Mounted on</code> или <code>Inodes IUsed IFree IUse% Mounted on</code>.</li>
+<li><strong>What to look at:</strong> <code>Use%</code>/<code>IUse%</code> для нужного mountpoint - не путать переполнение по месту с переполнением по inode.</li>
+<li><strong>Interpretation:</strong> <code>Use% = 100</code> - место кончилось, <code>write</code> падает; <code>IUse% = 100</code> при свободном месте - кончились inode, новые файлы создать нельзя.</li>
+<li><strong>Next inference:</strong> <code>Use%</code> высокий → <code>du -xhd1</code> на этот mount; <code>IUse%</code> высокий → искать директорию с огромным числом мелких файлов.</li>
+<li><strong>Incident/interview use:</strong> «диск полон, но <code>du</code> показывает мало» - см. <code>lsof +L1</code> ниже и ❓.</li>
+</ul>
 <p><strong><code>du -xhd1 &lt;path&gt;</code></strong></p>
-<p>Syntax: <code>du [опции] [путь]</code>. Флаги: <code>-x</code> не пересекать границу FS; <code>-h</code> human-readable; <code>-d1</code>/<code>--max-depth=1</code> только один уровень; <code>-s</code> только итог по пути. Expected output: список <code>&lt;размер&gt;\t&lt;путь&gt;</code> по поддиректориям первого уровня. What to look at: самая крупная строка - с неё начинать спуск глубже. Interpretation: явный «тяжеловес» среди подпапок - конкретный источник роста; равномерное распределение - органический рост, не аномалия. Next inference: найден источник → проверить retention-политику до удаления, не удалять активные логи/файлы БД вслепую. Incident/interview use: связка <code>df → df -i → du</code> - ожидаемый порядок диагностики disk full.</p>
+<ul>
+<li><strong>Syntax:</strong> <code>du [опции] [путь]</code>.</li>
+<li><strong>Флаги:</strong> <code>-x</code> не пересекать границу FS; <code>-h</code> human-readable; <code>-d1</code>/<code>--max-depth=1</code> только один уровень; <code>-s</code> только итог по пути.</li>
+<li><strong>Expected output:</strong> список <code>&lt;размер&gt;\t&lt;путь&gt;</code> по поддиректориям первого уровня.</li>
+<li><strong>What to look at:</strong> самая крупная строка - с неё начинать спуск глубже.</li>
+<li><strong>Interpretation:</strong> явный «тяжеловес» среди подпапок - конкретный источник роста; равномерное распределение - органический рост, не аномалия.</li>
+<li><strong>Next inference:</strong> найден источник → проверить retention-политику до удаления, не удалять активные логи/файлы БД вслепую.</li>
+<li><strong>Incident/interview use:</strong> связка <code>df → df -i → du</code> - ожидаемый порядок диагностики disk full.</li>
+</ul>
 <p><strong><code>ss -ltnp</code></strong></p>
-<p>Syntax: <code>ss [опции]</code> - современная замена <code>netstat</code>. Флаги: <code>-l</code> listening; <code>-t</code> TCP; <code>-u</code> UDP; <code>-n</code> numeric, не резолвить в имена; <code>-p</code> PID/имя процесса (может требовать sudo); <code>-a</code> все сокеты; <code>-i</code> внутренняя TCP-информация (retransmits, RTT). Короткие флаги комбинируются: <code>ss -lntp</code> = <code>-l -n -t -p</code>. Expected output: таблица <code>State Recv-Q Send-Q Local Address:Port Peer Address:Port Process</code>. What to look at: <code>Local Address:Port</code> - какой интерфейс (<code>0.0.0.0</code>/<code>*</code> все, <code>127.0.0.1</code> только локально, конкретный IP - только он); <code>Process</code> - какой PID держит порт. Interpretation: порт отсутствует - сервис не слушает вообще; порт на <code>127.0.0.1</code>, а стучимся снаружи - архитектурное решение или ошибка биндинга, не firewall; порт на <code>0.0.0.0</code> слушает широко, что само по себе не значит «доступен снаружи» - firewall может блокировать (живой пример - Zabbix 10050 в <code>Sber_KIRB_Unified_Stand_Prep.md</code>). Next inference: порта нет → <code>systemctl status</code>/<code>journalctl</code>; порт есть, снаружи не достучаться → <code>ufw status</code>/<code>iptables -L</code>. Incident/interview use: «порт не слушается» - <code>ss -lntp</code> даёт первый факт, до <code>tcpdump</code> и предположений про firewall.</p>
+<ul>
+<li><strong>Syntax:</strong> <code>ss [опции]</code> - современная замена <code>netstat</code>.</li>
+<li><strong>Флаги:</strong> <code>-l</code> listening; <code>-t</code> TCP; <code>-u</code> UDP; <code>-n</code> numeric, не резолвить в имена; <code>-p</code> PID/имя процесса (может требовать sudo); <code>-a</code> все сокеты; <code>-i</code> внутренняя TCP-информация. Короткие флаги комбинируются: <code>ss -lntp</code> = <code>-l -n -t -p</code>.</li>
+<li><strong>Expected output:</strong> таблица <code>State Recv-Q Send-Q Local Address:Port Peer Address:Port Process</code>.</li>
+<li><strong>What to look at:</strong> <code>Local Address:Port</code> - какой интерфейс (<code>0.0.0.0</code>/<code>*</code> все, <code>127.0.0.1</code> только локально, конкретный IP - только он); <code>Process</code> - какой PID держит порт.</li>
+<li><strong>Interpretation:</strong> порт отсутствует - сервис не слушает вообще; порт на <code>127.0.0.1</code>, а стучимся снаружи - архитектурное решение или ошибка биндинга, не firewall; порт на <code>0.0.0.0</code> слушает широко, что само по себе не значит «доступен снаружи» - firewall может блокировать (живой пример - Zabbix 10050 в <code>Sber_KIRB_Unified_Stand_Prep.md</code>).</li>
+<li><strong>Next inference:</strong> порта нет → <code>systemctl status</code>/<code>journalctl</code>; порт есть, снаружи не достучаться → <code>ufw status</code>/<code>iptables -L</code>.</li>
+<li><strong>Incident/interview use:</strong> «порт не слушается» - <code>ss -lntp</code> даёт первый факт, до <code>tcpdump</code> и предположений про firewall.</li>
+</ul>
 <p><strong><code>dmesg -T | tail -n 80</code></strong></p>
-<p>Syntax: <code>dmesg [опции]</code> - сообщения кольцевого буфера ядра. Флаги: <code>-T</code> человекочитаемые timestamp; <code>-w</code> follow; <code>--level=err,warn</code> фильтр severity. Expected output: строки ядра с меткой времени и подсистемой (<code>Out of memory</code>, <code>Killed process</code>, <code>I/O error</code>, <code>link up</code>/<code>down</code>). What to look at: строки <code>Out of memory</code>/<code>Killed process</code> (OOM killer), <code>I/O error</code>/<code>filesystem error</code>, смена состояния линка. Interpretation: OOM killer в логе - процесс принудительно завершён ядром из-за нехватки памяти; I/O errors - аппаратная/драйверная проблема, не проблема приложения. Next inference: OOM → сопоставить время с <code>free -h</code>/логами, пересмотреть лимиты памяти; I/O errors → эскалация на storage. Incident/interview use: «сервис исчез без ошибки в своих логах» - <code>dmesg</code> часто единственное место, где видно, что убил не он сам.</p>
+<ul>
+<li><strong>Syntax:</strong> <code>dmesg [опции]</code> - сообщения кольцевого буфера ядра.</li>
+<li><strong>Флаги:</strong> <code>-T</code> человекочитаемые timestamp; <code>-w</code> follow; <code>--level=err,warn</code> фильтр severity.</li>
+<li><strong>Expected output:</strong> строки ядра с меткой времени и подсистемой (<code>Out of memory</code>, <code>Killed process</code>, <code>I/O error</code>, <code>link up</code>/<code>down</code>).</li>
+<li><strong>What to look at:</strong> строки <code>Out of memory</code>/<code>Killed process</code> (OOM killer), <code>I/O error</code>/<code>filesystem error</code>, смена состояния линка.</li>
+<li><strong>Interpretation:</strong> OOM killer в логе - процесс принудительно завершён ядром из-за нехватки памяти; I/O errors - аппаратная/драйверная проблема, не проблема приложения.</li>
+<li><strong>Next inference:</strong> OOM → сопоставить время с <code>free -h</code>/логами, пересмотреть лимиты памяти; I/O errors → эскалация на storage.</li>
+<li><strong>Incident/interview use:</strong> «сервис исчез без ошибки в своих логах» - <code>dmesg</code> часто единственное место, где видно, что убил не он сам.</li>
+</ul>
 <p><strong><code>lsof +L1</code> и <code>lsof -i :PORT</code></strong></p>
-<p>Syntax: <code>lsof [опции]</code>. Флаги: <code>-p PID</code> файлы процесса; <code>-i</code> только сетевые сокеты; <code>-i :PORT</code> кто использует порт; <code>+L1</code> файлы с link count &lt; 1 - удалённые, но открытые файлы, которые держат место на диске, невидимое <code>du</code>. Expected output: таблица <code>COMMAND PID USER FD TYPE DEVICE SIZE/OFF NODE NAME</code>, для <code>+L1</code> в <code>NAME</code> пометка <code>(deleted)</code>. What to look at: <code>SIZE/OFF</code> - сколько места держит удалённый файл; <code>PID</code>/<code>COMMAND</code> - кто держит. Incident/interview use: прямой ответ на «<code>df</code> полон, <code>du</code> не находит крупных файлов» - см. ❓ и практику ниже.</p></div></section><section class="sec -practice" id="practice"><h2><span class="i">🔧</span>Практика</h2><ul class="steps"><li class="interlude"><p><strong>Как читать этот раздел.</strong> Каждый шаг устроен одинаково: что делаем и зачем → команды, у каждой в комментарии что она делает → что должно показаться на экране. В тетрадь пишется левая колонка: команда и одна фраза, что она делает. Весь слой - около двух часов за один-два вечера; ритм «по 20 минут в день» относится к слою 9, здесь его нет.</p></li><li class="interlude"><h3>0. Как вообще создать файл на сервере</h3>
+<ul>
+<li><strong>Syntax:</strong> <code>lsof [опции]</code>.</li>
+<li><strong>Флаги:</strong> <code>-p PID</code> файлы процесса; <code>-i</code> только сетевые сокеты; <code>-i :PORT</code> кто использует порт; <code>+L1</code> файлы с link count &lt; 1 - удалённые, но открытые файлы, которые держат место на диске, невидимое <code>du</code>.</li>
+<li><strong>Expected output:</strong> таблица <code>COMMAND PID USER FD TYPE DEVICE SIZE/OFF NODE NAME</code>, для <code>+L1</code> в <code>NAME</code> пометка <code>(deleted)</code>.</li>
+<li><strong>What to look at:</strong> <code>SIZE/OFF</code> - сколько места держит удалённый файл; <code>PID</code>/<code>COMMAND</code> - кто держит.</li>
+<li><strong>Incident/interview use:</strong> прямой ответ на «<code>df</code> полон, <code>du</code> не находит крупных файлов» - см. ❓ и практику ниже.</li>
+</ul></div></section><section class="sec -practice" id="practice"><h2><span class="i">🔧</span>Практика</h2><ul class="steps"><li class="interlude"><p><strong>Как читать этот раздел.</strong> Каждый шаг устроен одинаково: что делаем и зачем → команды, у каждой в комментарии что она делает → что должно показаться на экране. В тетрадь пишется левая колонка: команда и одна фраза, что она делает. Весь слой - около двух часов за один-два вечера; ритм «по 20 минут в день» относится к слою 9, здесь его нет.</p></li><li class="interlude"><h3>0. Как вообще создать файл на сервере</h3>
 <p>Три способа, от простого к удобному. Первый нужен всегда, третий - для длинных файлов.</p>
 <p><strong>Редактор nano</strong> - открыть файл, вставить текст, сохранить:</p>
 <pre><code class="language-bash">sudo nano /etc/systemd/system/hello.service   # sudo - файл в системной папке, писать туда может только root

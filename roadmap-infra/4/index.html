@@ -43,6 +43,12 @@ hr { border:0; border-top:1px solid var(--line); margin:1.2rem 0; }
 .masthead h1 { font-weight:700; font-size:clamp(30px,5vw,42px); letter-spacing:-.015em; }
 .masthead .sub { margin-top:6px; color:var(--muted); max-width:46ch; }
 .masthead .back { font-size:.9rem; text-decoration:none; color:var(--muted); }
+.version-switch { display:inline-block; margin-top:10px; font-family:"JetBrains Mono",monospace; font-size:12px; letter-spacing:.04em; text-decoration:none; color:var(--accent); border:1px solid var(--accent); border-radius:3px; padding:6px 12px; background:var(--accent-soft); }
+.version-switch:hover { background:var(--accent); color:#fff; }
+.side .version-switch { display:block; text-align:center; margin-bottom:16px; }
+.version-banner { background:var(--accent-soft); border:1px solid var(--accent); border-left:4px solid var(--accent); border-radius:3px; padding:16px 20px; margin-bottom:4px; font-size:14.5px; }
+.version-banner p+p { margin-top:.5rem; }
+.version-banner ul { margin:.4rem 0; }
 .countdown { font-family:"JetBrains Mono",monospace; text-align:right; line-height:1.25; }
 .countdown .num { font-size:34px; font-weight:700; color:var(--accent); font-variant-numeric:tabular-nums; }
 .countdown .cap { font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:var(--muted); }
@@ -189,6 +195,7 @@ blockquote.about p { margin:0; }
   <aside class="side">
     <a class="back" href="../">← Infrastructure Engineer L2-L3</a>
     <h2>🖥 Infrastructure Engineer L2-L3</h2>
+    <a class="version-switch" href="/roadmap-infra-v2/">🔀 Версия 2 - компакт (слои 0 и 4)</a>
     <div class="prog">пройдено <span id="pct">0%</span> · <span id="steps-done">0</span>/<span id="steps-all">0</span> шагов</div>
     <div class="bar" data-total><span></span></div>
     <nav><b>В этом слое</b><a href="#analogy"><span class="i">🎭</span>Аналогия</a><a href="#map"><span class="i">🗺</span>Карта мест</a><a href="#theory"><span class="i">📖</span>Теория</a><a href="#practice"><span class="i">🔧</span>Практика</a><a href="#break"><span class="i">💥</span>Сломай намеренно</a><a href="#task"><span class="i">✅</span>Задание</a><a href="#life"><span class="i">🌍</span>Из жизни</a><a href="#questions"><span class="i">❓</span>Вопросы с ответами</a></nav>
@@ -801,19 +808,30 @@ ORDER BY total_exec_time DESC LIMIT 15;
 <p>Дополнение по прямому запросу Ивана (19.09, сверка с
 <code>Инфра_Стенд_рабочий_конспект_v5...docx</code>). Остальные read-only проверки
 (текущие подключения, долгие запросы, блокировки, размеры) уже разобраны
-выше подробнее, чем в docx - повторно не дублирую. Формат: COMMAND →
-SYNTAX → EVERY IMPORTANT CLAUSE → EXPECTED OUTPUT → WHAT TO LOOK AT →
-INTERPRETATION → NEXT INFERENCE → INCIDENT/INTERVIEW USE.</p>
+выше подробнее, чем в docx - повторно не дублирую.</p>
 </blockquote>
 <p><strong>Базовая проверка окружения:</strong></p>
 <pre><code class="language-sql">SELECT current_database(), current_user, version();
 </code></pre>
-<p>Syntax/clauses: три системные функции без <code>FROM</code> - не читают ни одной таблицы. Expected output: одна строка - имя БД, роль, версия сервера. What to look at: совпадает ли с тем, что собирались проверять. Interpretation: это защита от «диагностировал не ту БД/не под той ролью» - самая дешёвая и самая пропускаемая проверка. Next inference: если не те - переподключиться, прежде чем делать выводы дальше. Incident/interview use: первый шаг <strong>любой</strong> диагностики PostgreSQL, до вопроса про её симптом.</p>
+<ul>
+<li><strong>Syntax/clauses:</strong> три системные функции без <code>FROM</code> - не читают ни одной таблицы.</li>
+<li><strong>Expected output:</strong> одна строка - имя БД, роль, версия сервера.</li>
+<li><strong>What to look at:</strong> совпадает ли с тем, что собирались проверять.</li>
+<li><strong>Interpretation:</strong> это защита от «диагностировал не ту БД/не под той ролью» - самая дешёвая и самая пропускаемая проверка.</li>
+<li><strong>Next inference:</strong> если не те - переподключиться, прежде чем делать выводы дальше.</li>
+<li><strong>Incident/interview use:</strong> первый шаг <strong>любой</strong> диагностики PostgreSQL, до вопроса про её симптом.</li>
+</ul>
 <p><strong>Проверка ролей и прав:</strong></p>
 <pre><code class="language-sql">SELECT rolname, rolsuper, rolcreaterole, rolcreatedb, rolcanlogin
 FROM pg_roles ORDER BY rolname;
 </code></pre>
-<p>Syntax/clauses: <code>pg_roles</code> - системный каталог ролей кластера. What to look at: <code>rolcanlogin</code> (может ли роль вообще логиниться), <code>rolsuper</code>/<code>rolcreaterole</code>/<code>rolcreatedb</code> (повышенные привилегии). Interpretation: приложение работает под ролью с <code>rolsuper = true</code> - избыточные права для сервисного аккаунта, находка для security review; для конкретных прав на объект (не на роль целиком) нужна отдельная проверка <code>GRANT</code>/<code>information_schema.role_table_grants</code>. Next inference: найдена лишняя привилегия → сузить роль под принцип least privilege, тот же, что уже применён к <code>codex-ro</code> на уровне ОС (<code>Agent_Access_Lab.md</code>). Incident/interview use: ответ на «как проверить права доступа в PostgreSQL» без выдумывания - конкретный каталог, конкретные колонки.</p></div></section><section class="sec -practice" id="practice"><h2><span class="i">🔧</span>Практика</h2><ul class="steps"><li class="step" data-step="4-practice-1"><input type="checkbox" id="s-4-practice-1"><span class="box"></span><span class="txt"><strong>Включить <code>pg_stat_statements</code></strong>, погонять трекер, найти три самых тяжёлых запроса.</span></li><li class="step" data-step="4-practice-2"><input type="checkbox" id="s-4-practice-2"><span class="box"></span><span class="txt"><strong><code>EXPLAIN (ANALYZE, BUFFERS)</code> на каждом.</strong> Найти хотя бы один Seq Scan и убрать индексом. <strong>Записать время до и после</strong> - это цифра для собеседования.</span></li><li class="step" data-step="4-practice-3"><input type="checkbox" id="s-4-practice-3"><span class="box"></span><span class="txt"><strong>Проверить, что индекс реально используется</strong> после создания повторить <code>EXPLAIN</code> и увидеть смену узла.</span></li><li class="step" data-step="4-practice-4"><input type="checkbox" id="s-4-practice-4"><span class="box"></span><span class="txt"><strong>Воспроизвести три случая оптимизации</strong> из списка выше на своих таблицах: функция на колонке, глубокий OFFSET, составной индекс под фильтр плюс сортировку.</span></li><li class="step" data-step="4-practice-5"><input type="checkbox" id="s-4-practice-5"><span class="box"></span><span class="txt"><strong>Поставить джобу через pg_cron</strong> ночная чистка старых находок в таблице трекера, с записью в <code>job_runs</code> и защитой через <code>pg_try_advisory_lock</code>.</span></li><li class="step" data-step="4-practice-6"><input type="checkbox" id="s-4-practice-6"><span class="box"></span><span class="txt"><strong>Собрать в Grafana панель по базе</strong> соединения, cache hit ratio, мёртвые строки, время последней успешной джобы.</span></li><li class="step" data-step="4-practice-7"><input type="checkbox" id="s-4-practice-7"><span class="box"></span><span class="txt"><strong>Живой прогон backup/restore, добавлено 15.09 под техсобес.</strong> Теория выше (раздел «Резервные копии и репликация») без этого пункта остаётся пересказом документации, а не своим опытом</span><span class="more">подробнее</span></li><li class="step-body"><ul>
+<ul>
+<li><strong>Syntax/clauses:</strong> <code>pg_roles</code> - системный каталог ролей кластера.</li>
+<li><strong>What to look at:</strong> <code>rolcanlogin</code> (может ли роль вообще логиниться), <code>rolsuper</code>/<code>rolcreaterole</code>/<code>rolcreatedb</code> (повышенные привилегии).</li>
+<li><strong>Interpretation:</strong> приложение работает под ролью с <code>rolsuper = true</code> - избыточные права для сервисного аккаунта, находка для security review; для конкретных прав на объект нужна отдельная проверка <code>GRANT</code>/<code>information_schema.role_table_grants</code>.</li>
+<li><strong>Next inference:</strong> найдена лишняя привилегия → сузить роль под принцип least privilege, тот же, что уже применён к <code>codex-ro</code> на уровне ОС (<code>Agent_Access_Lab.md</code>).</li>
+<li><strong>Incident/interview use:</strong> ответ на «как проверить права доступа в PostgreSQL» без выдумывания - конкретный каталог, конкретные колонки.</li>
+</ul></div></section><section class="sec -practice" id="practice"><h2><span class="i">🔧</span>Практика</h2><ul class="steps"><li class="step" data-step="4-practice-1"><input type="checkbox" id="s-4-practice-1"><span class="box"></span><span class="txt"><strong>Включить <code>pg_stat_statements</code></strong>, погонять трекер, найти три самых тяжёлых запроса.</span></li><li class="step" data-step="4-practice-2"><input type="checkbox" id="s-4-practice-2"><span class="box"></span><span class="txt"><strong><code>EXPLAIN (ANALYZE, BUFFERS)</code> на каждом.</strong> Найти хотя бы один Seq Scan и убрать индексом. <strong>Записать время до и после</strong> - это цифра для собеседования.</span></li><li class="step" data-step="4-practice-3"><input type="checkbox" id="s-4-practice-3"><span class="box"></span><span class="txt"><strong>Проверить, что индекс реально используется</strong> после создания повторить <code>EXPLAIN</code> и увидеть смену узла.</span></li><li class="step" data-step="4-practice-4"><input type="checkbox" id="s-4-practice-4"><span class="box"></span><span class="txt"><strong>Воспроизвести три случая оптимизации</strong> из списка выше на своих таблицах: функция на колонке, глубокий OFFSET, составной индекс под фильтр плюс сортировку.</span></li><li class="step" data-step="4-practice-5"><input type="checkbox" id="s-4-practice-5"><span class="box"></span><span class="txt"><strong>Поставить джобу через pg_cron</strong> ночная чистка старых находок в таблице трекера, с записью в <code>job_runs</code> и защитой через <code>pg_try_advisory_lock</code>.</span></li><li class="step" data-step="4-practice-6"><input type="checkbox" id="s-4-practice-6"><span class="box"></span><span class="txt"><strong>Собрать в Grafana панель по базе</strong> соединения, cache hit ratio, мёртвые строки, время последней успешной джобы.</span></li><li class="step" data-step="4-practice-7"><input type="checkbox" id="s-4-practice-7"><span class="box"></span><span class="txt"><strong>Живой прогон backup/restore, добавлено 15.09 под техсобес.</strong> Теория выше (раздел «Резервные копии и репликация») без этого пункта остаётся пересказом документации, а не своим опытом</span><span class="more">подробнее</span></li><li class="step-body"><ul>
 <li><code>pg_dump -Fc -d vacancy_tracker &gt; vacancy_tracker.dump</code> на сервере.</li>
 <li>Поднять рядом пустую базу <code>vacancy_tracker_restore_test</code>, <code>pg_restore -d vacancy_tracker_restore_test vacancy_tracker.dump</code>.</li>
 <li>Сверить <code>SELECT count(*) FROM vacancies;</code> и <code>companies</code> в обеих базах - числа обязаны сойтись.</li>

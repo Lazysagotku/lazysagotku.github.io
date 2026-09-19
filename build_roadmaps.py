@@ -65,12 +65,22 @@ class Track:
     closed: str = ""     # закрыт / закрыта
     acc: str = ""        # слой / фазу  (открыть что?)
     loc: str = ""        # этом слое / этой фазе
+    version_of: str = ""       # ключ трека-пары для кнопки переключения версий
+    version_label: str = ""   # текст кнопки переключения версий
+    intro_prominent: bool = False   # показать intro не только внизу свёрнутым, но и наверху страницы
 
 
 TRACKS = {
     "infra": Track("infra", "Infrastructure Engineer L2-L3",
                    "Практический маршрут: симптом → диагностика → root cause → восстановление. Linux, сеть, сервисы, PostgreSQL и эксплуатация.",
-                   "roadmap-infra", "Roadmap_Infra_Sept2026.md", "Infra_Layer*.md", "Слой", "Слои", "слоёв", "🖥", "закрыт", "слой", "этом слое"),
+                   "roadmap-infra", "Roadmap_Infra_Sept2026.md", "Infra_Layer*.md", "Слой", "Слои", "слоёв", "🖥", "закрыт", "слой", "этом слое",
+                   version_of="infra-v2", version_label="🔀 Версия 2 - компакт (слои 0 и 4)"),
+    "infra-v2": Track("infra-v2", "Infrastructure Engineer L2-L3 - версия 2 (слои 0 и 4)",
+                   "Компактные версии слоёв 0 и 4: построчный разбор команд/SQL без историй и без глубоких кейсов. Остальные 8 слоёв не дублируются - они ждут решения по OPEN_LOOPS #15, см. версию 1.",
+                   "roadmap-infra-v2", "Roadmap_Infra_Sept2026_v2.md", "InfraV2_Layer*.md", "Слой", "Слои", "слоёв", "🖥",
+                   "закрыт", "слой", "этом слое",
+                   version_of="infra", version_label="🔀 Версия 1 - полная (истории, кейсы, все 10 слоёв)",
+                   intro_prominent=True),
     "python": Track("python", "Python Backend",
                     "Бэкенд-паттерны и идиомы поверх живого языка. Полигон - трекер и разведчик, написанные Claude.",
                     "roadmap-python", "PythonBackend_Roadmap.md", "Python_Phase*.md", "Фаза", "Фазы", "фаз", "🐍", "закрыта", "фазу", "этой фазе"),
@@ -91,6 +101,7 @@ SIBLINGS = {
     "ai": [("infra", "/roadmap-infra/"), ("python", "/roadmap-python/"), ("csharp", "/roadmap/"), ("fullstack", "/roadmap-fullstack/")],
     "csharp": [("infra", "/roadmap-infra/"), ("python", "/roadmap-python/"), ("ai", "/roadmap-ai/"), ("fullstack", "/roadmap-fullstack/")],
     "fullstack": [("infra", "/roadmap-infra/"), ("python", "/roadmap-python/"), ("ai", "/roadmap-ai/"), ("csharp", "/roadmap/")],
+    "infra-v2": [("python", "/roadmap-python/"), ("ai", "/roadmap-ai/"), ("csharp", "/roadmap/"), ("fullstack", "/roadmap-fullstack/")],
 }
 
 
@@ -410,6 +421,12 @@ hr { border:0; border-top:1px solid var(--line); margin:1.2rem 0; }
 .masthead h1 { font-weight:700; font-size:clamp(30px,5vw,42px); letter-spacing:-.015em; }
 .masthead .sub { margin-top:6px; color:var(--muted); max-width:46ch; }
 .masthead .back { font-size:.9rem; text-decoration:none; color:var(--muted); }
+.version-switch { display:inline-block; margin-top:10px; font-family:"JetBrains Mono",monospace; font-size:12px; letter-spacing:.04em; text-decoration:none; color:var(--accent); border:1px solid var(--accent); border-radius:3px; padding:6px 12px; background:var(--accent-soft); }
+.version-switch:hover { background:var(--accent); color:#fff; }
+.side .version-switch { display:block; text-align:center; margin-bottom:16px; }
+.version-banner { background:var(--accent-soft); border:1px solid var(--accent); border-left:4px solid var(--accent); border-radius:3px; padding:16px 20px; margin-bottom:4px; font-size:14.5px; }
+.version-banner p+p { margin-top:.5rem; }
+.version-banner ul { margin:.4rem 0; }
 .countdown { font-family:"JetBrains Mono",monospace; text-align:right; line-height:1.25; }
 .countdown .num { font-size:34px; font-weight:700; color:var(--accent); font-variant-numeric:tabular-nums; }
 .countdown .cap { font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:var(--muted); }
@@ -760,6 +777,9 @@ def render_index(track: Track, intro_html: str, phases: list[Phase], meta: dict)
     hours_meter = (f'<div class="meter"><span class="val" id="hours-left">{total_hours:g}</span><span class="lbl">часов осталось</span></div>'
                    if total_hours else "")
     sib = " · ".join(f'<a href="{u}">{TRACKS[k].title}</a>' for k, u in SIBLINGS[track.key])
+    version_btn = (f'<a class="version-switch" href="/{TRACKS[track.version_of].folder}/">{html.escape(track.version_label)}</a>'
+                   if track.version_of and track.version_of in TRACKS else "")
+    version_banner = f'<div class="version-banner">{intro_html}</div>' if track.intro_prominent else ""
 
     body = f"""
 <div class="wrap">
@@ -769,9 +789,12 @@ def render_index(track: Track, intro_html: str, phases: list[Phase], meta: dict)
       <p class="eyebrow">Роадмап · {html.escape(track.unit_pl.lower())} с чекбоксами</p>
       <h1>{html.escape(track.title)}</h1>
       <p class="sub">{html.escape(track.lead)}</p>
+      {version_btn}
     </div>
 {countdown_markup}
   </header>
+
+  {version_banner}
 
   <section class="summary">
     <div class="meters">
@@ -834,6 +857,7 @@ def render_phase_page(track: Track, phases: list[Phase], p: Phase, meta: dict) -
   <aside class="side">
     <a class="back" href="../">← {html.escape(track.title)}</a>
     <h2>{track.icon} {html.escape(track.title)}</h2>
+    {f'<a class="version-switch" href="/{TRACKS[track.version_of].folder}/">{html.escape(track.version_label)}</a>' if track.version_of and track.version_of in TRACKS else ""}
     <div class="prog">пройдено <span id="pct">0%</span> · <span id="steps-done">0</span>/<span id="steps-all">0</span> шагов</div>
     <div class="bar" data-total><span></span></div>
     <nav><b>В {track.loc}</b>{"".join(toc)}</nav>
