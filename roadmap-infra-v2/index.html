@@ -1,4 +1,4 @@
-<!doctype html><html lang="ru"><head><meta charset="utf-8"><script>(()=>{let s=null;try{s=localStorage.getItem("theme")}catch(e){}document.documentElement.dataset.theme=s||(matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light")})();</script><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="robots" content="noindex"><title>Infrastructure Engineer L2-L3 - версия 2 (слои 0 и 4) - роадмап</title><meta name="description" content="Компактные версии слоёв 0 и 4: построчный разбор команд/SQL без историй и без глубоких кейсов. Остальные 8 слоёв не дублируются - они ждут решения по OPEN_LOOPS #15, см. версию 1."><link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%23a8741a'/%3E%3Ctext x='32' y='43' font-family='Georgia,serif' font-weight='700' font-size='30' fill='white' text-anchor='middle'%3EИА%3C/text%3E%3C/svg%3E"><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bitter:wght@600;700&family=Source+Sans+3:wght@400;600&family=JetBrains+Mono:wght@400;700&display=swap"><style>
+<!doctype html><html lang="ru"><head><meta charset="utf-8"><script>(()=>{let s=null;try{s=localStorage.getItem("theme")}catch(e){}document.documentElement.dataset.theme=s||(matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light")})();</script><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="robots" content="noindex"><title>Infrastructure Engineer L2-L3 - версия 1 (слои 0 и 4) - роадмап</title><meta name="description" content="Компактные слои 0 и 4: построчный разбор команд/SQL без историй и без глубоких кейсов - самодостаточная база, сделанная до сверки с независимыми review. Остальные 8 слоёв не дублируются - ждут решения по OPEN_LOOPS #15."><link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%23a8741a'/%3E%3Ctext x='32' y='43' font-family='Georgia,serif' font-weight='700' font-size='30' fill='white' text-anchor='middle'%3EИА%3C/text%3E%3C/svg%3E"><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bitter:wght@600;700&family=Source+Sans+3:wght@400;600&family=JetBrains+Mono:wght@400;700&display=swap"><style>
 :root {
   --ground:#e8eaee; --surface:#fff; --sunken:#f1f3f6; --ink:#1a1d24; --muted:#626b78; --faint:#8b939f;
   --line:#d2d7de; --accent:#a8741a; --accent-soft:#f5ead6; --done:#2f6f56; --done-soft:#dfeee7; --break:#97452f;
@@ -196,50 +196,14 @@ blockquote.about p { margin:0; }
     <div>
       <a class="back" href="/">← Иван Архипов</a>
       <p class="eyebrow">Роадмап · слои с чекбоксами</p>
-      <h1>Infrastructure Engineer L2-L3 - версия 2 (слои 0 и 4)</h1>
-      <p class="sub">Компактные версии слоёв 0 и 4: построчный разбор команд/SQL без историй и без глубоких кейсов. Остальные 8 слоёв не дублируются - они ждут решения по OPEN_LOOPS #15, см. версию 1.</p>
-      <a class="version-switch" href="/roadmap-infra/">🔀 Версия 1 - полная (истории, кейсы, все 10 слоёв)</a>
+      <h1>Infrastructure Engineer L2-L3 - версия 1 (слои 0 и 4)</h1>
+      <p class="sub">Компактные слои 0 и 4: построчный разбор команд/SQL без историй и без глубоких кейсов - самодостаточная база, сделанная до сверки с независимыми review. Остальные 8 слоёв не дублируются - ждут решения по OPEN_LOOPS #15.</p>
+      <a class="version-switch" href="/roadmap-infra/">🔀 Версия 2 - полная (истории, кейсы, все 10 слоёв)</a>
     </div>
 
   </header>
 
-  <div class="version-banner"><blockquote>
-<p><strong>Это вторая версия слоёв 0 и 4.</strong> Остальные 8 слоёв (1, 2, 3, 5, 6, 7, 8, 9)
-здесь намеренно не дублируются - за ними идти в версию 1 (кнопка вверху
-страницы). Дублируются только Linux-база и PostgreSQL - по ним попросили
-компактный вариант рядом с полным.</p>
-</blockquote>
-<h2>После версии 1 - на что обратить внимание здесь</h2>
-<p><strong>Слой 0 (Linux).</strong> Здесь нет истории покупки VPS, ловушки <code>sudo echo &gt;</code>
-разобрана короче, нет квиза «Проверь себя» и нет 4 живых историй - это
-специально, за ними идти в версию 1. Здесь то же самое, что было в версии 1
-до её расширения плюс:
-- построчный разбор 9 команд по формату COMMAND→SYNTAX→FLAGS→EXPECTED
-  OUTPUT→INTERPRETATION→INCIDENT USE - идентичен версии 1;
-- разбор структуры <code>docker-compose.yml</code> как декларативного документа -
-  идентичен версии 1;
-- таблица терминов I/O/TCP/UDP/PID с произношением - идентична версии 1.</p>
-<p><strong>Слой 4 (PostgreSQL).</strong> Здесь нет 8 кейсов оптимизации, нет pg_cron с
-<code>job_runs</code>, нет полного разбора репликации/failover, нет ответа про
-Pangolin и нет 5 историй - за ними тоже в версию 1. Здесь только базовые
-diagnostic-таблицы плюс SQL audit cookbook - тот же, что и в версии 1.</p>
-<p>Практический смысл: если уже прошёл слой 0/4 в версии 1 - здесь смотреть
-только на два новых блока (построчный разбор команд/SQL и разбор YAML),
-остальное будет знакомо. Если начинаешь с версии 2 - это более быстрый
-проход без историй и без глубоких SQL-кейсов.</p>
-<h2>Алгоритм инженера</h2>
-<pre><code class="language-text">Симптом
-→ определить слой и влияние
-→ собрать факты до изменений
-→ назвать 2-3 гипотезы
-→ выбрать самый дешёвый и обратимый тест
-→ интерпретировать результат
-→ сузить гипотезу и проверить зависимости
-→ найти root cause
-→ исправить одну переменную
-→ проверить восстановление
-→ записать время, факт, причину и профилактику
-</code></pre></div>
+  
 
   <section class="summary">
     <div class="meters">
@@ -322,29 +286,27 @@ diagnostic-таблицы плюс SQL audit cookbook - тот же, что и �
 
   <details class="layer"><summary><span class="idx">▪</span><span class="headline"><h2>Про этот роадмап</h2><span class="meta">цель, алгоритм и глубина</span></span><span></span></summary>
     <div class="body"><div class="note"><blockquote>
-<p><strong>Это вторая версия слоёв 0 и 4.</strong> Остальные 8 слоёв (1, 2, 3, 5, 6, 7, 8, 9)
-здесь намеренно не дублируются - за ними идти в версию 1 (кнопка вверху
-страницы). Дублируются только Linux-база и PostgreSQL - по ним попросили
-компактный вариант рядом с полным.</p>
+<p><strong>Это первая, базовая версия слоёв 0 и 4</strong> - самодостаточная, сделанная
+Claude ещё до сверки с независимым review других агентов (ChatGPT/Codex).
+Даёт полный рабочий набор: теорию, построчный разбор команд/SQL, разбор
+структуры конфиг-файлов - без историй и без самых глубоких кейсов, которые
+появились позже во <strong>версии 2</strong> (кнопка вверху страницы). Остальные 8
+слоёв (1, 2, 3, 5, 6, 7, 8, 9) здесь не дублируются - ждут решения по
+<code>OPEN_LOOPS.md</code> №15, за ними идти в версию 2 (единственное место, где они
+вообще есть сейчас на сайте).</p>
 </blockquote>
-<h2>После версии 1 - на что обратить внимание здесь</h2>
-<p><strong>Слой 0 (Linux).</strong> Здесь нет истории покупки VPS, ловушки <code>sudo echo &gt;</code>
-разобрана короче, нет квиза «Проверь себя» и нет 4 живых историй - это
-специально, за ними идти в версию 1. Здесь то же самое, что было в версии 1
-до её расширения плюс:
-- построчный разбор 9 команд по формату COMMAND→SYNTAX→FLAGS→EXPECTED
-  OUTPUT→INTERPRETATION→INCIDENT USE - идентичен версии 1;
-- разбор структуры <code>docker-compose.yml</code> как декларативного документа -
-  идентичен версии 1;
-- таблица терминов I/O/TCP/UDP/PID с произношением - идентична версии 1.</p>
-<p><strong>Слой 4 (PostgreSQL).</strong> Здесь нет 8 кейсов оптимизации, нет pg_cron с
-<code>job_runs</code>, нет полного разбора репликации/failover, нет ответа про
-Pangolin и нет 5 историй - за ними тоже в версию 1. Здесь только базовые
-diagnostic-таблицы плюс SQL audit cookbook - тот же, что и в версии 1.</p>
-<p>Практический смысл: если уже прошёл слой 0/4 в версии 1 - здесь смотреть
-только на два новых блока (построчный разбор команд/SQL и разбор YAML),
-остальное будет знакомо. Если начинаешь с версии 2 - это более быстрый
-проход без историй и без глубоких SQL-кейсов.</p>
+<h2>Что здесь есть</h2>
+<p><strong>Слой 0 (Linux).</strong> Полный минимальный набор команд, построчный разбор 9
+команд по формату COMMAND→SYNTAX→FLAGS→EXPECTED OUTPUT→INTERPRETATION→
+INCIDENT USE, разбор структуры <code>docker-compose.yml</code> как декларативного
+документа, таблица терминов I/O/TCP/UDP/PID с произношением, incident cards,
+практика и «сломай намеренно».</p>
+<p><strong>Слой 4 (PostgreSQL).</strong> Diagnostic-деревья (connection failure, slow
+database), базовые SQL-команды, SQL audit cookbook (9 read-only запросов с
+тем же построчным разбором), incident cards.</p>
+<p>Если после этой версии останется время - версия 2 добавляет к тем же двум
+слоям реальные истории Ивана, 8 кейсов оптимизации SQL, pg_cron, разбор
+репликации/failover и квиз «Проверь себя» - кнопка переключения вверху страницы.</p>
 <h2>Алгоритм инженера</h2>
 <pre><code class="language-text">Симптом
 → определить слой и влияние
