@@ -8,6 +8,7 @@
     try { saved = localStorage.getItem("theme"); } catch (e) {}
     document.documentElement.dataset.theme = saved
       || (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+    document.documentElement.className += " js";
   })();
 </script>
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -21,21 +22,38 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bitter:wght@600;700;800&family=Golos+Text:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
+  /* Макет - редакционный каталог: волосяные линии вместо карточек, крупный
+     воздух между разделами, мелкие моноширинные подписи несут структуру,
+     акцентный цвет появляется примерно один раз на экран. */
   :root {
-    --bg: oklch(1 0 0);                    /* 60% - светлая база */
+    --bg: oklch(1 0 0);                    /* светлая база */
     --surface: oklch(0.97 0.003 255);
-    --dark: oklch(0.23 0.012 255);          /* 30% - тёмные секции */
+    --dark: oklch(0.23 0.012 255);          /* тёмные секции */
     --dark-soft: oklch(0.3 0.015 255);
     --ink: oklch(0.24 0.015 255);
     --muted: oklch(0.45 0.015 255);
-    --accent: oklch(0.58 0.12 74);         /* 10% - янтарный акцент: кнопки, цифры, годы */
+    --accent: oklch(0.58 0.12 74);         /* янтарный акцент: кнопка, цифры, годы */
     --accent-deep: oklch(0.47 0.10 72);   /* ссылки и мелкий акцентный текст на белом */
     --ok: oklch(0.55 0.12 145);
     --line: oklch(0.9 0.004 255);
+
+    /* Окна агентов. Панели тёмные в обеих темах, поэтому токены свои. */
+    --panel: oklch(0.205 0.012 255);
+    --panel-head: oklch(0.26 0.013 255);
+    --panel-field: oklch(0.165 0.01 255);
+    --panel-line: oklch(0.33 0.014 255);
+    --panel-ink: oklch(0.94 0.005 255);
+    --panel-dim: oklch(0.66 0.015 255);
+    --panel-accent: oklch(0.79 0.13 80);
+    --rec: oklch(0.72 0.15 48);            /* метка «запись» */
+    --calc: oklch(0.74 0.09 232);          /* метка «считает браузер» */
+    --panel-ok: oklch(0.76 0.14 148);
+    --panel-no: oklch(0.72 0.15 25);
+
     --display: "Bitter", Georgia, serif;
     --body: "Golos Text", "Segoe UI", system-ui, sans-serif;
     --mono: ui-monospace, "Cascadia Mono", Consolas, monospace;
-    --r: 14px;
+    --r: 3px;
     --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
   }
 
@@ -56,7 +74,11 @@
   a:hover { text-decoration-thickness: 2px; }
   :focus-visible { outline: 3px solid var(--accent-deep); outline-offset: 3px; border-radius: 4px; }
 
-  .wrap { max-width: 66rem; margin-inline: auto; padding-inline: clamp(1.25rem, 5vw, 3rem); }
+  .wrap {
+    max-width: 68rem;
+    margin-inline: auto;
+    padding-inline: clamp(1.25rem, 5vw, 3.25rem);
+  }
 
   .btn {
     display: inline-block;
@@ -70,57 +92,104 @@
   }
   .btn:hover { background: var(--accent-deep); transform: translateY(-1px); }
 
-  /* ---------- Хиро: светлый, воздушный ---------- */
-  .hero { padding-block: clamp(3.5rem, 10vh, 7rem) clamp(2.5rem, 6vh, 4rem); }
+  /* ---------- Подписи-каталог: мелкий моношрифт и волосяная линия ---------- */
+  .k {
+    font-family: var(--mono);
+    font-size: 0.74rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--muted);
+    line-height: 1.5;
+  }
+  .eyebrow {
+    display: flex;
+    align-items: center;
+    gap: 1.1rem;
+    margin-bottom: 1.1rem;
+  }
+  .eyebrow::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background: var(--line);
+  }
+  .dark-band .eyebrow::after { background: var(--dark-soft); }
+  .dark-band .k { color: oklch(0.68 0.015 255); }
+
+  /* ---------- Хиро ---------- */
+  .hero { padding-block: clamp(4rem, 12vh, 8.5rem) clamp(3rem, 7vh, 5rem); }
   .hero .cols {
     display: grid;
     grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
-    gap: 2rem 4rem;
+    gap: 2.5rem 4.5rem;
     align-items: center;
   }
-  .hero .kicker { font-weight: 500; color: var(--muted); font-size: 1rem; }
+  .hero .kicker { color: var(--muted); }
   .hero h1 {
-    font-size: clamp(2.8rem, 7.5vw, 5.2rem);
+    font-size: clamp(2.8rem, 7.5vw, 5.4rem);
     font-weight: 800;
     line-height: 1.02;
-    letter-spacing: -0.015em;
-    margin-top: 0.4rem;
+    letter-spacing: -0.025em;
+    margin-top: 0.8rem;
   }
   .hero .claim {
-    margin-top: 1.3rem;
+    margin-top: 1.5rem;
     font-size: clamp(1.15rem, 2.3vw, 1.4rem);
     line-height: 1.5;
     max-width: 30em;
   }
   .hero .claim strong { color: var(--accent-deep); font-weight: 600; }
-  .hero .sub { margin-top: 0.9rem; color: var(--muted); max-width: 34em; }
+  .hero .sub { margin-top: 1rem; color: var(--muted); max-width: 34em; }
   .hero .cta {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    gap: 1rem 1.75rem;
-    margin-top: 2.1rem;
+    gap: 1rem 1.4rem;
+    margin-top: 2.4rem;
   }
 
   /* Карточка-пайплайн: терминальный фидбек, как в реальном скрипте */
   .pipe {
     justify-self: end;
-    width: min(100%, 21rem);
-    background: var(--dark);
-    color: oklch(0.93 0.005 255);
+    width: min(100%, 22rem);
+    background: var(--panel);
+    color: var(--panel-ink);
+    border: 1px solid var(--panel-line);
     border-radius: var(--r);
-    padding: 1.4rem 1.5rem 1.2rem;
     font-family: var(--mono);
-    font-size: 0.92rem;
-    line-height: 2.05;
-    box-shadow: 0 18px 40px -18px oklch(0.23 0.012 255 / 0.45);
+    font-size: 0.9rem;
+    line-height: 2;
   }
-  .pipe .bar { display: flex; gap: 0.4rem; margin-bottom: 0.9rem; }
-  .pipe .bar i { width: 0.65rem; height: 0.65rem; border-radius: 50%; background: var(--dark-soft); }
-  .pipe .bar i:first-child { background: var(--accent); }
+  .pipe .bar {
+    display: flex;
+    gap: 0.4rem;
+    align-items: center;
+    padding: 0.7rem 1.1rem;
+    border-bottom: 1px solid var(--panel-line);
+    background: var(--panel-head);
+  }
+  .pipe .bar i { width: 0.6rem; height: 0.6rem; border-radius: 50%; background: var(--panel-line); }
+  .pipe .bar i:first-child { background: var(--panel-accent); }
+  .pipe .bar span {
+    margin-left: auto;
+    font-size: 0.68rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--panel-dim);
+  }
+  .pipe .inner { padding: 1rem 1.1rem 1.15rem; }
   .pipe .row { display: flex; justify-content: space-between; gap: 1rem; white-space: nowrap; }
-  .pipe .ok { color: oklch(0.78 0.14 145); }
-  .pipe .note { margin-top: 0.8rem; color: oklch(0.68 0.02 255); font-family: var(--body); font-size: 0.88rem; line-height: 1.5; white-space: normal; }
+  .pipe .ok { color: var(--panel-ok); }
+  .pipe .note {
+    margin-top: 0.9rem;
+    padding-top: 0.9rem;
+    border-top: 1px solid var(--panel-line);
+    color: var(--panel-dim);
+    font-family: var(--body);
+    font-size: 0.88rem;
+    line-height: 1.5;
+    white-space: normal;
+  }
 
   .rise { animation: rise 0.9s var(--ease-out) both; }
   .rise:nth-child(2) { animation-delay: 0.08s; }
@@ -132,219 +201,458 @@
     from { opacity: 0; transform: translateY(1rem); }
     to   { opacity: 1; transform: none; }
   }
+
+  /* Появление секций при прокрутке. Без JS всё видно сразу - класс js
+     ставится инлайновым скриптом в <head>. */
+  html.js .reveal { opacity: 0; transform: translateY(0.85rem); }
+  html.js .reveal.in {
+    opacity: 1;
+    transform: none;
+    transition: opacity 0.5s var(--ease-out), transform 0.5s var(--ease-out);
+  }
+  html.js .reveal.in:nth-child(2) { transition-delay: 0.05s; }
+  html.js .reveal.in:nth-child(3) { transition-delay: 0.1s; }
+  html.js .reveal.in:nth-child(4) { transition-delay: 0.15s; }
+  html.js .reveal.in:nth-child(5) { transition-delay: 0.2s; }
+  html.js .reveal.in:nth-child(6) { transition-delay: 0.25s; }
+
   @media (prefers-reduced-motion: reduce) {
     .rise, .hero .pipe { animation: none; }
     .btn { transition: none; }
     html { scroll-behavior: auto; }
+    html.js .reveal { opacity: 1; transform: none; }
+    html.js .reveal.in { transition: none; transition-delay: 0s; }
   }
 
   /* ---------- Полоса цифр ---------- */
   .proof { border-block: 1px solid var(--line); background: var(--surface); }
   .proof .wrap {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 1.5rem 2.5rem;
-    padding-block: 1.9rem;
+    grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
+    gap: 2rem 3rem;
+    padding-block: 2.4rem;
   }
   .proof p { font-size: 0.98rem; color: var(--muted); line-height: 1.5; }
   .proof b {
     display: block;
     font-family: var(--display);
     font-weight: 800;
-    font-size: 1.9rem;
+    font-size: 2.1rem;
     color: var(--accent-deep);
-    line-height: 1.2;
+    line-height: 1.15;
+    margin-block: 0.35rem 0.3rem;
+    font-variant-numeric: tabular-nums;
   }
 
   /* ---------- Секции ---------- */
-  section { padding-block: clamp(3rem, 8vh, 5.5rem); }
+  section { padding-block: clamp(4rem, 11vh, 7.5rem); }
   .section-title {
-    font-size: clamp(1.7rem, 3.5vw, 2.4rem);
+    font-size: clamp(1.8rem, 3.6vw, 2.6rem);
     font-weight: 700;
-    letter-spacing: -0.01em;
-    margin-bottom: clamp(1.75rem, 4vh, 2.75rem);
+    letter-spacing: -0.018em;
+    margin-bottom: clamp(2rem, 5vh, 3.25rem);
   }
   .section-title em { font-style: normal; color: var(--accent-deep); }
+  .lede {
+    margin-top: -1.75rem;
+    margin-bottom: clamp(2rem, 4.5vh, 3rem);
+    max-width: 44em;
+    color: var(--muted);
+  }
 
   /* Направления */
   .tracks {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 1.75rem 3rem;
+    grid-template-columns: repeat(auto-fit, minmax(17rem, 1fr));
+    gap: 2.25rem 3.5rem;
   }
+  .tracks > div { border-top: 1px solid var(--line); padding-top: 1.1rem; }
   .tracks h3 { font-size: 1.15rem; font-weight: 700; }
-  .tracks p { color: var(--muted); margin-top: 0.45rem; font-size: 1rem; }
-  .tracks-note { margin-top: 1.75rem; font-size: 0.95rem; color: var(--muted); }
+  .tracks p { color: var(--muted); margin-top: 0.5rem; font-size: 1rem; }
+  .tracks-note { margin-top: 2.25rem; font-size: 0.95rem; color: var(--muted); }
 
   /* Кейсы */
   .case {
     display: grid;
-    grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
-    gap: 1rem 3rem;
-    padding: 1.75rem;
-    border-radius: var(--r);
+    grid-template-columns: 11rem minmax(0, 1fr);
+    gap: 0.6rem 3.5rem;
+    border-top: 1px solid var(--line);
+    padding-block: 2rem;
   }
-  .case:nth-child(even) { background: var(--surface); }
+  .case:last-child { border-bottom: 1px solid var(--line); }
+  .case-meta { display: flex; flex-direction: column; gap: 0.2rem; }
   .case h3 { font-size: clamp(1.2rem, 2.3vw, 1.5rem); font-weight: 700; line-height: 1.25; }
-  .case .where { display: block; font-family: var(--body); font-weight: 500; font-size: 0.9rem; color: var(--muted); margin-top: 0.5rem; }
-  .case p strong { color: var(--accent-deep); }
+  .case p { margin-top: 0.7rem; color: var(--muted); }
+  .case p strong { color: var(--ink); font-weight: 500; }
 
   /* Путь: тёмная секция */
-  /* Ритм фонов: без чередования пять секций подряд сливаются в одно полотно */
+  /* Ритм фонов: без чередования секции сливаются в одно полотно */
   .tinted { background: var(--surface); border-block: 1px solid var(--line); }
   .dark-band { background: var(--dark); color: oklch(0.95 0.005 255); }
   .dark-band .section-title { color: #fff; }
   .path { list-style: none; margin: 0; padding: 0; }
   .path li {
     display: grid;
-    grid-template-columns: 9.5rem minmax(0, 1fr);
+    grid-template-columns: 3rem 9.5rem minmax(0, 1fr);
     gap: 0.25rem 2rem;
-    padding-block: 1.4rem;
+    padding-block: 1.6rem;
   }
   .path li + li { border-top: 1px solid var(--dark-soft); }
+  .path .n {
+    font-family: var(--mono);
+    font-size: 0.78rem;
+    color: oklch(0.6 0.015 255);
+    font-variant-numeric: tabular-nums;
+    padding-top: 0.35rem;
+  }
   .path .years {
     font-family: var(--display);
     font-weight: 700;
     font-size: 1.15rem;
     color: oklch(0.76 0.12 80);
     line-height: 1.5;
+    font-variant-numeric: tabular-nums;
   }
   .path h3 { font-size: 1.15rem; font-weight: 700; color: #fff; }
-  .path p { color: oklch(0.72 0.015 255); margin-top: 0.3rem; font-size: 1rem; }
+  .path p { color: oklch(0.72 0.015 255); margin-top: 0.35rem; font-size: 1rem; }
 
   /* Инструменты */
-  .tools { display: grid; gap: 1.1rem; }
+  .tools { display: grid; }
   .tools .row {
     display: grid;
-    grid-template-columns: 9.5rem minmax(0, 1fr);
-    gap: 0.35rem 2rem;
+    grid-template-columns: 11rem minmax(0, 1fr);
+    gap: 0.35rem 3rem;
     align-items: baseline;
+    border-top: 1px solid var(--line);
+    padding-block: 0.95rem;
   }
-  .tools .label { font-weight: 600; font-size: 0.95rem; }
+  .tools .row:last-child { border-bottom: 1px solid var(--line); }
   .tools .items { color: var(--muted); font-size: 1rem; line-height: 1.8; }
   .tools .items b { color: var(--ink); font-weight: 500; }
 
   /* Сейчас */
-  .now-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem; }
-  .now-grid article {
-    border: 1px solid var(--line);
-    border-radius: var(--r);
-    padding: 1.5rem 1.6rem;
-  }
+  .now-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(17rem, 1fr)); gap: 2.25rem 3.5rem; }
+  .now-grid article { border-top: 1px solid var(--line); padding-top: 1.1rem; }
   .now-grid h3 { font-size: 1.2rem; font-weight: 700; }
   .now-grid h3 a { color: inherit; }
-  .now-grid .tagline { font-size: 0.9rem; font-weight: 500; color: var(--accent-deep); margin-top: 0.2rem; }
-  .now-grid p { color: var(--muted); margin-top: 0.6rem; font-size: 1rem; }
-  .now-note { margin-top: 2rem; color: var(--muted); font-size: 1.02rem; max-width: 52em; }
+  .now-grid .tagline { font-size: 0.88rem; color: var(--accent-deep); margin-top: 0.35rem; font-family: var(--mono); line-height: 1.5; }
+  .now-grid p { color: var(--muted); margin-top: 0.7rem; font-size: 1rem; }
+  .now-note { margin-top: 2.5rem; color: var(--muted); font-size: 1.02rem; max-width: 52em; }
 
   /* Частички меня */
-  .mottos { display: grid; gap: 1.1rem; margin-bottom: 2.5rem; }
+  .mottos { display: grid; gap: 1.2rem; margin-bottom: 3rem; }
   .mottos blockquote {
     margin: 0;
     font-family: var(--display);
     font-style: italic;
-    font-size: clamp(1.15rem, 2.4vw, 1.45rem);
+    font-size: clamp(1.15rem, 2.4vw, 1.5rem);
     line-height: 1.4;
     max-width: 34em;
   }
   .mottos blockquote::before { content: "« "; color: var(--accent); font-weight: 700; }
   .mottos blockquote::after { content: " »"; color: var(--accent); font-weight: 700; }
-  .streams { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 2rem 3rem; }
-  .stream .tag { font-size: 0.85rem; font-weight: 600; color: var(--accent-deep); }
-  .typed { margin-top: 0.5rem; min-height: 4.2em; font-size: 1.05rem; }
+  .streams { display: grid; grid-template-columns: repeat(auto-fit, minmax(17rem, 1fr)); gap: 2rem 3.5rem; }
+  .stream { border-top: 1px solid var(--line); padding-top: 1.1rem; }
+  .typed { margin-top: 0.6rem; min-height: 4.2em; font-size: 1.05rem; }
   .typed::after { content: "▌"; color: var(--accent); animation: blink 1s steps(1) infinite; }
   @keyframes blink { 50% { opacity: 0; } }
   .advice {
     margin-top: 2.5rem;
-    background: var(--dark);
-    color: oklch(0.93 0.005 255);
+    background: var(--panel);
+    color: var(--panel-ink);
+    border: 1px solid var(--panel-line);
     border-radius: var(--r);
     padding: 1.3rem 1.5rem 1.4rem;
   }
-  .advice-tag { font-family: var(--mono); font-size: 0.85rem; color: oklch(0.76 0.12 80); }
+  .advice-tag { font-family: var(--mono); font-size: 0.85rem; color: var(--panel-accent); }
   .advice .typed { min-height: 3em; }
   @media (prefers-reduced-motion: reduce) { .typed::after { animation: none; } }
 
+  /* ---------- Агенты ---------- */
+  .wins {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(19rem, 1fr));
+    gap: 1.5rem;
+  }
+  .wins + .wins { margin-top: 1.5rem; }
+  .win {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    background: var(--panel);
+    color: var(--panel-ink);
+    border: 1px solid var(--panel-line);
+    border-radius: var(--r);
+  }
+  .win-wide { grid-column: 1 / -1; }
+  .win-head {
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+    padding: 0.65rem 0.95rem;
+    border-bottom: 1px solid var(--panel-line);
+    background: var(--panel-head);
+    font-family: var(--mono);
+    border-radius: var(--r) var(--r) 0 0;
+  }
+  .win-name { font-size: 0.82rem; font-weight: 600; letter-spacing: 0.03em; }
+  .win-sub { font-size: 0.72rem; color: var(--panel-dim); }
+  .win-badge {
+    margin-left: auto;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    font-size: 0.64rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--panel-dim);
+    white-space: nowrap;
+  }
+  .win-badge i { width: 0.5rem; height: 0.5rem; border-radius: 50%; background: var(--rec); flex: none; }
+  .win-badge.calc i { background: var(--calc); border-radius: 1px; }
+  .win-body {
+    padding: 1rem 0.95rem 1.1rem;
+    font-family: var(--mono);
+    font-size: 0.8rem;
+    line-height: 1.65;
+    display: flex;
+    flex-direction: column;
+    gap: 0.8rem;
+    flex: 1;
+    min-width: 0;
+  }
+  .talk { min-height: 20rem; }
+  .msg { display: grid; grid-template-columns: 1.9rem minmax(0, 1fr); gap: 0.65rem; }
+  html.js .msg { opacity: 0; transform: translateY(0.4rem); }
+  html.js .msg.on {
+    opacity: 1;
+    transform: none;
+    transition: opacity 0.3s var(--ease-out), transform 0.3s var(--ease-out);
+  }
+  .msg .n { color: var(--panel-dim); font-variant-numeric: tabular-nums; }
+  .msg .t { min-width: 0; overflow-wrap: anywhere; }
+  .msg em { font-style: normal; color: var(--panel-accent); }
+  .msg.verdict .t { border-left: 2px solid var(--panel-accent); padding-left: 0.6rem; }
+  .msg.stop .t { border-left: 2px solid var(--panel-no); padding-left: 0.6rem; }
+
+  .log-lines { display: grid; gap: 0.3rem; min-height: 7.5rem; }
+  .log-lines div { display: grid; grid-template-columns: 4.5rem minmax(0, 1fr); gap: 0.65rem; color: var(--panel-dim); }
+  html.js .log-lines div { opacity: 0; }
+  html.js .log-lines div.on { opacity: 1; transition: opacity 0.3s var(--ease-out); }
+  .log-lines b { color: var(--panel-ink); font-weight: 500; }
+  .log-lines .ts { font-variant-numeric: tabular-nums; }
+
+  .win-foot {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.6rem 0.9rem;
+    padding: 0.7rem 0.95rem;
+    border-top: 1px solid var(--panel-line);
+  }
+  .mini {
+    font-family: var(--mono);
+    font-size: 0.72rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--panel-ink);
+    background: transparent;
+    border: 1px solid var(--panel-line);
+    border-radius: 2px;
+    padding: 0.42rem 0.85rem;
+    cursor: pointer;
+    transition: border-color 0.2s var(--ease-out), color 0.2s var(--ease-out);
+  }
+  .mini:hover { border-color: var(--panel-accent); color: var(--panel-accent); }
+  .mini.primary { border-color: var(--panel-accent); color: var(--panel-accent); }
+  .mini:focus-visible { outline: 2px solid var(--panel-accent); outline-offset: 2px; }
+  .win-foot .hint { font-family: var(--mono); font-size: 0.72rem; color: var(--panel-dim); }
+
+  .field { display: grid; gap: 0.4rem; }
+  .field > span { font-size: 0.7rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--panel-dim); }
+  .win select, .win textarea {
+    width: 100%;
+    font-family: var(--mono);
+    font-size: 0.78rem;
+    line-height: 1.6;
+    color: var(--panel-ink);
+    background: var(--panel-field);
+    border: 1px solid var(--panel-line);
+    border-radius: 2px;
+    padding: 0.55rem 0.65rem;
+    resize: vertical;
+  }
+  .win textarea { min-height: 8.5rem; }
+  .win select:focus-visible, .win textarea:focus-visible { outline: 2px solid var(--panel-accent); outline-offset: 1px; }
+
+  .score-head { display: flex; align-items: baseline; gap: 0.9rem; flex-wrap: wrap; }
+  .score-big {
+    font-family: var(--display);
+    font-size: 2.6rem;
+    font-weight: 800;
+    line-height: 1;
+    color: var(--panel-accent);
+    font-variant-numeric: tabular-nums;
+  }
+  .pill {
+    font-size: 0.68rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    border: 1px solid currentColor;
+    border-radius: 999px;
+    padding: 0.2rem 0.7rem;
+  }
+  .pill.strong { color: var(--panel-ok); }
+  .pill.maybe { color: var(--panel-accent); }
+  .pill.weak { color: var(--panel-dim); }
+  .pill.skip { color: var(--panel-no); }
+  .res-group { display: grid; gap: 0.3rem; }
+  .res-group > .k { color: var(--panel-dim); font-size: 0.68rem; }
+  .res-group ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.25rem; }
+  .res-group li { display: grid; grid-template-columns: 0.9rem minmax(0, 1fr); gap: 0.5rem; }
+  .res-group li s { text-decoration: none; }
+  .res-group .plus s { color: var(--panel-ok); }
+  .res-group .minus s { color: var(--panel-accent); }
+  .res-group .no s { color: var(--panel-no); }
+  /* Класс намеренно не называется proof: это имя уже занято полосой цифр
+     наверху страницы, и её фон с рамкой протекли бы сюда. */
+  .res-group .why { color: var(--panel-dim); }
+  #let-text { min-height: 13rem; }
+
+  .checks { display: grid; gap: 0.35rem; }
+  .checks div { display: grid; grid-template-columns: 1rem minmax(0, 1fr) auto; gap: 0.5rem; align-items: baseline; }
+  .checks s { text-decoration: none; }
+  .checks .pass s { color: var(--panel-ok); }
+  .checks .fail s { color: var(--panel-no); }
+  .checks .fail { color: var(--panel-no); }
+  .checks .got { color: var(--panel-dim); font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+  .gate {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    border-top: 1px solid var(--panel-line);
+    padding-top: 0.8rem;
+    font-size: 0.78rem;
+  }
+  .gate.pass { color: var(--panel-ok); }
+  .gate.fail { color: var(--panel-no); }
+
+  .honest {
+    border-left: 2px solid var(--accent);
+    padding-left: 1.1rem;
+    margin-bottom: clamp(2rem, 4.5vh, 2.75rem);
+    max-width: 46em;
+  }
+  .honest p + p { margin-top: 0.6rem; }
+  .honest .k { display: block; margin-bottom: 0.4rem; color: var(--accent-deep); }
+
   /* ---------- Футер ---------- */
-  footer { background: var(--dark); color: oklch(0.95 0.005 255); padding-block: clamp(2.75rem, 7vh, 4.5rem); }
+  footer { background: var(--dark); color: oklch(0.95 0.005 255); padding-block: clamp(3rem, 8vh, 5rem); }
   footer h2 { font-family: var(--display); font-size: clamp(1.7rem, 3.2vw, 2.3rem); font-weight: 700; margin: 0; }
   footer .lead { margin-top: 0.7rem; color: oklch(0.72 0.015 255); max-width: 38em; }
-  .contacts { display: flex; flex-wrap: wrap; gap: 0.8rem 2.25rem; margin: 1.75rem 0 0; padding: 0; list-style: none; align-items: center; }
+  .contacts { display: flex; flex-wrap: wrap; gap: 0.8rem 2.25rem; margin: 2rem 0 0; padding: 0; list-style: none; align-items: center; }
   .contacts a { color: #fff; font-weight: 600; text-decoration-color: oklch(1 0 0 / 0.4); }
   .contacts .k { color: oklch(0.62 0.015 255); margin-right: 0.4rem; }
-  footer .fine { margin-top: 2.25rem; font-size: 0.88rem; color: oklch(0.6 0.015 255); user-select: none; }
+  footer .fine { margin-top: 2.5rem; font-size: 0.88rem; color: oklch(0.6 0.015 255); user-select: none; }
   .maps { display: flex; flex-wrap: wrap; gap: 0.5rem 1.5rem; margin-top: 1rem; font-size: 0.92rem; }
   .maps[hidden] { display: none; }
   .maps a { color: oklch(0.76 0.12 80); font-weight: 600; }
 
   /* ---------- Адаптив ---------- */
+  @media (max-width: 860px) {
+    .case { grid-template-columns: 1fr; gap: 0.75rem; }
+    .case-meta { flex-direction: row; gap: 1.1rem; }
+    .path li { grid-template-columns: 2.5rem minmax(0, 1fr); }
+    .path .years { grid-column: 2; font-size: 1rem; }
+    .path li > div { grid-column: 2; }
+    .tools .row { grid-template-columns: 1fr; }
+  }
   @media (max-width: 780px) {
     .hero .cols { grid-template-columns: 1fr; }
     .pipe { justify-self: start; }
-    .case, .path li, .tools .row { grid-template-columns: 1fr; }
-    .case { padding: 1.4rem 1.1rem; }
-    .path .years { font-size: 1rem; }
   }
 </style>
 <link rel="stylesheet" href="/theme.css?v=2">
+<style>
+  /* Тёмные значения для токенов, которых нет в общем theme.css.
+     Панели агентов тёмные в обеих темах, меняется только их глубина. */
+  :root[data-theme="dark"] {
+    --panel: oklch(0.225 0.011 255);
+    --panel-head: oklch(0.275 0.013 255);
+    --panel-field: oklch(0.19 0.01 255);
+    --panel-line: oklch(0.35 0.014 255);
+    --panel-ink: oklch(0.94 0.006 255);
+    --panel-dim: oklch(0.69 0.015 255);
+    --panel-accent: oklch(0.81 0.12 82);
+    --rec: oklch(0.75 0.14 50);
+    --calc: oklch(0.77 0.09 232);
+    --panel-ok: oklch(0.78 0.13 148);
+    --panel-no: oklch(0.75 0.14 25);
+  }
+</style>
 </head>
 <body>
 
 <header class="hero">
   <div class="wrap cols">
     <div>
-      <p class="kicker rise">Москва · корпоративные системы · финансовый и государственный сектор</p>
+      <p class="kicker k rise">Москва · корпоративные системы · финансовый и государственный сектор</p>
       <h1 class="rise">Иван Архипов</h1>
       <p class="claim rise">Разбираю проблему <strong>от заявки пользователя до кода в проде</strong> - сам ставлю диагноз, сам пишу решение, сам довожу до результата.</p>
       <p class="sub rise">Разработчик с 7+ годами внутри корпоративных систем: бэкенд на C#, автоматизация на Python, ИИ-инструменты в ежедневной разработке, SQL как родной язык.</p>
       <div class="cta rise">
         <a class="btn" href="https://t.me/rmvrn">Написать в Telegram</a>
+        <a href="#agents">Посмотреть агентов</a>
         <a href="https://github.com/Lazysagotku">GitHub</a>
         <a href="mailto:arkhipov.i.k@mail.ru">Почта</a>
       </div>
     </div>
     <div class="pipe" role="img" aria-label="Пайплайн работы: заявка принята, диагноз поставлен, код написан, релиз в проде - каждый шаг с зелёной галочкой">
-      <div class="bar"><i></i><i></i><i></i></div>
-      <div class="row"><span>заявка принята</span><span class="ok">✓</span></div>
-      <div class="row"><span>диагноз поставлен</span><span class="ok">✓</span></div>
-      <div class="row"><span>код написан</span><span class="ok">✓</span></div>
-      <div class="row"><span>релиз в проде</span><span class="ok">✓</span></div>
-      <p class="note">Мои скрипты отчитываются о каждом шаге - и я так же: статус виден всегда.</p>
+      <div class="bar"><i></i><i></i><i></i><span>pipeline</span></div>
+      <div class="inner">
+        <div class="row"><span>заявка принята</span><span class="ok">✓</span></div>
+        <div class="row"><span>диагноз поставлен</span><span class="ok">✓</span></div>
+        <div class="row"><span>код написан</span><span class="ok">✓</span></div>
+        <div class="row"><span>релиз в проде</span><span class="ok">✓</span></div>
+        <p class="note">Мои скрипты отчитываются о каждом шаге - и я так же: статус виден всегда.</p>
+      </div>
     </div>
   </div>
 </header>
 
 <div class="proof">
   <div class="wrap">
-    <p><b>7+ лет</b> в корпоративных системах финансов и госсектора</p>
-    <p><b>~20</b> бизнес-процессов сопровождал в основной системе</p>
-    <p><b>1+ год</b> мой скрипт в проде, им пользуется вся группа поддержки</p>
-    <p><b>2 репо</b> открытых: учебный курс и боевой проект на ASP.NET Core</p>
+    <p><span class="k">опыт</span><b>7+ лет</b>в корпоративных системах финансов и госсектора</p>
+    <p><span class="k">охват</span><b>~20</b>бизнес-процессов сопровождал в основной системе</p>
+    <p><span class="k">в проде</span><b>1+ год</b>мой скрипт работает, им пользуется вся группа поддержки</p>
+    <p><span class="k">открыто</span><b>2 репо</b>учебный курс и боевой проект на ASP.NET Core</p>
   </div>
 </div>
 
 <main>
   <section aria-labelledby="tracks-title">
     <div class="wrap">
+      <p class="eyebrow k">Направления</p>
       <h2 class="section-title" id="tracks-title">Куда <em>развиваюсь</em></h2>
       <div class="tracks">
-        <div>
+        <div class="reveal">
           <h3>Сопровождение сложных систем</h3>
           <p>Прошёл все линии: распределение заявок, консультации пользователей, расследование инцидентов, дебаг кода на 3-й линии. Разбираю проблему до причины и закрываю её, а не передаю дальше.</p>
         </div>
-        <div>
+        <div class="reveal">
           <h3>Оркестрация и мониторинг</h3>
           <p>Беру голый сервер и разворачиваю на нём всё: Docker, nginx, CI/CD, метрики и алерты, Kubernetes. Мониторинг вёл в Zabbix и провёл переход на Grafana, релизы накатывал через Jenkins.</p>
         </div>
-        <div>
+        <div class="reveal">
           <h3>Python-бэкенд</h3>
           <p>FastAPI, SQLAlchemy 2.0, PostgreSQL - на этом собраны мои рабочие инструменты. Плюс годы автоматизации: интеграции между системами, отчётность, pandas и selenium, скрипты, живущие в проде.</p>
         </div>
-        <div>
+        <div class="reveal">
           <h3>ИИ-инженерия</h3>
           <p>Claude Code в ежедневной разработке, собственные MCP-серверы под конкретные задачи, LLM-автоматизации в n8n. Инструмент, который ищет вакансии и оценивает их по профилю, написан этим же способом.</p>
         </div>
-        <div>
+        <div class="reveal">
           <h3>C#/.NET бэкенд</h3>
           <p>Полтора года коммерческого бэкенда: учётные балансы, платежи, проводки. Довожу стек до ASP.NET Core и EF Core в открытом проекте с чистой архитектурой.</p>
         </div>
@@ -355,6 +663,7 @@
 
   <section class="tinted" aria-labelledby="soul-title">
     <div class="wrap">
+      <p class="eyebrow k">Между делом</p>
       <h2 class="section-title" id="soul-title">Частички <em>меня</em></h2>
 
       <div class="mottos">
@@ -364,11 +673,11 @@
 
       <div class="streams">
         <div class="stream">
-          <span class="tag">Мотивация · пишет саму себя</span>
+          <span class="k">Мотивация · пишет саму себя</span>
           <p class="typed" id="typed-mot">&nbsp;</p>
         </div>
         <div class="stream">
-          <span class="tag">Из курилки поддержки</span>
+          <span class="k">Из курилки поддержки</span>
           <p class="typed" id="typed-joke">&nbsp;</p>
         </div>
       </div>
@@ -382,43 +691,156 @@
 
   <section aria-labelledby="proof-title">
     <div class="wrap">
+      <p class="eyebrow k">Кейсы</p>
       <h2 class="section-title" id="proof-title">Работает <em>без меня</em></h2>
 
-      <article class="case">
-        <h3>Тикет-система, после которой первая линия поддержки стала лишней
-          <span class="where">Мосгоргеотрест</span>
-        </h3>
-        <p>Спроектировал и внедрил внутреннюю тикет-систему и настолько её отладил, что <strong>отдельная 1-я линия оказалась ненужной</strong>: маршрутизация, права по группам пользователей и автозаполнение делали рутинную работу сами. Позже собрал на той же базе кадровую систему с разграничением доступа.</p>
+      <article class="case reveal">
+        <div class="case-meta">
+          <span class="k">Мосгоргеотрест</span>
+          <span class="k">2019 → 2025</span>
+        </div>
+        <div>
+          <h3>Тикет-система, после которой первая линия поддержки стала лишней</h3>
+          <p>Спроектировал и внедрил внутреннюю тикет-систему и настолько её отладил, что <strong>отдельная 1-я линия оказалась ненужной</strong>: маршрутизация, права по группам пользователей и автозаполнение делали рутинную работу сами. Позже собрал на той же базе кадровую систему с разграничением доступа.</p>
+        </div>
       </article>
 
-      <article class="case">
-        <h3>Импорт заявок в Jira: больше года в проде
-          <span class="where">ТРИНФИКО</span>
-        </h3>
-        <p>Цепочка из шести Python-скриптов переносит заявки из внутренней тикет-системы в Jira: выгрузка, CSV, загрузка, статус на каждом шаге. <strong>Пользуется вся группа поддержки</strong>, а руководство импортирует задачи самостоятельно, без участия разработчика.</p>
+      <article class="case reveal">
+        <div class="case-meta">
+          <span class="k">ТРИНФИКО</span>
+          <span class="k">2025 → 2026</span>
+        </div>
+        <div>
+          <h3>Импорт заявок в Jira: больше года в проде</h3>
+          <p>Цепочка из шести Python-скриптов переносит заявки из внутренней тикет-системы в Jira: выгрузка, CSV, загрузка, статус на каждом шаге. <strong>Пользуется вся группа поддержки</strong>, а руководство импортирует задачи самостоятельно, без участия разработчика.</p>
+        </div>
       </article>
 
-      <article class="case">
-        <h3>TimeReportV3: соло-доработка легаси-инструмента учёта заявок
-          <span class="where">ТРИНФИКО</span>
-        </h3>
-        <p>В одиночку развивал внутренний WinForms-инструмент, доставшийся как легаси: двойная интеграция с IS-системой и Jira через Dapper, поддержка PostgreSQL и MS SQL. Фича «фильтрация заявок по сервисам» - <strong>с README, где четыре пойманных бага разобраны до root-cause</strong>: гонка BeginInvoke, перерисовка DataGridView и другие.</p>
+      <article class="case reveal">
+        <div class="case-meta">
+          <span class="k">ТРИНФИКО</span>
+          <span class="k">2025 → 2026</span>
+        </div>
+        <div>
+          <h3>TimeReportV3: соло-доработка легаси-инструмента учёта заявок</h3>
+          <p>В одиночку развивал внутренний WinForms-инструмент, доставшийся как легаси: двойная интеграция с IS-системой и Jira через Dapper, поддержка PostgreSQL и MS SQL. Фича «фильтрация заявок по сервисам» - <strong>с README, где четыре пойманных бага разобраны до root-cause</strong>: гонка BeginInvoke, перерисовка DataGridView и другие.</p>
+        </div>
       </article>
 
-      <article class="case">
-        <h3>«Электронный секретарь» с отчётами в Telegram
-          <span class="where">Мосгоргеотрест</span>
-        </h3>
-        <p>Сервис на React и Python: многопоточные сессии, мониторинг через Selenoid, о каждом успехе и сбое <strong>сам докладывает в Telegram-бот</strong>. Плюс автоматизация отчётности для руководства: из ручной выгрузки JSON вырос гибкий конструктор отчётов.</p>
+      <article class="case reveal">
+        <div class="case-meta">
+          <span class="k">Мосгоргеотрест</span>
+          <span class="k">2019 → 2025</span>
+        </div>
+        <div>
+          <h3>«Электронный секретарь» с отчётами в Telegram</h3>
+          <p>Сервис на React и Python: многопоточные сессии, мониторинг через Selenoid, о каждом успехе и сбое <strong>сам докладывает в Telegram-бот</strong>. Плюс автоматизация отчётности для руководства: из ручной выгрузки JSON вырос гибкий конструктор отчётов.</p>
+        </div>
       </article>
+    </div>
+  </section>
+
+  <section class="tinted" id="agents" aria-labelledby="agents-title">
+    <div class="wrap">
+      <p class="eyebrow k">Разведчик вакансий · FastAPI · SQLite · Playwright</p>
+      <h2 class="section-title" id="agents-title">Что делают мои <em>агенты</em></h2>
+      <p class="lede">Свой поиск работы я веду сервисом, который собирает вакансии, разбирает требования, оценивает совпадение с профилем и готовит сопроводительные. Цикл идёт по кругу каждые три часа и состоит из шести шагов. Ниже видно, как шаги передают работу друг другу, и два окна, где правила сервиса можно запустить самому.</p>
+
+      <div class="honest" role="note">
+        <span class="k">Чем это является</span>
+        <p>Страница статическая, лежит на GitHub Pages, ключей от модели здесь нет и быть не может. Поэтому разговор агентов слева - запись одного прохода цикла, собранная из того, что шаги пишут в журнал. Она проигрывается, а не считается заново.</p>
+        <p>Два нижних окна работают по-настоящему: правила оценки и проверка письма перенесены из сервиса в JavaScript и считаются вашим браузером. Модель в них не участвует, поэтому результат повторяем и его можно проверить вручную.</p>
+      </div>
+
+      <div class="wins">
+        <article class="win">
+          <div class="win-head">
+            <span class="win-name">Разведчик</span>
+            <span class="win-sub">collector.py</span>
+            <span class="win-badge"><i></i>Запись</span>
+          </div>
+          <div class="win-body talk" id="talk-scout"></div>
+        </article>
+
+        <article class="win">
+          <div class="win-head">
+            <span class="win-name">Оценщик</span>
+            <span class="win-sub">scoring.py</span>
+            <span class="win-badge"><i></i>Запись</span>
+          </div>
+          <div class="win-body talk" id="talk-scorer"></div>
+        </article>
+
+        <article class="win win-wide">
+          <div class="win-head">
+            <span class="win-name">Журнал цикла</span>
+            <span class="win-sub">runner.py</span>
+            <span class="win-badge"><i></i>Запись</span>
+          </div>
+          <div class="win-body">
+            <div class="log-lines" id="talk-log"></div>
+          </div>
+          <div class="win-foot">
+            <button type="button" class="mini primary" id="replay-toggle">Пауза</button>
+            <button type="button" class="mini" id="replay-restart">Сначала</button>
+            <span class="hint" id="replay-hint">Запись прохода от 31.08.2026, компании обезличены</span>
+          </div>
+        </article>
+      </div>
+
+      <div class="wins">
+        <article class="win">
+          <div class="win-head">
+            <span class="win-name">Оценка вакансии</span>
+            <span class="win-sub">правила из scoring.py</span>
+            <span class="win-badge calc"><i></i>Считает браузер</span>
+          </div>
+          <div class="win-body">
+            <label class="field" for="vac-pick">
+              <span>Пример или свой текст</span>
+              <select id="vac-pick"></select>
+            </label>
+            <label class="field" for="vac-text">
+              <span>Текст вакансии</span>
+              <textarea id="vac-text" spellcheck="false"></textarea>
+            </label>
+            <div id="vac-out" aria-live="polite"></div>
+          </div>
+          <div class="win-foot">
+            <button type="button" class="mini primary" id="vac-run">Оценить</button>
+            <span class="hint">Пороги зарплат и правила по работодателям остались в сервисе</span>
+          </div>
+        </article>
+
+        <article class="win">
+          <div class="win-head">
+            <span class="win-name">Проверка письма</span>
+            <span class="win-sub">writer.py</span>
+            <span class="win-badge calc"><i></i>Считает браузер</span>
+          </div>
+          <div class="win-body">
+            <label class="field" for="let-text">
+              <span>Сопроводительное письмо</span>
+              <textarea id="let-text" spellcheck="false"></textarea>
+            </label>
+            <div id="let-out" aria-live="polite"></div>
+          </div>
+          <div class="win-foot">
+            <button type="button" class="mini" id="let-break">Сломать письмо</button>
+            <span class="hint">В сервисе этот фильтр стоит после модели: не прошло - письмом не считается</span>
+          </div>
+        </article>
+      </div>
     </div>
   </section>
 
   <section class="dark-band" aria-labelledby="path-title">
     <div class="wrap">
+      <p class="eyebrow k">2019 → сейчас</p>
       <h2 class="section-title" id="path-title">Путь</h2>
       <ol class="path">
         <li>
+          <span class="n">01</span>
           <span class="years">2019 → 2025</span>
           <div>
             <h3>Мосгоргеотрест · инженер по внедрению и сопровождению</h3>
@@ -426,6 +848,7 @@
           </div>
         </li>
         <li>
+          <span class="n">02</span>
           <span class="years">2025</span>
           <div>
             <h3>Альфа-Банк · поддержка инвестиционных процессов</h3>
@@ -433,6 +856,7 @@
           </div>
         </li>
         <li>
+          <span class="n">03</span>
           <span class="years">2025 → 2026</span>
           <div>
             <h3>ТРИНФИКО · разработчик и 3-я линия</h3>
@@ -440,6 +864,7 @@
           </div>
         </li>
         <li>
+          <span class="n">04</span>
           <span class="years">сейчас</span>
           <div>
             <h3>Инфраструктура и оркестрация</h3>
@@ -452,51 +877,53 @@
 
   <section class="tinted" aria-labelledby="tools-title">
     <div class="wrap">
+      <p class="eyebrow k">Стек</p>
       <h2 class="section-title" id="tools-title">Инструменты</h2>
       <div class="tools">
-        <div class="row"><span class="label">Языки</span><span class="items"><b>C#</b>, <b>Python</b>, <b>SQL</b>, TypeScript, Bash</span></div>
-        <div class="row"><span class="label">Backend</span><span class="items"><b>.NET Framework</b>, ASP.NET Core, LINQ, Dapper, REST, SOAP</span></div>
-        <div class="row"><span class="label">Данные</span><span class="items"><b>PostgreSQL</b>, <b>MS SQL Server</b>, MySQL, MongoDB, Liquibase</span></div>
-        <div class="row"><span class="label">Инфраструктура</span><span class="items"><b>Docker</b>, Git, Jenkins, Zabbix, Grafana, RabbitMQ, Kafka</span></div>
-        <div class="row"><span class="label">API и отладка</span><span class="items"><b>Postman</b> (вплоть до Collection Runner), Swagger, SoapUI, WinSCP, SSH</span></div>
-        <div class="row"><span class="label">Процессы</span><span class="items"><b>Jira</b> - внедрение и администрирование, Confluence, HPSM</span></div>
-        <div class="row"><span class="label">Frontend (смежный)</span><span class="items">Angular, TypeScript, React, Vue, Bootstrap, Tailwind</span></div>
-        <div class="row"><span class="label">Автоматизация</span><span class="items">pandas, selenium, <b>n8n</b>, <b>Claude Code</b> в ежедневной разработке</span></div>
-        <div class="row"><span class="label">Личные проекты</span><span class="items">Airflow, cron на Ubuntu VM, Unity (<a href="https://github.com/iosifov-pavel/EgyptPlatformer">EgyptPlatformer</a>)</span></div>
+        <div class="row"><span class="k">Языки</span><span class="items"><b>C#</b>, <b>Python</b>, <b>SQL</b>, TypeScript, Bash</span></div>
+        <div class="row"><span class="k">Backend</span><span class="items"><b>.NET Framework</b>, ASP.NET Core, LINQ, Dapper, REST, SOAP</span></div>
+        <div class="row"><span class="k">Данные</span><span class="items"><b>PostgreSQL</b>, <b>MS SQL Server</b>, MySQL, MongoDB, Liquibase</span></div>
+        <div class="row"><span class="k">Инфраструктура</span><span class="items"><b>Docker</b>, Git, Jenkins, Zabbix, Grafana, RabbitMQ, Kafka</span></div>
+        <div class="row"><span class="k">API и отладка</span><span class="items"><b>Postman</b> (вплоть до Collection Runner), Swagger, SoapUI, WinSCP, SSH</span></div>
+        <div class="row"><span class="k">Процессы</span><span class="items"><b>Jira</b> - внедрение и администрирование, Confluence, HPSM</span></div>
+        <div class="row"><span class="k">Frontend (смежный)</span><span class="items">Angular, TypeScript, React, Vue, Bootstrap, Tailwind</span></div>
+        <div class="row"><span class="k">Автоматизация</span><span class="items">pandas, selenium, <b>n8n</b>, <b>Claude Code</b> в ежедневной разработке</span></div>
+        <div class="row"><span class="k">Личные проекты</span><span class="items">Airflow, cron на Ubuntu VM, Unity (<a href="https://github.com/iosifov-pavel/EgyptPlatformer">EgyptPlatformer</a>)</span></div>
       </div>
     </div>
   </section>
 
   <section aria-labelledby="now-title">
     <div class="wrap">
+      <p class="eyebrow k">В работе прямо сейчас</p>
       <h2 class="section-title" id="now-title">Сейчас на верстаке</h2>
       <div class="now-grid">
-        <article>
+        <article class="reveal">
           <h3>Стенд с нуля</h3>
           <p class="tagline">Docker · nginx · CI/CD · Prometheus и Grafana · Kubernetes</p>
           <p>Чистый сервер, на который слоями ставится вся обвязка: контейнеры, обратный прокси с TLS, пайплайн от коммита до деплоя, метрики с алертами и оркестрация. Ровно та задача, которая приходит на работе как «вот сервер, разверни».</p>
         </article>
-        <article>
+        <article class="reveal">
           <h3>Fullstack / Agent-Coding Stand</h3>
-          <p class="tagline">Python · FastAPI · PostgreSQL · React · Architecture · High-load · Real-time · AI Agents · Agent-Coding</p>
+          <p class="tagline">Python · FastAPI · PostgreSQL · React · High-load · Real-time · AI Agents</p>
           <p>Путь от HTTP-запроса до архитектурных trade-off'ов: слои приложения, отказоустойчивость, распределённые системы и то, как я на практике работаю с AI-агентами при разработке.</p>
         </article>
-        <article>
+        <article class="reveal">
           <h3><a href="https://github.com/Lazysagotku/life-notes">Life Notes</a></h3>
           <p class="tagline">ASP.NET Core Web API · EF Core · PostgreSQL · JWT</p>
           <p>Открытый бэкенд-проект: чистая архитектура, репозитории и Unit of Work, миграции, авторизация. Строится в открытую, коммит за коммитом.</p>
         </article>
-        <article>
+        <article class="reveal">
           <h3><a href="https://github.com/Lazysagotku/l2code">l2code</a></h3>
           <p class="tagline">Открытый конспект пути к современному .NET</p>
           <p>Полный курс с теорией, задачами и банком реальных вопросов с собеседований, который я веду по мере собственного продвижения.</p>
         </article>
-        <article>
+        <article class="reveal">
           <h3><a href="/knowledge/">База знаний</a></h3>
           <p class="tagline">Статический сайт · Python · поиск по 30 материалам</p>
           <p>Конспекты, роадмапы и разборы тем к собеседованиям собираются из рабочих заметок в один сайт с оглавлением и поиском - <a href="/knowledge/">открыть</a>. Читать с гита стало неудобно, поэтому сборка идёт одной командой и всегда даёт свежую версию.</p>
         </article>
-        <article>
+        <article class="reveal">
           <h3><a href="/tracker/">Трекер откликов</a></h3>
           <p class="tagline">FastAPI · SQLAlchemy 2.0 · PostgreSQL · REST API</p>
           <p>Инструмент, которым я веду собственный поиск: события двигают вакансию по воронке, аналитика считает ответы и сроки - <a href="/tracker/">страница проекта со скриншотами</a>.</p>
@@ -508,17 +935,18 @@
 
   <section class="tinted" aria-labelledby="more-title">
     <div class="wrap">
+      <p class="eyebrow k">Архив</p>
       <h2 class="section-title" id="more-title">Ещё в копилке</h2>
       <div class="tracks">
-        <div>
+        <div class="reveal">
           <h3><a href="/inventory/">Инвентаризация</a></h3>
           <p>Готовый продукт на Django: учёт техники с 25 полями от статуса до номера госконтракта, поиск, Docker. Работал на PythonAnywhere - <a href="/inventory/">смотреть проект со скриншотами</a>.</p>
         </div>
-        <div>
+        <div class="reveal">
           <h3><a href="https://github.com/iosifov-pavel/EgyptPlatformer">EgyptPlatformer</a></h3>
           <p>2D-платформер на Unity: командная разработка, C# и ShaderLab. Игровой движок расширяет взгляд на код за пределы бэкенда.</p>
         </div>
-        <div>
+        <div class="reveal">
           <h3><a href="https://www.unisprings.ru/">Unisprings</a></h3>
           <p>Сайт производителя пружин: участвовал в <a href="https://github.com/iosifov-pavel/Pruzhinki">разработке</a>, дизайн логотипа придумал лично. Сайт живёт и работает до сих пор.</p>
         </div>
@@ -588,11 +1016,13 @@
     "Один процент на роадмапе в день - это тридцать за месяц. Держи бегуна живым.",
     "Спрашивай на собесе про рост в разработку прямо. Ответ работодателя - тоже данные."
   ];
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
   const typer = (id, items, first) => {
     const el = document.getElementById(id);
     if (!el) return;
     let i = Math.floor(Math.random() * items.length);
-    if (matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    if (reduced) {
       el.textContent = items[i];
       setInterval(() => { i = (i + 1) % items.length; el.textContent = items[i]; }, 9000);
       return;
@@ -617,6 +1047,23 @@
   typer('typed-joke', JOKES, 1400);
   typer('typed-adv', ADV, 2500);
 
+  // Появление секций при прокрутке: один раз, без повторов на обратном ходу
+  const targets = document.querySelectorAll('.reveal');
+  const showAll = () => targets.forEach(el => el.classList.add('in'));
+  if (reduced || !('IntersectionObserver' in window)) {
+    showAll();
+  } else {
+    const io = new IntersectionObserver((entries, obs) => {
+      entries.forEach(e => {
+        if (!e.isIntersecting) return;
+        e.target.classList.add('in');
+        obs.unobserve(e.target);
+      });
+    }, { rootMargin: '0px 0px -12% 0px', threshold: 0.12 });
+    targets.forEach(el => io.observe(el));
+    setTimeout(showAll, 3500);   // страховка: ничего не остаётся невидимым
+  }
+
   const maps = document.getElementById('maps');
   const fine = document.getElementById('fine');
   const show = () => { maps.hidden = false; };
@@ -628,6 +1075,482 @@
     t = now;
     if (++n >= 3) show();
   });
+})();
+</script>
+
+<script>
+/* Секция агентов.
+
+   Два верхних окна - запись одного прохода цикла «Разведчика вакансий».
+   Реплики собраны из того, что шаги сервиса пишут в журнал; проигрываются
+   по таймеру, инференса здесь нет и быть не может на статической странице.
+
+   Два нижних окна считают по-настоящему: правила оценки перенесены из
+   scout/scoring.py и scout/profile.py, проверка письма - из scout/writer.py.
+   Из публичной версии убраны зарплатные пороги и правила по работодателям. */
+(() => {
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  /* ---------------- запись прохода ---------------- */
+
+  const SCRIPT = [
+    { to: 'scout',  t: 'Прошёл по четырём поисковым ссылкам. 38 карточек, из них <em>11 новых</em>. Отдаю на разбор.' },
+    { to: 'scorer', t: 'Беру первую. «Инженер по сопровождению», крупный банк: Zabbix, Grafana, инциденты, релизы в Jira, SQL.' },
+    { to: 'scout',  t: 'В «плюсом» у них ещё GigaChat и навыки создания AI-агентов. Думал, тебе понравится.' },
+    { to: 'scorer', t: 'Понравилось. Совпало шесть: Zabbix - мониторинг серверов под бэкапы, Grafana - переход с Zabbix делал сам, Jira - внедрял и администрировал. Плюс SQL, поддержка и ИИ-инструменты.', cls: 'verdict' },
+    { to: 'scorer', t: 'Трек support, в заголовке слово «сопровождению» - ядро направления, это плюс 25. Минус 5 за «высоконагруженные». <em>87, сильный матч.</em>', cls: 'verdict' },
+    { to: 'scout',  t: 'Следующая повеселее: ML-инженер, 250 000, удалёнка. Стек вроде наш, Python везде.' },
+    { to: 'scorer', t: 'Стоп. «Обучение моделей» и fine-tuning в описании - блокер. Другая профессия, разрыв на годы. <em>Пропустить.</em>', cls: 'stop' },
+    { to: 'scout',  t: 'Ладно. Третья: support-инженер B2B, Python, Bash, SQL, Linux, сменный график.' },
+    { to: 'scorer', t: 'Навыков совпало десять, с бонусом за направление это 99. Дальше читаю мелкий шрифт: «готовы обучить в процессе» и «передача запросов на следующие уровни».' },
+    { to: 'scorer', t: 'Минус 20 за роль для новичка, минус 10 за первую линию. <em>69, стоит посмотреть.</em> С оговоркой про линию в письме.', cls: 'verdict' },
+    { to: 'scout',  t: 'По первой готовлю бриф для письма. Факты беру только из scout/facts/, выдумывать нечего.' },
+    { to: 'scorer', t: 'Письмо вернулось: 870 символов, 142 слова, начало и концовка на месте, длинных тире нет, оборотов «не X, а Y» нет. Фильтр пройден.', cls: 'verdict' }
+  ];
+
+  const LOG = [
+    { ts: '13:00:04', t: 'collector: 4 источника, 38 карточек, <b>11 новых</b>' },
+    { ts: '13:00:31', t: 'scoring: d1 <b>87</b> сильный матч · трек support · +25 ядро направления' },
+    { ts: '13:00:31', t: 'scoring: d5 <b>пропустить</b> · блокер «обучение моделей»' },
+    { ts: '13:00:32', t: 'scoring: d3 <b>69</b> стоит посмотреть · -20 роль для новичка · -10 первая линия' },
+    { ts: '13:01:47', t: 'writer: d1 письмо прошло проверку (870 символов, 142 слова)' },
+    { ts: '13:01:48', t: 'application_plan: d1 ворота открыты · балл 87 · блокеров нет' },
+    { ts: '13:01:48', t: 'apply: <b>live_apply выключен</b>, круг закончен вхолостую' }
+  ];
+
+  const panes = { scout: document.getElementById('talk-scout'), scorer: document.getElementById('talk-scorer') };
+  const logBox = document.getElementById('talk-log');
+  const btnToggle = document.getElementById('replay-toggle');
+  const btnRestart = document.getElementById('replay-restart');
+
+  if (panes.scout && panes.scorer && logBox) {
+    const msgEls = SCRIPT.map((m, i) => {
+      const el = document.createElement('div');
+      el.className = 'msg' + (m.cls ? ' ' + m.cls : '');
+      el.innerHTML = '<span class="n">' + String(i + 1).padStart(2, '0') + '</span><span class="t">' + m.t + '</span>';
+      panes[m.to].appendChild(el);
+      return el;
+    });
+    const logEls = LOG.map(l => {
+      const el = document.createElement('div');
+      el.innerHTML = '<span class="ts">' + l.ts + '</span><span>' + l.t + '</span>';
+      logBox.appendChild(el);
+      return el;
+    });
+
+    // Журнал идёт следом за репликами: какая строка открывается после какой
+    const LOG_AFTER = { 0: 0, 4: 1, 6: 2, 9: 3, 11: 4 };
+
+    let step = 0, timer = null, playing = false;
+
+    const paint = () => {
+      msgEls.forEach((el, i) => el.classList.toggle('on', i < step));
+      let shown = 0;
+      Object.keys(LOG_AFTER).forEach(k => { if (step > Number(k)) shown = Math.max(shown, LOG_AFTER[k] + 1); });
+      if (step >= msgEls.length) shown = logEls.length;
+      logEls.forEach((el, i) => el.classList.toggle('on', i < shown));
+    };
+
+    const stop = () => { playing = false; clearTimeout(timer); timer = null; btnToggle.textContent = 'Дальше'; };
+
+    const tick = () => {
+      if (step >= msgEls.length) { stop(); btnToggle.textContent = 'Повторить'; return; }
+      step += 1;
+      paint();
+      timer = setTimeout(tick, 1500 + Math.random() * 900);
+    };
+
+    const play = () => {
+      if (playing) return;
+      if (step >= msgEls.length) { step = 0; paint(); }
+      playing = true;
+      btnToggle.textContent = 'Пауза';
+      timer = setTimeout(tick, 400);
+    };
+
+    btnToggle.addEventListener('click', () => { playing ? stop() : play(); });
+    btnRestart.addEventListener('click', () => { stop(); step = 0; paint(); play(); });
+
+    if (reduced) {
+      step = msgEls.length;
+      paint();
+      btnToggle.textContent = 'Повторить';
+    } else {
+      paint();
+      const start = () => { if (!playing && step === 0) play(); };
+      if ('IntersectionObserver' in window) {
+        const io = new IntersectionObserver((es, obs) => {
+          es.forEach(e => { if (e.isIntersecting) { start(); obs.disconnect(); } });
+        }, { threshold: 0.25 });
+        io.observe(logBox.closest('.wins'));
+      } else {
+        start();
+      }
+    }
+  }
+
+  /* ---------------- правила оценки: порт scout/scoring.py ---------------- */
+
+  const STRENGTHS = [
+    ['PostgreSQL', 10, 'хранимые процедуры, оптимизация запросов, замена легаси-процедур', ['postgres', 'постгрес', 'pgsql']],
+    ['SQL', 9, 'хранимые процедуры на двух СУБД, уровень выше «написать запрос»', ['t-sql', 'pl/sql', 'запросы к БД']],
+    ['MS SQL', 8, 'хранимые процедуры, миграция легаси', ['mssql', 'sql server']],
+    ['Python', 10, 'перенос заявок в Jira - в проде больше года, вся группа поддержки', ['питон']],
+    ['C#', 10, 'бэкенд внутреннего ПО: балансы, платежи, проводки', ['.net', 'дотнет']],
+    ['Zabbix', 9, 'мониторинг серверов, отслеживание нагрузки под бэкапы', ['заббикс']],
+    ['Grafana', 9, 'участвовал в переходе с Zabbix на Grafana', ['графана']],
+    ['Jira', 8, 'внедрял и администрировал: проекты, права, доски, учёт времени', ['джира', 'jira service desk']],
+    ['Bash', 8, 'мониторинг источников: обход по расписанию, wget, email-алерты', ['баш', 'shell']],
+    ['Docker', 7, 'все проекты в контейнерах', ['докер', 'контейнер']],
+    ['Jenkins', 7, 'накатка релизов с проверкой через Postman и SQL', ['дженкинс']],
+    ['Postman', 7, 'вплоть до Collection Runner', ['swagger', 'soapui']],
+    ['REST', 8, 'интеграции между системами, разбор чужих контрактов', ['api', 'soap']],
+    ['Linux', 6, 'эксплуатация и диагностика: SSH, логи, cron', ['unix', 'линукс', 'ubuntu']],
+    ['RabbitMQ', 6, 'подключён через RPA для отслеживания сессий', ['кафка', 'kafka']],
+    ['MongoDB', 5, 'федеральный проект, выбрана под масштаб', ['монго']],
+    ['Git', 6, 'повседневно', ['гит', 'gitlab', 'github']],
+    ['поддержка', 9, 'семь лет, все линии: приём, консультации, инциденты, эскалации', ['техподдержка', 'сопровождение', 'service desk', 'servicedesk', 'hpsm', 'itsm']],
+    ['инциденты', 8, 'разбор до причины в коде на третьей линии', ['траблшутинг', 'диагностика', 'разбор логов']],
+    ['ИИ-инструменты', 9, 'ежедневная разработка с Claude Code, MCP-серверы, n8n', ['ai', 'llm', 'нейросет', 'claude', 'gpt', 'промпт', 'ии-агент', 'ai-агент', 'gigachat']],
+    ['Angular', 5, 'внутренний веб-ресурс на Angular и TypeScript', ['typescript', 'react', 'javascript', 'js']]
+  ];
+
+  const GAPS = [
+    ['kubernetes', 8, 'Kubernetes в проде нет - только понимание'],
+    ['k8s', 8, 'Kubernetes в проде нет'],
+    ['ansible', 6, 'IaC и Ansible не в опыте'],
+    ['terraform', 6, 'IaC не в опыте'],
+    ['highload', 5, 'высоконагруженные системы - понимание есть, опыта построения нет'],
+    ['высоконагруж', 5, 'высоконагруженные системы не строил'],
+    ['active directory', 7, 'администрирование AD не в опыте'],
+    ['windows server', 5, 'администрирование Windows Server не в опыте'],
+    ['1с', 7, '1С только как вторая линия поддержки'],
+    ['java', 6, 'Java не в опыте'],
+    ['golang', 7, 'Go не в опыте'],
+    ['rag', 7, 'RAG в проде не делал'],
+    ['pytorch', 9, 'обучение моделей - другая профессия'],
+    ['fine-tun', 9, 'файн-тюнинг не в опыте'],
+    ['векторн', 7, 'векторные БД не в опыте'],
+    ['clickhouse', 5, 'ClickHouse не в опыте'],
+    ['oracle', 4, 'Oracle только частично']
+  ];
+
+  const BLOCKERS = [
+    ['английский c1', 'английский C1 обязателен'],
+    ['свободный английский', 'свободный английский обязателен'],
+    ['реверс-инжиниринг', 'реверс-инжиниринг - другая профессия, разрыв на годы'],
+    ['ida pro', 'низкоуровневый реверс - другая профессия'],
+    ['обучение моделей', 'обучение моделей - другая профессия'],
+    ['1с-разработчик', '1С-разработка - другая профессия'],
+    ['1с программист', '1С-разработка - другая профессия'],
+    ['стажировк', 'стажировка - уровень ниже некуда при семи годах'],
+    ['стажер', 'стажёрская позиция'],
+    ['холодные звонки', 'продажи, а не инженерная роль'],
+    ['поиск клиентов', 'продажи, а не инженерная роль']
+  ];
+
+  /* В Python \b понимает кириллицу, в JavaScript нет: там граница слова
+     считается только по латинице, и шаблон «\bскс\b» молча перестаёт
+     срабатывать. Поэтому границы задаются явно через свойства Unicode,
+     а в шаблонах они помечены как @< и @>. */
+  const NB = '(?<![\\p{L}\\p{N}_])';
+  const NA = '(?![\\p{L}\\p{N}_])';
+  const mk = (s, flags) => {
+    const f = flags || '';
+    try { return new RegExp(s.split('@<').join(NB).split('@>').join(NA), f + 'u'); }
+    catch (e) { return new RegExp(s.split('@<').join('(?:^|[^A-Za-zА-Яа-яЁё0-9_])').split('@>').join('(?![A-Za-zА-Яа-яЁё0-9_])'), f); }
+  };
+
+  const HANDS_ON = [
+    [mk('сборк[аеи] (компьютер|пк@>|рабочих станц|системных блок)'), 'сборка компьютеров'],
+    [mk('ремонт(а|у)? (компьютер|оргтехник|оборудован|пк@>)'), 'ремонт техники'],
+    [mk('обслуживани[ея] оргтехник|замен[аы] (картридж|расходн)'), 'оргтехника'],
+    [mk('@<скс@>|обжим|прокладк[аеи] кабел|монтаж (сет|скс|розет|оборудован)'), 'СКС и монтаж'],
+    [mk('ip[- ]телефони|@<voip@>|@<asterisk@>|@<sip@>|@<атс@>'), 'IP-телефония'],
+    [mk('@<вкс@>|видеоконференцсвяз|@<trueconf@>|@<polycom@>|поликом'), 'ВКС'],
+    [mk('@<ccna@>|@<ccnp@>|@<mikrotik@>|@<cisco@>|@<ospf@>|@<bgp@>|настройк[аеи] (коммутатор|маршрутизатор)|@<vlan@>'), 'сетевая инженерия']
+  ];
+
+  const DOWNGRADE = [
+    ['замена картридж', 'заправка и замена картриджей - хелпдеск'],
+    ['инвентаризац', 'инвентаризация техники - хелпдеск'],
+    ['утилизац', 'утилизация оборудования - хелпдеск'],
+    ['настройка рабочих мест', 'настройка рабочих мест - первая линия'],
+    ['заправка', 'обслуживание расходников - хелпдеск'],
+    ['helpdesk', 'helpdesk - первая линия'],
+    ['хелпдеск', 'helpdesk - первая линия'],
+    ['первая линия', 'первая линия поддержки'],
+    ['1-я линия', 'первая линия поддержки'],
+    ['выездн', 'выездная работа с техникой']
+  ];
+
+  const TRACKS = {
+    dev: ['c#', '.net', 'backend', 'бэкенд', 'разработчик', 'программист', 'asp.net'],
+    ai: ['ai', 'ии', 'llm', 'нейросет', 'prompt', 'промпт', 'агент', 'gigachat'],
+    support: ['поддержк', 'сопровожден', 'l2', 'l3', 'эксплуатац', 'инженер', 'администратор']
+  };
+
+  const SHORT = new Set(['ai', 'ии', 'l2', 'l3', 'c#']);
+  const esc = s => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+  // Короткие ключи ищем по границам слова: «ии» сидит внутри «организации»
+  const hit = (word, text) => {
+    if (word.length > 3 && !SHORT.has(word)) return text.includes(word);
+    try {
+      return new RegExp('(?<![\\p{L}\\p{N}_#.])' + esc(word) + '(?![\\p{L}\\p{N}_#])', 'u').test(text);
+    } catch (e) {
+      return text.includes(word);
+    }
+  };
+
+  const detectTrack = (low, head) => {
+    let best = null, bestScore = 0;
+    for (const [track, words] of Object.entries(TRACKS)) {
+      let value = 0;
+      words.forEach(w => { if (hit(w, low)) value += 1; });
+      words.forEach(w => { if (hit(w, head)) value += 3; });   // заголовок весит втрое
+      if (value > bestScore) { best = track; bestScore = value; }
+    }
+    return best;
+  };
+
+  const score = (v) => {
+    const text = [v.name, (v.skills || []).join(' '), v.description].join('\n');
+    const low = text.toLowerCase();
+    const head = (v.name || '').toLowerCase();
+
+    const blockers = BLOCKERS.filter(b => low.includes(b[0])).map(b => b[1]);
+    const hands = [...new Set(HANDS_ON.filter(h => h[0].test(low)).map(h => h[1]))].sort();
+    const notes = [];
+    if (hands.length >= 3) blockers.push('железо и сети как суть работы: ' + hands.join(', '));
+    else if (hands.length) notes.push('есть железо/сети: ' + hands.join(', '));
+
+    const matched = [];
+    let earned = 0;
+    STRENGTHS.forEach(([name, weight, proof, aliases]) => {
+      if ([name, ...aliases].some(w => low.includes(w.toLowerCase()))) {
+        matched.push([name, proof]);
+        earned += weight;
+      }
+    });
+
+    const gaps = [];
+    let penalty = 0;
+    GAPS.forEach(([word, weight, reason]) => {
+      if (low.includes(word)) { penalty += weight; gaps.push(reason); }
+    });
+
+    // Мягкая кривая: 60 очков совпадений - около 67, 150 - около 83
+    const raw = Math.max(0, earned - penalty);
+    let value = raw ? Math.round(100 * raw / (raw + 30)) : 0;
+
+    const track = detectTrack(low, head);
+
+    if (track === 'dev' || track === 'ai') {
+      const senior = ['senior', 'сеньор', 'lead', 'лид', 'head', 'architect', 'архитектор', 'staff', 'principal', 'tech lead'];
+      if (senior.some(w => hit(w, head))) {
+        value = Math.max(0, value - 30);
+        notes.push('senior/lead в разработке - уровень выше опыта');
+      }
+      const exp = (v.experience || '').toLowerCase();
+      if (exp.includes('более 6') || exp.includes('6 лет')) {
+        value = Math.max(0, value - 15);
+        notes.push('требуют от 6 лет в разработке');
+      }
+    }
+    if (track === 'support') {
+      value += 10;
+      if (['поддержк', 'сопровожден', 'l2', 'l3', 'support'].some(w => hit(w, head))) value += 15;
+      value = Math.min(100, value);
+    }
+
+    const junior = ['готовы обучить', 'без опыта', 'нет опыта', 'обучим', 'стажёр', 'junior'];
+    if (junior.some(w => low.includes(w))) {
+      value = Math.max(0, value - 20);
+      notes.push('роль рассчитана на новичка - риск понижения уровня');
+    }
+
+    const downs = DOWNGRADE.filter(d => low.includes(d[0])).map(d => d[1]);
+    if (downs.length) {
+      value = Math.max(0, value - 8 * downs.length);
+      notes.push(...downs.slice(0, 3));
+    }
+    if (low.includes('передача запросов на следующие') || low.includes('эскалировать на вторую')) {
+      value = Math.max(0, value - 10);
+      notes.push('по задачам это первая линия');
+    }
+
+    let verdict = 'слабый матч';
+    if (blockers.length) verdict = 'пропустить';
+    else if (value >= 70) verdict = 'сильный матч';
+    else if (value >= 45) verdict = 'стоит посмотреть';
+
+    const css = { 'пропустить': 'skip', 'сильный матч': 'strong', 'стоит посмотреть': 'maybe', 'слабый матч': 'weak' }[verdict];
+    return { score: value, verdict, css, track, matched, gaps, blockers, notes };
+  };
+
+  /* Демо-вакансии взяты из scout/demo.py: тексты сокращены до сути,
+     компании обезличены ещё на стороне сервиса. */
+  const DEMO = [
+    {
+      key: 'd1', label: 'Инженер по сопровождению · крупный банк',
+      name: 'Инженер по сопровождению', experience: 'От 3 до 6 лет',
+      skills: ['Zabbix', 'Grafana', 'SQL', 'Jira'],
+      description: 'Настройка систем мониторинга Zabbix, Grafana.\nРазбор обращений от пользователей в Service Manager по работоспособности систем.\nМониторинг высоконагруженных сервисов, реагирование на отклонения.\nРешение инцидентов, анализ причин их возникновения.\nРелиз-менеджмент: сопровождение релизов в Jira, приёмо-сдаточные испытания.\nТребования: опыт с системами мониторинга и логирования, внедрение и сопровождение IT-систем, понимание сетевых протоколов, опыт работы с базами данных, написание SQL.\nПлюсом: опыт использования GigaChat и аналогов, навыки создания AI-агентов.'
+    },
+    {
+      key: 'd2', label: 'Специалист техподдержки ИС · добывающая компания',
+      name: 'Специалист технической поддержки ИС', experience: 'От 1 года до 3 лет',
+      skills: ['SQL', 'PostgreSQL', 'Jira', 'Confluence'],
+      description: 'Изучение принципов работы уникальной информационной системы.\nОбработка обращений и взаимодействие с пользователями системы.\nПостановка задач разработчикам, описание бизнес-процессов, написание тест-кейсов.\nОбучение и консультирование пользователей, подготовка документации, тестирование.\nТребования: высшее образование, опыт специалистом технической поддержки ИС от полугода, опыт работы с Microsoft SQL и PostgreSQL на уровне несложных запросов, желателен опыт с Confluence, Jira, gitlab.\nПерспектива: переход к задачам по созданию системных сервисов с применением ИИ-агентов.'
+    },
+    {
+      key: 'd3', label: 'Support-инженер B2B · финтех',
+      name: 'Support-инженер поддержки B2B', experience: 'Нет опыта',
+      skills: ['Python', 'Bash', 'SQL', 'Linux'],
+      description: 'Работа с клиентскими обращениями, приём обращений по почте и телефону.\nМониторинг платформы, передача запросов на следующие уровни поддержки.\nСмены: утро 07:00-16:00, вечер 14:00-23:00, ночь 22:45-07:15.\nТребования: сети, Bash, Python, SQL, Git, Windows и Linux на уровне администратора, работа с большими логами. Готовы обучить в процессе работы.\nИспользуем: Zabbix и Grafana, Jira Service Desk, PostgreSQL.\nПлюсом: английский от B1.'
+    },
+    {
+      key: 'd4', label: 'Инженер техподдержки · аутсорс',
+      name: 'Инженер технической поддержки', experience: 'От 3 до 6 лет',
+      skills: ['Windows', 'ServiceDesk'],
+      description: 'Создание и сопровождение заявок в ServiceDesk, коммуникация полностью на английском языке.\nУстановка, настройка и обслуживание оборудования DELL и LENOVO.\nЗамена техники, перенос данных, ведение инвентаризации, утилизация техники.\nПоддержка устройств iOS, Mac OS, Android, настройка MDM профилей.\nТребования: опыт на 2-й линии от 3 лет, английский язык - B2 (Upper-Intermediate) и выше.'
+    },
+    {
+      key: 'd5', label: 'ML-инженер · продуктовая компания',
+      name: 'ML-инженер', experience: 'От 3 до 6 лет',
+      skills: ['PyTorch', 'Python'],
+      description: 'Обучение моделей, fine-tuning, построение RAG в продакшене.\nРабота с векторными базами, hybrid search. PyTorch, обучение моделей с нуля.\nТребования: опыт обучения моделей от 3 лет, PyTorch, векторные БД.'
+    },
+    {
+      key: 'd6', label: 'SRE-инженер (PAM) · кибербезопасность',
+      name: 'SRE-инженер (PAM)', experience: 'От 3 до 6 лет',
+      skills: ['Kubernetes', 'Linux', 'PostgreSQL'],
+      description: 'Развитие и поддержка PAM-платформы. Kubernetes в проде, Ansible, Terraform.\nМониторинг и алертинг, разбор инцидентов, дежурства.\nLinux, PostgreSQL, сети. Bash и Python для автоматизации.\nТребования: опыт SRE или DevOps, Kubernetes, IaC, highload.'
+    }
+  ];
+
+  const pick = document.getElementById('vac-pick');
+  const area = document.getElementById('vac-text');
+  const out = document.getElementById('vac-out');
+  const runBtn = document.getElementById('vac-run');
+
+  if (pick && area && out && runBtn) {
+    DEMO.forEach(d => {
+      const o = document.createElement('option');
+      o.value = d.key;
+      o.textContent = d.label;
+      pick.appendChild(o);
+    });
+    const own = document.createElement('option');
+    own.value = 'own';
+    own.textContent = 'Свой текст';
+    pick.appendChild(own);
+
+    const group = (label, items, cls, mark) => {
+      if (!items.length) return '';
+      return '<div class="res-group"><span class="k">' + label + '</span><ul>' +
+        items.map(i => '<li class="' + cls + '"><s>' + mark + '</s><span>' + i + '</span></li>').join('') +
+        '</ul></div>';
+    };
+
+    const render = () => {
+      const chosen = DEMO.find(d => d.key === pick.value);
+      const v = chosen
+        ? { name: chosen.name, experience: chosen.experience, skills: chosen.skills, description: area.value }
+        : { name: '', experience: '', skills: [], description: area.value };
+      const r = score(v);
+
+      const matched = r.matched.map(m => '<b>' + m[0] + '</b> <span class="why">- ' + m[1] + '</span>');
+      out.innerHTML =
+        '<div class="score-head"><span class="score-big">' + r.score + '</span>' +
+        '<span class="pill ' + r.css + '">' + r.verdict + '</span>' +
+        '<span class="k">трек: ' + (r.track || 'не определён') + '</span></div>' +
+        group('Совпало и чем подтверждается', matched, 'plus', '+') +
+        group('Чего нет в опыте', r.gaps, 'minus', '−') +
+        group('Блокеры', r.blockers, 'no', '×') +
+        group('Внимание', r.notes, 'minus', '·');
+    };
+
+    pick.addEventListener('change', () => {
+      const chosen = DEMO.find(d => d.key === pick.value);
+      if (chosen) area.value = chosen.description;
+      render();
+    });
+    runBtn.addEventListener('click', render);
+    area.addEventListener('input', () => { if (pick.value !== 'own') pick.value = 'own'; });
+
+    pick.value = 'd1';
+    area.value = DEMO[0].description;
+    render();
+  }
+
+  /* ---------------- проверка письма: порт scout/writer.py ---------------- */
+
+  const SAMPLE = 'Добрый день!\n\n' +
+    'Откликаюсь на позицию инженера по сопровождению.\n\n' +
+    'Семь лет работаю внутри корпоративных систем в госсекторе и финансах. ' +
+    'Прошёл все линии поддержки: принимал и распределял заявки, консультировал пользователей, ' +
+    'расследовал инциденты и закрывал их сам. На третьей линии разбирал причину до кода.\n\n' +
+    'Мониторинг вёл в Zabbix, участвовал в переходе на Grafana. Релизы накатывал через Jenkins ' +
+    'с проверкой через Postman и SQL. Jira внедрял и администрировал: проекты, права, учёт времени, доски.\n\n' +
+    'Из своего: перенос заявок в Jira на Python живёт в проде больше года, им пользуется вся группа поддержки. ' +
+    'Тикет-система, которую я собрал на прошлом месте, сняла необходимость в отдельной первой линии.\n\n' +
+    'Проекты и открытые репозитории собраны здесь: https://lazysagotku.github.io\n\n' +
+    'Готов созвониться в удобное время.\n\n' +
+    'С уважением,\nИван Архипов';
+
+  const letArea = document.getElementById('let-text');
+  const letOut = document.getElementById('let-out');
+  const letBreak = document.getElementById('let-break');
+
+  if (letArea && letOut && letBreak) {
+    const NOT_X_BUT_Y = mk('@<не\\s+[^.!?\\n]{1,80},\\s*а\\s+', 'i');
+
+    const checkLetter = (s) => {
+      const words = s.trim() ? s.trim().split(/\s+/).length : 0;
+      return [
+        ['Длина 400-2500 символов', s.length >= 400 && s.length <= 2500, s.length],
+        ['Не больше 190 слов', words <= 190, words],
+        ['Начинается «Добрый день!» и «Откликаюсь на позицию»', s.startsWith('Добрый день!\n\nОткликаюсь на позицию '), ''],
+        ['Заканчивается «С уважением, Иван Архипов»', s.trimEnd().endsWith('С уважением,\nИван Архипов'), ''],
+        ['Есть ссылка на портфолио', s.includes('lazysagotku.github.io'), ''],
+        ['Без разметки: **, ```, # в начале строки', !['**', '```', '\n#'].some(m => s.includes(m)), ''],
+        ['Только дефис, длинное тире запрещено', !/[—–]/.test(s), ''],
+        ['Без оборота «не X, а Y»', !NOT_X_BUT_Y.test(s), '']
+      ];
+    };
+
+    const renderLetter = () => {
+      const rows = checkLetter(letArea.value);
+      const passed = rows.every(r => r[1]);
+      letOut.innerHTML =
+        '<div class="checks">' + rows.map(r =>
+          '<div class="' + (r[1] ? 'pass' : 'fail') + '"><s>' + (r[1] ? '✓' : '×') + '</s>' +
+          '<span>' + r[0] + '</span>' +
+          '<span class="got">' + (r[2] === '' ? '' : r[2]) + '</span></div>').join('') + '</div>' +
+        '<div class="gate ' + (passed ? 'pass' : 'fail') + '">' +
+        (passed ? '✓ Письмо уходит на отправку' : '× Ответ письмом не считается, отклик обрывается') + '</div>';
+    };
+
+    const BREAKERS = [
+      s => s.replace('Проекты и открытые репозитории собраны здесь: https://lazysagotku.github.io\n\n', ''),
+      s => s.replace('до кода.', 'до кода — глубоко и надолго.'),
+      s => s.replace('расследовал инциденты и закрывал их сам.', 'разбирал не симптом на поверхности, а причину в коде.'),
+      s => s.replace('инженера по сопровождению.', 'инженера по сопровождению. **Опыт: 7 лет.**'),
+      s => s.replace('С уважением,\nИван Архипов', 'Спасибо!')
+    ];
+    let b = 0;
+    letBreak.addEventListener('click', () => {
+      letArea.value = BREAKERS[b % BREAKERS.length](SAMPLE);
+      b += 1;
+      renderLetter();
+    });
+
+    letArea.addEventListener('input', renderLetter);
+    letArea.value = SAMPLE;
+    renderLetter();
+  }
 })();
 </script>
 
